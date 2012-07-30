@@ -641,72 +641,6 @@ void nfa_p2p_proc_llcp_link_status (tLLCP_SAP_CBACK_DATA  *p_data)
 
 /*******************************************************************************
 **
-** Function         nfa_p2p_notify_listen_start
-**
-** Description      Notify applications that listening has been started
-**                  
-**
-** Returns          None
-**
-*******************************************************************************/
-void nfa_p2p_notify_listen_start (BOOLEAN is_success)
-{
-    UINT8             local_sap;
-    tNFA_P2P_EVT_DATA data;
-    tNFA_P2P_MSG     *p_reg_msg;
-
-    P2P_TRACE_DEBUG0 ("nfa_p2p_notify_listen_start ()");
-
-    for (local_sap = 0; local_sap < NFA_P2P_NUM_SAP; local_sap++)
-    {
-        /* only server */
-        if (  (nfa_p2p_cb.sap_cb[local_sap].p_cback)
-            &&(nfa_p2p_cb.sap_cb[local_sap].flags & NFA_P2P_SAP_FLAG_SERVER)
-            &&(nfa_p2p_cb.sap_cb[local_sap].flags & NFA_P2P_SAP_FLAG_LISTEN_EVT_PND)  )
-        {
-            nfa_p2p_cb.sap_cb[local_sap].flags &= ~NFA_P2P_SAP_FLAG_LISTEN_EVT_PND;
-
-            if (nfa_p2p_cb.sap_cb[local_sap].p_reg_msg)
-            {
-                p_reg_msg = nfa_p2p_cb.sap_cb[local_sap].p_reg_msg;
-                BCM_STRNCPY_S (data.listen.service_name, sizeof (data.listen.service_name), 
-                               p_reg_msg->api_reg_server.service_name, LLCP_MAX_SN_LEN);
-                data.listen.service_name[LLCP_MAX_SN_LEN] = 0;
-
-                GKI_freebuf (p_reg_msg);
-                nfa_p2p_cb.sap_cb[local_sap].p_reg_msg = NULL;
-            }
-            else
-            {
-                /* this should not happen */
-                data.listen.service_name[0] = 0;
-            }
-
-            if (is_success)
-            {
-                data.listen.server_handle = (NFA_HANDLE_GROUP_P2P | local_sap);
-                data.listen.server_sap    = local_sap;
-            }
-            else
-            {
-                data.listen.server_handle = NFA_HANDLE_INVALID;
-                data.listen.server_sap    = NFA_P2P_INVALID_SAP;
-            }
-
-            /* notify NFA_P2P_LISTEN_EVT to server */
-            nfa_p2p_cb.sap_cb[local_sap].p_cback (NFA_P2P_LISTEN_EVT, &data);
-
-            if (!is_success)
-            {
-                LLCP_Deregister (local_sap);
-                nfa_p2p_cb.sap_cb[local_sap].p_cback = NULL;
-            }
-        }
-    }
-}
-
-/*******************************************************************************
-**
 ** Function         nfa_p2p_reg_server
 **
 ** Description      Allocate a service as server and register to LLCP
@@ -729,13 +663,13 @@ BOOLEAN nfa_p2p_reg_server (tNFA_P2P_MSG *p_msg)
 
     if (server_sap == LLCP_INVALID_SAP)
     {
-        evt_data.listen.server_handle = NFA_HANDLE_INVALID;
-        evt_data.listen.server_sap    = NFA_P2P_INVALID_SAP;
-        BCM_STRNCPY_S (evt_data.listen.service_name, sizeof (evt_data.listen.service_name), 
+        evt_data.reg_server.server_handle = NFA_HANDLE_INVALID;
+        evt_data.reg_server.server_sap    = NFA_P2P_INVALID_SAP;
+        BCM_STRNCPY_S (evt_data.reg_server.service_name, sizeof (evt_data.reg_server.service_name), 
                        p_msg->api_reg_server.service_name, LLCP_MAX_SN_LEN);
-        evt_data.listen.service_name[LLCP_MAX_SN_LEN] = 0;
+        evt_data.reg_server.service_name[LLCP_MAX_SN_LEN] = 0;
 
-        p_msg->api_reg_server.p_cback (NFA_P2P_LISTEN_EVT, &evt_data);
+        p_msg->api_reg_server.p_cback (NFA_P2P_REG_SERVER_EVT, &evt_data);
 
         return TRUE;
     }
@@ -753,39 +687,27 @@ BOOLEAN nfa_p2p_reg_server (tNFA_P2P_MSG *p_msg)
     nfa_p2p_cb.sap_cb[server_sap].p_cback    = p_msg->api_reg_server.p_cback;
     nfa_p2p_cb.sap_cb[server_sap].flags      = NFA_P2P_SAP_FLAG_SERVER;
 
-    if (  (nfa_p2p_cb.llcp_state == NFA_P2P_LLCP_STATE_LISTENING)
-        ||(nfa_p2p_cb.llcp_state == NFA_P2P_LLCP_STATE_ACTIVATED)  )
+    evt_data.reg_server.server_handle = (NFA_HANDLE_GROUP_P2P | server_sap);
+    evt_data.reg_server.server_sap    = server_sap;
+    BCM_STRNCPY_S (evt_data.reg_server.service_name, sizeof (evt_data.reg_server.service_name), 
+                   p_msg->api_reg_server.service_name, LLCP_MAX_SN_LEN);
+    evt_data.reg_server.service_name[LLCP_MAX_SN_LEN] = 0;
+
+    /* notify NFA_P2P_REG_SERVER_EVT to server */
+    nfa_p2p_cb.sap_cb[server_sap].p_cback (NFA_P2P_REG_SERVER_EVT, &evt_data);
+
+    /* if LLCP is already activated */
+    if (nfa_p2p_cb.llcp_state == NFA_P2P_LLCP_STATE_ACTIVATED)
     {
-        evt_data.listen.server_handle = (NFA_HANDLE_GROUP_P2P | server_sap);
-        evt_data.listen.server_sap    = server_sap;
-        BCM_STRNCPY_S (evt_data.listen.service_name, sizeof (evt_data.listen.service_name), 
-                       p_msg->api_reg_server.service_name, LLCP_MAX_SN_LEN);
-        evt_data.listen.service_name[LLCP_MAX_SN_LEN] = 0;
+        evt_data.activated.handle          = (NFA_HANDLE_GROUP_P2P | server_sap);
+        evt_data.activated.local_link_miu  = nfa_p2p_cb.local_link_miu;
+        evt_data.activated.remote_link_miu = nfa_p2p_cb.remote_link_miu;
 
-        /* notify NFA_P2P_LISTEN_EVT to server */
-        nfa_p2p_cb.sap_cb[server_sap].p_cback (NFA_P2P_LISTEN_EVT, &evt_data);
-
-        /* if LLCP is already activated */
-        if (nfa_p2p_cb.llcp_state == NFA_P2P_LLCP_STATE_ACTIVATED)
-        {
-            evt_data.activated.handle          = (NFA_HANDLE_GROUP_P2P | server_sap);
-            evt_data.activated.local_link_miu  = nfa_p2p_cb.local_link_miu;
-            evt_data.activated.remote_link_miu = nfa_p2p_cb.remote_link_miu;
-
-            /* notify NFA_P2P_ACTIVATED_EVT to server */
-            nfa_p2p_cb.sap_cb[server_sap].p_cback (NFA_P2P_ACTIVATED_EVT, &evt_data);
-        }
-
-        return TRUE;
+        /* notify NFA_P2P_ACTIVATED_EVT to server */
+        nfa_p2p_cb.sap_cb[server_sap].p_cback (NFA_P2P_ACTIVATED_EVT, &evt_data);
     }
-    else
-    {
-        /* if NFA_P2P_LLCP_STATE_IDLE then wait for starting listen */
-        nfa_p2p_cb.sap_cb[server_sap].flags |= NFA_P2P_SAP_FLAG_LISTEN_EVT_PND;
-        nfa_p2p_cb.sap_cb[server_sap].p_reg_msg = p_msg;
 
-        return FALSE;
-    }
+    return TRUE;
 }
 
 /*******************************************************************************

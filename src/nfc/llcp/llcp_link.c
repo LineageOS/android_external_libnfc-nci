@@ -1003,7 +1003,7 @@ static void llcp_link_proc_ui_pdu (UINT8  local_sap,
             llcp_cb.total_rx_ui_pdu--;
         }
 
-        if (p_app_cb->ui_rx_q.count == 1)
+        if ((p_app_cb->ui_rx_q.count == 1)&&(appended == FALSE))
         {
             data.data_ind.event         = LLCP_SAP_EVT_DATA_IND;
             data.data_ind.local_sap     = local_sap;
@@ -1112,6 +1112,10 @@ static void llcp_link_proc_agf_pdu (BT_HDR *p_agf)
             GKI_freebuf (p_agf);
             llcp_link_deactivate (LLCP_LINK_REMOTE_INITIATED);
             return;
+        }
+        else if (ptype == LLCP_PDU_SYMM_TYPE)
+        {
+            LLCP_TRACE_ERROR0 ("llcp_link_proc_agf_pdu(): SYMM PDU exchange shall not be in AGF");
         }
         else if (ptype == LLCP_PDU_PAX_TYPE)
         {

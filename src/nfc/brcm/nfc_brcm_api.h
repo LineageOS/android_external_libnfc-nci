@@ -24,6 +24,23 @@ enum
 };
 
 /* Definitions for NFC_FIRMWARE_BUILD_INFO_REVT */
+#define BRCM_FW_PATCH_CHIP_VER_MAXLEN       16
+typedef struct 
+{
+    UINT16      project_id;
+    UINT8       rfu;
+    UINT8       chip_ver[BRCM_FW_PATCH_CHIP_VER_MAXLEN+1];
+    UINT16      major_ver;
+    UINT16      minor_ver;
+    UINT16      nvm_max_size;
+    UINT16      patch_code_max_size;
+    UINT16      lpm_patch_code_size;
+    UINT16      fpm_patch_code_size;
+    UINT8       lpm_patch_code_has_bad_crc;
+    UINT8       fpm_patch_code_has_bad_crc;
+    UINT8       nvm_type;
+} tNFC_BRCM_FW_PATCH_INFO;
+
 #define BRCM_FW_BUILD_INFO_DATE_LEN         11
 #define BRCM_FW_BUILD_INFO_TIME_LEN         8
 #define BRCM_FW_BUILD_INFO_CHIP_ID_MAXLEN   64
@@ -38,6 +55,9 @@ typedef struct
     UINT8       build_minor;
     UINT32      hwt;
     UINT8       chip_id[BRCM_FW_BUILD_INFO_CHIP_ID_MAXLEN+1];
+
+    /* Patch info (not valid for hwt=20791B02) */
+    tNFC_BRCM_FW_PATCH_INFO patch;         
 } tNFC_BRCM_FW_BUILD_INFO;
 
 /* Data types for BRCM-specific tNFC_RESPONSE_CBACK event notification */
@@ -379,6 +399,17 @@ NFC_API extern void NFC_BrcmInit (tBRCM_DEV_INIT_CBACK *p_dev_init_cback);
 
 /*******************************************************************************
 **
+** Function         NFC_BrcmGetNciPktSize
+**
+** Description      Get Max NCI Packet size
+**
+** Returns          Max Control Packet Payload Size
+**
+*******************************************************************************/
+NFC_API extern UINT8 NFC_BrcmGetNciPktSize(void);
+
+/*******************************************************************************
+**
 ** Function         NFC_BrcmGetFirmwareBuildInfo
 **
 ** Description      Get firmware build info
@@ -656,6 +687,28 @@ EXPORT_API extern BOOLEAN PRM_LaunchRam (void);
 **
 *******************************************************************************/
 EXPORT_API extern void PRM_SetI2cPatch (UINT8 *p_i2c_patchfile_buf, UINT16 i2c_patchfile_len);
+
+/*******************************************************************************
+**
+** Function         PRM_SetSpdNciCmdPayloadSize
+**
+** Description      Set Host-to-NFCC NCI message size for secure patch download
+**
+**                  This API must be called before calling PRM_DownloadStart.
+**                  If the API is not called, then PRM will use the default 
+**                  message size.
+**
+**                  Typically, this API is only called for platforms that have
+**                  message-size limitations in the transport/driver.
+**
+**                  Valid message size range: BRCM_PRM_MIN_NCI_CMD_PAYLOAD_SIZE to 255.
+**
+** Returns          NFC_STATUS_OK if successful
+**                  NFC_STATUS_INVALID_PARAM otherwise
+**                  
+**
+*******************************************************************************/
+EXPORT_API extern tNFC_STATUS PRM_SetSpdNciCmdPayloadSize (UINT8 max_payload_size);
 
 #ifdef __cplusplus
 }

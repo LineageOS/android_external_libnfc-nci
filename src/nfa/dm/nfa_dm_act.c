@@ -661,17 +661,16 @@ BOOLEAN nfa_dm_act_release_excl_rf_ctrl (tNFA_DM_MSG *p_data)
 {
     NFA_TRACE_DEBUG0 ("nfa_dm_act_release_excl_rf_ctrl ()");
 
-    if (  (nfa_dm_cb.disc_cb.disc_state == NFA_DM_RFST_W4_ALL_DISCOVERIES)
-        ||(nfa_dm_cb.disc_cb.disc_state == NFA_DM_RFST_W4_HOST_SELECT)
-        ||(nfa_dm_cb.disc_cb.disc_state == NFA_DM_RFST_POLL_ACTIVE)  )
+    /* nfa_dm_rel_excl_rf_control_and_notify() is called when discovery state goes IDLE */
+    nfa_dm_cb.disc_cb.disc_flags |= NFA_DM_DISC_FLAGS_STOPPING;
+
+    /* if discover command has been sent in IDLE state and waiting for response 
+    ** then just wait for responose. Otherwise initiate deactivating.
+    */
+    if (!(  (nfa_dm_cb.disc_cb.disc_state == NFA_DM_RFST_IDLE) 
+          &&(nfa_dm_cb.disc_cb.disc_flags & NFA_DM_DISC_FLAGS_W4_RSP)  ))
     {
-        nfa_dm_cb.flags |= NFA_DM_FLAGS_SEND_EXCL_CTRL_STOPPED_EVT;
         nfa_dm_rf_deactivate (NFA_DEACTIVATE_TYPE_IDLE);
-    }
-    else
-    {
-        /* Notify app of NFA_EXCLUSIVE_RF_CONTROL_STOPPED_EVT */
-        nfa_dm_rel_excl_rf_control_and_notify ();
     }
 
     return TRUE;
@@ -698,8 +697,10 @@ BOOLEAN nfa_dm_act_deactivate (tNFA_DM_MSG *p_data)
            &&(nfa_dm_cb.disc_cb.activated_protocol != NFA_PROTOCOL_NFC_DEP)
            &&(nfa_dm_cb.disc_cb.activated_protocol != NFA_PROTOCOL_ISO15693)  )  )
     {
-        if (nfa_dm_cb.disc_cb.activated_protocol == NFA_PROTOCOL_NFC_DEP)
+        if (  (nfa_dm_cb.disc_cb.activated_protocol == NFA_PROTOCOL_NFC_DEP)
+            &&((nfa_dm_cb.flags & NFA_DM_FLAGS_EXCL_RF_ACTIVE) == 0x00)  )
         {
+            /* Exclusive RF control doesn't use NFA P2P */
             /* NFA P2P will deactivate NFC link after deactivating LLCP link */
             nfa_p2p_deactivate_llcp ();
             return (TRUE);
@@ -1113,8 +1114,17 @@ BOOLEAN nfa_dm_act_stop_rf_discovery (tNFA_DM_MSG *p_data)
         (nfa_dm_cb.disc_cb.disc_state == NFA_DM_RFST_IDLE) )
     {
         nfa_dm_cb.disc_cb.disc_flags &= ~NFA_DM_DISC_FLAGS_ENABLED;
-        evt_data.status = NFA_STATUS_OK;
-        nfa_dm_conn_cback_event_notify (NFA_RF_DISCOVERY_STOPPED_EVT, &evt_data);
+
+        /* if discover command has been sent in IDLE state and waiting for response */
+        if (nfa_dm_cb.disc_cb.disc_flags & NFA_DM_DISC_FLAGS_W4_RSP)
+        {
+            nfa_dm_cb.disc_cb.disc_flags |= NFA_DM_DISC_FLAGS_STOPPING;
+        }
+        else
+        {
+            evt_data.status = NFA_STATUS_OK;
+            nfa_dm_conn_cback_event_notify (NFA_RF_DISCOVERY_STOPPED_EVT, &evt_data);
+        }
     }
     else
     {
@@ -1383,19 +1393,6 @@ static void nfa_dm_excl_disc_cback (tNFA_DM_RF_DISC_EVT event, tNFC_DISCOVER *p_
 
         /* clean up SEL_RES response */
         nfa_dm_cb.disc_cb.activated_sel_res = 0;
-
-        if (  (p_data->deactivate.type != NFC_DEACTIVATE_TYPE_SLEEP)
-            &&(p_data->deactivate.type != NFC_DEACTIVATE_TYPE_SLEEP_AF)  )
-        {
-            if (  (nfa_dm_cb.flags & NFA_DM_FLAGS_EXCL_RF_ACTIVE)
-                &&(nfa_dm_cb.flags & NFA_DM_FLAGS_SEND_EXCL_CTRL_STOPPED_EVT))
-            {
-                nfa_dm_cb.flags &= ~NFA_DM_FLAGS_SEND_EXCL_CTRL_STOPPED_EVT;
-
-                /* Notify app of NFA_EXCLUSIVE_RF_CONTROL_STOPPED_EVT now */
-                nfa_dm_rel_excl_rf_control_and_notify ();
-            }
-        }
         break;
 
     case NFA_DM_RF_DISC_CMD_IDLE_CMPL_EVT:
@@ -1405,15 +1402,6 @@ static void nfa_dm_excl_disc_cback (tNFA_DM_RF_DISC_EVT event, tNFC_DISCOVER *p_
         evt_data.deactivated.type = NFA_DEACTIVATE_TYPE_IDLE;
         /* notify deactivation to application */
         nfa_dm_conn_cback_event_notify (NFA_DEACTIVATED_EVT, &evt_data);
-
-        if (  (nfa_dm_cb.flags & NFA_DM_FLAGS_EXCL_RF_ACTIVE)
-            &&(nfa_dm_cb.flags & NFA_DM_FLAGS_SEND_EXCL_CTRL_STOPPED_EVT))
-        {
-            nfa_dm_cb.flags &= ~NFA_DM_FLAGS_SEND_EXCL_CTRL_STOPPED_EVT;
-
-            /* Notify app of NFA_EXCLUSIVE_RF_CONTROL_STOPPED_EVT now */
-            nfa_dm_rel_excl_rf_control_and_notify ();
-        }
         break;
 
     default:

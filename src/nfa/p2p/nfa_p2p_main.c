@@ -97,12 +97,7 @@ void nfa_p2p_discovery_cback (tNFA_DM_RF_DISC_EVT event, tNFC_DISCOVER *p_data)
     case NFA_DM_RF_DISC_START_EVT:
         if (p_data->status == NFC_STATUS_OK)
         {
-            nfa_p2p_notify_listen_start (TRUE);
             nfa_p2p_cb.llcp_state = NFA_P2P_LLCP_STATE_LISTENING;
-        }
-        else
-        {
-            nfa_p2p_notify_listen_start (FALSE);
         }
         break;
 

@@ -30,7 +30,7 @@
 #define NFA_P2P_DISC_REASON_NO_INFORMATION	    0x80    /* Without information             */
 
 /* NFA P2P callback events */
-#define NFA_P2P_LISTEN_EVT          0x00    /* Server listening started                     */
+#define NFA_P2P_REG_SERVER_EVT      0x00    /* Server is registered                         */
 #define NFA_P2P_REG_CLIENT_EVT      0x01    /* Client is registered                         */
 #define NFA_P2P_ACTIVATED_EVT       0x02    /* LLCP Link has been activated                 */
 #define NFA_P2P_DEACTIVATED_EVT	    0x03    /* LLCP Link has been deactivated               */
@@ -58,13 +58,13 @@ typedef UINT8 tNFA_P2P_EVT;
 #define NFA_P2P_DLINK_TYPE      LLCP_LINK_TYPE_DATA_LINK_CONNECTION
 typedef UINT8 tNFA_P2P_LINK_TYPE;
 
-/* Data for NFA_P2P_LISTEN_EVT */
+/* Data for NFA_P2P_REG_SERVER_EVT */
 typedef struct
 {
     tNFA_HANDLE     server_handle;     /* NFA_HANDLE_INVALID if failed */
     char            service_name[LLCP_MAX_SN_LEN + 1];
     UINT8           server_sap;
-} tNFA_P2P_LISTEN;
+} tNFA_P2P_REG_SERVER;
 
 /* Data for NFA_P2P_REG_CLIENT_EVT */
 typedef struct
@@ -148,8 +148,8 @@ typedef struct
 /* Union of all P2P callback structures */
 typedef union
 {
-    tNFA_P2P_LISTEN         listen;         /* NFA_P2P_LISTEN_EVT       */
-    tNFA_P2P_REG_CLIENT     reg_client;     /* NFA_P2P_REG_CLIENT       */
+    tNFA_P2P_REG_SERVER     reg_server;     /* NFA_P2P_REG_SERVER_EVT   */
+    tNFA_P2P_REG_CLIENT     reg_client;     /* NFA_P2P_REG_CLIENT_EVT   */
     tNFA_P2P_ACTIVATED      activated;      /* NFA_P2P_ACTIVATED_EVT    */
     tNFA_P2P_DEACTIVATED    deactivated;    /* NFA_P2P_DEACTIVATED_EVT  */
     tNFA_P2P_CONN_REQ       conn_req;       /* NFA_P2P_CONN_REQ_EVT     */
@@ -178,7 +178,7 @@ extern "C"
 **
 ** Description      This function is called to listen to a SAP as server on LLCP.
 **
-**                  NFA_P2P_LISTEN_EVT will be returned with status and handle.
+**                  NFA_P2P_REG_SERVER_EVT will be returned with status and handle.
 **
 **                  If server_sap is set to NFA_P2P_ANY_SAP, then NFA will allocate 
 **                  a SAP between LLCP_LOWER_BOUND_SDP_SAP and LLCP_UPPER_BOUND_SDP_SAP

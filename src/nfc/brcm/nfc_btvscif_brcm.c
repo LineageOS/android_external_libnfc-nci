@@ -38,62 +38,6 @@
 
 /*******************************************************************************
 **
-** Function         nfc_brcm_btvscif_command_complete_evt 
-**
-** Description      Process event HCI_COMMAND_COMPLETE_EVT 
-**
-** Returns          void
-**
-*******************************************************************************/
-static void nfc_brcm_btvscif_command_complete_evt (UINT8 *p_evt, UINT16 evt_len)
-{
-    UINT8           *p;
-    UINT16          cmd_opcode, cc_opcode;
-
-    tNFC_BTVSC_CPLT        vcs_cplt_params;
-    tNFC_BTVSC_CPLT_CBACK *p_cback;
-     
-    if ((nfc_cb.p_nci_last_cmd)
-     &&((nfc_cb.p_nci_last_cmd->event & BT_EVT_MASK) == BT_EVT_TO_NFC_NCI_VS))
-    {
-        /* get opcode from last command */
-        p = (UINT8 *)(nfc_cb.p_nci_last_cmd + 1) + nfc_cb.p_nci_last_cmd->offset;
-        STREAM_TO_UINT16(cmd_opcode, p);
-
-        /* get opcode from received event */
-        p_evt++;    /* BT command window */
-        STREAM_TO_UINT16 (cc_opcode, p_evt);
-        evt_len -= 3;
-
-        /* Verify opcode matches the last command sent */
-        if (cc_opcode != cmd_opcode)
-        {
-            NFC_TRACE_ERROR2("NFC_TASK: expecting command complete for opcode 0x%04X, but got opcode  0x%04X instead", 
-                              cmd_opcode, cc_opcode);
-        }
-        else
-        {
-            /* get callback function from last command */
-            p_cback = ((BT_HDR_BTVSC *)nfc_cb.p_nci_last_cmd)->p_cback;
-
-            /* Call vsc cplt callback, if any */
-            if (p_cback)
-            {
-                vcs_cplt_params.opcode      = cc_opcode;
-                vcs_cplt_params.param_len   = evt_len;
-                vcs_cplt_params.p_param_buf = p_evt;
-                (p_cback)(&vcs_cplt_params);
-            }
-        }
-    }
-
-    /* see if we can send more commands */
-    nfc_ncif_update_window (TRUE);
-}
-
-
-/*******************************************************************************
-**
 ** Function         nfc_brcm_btvscif_process_event 
 **
 ** Description      Process Bluetooth HCI events
@@ -106,7 +50,10 @@ void nfc_brcm_btvscif_process_event(BT_HDR *p_msg)
 {
     UINT8   *p = (UINT8 *)(p_msg + 1) + p_msg->offset;
     UINT8   btvsc_evt_code, btvsc_evt_len;
-    
+    UINT16  cc_opcode;
+    tNFC_BTVSC_CPLT        vcs_cplt_params;
+    tNFC_BTVSC_CPLT_CBACK *p_cback;
+
     STREAM_TO_UINT8  (btvsc_evt_code, p);
     STREAM_TO_UINT8  (btvsc_evt_len, p);
 
@@ -115,7 +62,21 @@ void nfc_brcm_btvscif_process_event(BT_HDR *p_msg)
     /* Process btvsc event */
     if (btvsc_evt_code == HCI_COMMAND_COMPLETE_EVT)
     {
-        nfc_brcm_btvscif_command_complete_evt (p, btvsc_evt_len);
+        p++;    /* BT command window */
+        STREAM_TO_UINT16 (cc_opcode, p);
+        btvsc_evt_len -= 3; /* BT cmd window, 2 byte opcode */
+
+        /* get callback function from last command */
+        p_cback = (tNFC_BTVSC_CPLT_CBACK *) ((tNFC_NCI_MSG *)p_msg)->p_cback;
+
+        /* Call vsc cplt callback, if any */
+        if (p_cback)
+        {
+            vcs_cplt_params.opcode      = cc_opcode;
+            vcs_cplt_params.param_len   = btvsc_evt_len;
+            vcs_cplt_params.p_param_buf = p;
+            (p_cback)(&vcs_cplt_params);
+        }
     }
     else
     {
@@ -161,8 +122,8 @@ static tNFC_STATUS nfc_brcm_btvscif_send (UINT16 opcode,
     {
         p_buf->bt_hdr.len    = NCI_MSG_HDR_SIZE + param_len;
         p_buf->bt_hdr.offset = sizeof(void *);  /* Skip over pointer for VSC callback */
-        p_buf->bt_hdr.layer_specific = 0;
-        p_buf->bt_hdr.event = BT_EVT_TO_NFC_NCI_VS | NCI_BRCM_HCI_CMD_EVT;
+        p_buf->bt_hdr.event  = BT_EVT_TO_NFC_NCI_VS | NCI_BRCM_HCI_CMD_EVT;
+        p_buf->bt_hdr.layer_specific = NCI_MSGS_LS_VSC;
 
         /* Store command complete callback*/
         p_buf->p_cback = p_cback;
@@ -180,7 +141,7 @@ static tNFC_STATUS nfc_brcm_btvscif_send (UINT16 opcode,
         ARRAY_TO_STREAM  (p, p_param_buf, param_len);
 
         /* Send the buffer */
-        nfc_ncif_send_cmd ((BT_HDR *)p_buf);
+        GKI_send_msg (NCI_TASK, NCI_TASK_MBOX, p_buf);
 
         return (NFC_STATUS_OK);
 

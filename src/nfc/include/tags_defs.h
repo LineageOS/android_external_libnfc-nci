@@ -158,7 +158,8 @@
 #define T2T_CC3_RWA_RW          0x00  /* RWA - Read/write allowed */
 #define T2T_CC3_RWA_RO          0x0F  /* RWA - Read only */
 
-#define T2T_TMS_TAG_FACTOR      0x08  /* Factor to multiply to get tag data size from TMS */ 
+#define T2T_TMS_TAG_FACTOR      0x08  /* Factor to multiply to get tag data size from TMS */
+#define T2T_DEFAULT_LOCK_BLPB   0x08  /* Bytes locked per lock bit of default locks */
 
 /* Type 2 Tag Commands  */
 #define T2T_CMD_READ            0x30    /* read  4 blocks (16 bytes) */

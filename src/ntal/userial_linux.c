@@ -33,9 +33,12 @@
 #endif
 #include "nfa_brcm_api.h"
 #include "nfc_api.h"
+#include "config.h"
+
 #define HCISU_EVT                           EVENT_MASK(APPL_EVT_0)
 #define NCI_TASK_EVT_TERMINATE              EVENT_MASK(APPL_EVT_7)
 #define MAX_ERROR                           10
+#define default_transport                   "/dev/bcm2079x"
 
 #ifndef BTE_APPL_MAX_USERIAL_DEV_NAME
 #define BTE_APPL_MAX_USERIAL_DEV_NAME           (256)
@@ -43,16 +46,18 @@
 extern UINT8 appl_trace_level;
 
 /* Mapping of USERIAL_PORT_x to linux */
-extern char userial_dev[BTE_APPL_MAX_USERIAL_DEV_NAME+1];
-extern char power_control_dev[BTE_APPL_MAX_USERIAL_DEV_NAME+1];
-extern int uart_port;
-extern int nfc_wake_delay;
-extern int nfc_write_delay;
-extern UINT8 bcmi2cnfc_read_multi_packets;
-extern UINT32 gPowerOnDelay;
 extern UINT32 ScrProtocolTraceFlag;
-extern UINT8 bcmi2cnfc_client_addr;
 static tUPIO_STATE current_nfc_wake_state = UPIO_OFF;
+int uart_port  = 0;
+int isLowSpeedTransport = 0;
+int nfc_wake_delay = 0;
+int nfc_write_delay = 0;
+int gPowerOnDelay = 300;
+char userial_dev[BTE_APPL_MAX_USERIAL_DEV_NAME+1];
+char power_control_dev[BTE_APPL_MAX_USERIAL_DEV_NAME+1];
+
+UINT8 bcmi2cnfc_client_addr = 0;
+UINT8 bcmi2cnfc_read_multi_packets = 0;
 
 #define USERIAL_Debug_verbose     ((ScrProtocolTraceFlag & 0x80000000) == 0x80000000)
 
@@ -118,7 +123,6 @@ static char spi_nego_res[20];
 
 extern void dumpbin(const char* data, int size);
 extern UINT8 *scru_dump_hex (UINT8 *p, char *p_title, UINT32 len, UINT32 trace_layer, UINT32 trace_type);
-extern int   isLowSpeedTransport;
 
 static pthread_t      worker_thread1 = 0;
 
@@ -184,6 +188,7 @@ void perf_log(tPERF_DATA* t)
     // t->lapse += 500;
     // t->lapse /= 1000;
     if (t->lapse)
+    {
         if (t->bytes)
             ALOGD( "%s:%s, bytes=%ld, lapse=%ld (%d.%02d kbps) (bus data rate %d.%02d kbps) overhead %d(%d percent)\n",
                     __func__,
@@ -196,6 +201,7 @@ void perf_log(tPERF_DATA* t)
             ALOGD( "%s:%s, lapse=%ld (average %ld)\n", __func__,
                     t->label, t->lapse, (int)t->lapse / t->count
                     );
+    }
     perf_reset(t);
 }
 
@@ -861,9 +867,26 @@ UDRV_API void USERIAL_Open(tUSERIAL_PORT port, tUSERIAL_OPEN_CFG *p_cfg, tUSERIA
     struct termios termios;
     const char ttyusb[] = "/dev/ttyUSB";
     const char devtty[] = "/dev/tty";
+    unsigned long num = 0;
     int     ret;
 
-    ALOGI("USERIAL_Open() device: %s port=%d, uart_port=%d", (char*)userial_dev, port, uart_port);
+    if ( !GetStrValue ( NAME_TRANSPORT_DRIVER, userial_dev, sizeof ( userial_dev ) ) )
+        strcpy ( userial_dev, default_transport );
+    if ( GetNumValue ( NAME_UART_PORT, &num, sizeof ( num ) ) )
+        uart_port = num;
+    if ( GetNumValue ( NAME_LOW_SPEED_TRANSPORT, &num, sizeof ( num ) ) )
+        isLowSpeedTransport = num;
+    if ( GetNumValue ( NAME_NFC_WAKE_DELAY, &num, sizeof ( num ) ) )
+        nfc_wake_delay = num;
+    if ( GetNumValue ( NAME_NFC_WRITE_DELAY, &num, sizeof ( num ) ) )
+        nfc_write_delay = num;
+    if ( GetNumValue ( NAME_PERF_MEASURE_FREQ, &num, sizeof ( num ) ) )
+        perf_log_every_count = num;
+    if ( GetNumValue ( NAME_POWER_ON_DELAY, &num, sizeof ( num ) ) )
+        gPowerOnDelay = num;
+    ALOGI("USERIAL_Open() device: %s port=%d, uart_port=%d WAKE_DELAY(%d) WRITE_DELAY(%d) POWER_ON_DELAY(%d)",
+            (char*)userial_dev, port, uart_port, nfc_wake_delay, nfc_write_delay, gPowerOnDelay);
+
     strcpy((char*)device_name, (char*)userial_dev);
     sRxLength = 0;
     _poll_t0 = 0;
@@ -921,7 +944,8 @@ UDRV_API void USERIAL_Open(tUSERIAL_PORT port, tUSERIAL_OPEN_CFG *p_cfg, tUSERIA
             return;
         }
         ALOGD( "sock = %d\n", linux_cb.sock);
-        if (power_control_dev[0] != '\0')
+        if (GetStrValue ( NAME_POWER_CONTROL_DRIVER, power_control_dev, sizeof ( power_control_dev ) ) &&
+            power_control_dev[0] != '\0')
         {
             if (strcmp(power_control_dev, userial_dev) == 0)
                 linux_cb.sock_power_control = linux_cb.sock;
@@ -963,6 +987,7 @@ UDRV_API void USERIAL_Open(tUSERIAL_PORT port, tUSERIAL_OPEN_CFG *p_cfg, tUSERIA
         }
         else
         {
+            unsigned long num = 0;
             if (linux_cb.sock_power_control > 0)
             {
                 ioctl(linux_cb.sock_power_control, BCMNFC_POWER_CTL, 0);
@@ -978,13 +1003,17 @@ UDRV_API void USERIAL_Open(tUSERIAL_PORT port, tUSERIAL_OPEN_CFG *p_cfg, tUSERIA
                 USERIAL_Read(port, spi_nego_res,20);
             }
 
+            if ( GetNumValue ( NAME_READ_MULTI_PACKETS, &num, sizeof ( num ) ) )
+                bcmi2cnfc_read_multi_packets = num;
+
             if (bcmi2cnfc_read_multi_packets > 0)
                 ioctl(linux_cb.sock, BCMNFC_READ_MULTI_PACKETS, bcmi2cnfc_read_multi_packets);
 
+            if ( GetNumValue ( NAME_CLIENT_ADDRESS, &num, sizeof ( num ) ) )
+                bcmi2cnfc_client_addr = num & 0xFF;
             if (bcmi2cnfc_client_addr != 0 &&
                 0x07 < bcmi2cnfc_client_addr &&
-                bcmi2cnfc_client_addr < 0x78 &&
-                linux_cb.client_device_address != bcmi2cnfc_client_addr)
+                bcmi2cnfc_client_addr < 0x78)
             {
                 ALOGD( "Change client address to %x\n", bcmi2cnfc_client_addr);
                 GKI_delay(gPowerOnDelay);
@@ -1137,12 +1166,6 @@ UDRV_API UINT16  USERIAL_Write(tUSERIAL_PORT port, UINT8 *p_data, UINT16 len)
 
     doWriteDelay();
     ALOGD_IF((appl_trace_level>=BT_TRACE_LEVEL_DEBUG), "USERIAL_Write: (%d bytes) - \n", len);
-    if ((appl_trace_level>=BT_TRACE_LEVEL_DEBUG))
-    {
-        for (i = 0; i < len; ++i)
-            printf( "%02x ", p_data[i]);
-        ALOGD( "\n");
-    }
     t = clock();
     while (len != 0)
     {

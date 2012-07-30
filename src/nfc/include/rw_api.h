@@ -118,6 +118,7 @@ typedef UINT8 tRW_EVENT;
 #define RW_NDEF_FL_FORMATABLE                   0x10    /* Tag supports format operation */
 #define RW_NDEF_FL_SOFT_LOCKABLE                0x20    /* Tag can be soft locked */
 #define RW_NDEF_FL_HARD_LOCKABLE                0x40    /* Tag can be hard locked */
+#define RW_NDEF_FL_OTP                          0x80    /* Tag is one time programmable */
 
 typedef struct
 {

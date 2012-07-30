@@ -207,15 +207,13 @@ typedef struct
 
 /* NFA P2P SAP control block */
 #define NFA_P2P_SAP_FLAG_SERVER             0x01    /* registered server                        */
-#define NFA_P2P_SAP_FLAG_LISTEN_EVT_PND     0x02    /* NFA_P2P_LISTEN_EVT hasn't been sent      */
-#define NFA_P2P_SAP_FLAG_CLIENT             0x04    /* registered client                        */
-#define NFA_P2P_SAP_FLAG_LLINK_CONGESTED    0x08    /* logical link connection is congested     */
+#define NFA_P2P_SAP_FLAG_CLIENT             0x02    /* registered client                        */
+#define NFA_P2P_SAP_FLAG_LLINK_CONGESTED    0x04    /* logical link connection is congested     */
 
 typedef struct
 {
     UINT8              flags;                       /* internal flags for local SAP             */ 
     tNFA_P2P_CBACK     *p_cback;                    /* callback function for local SAP          */
-    tNFA_P2P_MSG       *p_reg_msg;                  /* temporarily holding service name         */
     UINT8              num_pending_ui_pdu;          /* number of tx UI PDU not processed by NFA */
 } tNFA_P2P_SAP_CB;
 
@@ -291,7 +289,6 @@ void nfa_p2p_proc_llcp_congestion (tLLCP_SAP_CBACK_DATA  *p_data);
 void nfa_p2p_proc_llcp_link_status (tLLCP_SAP_CBACK_DATA  *p_data);
 
 BOOLEAN nfa_p2p_start_sdp (char *p_service_name, UINT8 local_sap);
-void nfa_p2p_notify_listen_start (BOOLEAN is_success);
 
 BOOLEAN nfa_p2p_reg_server (tNFA_P2P_MSG *p_msg);
 BOOLEAN nfa_p2p_reg_client (tNFA_P2P_MSG *p_msg);

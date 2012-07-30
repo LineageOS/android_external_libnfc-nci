@@ -28,6 +28,7 @@
 #include "nfa_brcm_api.h"
 #include "nfa_brcm_int.h"
 
+
 #ifndef NFA_HCI_BRCM_NV_READ_TIMEOUT_VAL
 #define NFA_HCI_BRCM_NV_READ_TIMEOUT_VAL    1000
 #endif
@@ -112,8 +113,6 @@ static void nfa_hci_brcm_evt_hdlr (tNFA_HCI_EVENT_DATA *p_evt_data)
         break;
 
     case NFA_HCI_HCP_CONN_CREATE_EVT:
-        if (nfa_hci_cb.buff_size > NCI_MAX_CTRL_SIZE)
-            nfa_hci_cb.buff_size = NCI_MAX_CTRL_SIZE;
         break;
 
     default:
@@ -253,6 +252,7 @@ void nfa_hci_handle_hci_netwk_info (UINT8 *p_data)
 void nfa_hci_brcm_handle_nv_read (UINT8 block, tNFA_STATUS status, UINT16 size)
 {
     BT_HDR              *p_data     = NULL;
+    UINT64              session_id  = 0;
     UINT8               *p_buf;
     UINT8               *p;
 

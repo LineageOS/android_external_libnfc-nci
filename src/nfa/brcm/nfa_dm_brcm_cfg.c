@@ -155,4 +155,3 @@ const UINT8 nfa_power_bitmap_ce_lp[] =
 };
 
 UINT8 *p_nfa_power_bitmap_ce_lp = (UINT8 *) nfa_power_bitmap_ce_lp;
-

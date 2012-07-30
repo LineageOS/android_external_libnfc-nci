@@ -14,6 +14,7 @@
 #include "nfa_sys_int.h"
 #include "nfa_hci_api.h"
 #include "nfa_hci_int.h"
+#include "nfa_hci_defs.h"
 
 /*******************************************************************************
 **
@@ -21,18 +22,17 @@
 **
 ** Description      This function will register an application with hci and 
 **                  returns an application handle and provides a mechanism to 
-**                  register a callback with HCI to receive NFA HCI event 
-**                  notification. When the application is registered 
-**                  (or if an error occurs), the app will be notified with 
-**                  NFA_HCI_REGISTER_EVT. Previous session information including
-**                  allocated gates, created pipes and pipes states will be 
-**                  returned as part of tNFA_HCI_REGISTER data. 
+**                  register a callback with HCI to receive NFA HCI event notification.
+**                  When the application is registered (or if an error occurs), 
+**                  the app will be notified with NFA_HCI_REGISTER_EVT. Previous 
+**                  session information including allocated gates, created pipes 
+**                  and pipes states will be returned as part of tNFA_HCI_REGISTER data. 
 **                  
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_FAILED otherwise
 **
 *******************************************************************************/
-tNFA_STATUS NFA_HciRegister (char *p_app_name, tNFA_HCI_CBACK *p_cback, BOOLEAN b_send_conn_evts, UINT16 buf_size, UINT8 *p_evt_buf)
+tNFA_STATUS NFA_HciRegister (char *p_app_name, tNFA_HCI_CBACK *p_cback, BOOLEAN b_send_conn_evts)
 {
     tNFA_HCI_API_REGISTER_APP *p_msg;
     UINT8                     app_name_len;
@@ -40,6 +40,12 @@ tNFA_STATUS NFA_HciRegister (char *p_app_name, tNFA_HCI_CBACK *p_cback, BOOLEAN 
     if (p_app_name == NULL)
     {
         NFA_TRACE_API0 ("NFA_HciRegister (): Invalid Application name");
+        return (NFA_STATUS_FAILED);
+    }
+
+    if (p_cback == NULL)
+    {
+        NFA_TRACE_API0 ("NFA_HciRegister (): Application should provide callback function to register!");
         return (NFA_STATUS_FAILED);
     }
 
@@ -60,8 +66,6 @@ tNFA_STATUS NFA_HciRegister (char *p_app_name, tNFA_HCI_CBACK *p_cback, BOOLEAN 
         BCM_STRNCPY_S (p_msg->app_name, sizeof (p_msg->app_name), p_app_name, NFA_MAX_HCI_APP_NAME_LEN);
         p_msg->p_cback          = p_cback;
         p_msg->b_send_conn_evts = b_send_conn_evts;
-        p_msg->buf_size         = buf_size;
-        p_msg->p_evt_buf        = p_evt_buf;
 
         nfa_sys_sendmsg (p_msg);
         return (NFA_STATUS_OK);
@@ -74,7 +78,13 @@ tNFA_STATUS NFA_HciRegister (char *p_app_name, tNFA_HCI_CBACK *p_cback, BOOLEAN 
 **
 ** Function         NFA_HciGetGateAndPipeList
 **
-** Description      This function will  
+** Description      This function will get the list of gates allocated to the 
+**                  application and list of dynamic pipes created by the 
+**                  application. The app will be notified with 
+**                  NFA_HCI_GET_GATE_PIPE_LIST_EVT. List of allocated dynamic 
+**                  gates to the application and list of pipes created by the 
+**                  application will be returned as part of 
+**                  tNFA_HCI_GET_GATE_PIPE_LIST data.  
 **                  
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_FAILED otherwise
@@ -83,6 +93,12 @@ tNFA_STATUS NFA_HciRegister (char *p_app_name, tNFA_HCI_CBACK *p_cback, BOOLEAN 
 tNFA_STATUS NFA_HciGetGateAndPipeList (tNFA_HANDLE hci_handle)
 {
     tNFA_HCI_API_GET_APP_GATE_PIPE *p_msg;
+
+    if ((NFA_HANDLE_GROUP_MASK & hci_handle) != NFA_HANDLE_GROUP_HCI)
+    {
+        NFA_TRACE_API1 ("NFA_HciGetGateAndPipeList (): Invalid hci_handle:0x%04x", hci_handle);
+        return (NFA_STATUS_FAILED);
+    }
 
     NFA_TRACE_API1 ("NFA_HciGetGateAndPipeList (): hci_handle:0x%04x", hci_handle);
 
@@ -105,8 +121,11 @@ tNFA_STATUS NFA_HciGetGateAndPipeList (tNFA_HANDLE hci_handle)
 ** Function         NFA_HciDeregister
 **
 ** Description      This function is called to deregister an application 
-**                  from HCI.However pipe states will not be affected by this 
-**                  function call.
+**                  from HCI. The app will be notified by NFA_HCI_DEREGISTER_EVT 
+**                  after deleting all the pipes owned by the app and deallocating 
+**                  all the gates allocated to the app or if an error occurs.
+**                  Even if deregistration fails, the app has to register again
+**                  to provide a new cback function.
 **                  
 ** Returns          NFA_STATUS_OK if the application is deregistered successfully
 **                  NFA_STATUS_FAILED otherwise
@@ -180,6 +199,12 @@ tNFA_STATUS NFA_HciAllocGate (tNFA_HANDLE hci_handle)
 {
     tNFA_HCI_API_ALLOC_GATE *p_msg;
 
+    if ((NFA_HANDLE_GROUP_MASK & hci_handle) != NFA_HANDLE_GROUP_HCI)
+    {
+        NFA_TRACE_API1 ("NFA_HciAllocGate (): Invalid hci_handle:0x%04x", hci_handle);
+        return (NFA_STATUS_FAILED);
+    }
+
     NFA_TRACE_API1 ("NFA_HciAllocGate (): hci_handle:0x%04x", hci_handle);
 
     /* Request HCI to allocate a gate to the application */
@@ -203,9 +228,6 @@ tNFA_STATUS NFA_HciAllocGate (tNFA_HANDLE hci_handle)
 **                  previously allocated to the application. When the generic 
 **                  gate is released (or if an error occurs), the app will be 
 **                  notified with NFA_HCI_DEALLOCATE_GATE_EVT with the gate id. 
-**                  The allocated Gate information will be deleted from non 
-**                  volatile memory and all the associated pipes are deleted 
-**                  by informing host controller.
 **                  
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_FAILED otherwise
@@ -214,6 +236,18 @@ tNFA_STATUS NFA_HciAllocGate (tNFA_HANDLE hci_handle)
 tNFA_STATUS NFA_HciDeallocGate (tNFA_HANDLE hci_handle, UINT8 gate)
 {
     tNFA_HCI_API_DEALLOC_GATE *p_msg;
+
+    if ((NFA_HANDLE_GROUP_MASK & hci_handle) != NFA_HANDLE_GROUP_HCI)
+    {
+        NFA_TRACE_API1 ("NFA_HciDeallocGate (): Invalid hci_handle:0x%04x", hci_handle);
+        return (NFA_STATUS_FAILED);
+    }
+
+    if ((gate < NFA_HCI_FIRST_DYNAMIC_GATE) || (gate > NFA_HCI_LAST_DYNAMIC_GATE) || (gate == NFA_HCI_CONNECTIVITY_GATE))
+    {
+        NFA_TRACE_API1 ("NFA_HciDeallocGate (): Cannot deallocate the gate:0x%02x", gate);
+        return (NFA_STATUS_FAILED);
+    }
 
     NFA_TRACE_API2 ("NFA_HciDeallocGate (): hci_handle:0x%04x, gate:0x%02X", hci_handle, gate);
 
@@ -247,6 +281,13 @@ tNFA_STATUS NFA_HciDeallocGate (tNFA_HANDLE hci_handle, UINT8 gate)
 tNFA_STATUS NFA_HciGetHostList (tNFA_HANDLE hci_handle)
 {
     tNFA_HCI_API_GET_HOST_LIST *p_msg;
+
+
+    if ((NFA_HANDLE_GROUP_MASK & hci_handle) != NFA_HANDLE_GROUP_HCI)
+    {
+        NFA_TRACE_API1 ("NFA_HciGetHostList (): Invalid hci_handle:0x%04x", hci_handle);
+        return (NFA_STATUS_FAILED);
+    }
 
     NFA_TRACE_API1 ("NFA_HciGetHostList (): hci_handle:0x%04x",hci_handle);
 
@@ -295,13 +336,37 @@ tNFA_STATUS NFA_HciCreatePipe (tNFA_HANDLE  hci_handle,
     NFA_TRACE_API4 ("NFA_HciCreatePipe (): hci_handle:0x%04x, source gate:0x%02X, destination host:0x%02X , destination gate:0x%02X",
                                          hci_handle, source_gate_id, dest_host, dest_gate);
 
+    if ((NFA_HANDLE_GROUP_MASK & hci_handle) != NFA_HANDLE_GROUP_HCI)
+    {
+        NFA_TRACE_API1 ("NFA_HciCreatePipe (): Invalid hci_handle:0x%04x", hci_handle);
+        return (NFA_STATUS_FAILED);
+    }
+
+    if ((source_gate_id < NFA_HCI_FIRST_DYNAMIC_GATE) || (source_gate_id > NFA_HCI_LAST_DYNAMIC_GATE))
+    {
+        NFA_TRACE_API1 ("NFA_HciCreatePipe (): Invalid local Gate:0x%02x", source_gate_id);
+        return (NFA_STATUS_FAILED);
+    }
+
+    if (  ((dest_gate < NFA_HCI_FIRST_DYNAMIC_GATE) && (dest_gate != NFA_HCI_LOOP_BACK_GATE) && (dest_gate != NFA_HCI_IDENTITY_MANAGEMENT_GATE))
+        ||(dest_gate > NFA_HCI_LAST_DYNAMIC_GATE))
+    {
+        NFA_TRACE_API1 ("NFA_HciCreatePipe (): Invalid Destination Gate:0x%02x", dest_gate);
+        return (NFA_STATUS_FAILED);
+    }
+
     for (xx = 0; xx < NFA_HCI_MAX_HOST_IN_NETWORK; xx++)
         if (nfa_hci_cb.inactive_host[xx] == dest_host)
             break;
 
+    if (xx != NFA_HCI_MAX_HOST_IN_NETWORK)
+    {
+        NFA_TRACE_API1 ("NFA_HciCreatePipe (): Host not active:0x%02x", dest_host);
+        return (NFA_STATUS_FAILED);
+    }
+
     /* Request HCI to create a pipe between two specified gates */
-    if (  (xx == NFA_HCI_MAX_HOST_IN_NETWORK)
-        &&(nfa_hci_cb.hci_state != NFA_HCI_STATE_DISABLED)
+    if (  (nfa_hci_cb.hci_state != NFA_HCI_STATE_DISABLED)
         &&(!nfa_hci_cb.b_low_power_mode)
         &&((p_msg = (tNFA_HCI_API_CREATE_PIPE_EVT *) GKI_getbuf (sizeof (tNFA_HCI_API_CREATE_PIPE_EVT))) != NULL) )
     {
@@ -334,6 +399,19 @@ tNFA_STATUS NFA_HciOpenPipe (tNFA_HANDLE hci_handle, UINT8 pipe)
 {
     tNFA_HCI_API_OPEN_PIPE_EVT *p_msg;
 
+    if ((NFA_HANDLE_GROUP_MASK & hci_handle) != NFA_HANDLE_GROUP_HCI)
+    {
+        NFA_TRACE_API1 ("NFA_HciOpenPipe (): Invalid hci_handle:0x%04x", hci_handle);
+        return (NFA_STATUS_FAILED);
+    }
+
+    if ((pipe < NFA_HCI_FIRST_DYNAMIC_PIPE) || (pipe > NFA_HCI_LAST_DYNAMIC_PIPE))
+    {
+        NFA_TRACE_API1 ("NFA_HciOpenPipe (): Invalid Pipe:0x%02x", pipe);
+        return (NFA_STATUS_FAILED);
+    }
+
+
     NFA_TRACE_API2 ("NFA_HciOpenPipe (): hci_handle:0x%04x, pipe:0x%02X", hci_handle, pipe);
 
     /* Request HCI to open a pipe if it is in closed state */
@@ -358,17 +436,30 @@ tNFA_STATUS NFA_HciOpenPipe (tNFA_HANDLE hci_handle, UINT8 pipe)
 ** Description      This function requests a peer host to return the desired
 **                  registry field value for the gate that the pipe is on.
 **
-**                  When the peer host responds with the registry value, or if an
-**                  error occurs, the app is notified with NFA_HCI_GET_REG_RSP_EVT
+**                  When the peer host responds,the app is notified with 
+**                  NFA_HCI_GET_REG_RSP_EVT or
+**                  if an error occurs in sending the command the app will be 
+**                  notified by NFA_HCI_CMD_SENT_EVT
 **
 ** Returns          NFA_STATUS_OK if successfully initiated
-**                  NFA_STATUS_BAD_HANDLE if handle is not valid
 **                  NFA_STATUS_FAILED otherwise
 **
 *******************************************************************************/
 tNFA_STATUS NFA_HciGetRegistry (tNFA_HANDLE hci_handle, UINT8 pipe, UINT8 reg_inx)
 {
     tNFA_HCI_API_GET_REGISTRY *p_msg;
+
+    if ((NFA_HANDLE_GROUP_MASK & hci_handle) != NFA_HANDLE_GROUP_HCI)
+    {
+        NFA_TRACE_API1 ("NFA_HciGetRegistry (): Invalid hci_handle:0x%04x", hci_handle);
+        return (NFA_STATUS_FAILED);
+    }
+
+    if ((pipe < NFA_HCI_FIRST_DYNAMIC_PIPE) || (pipe > NFA_HCI_LAST_DYNAMIC_PIPE))
+    {
+        NFA_TRACE_API1 ("NFA_HciGetRegistry (): Invalid Pipe:0x%02x", pipe);
+        return (NFA_STATUS_FAILED);
+    }
 
     NFA_TRACE_API2 ("NFA_HciGetRegistry (): hci_handle:0x%04x  Pipe: 0x%02x", hci_handle, pipe);
 
@@ -395,11 +486,12 @@ tNFA_STATUS NFA_HciGetRegistry (tNFA_HANDLE hci_handle, UINT8 pipe, UINT8 reg_in
 ** Description      This function requests a peer host to set the desired
 **                  registry field value for the gate that the pipe is on.
 **
-**                  When the peer host responds, or if an error occurs, the app
-**                  is notified with NFA_HCI_SET_REG_RSP_EVT
+**                  When the peer host responds,the app is notified with 
+**                  NFA_HCI_SET_REG_RSP_EVT or
+**                  if an error occurs in sending the command the app will be 
+**                  notified by NFA_HCI_CMD_SENT_EVT
 **
 ** Returns          NFA_STATUS_OK if successfully initiated
-**                  NFA_STATUS_BAD_HANDLE if handle is not valid
 **                  NFA_STATUS_FAILED otherwise
 **
 *******************************************************************************/
@@ -410,6 +502,25 @@ NFC_API extern tNFA_STATUS NFA_HciSetRegistry (tNFA_HANDLE   hci_handle,
                                                UINT8         *p_data)
 {
     tNFA_HCI_API_SET_REGISTRY *p_msg;
+
+
+    if ((NFA_HANDLE_GROUP_MASK & hci_handle) != NFA_HANDLE_GROUP_HCI)
+    {
+        NFA_TRACE_API1 ("NFA_HciSetRegistry (): Invalid hci_handle:0x%04x", hci_handle);
+        return (NFA_STATUS_FAILED);
+    }
+
+    if ((pipe < NFA_HCI_FIRST_DYNAMIC_PIPE) || (pipe > NFA_HCI_LAST_DYNAMIC_PIPE))
+    {
+        NFA_TRACE_API1 ("NFA_HciSetRegistry (): Invalid Pipe:0x%02x", pipe);
+        return (NFA_STATUS_FAILED);
+    }
+
+    if ((data_size == 0) || (p_data == NULL) || (data_size > NFA_MAX_HCI_CMD_LEN))
+    {
+        NFA_TRACE_API1 ("NFA_HciSetRegistry (): Invalid data size:0x%02x", data_size);
+        return (NFA_STATUS_FAILED);
+    }
 
     NFA_TRACE_API2 ("NFA_HciSetRegistry (): hci_handle:0x%04x  Pipe: 0x%02x", hci_handle, pipe);
 
@@ -435,8 +546,12 @@ NFC_API extern tNFA_STATUS NFA_HciSetRegistry (tNFA_HANDLE   hci_handle,
 **
 ** Function         NFA_HciSendCommand
 **
-** Description      This function is called to send a command on a particular 
-**                  pipe.
+** Description      This function is called to send a command on a pipe created 
+**                  by the application. 
+**                  The app will be notified by NFA_HCI_CMD_SENT_EVT if an error 
+**                  occurs.
+**                  When the peer host responds,the app is notified with 
+**                  NFA_HCI_RSP_RCVD_EVT
 **
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_FAILED otherwise
@@ -450,6 +565,18 @@ tNFA_STATUS NFA_HciSendCommand (tNFA_HANDLE  hci_handle,
 {
     tNFA_HCI_API_SEND_CMD_EVT *p_msg;
 
+    if ((NFA_HANDLE_GROUP_MASK & hci_handle) != NFA_HANDLE_GROUP_HCI)
+    {
+        NFA_TRACE_API1 ("NFA_HciSendCommand (): Invalid hci_handle:0x%04x", hci_handle);
+        return (NFA_STATUS_FAILED);
+    }
+
+    if ((cmd_size && (p_data == NULL)) || (cmd_size > NFA_MAX_HCI_CMD_LEN))
+    {
+        NFA_TRACE_API1 ("NFA_HciSendCommand (): Invalid cmd size:0x%02x", cmd_size);
+        return (NFA_STATUS_FAILED);
+    }
+
     NFA_TRACE_API3 ("NFA_HciSendCommand (): hci_handle:0x%04x, pipe:0x%02x  Code: %0x%02x", hci_handle, pipe, cmd_code);
 
     /* Request HCI to post event data on a particular pipe */
@@ -462,7 +589,8 @@ tNFA_STATUS NFA_HciSendCommand (tNFA_HANDLE  hci_handle,
         p_msg->cmd_code     = cmd_code;
         p_msg->cmd_len      = cmd_size;
 
-        memcpy (p_msg->data, p_data, cmd_size);
+        if (cmd_size)
+            memcpy (p_msg->data, p_data, cmd_size);
 
         nfa_sys_sendmsg (p_msg);
         return (NFA_STATUS_OK);
@@ -475,8 +603,10 @@ tNFA_STATUS NFA_HciSendCommand (tNFA_HANDLE  hci_handle,
 **
 ** Function         NFA_HciSendResponse
 **
-** Description      This function sends a response. Typically this is to reply
-**                  to a Get Param or a Set Param command
+** Description      This function is called to send a response on a pipe created 
+**                  by the application. 
+**                  The app will be notified by NFA_HCI_RSP_SENT_EVT if an error 
+**                  occurs.
 **
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_FAILED otherwise
@@ -490,6 +620,18 @@ NFC_API extern tNFA_STATUS NFA_HciSendResponse (tNFA_HANDLE   hci_handle,
 {
     tNFA_HCI_API_SEND_RSP_EVT *p_msg;
 
+    if ((NFA_HANDLE_GROUP_MASK & hci_handle) != NFA_HANDLE_GROUP_HCI)
+    {
+        NFA_TRACE_API1 ("NFA_HciSendResponse (): Invalid hci_handle:0x%04x", hci_handle);
+        return (NFA_STATUS_FAILED);
+    }
+
+    if ((data_size && (p_data == NULL)) || (data_size > NFA_MAX_HCI_RSP_LEN))
+    {
+        NFA_TRACE_API1 ("NFA_HciSendResponse (): Invalid data size:0x%02x", data_size);
+        return (NFA_STATUS_FAILED);
+    }
+
     NFA_TRACE_API3 ("NFA_HciSendResponse (): hci_handle:0x%04x  Pipe: 0x%02x  Response: 0x%02x", hci_handle, pipe, response);
 
     /* Request HCI to get list of gates supported by the specified host */
@@ -501,7 +643,7 @@ NFC_API extern tNFA_STATUS NFA_HciSendResponse (tNFA_HANDLE   hci_handle,
         p_msg->response     = response;
         p_msg->size         = data_size;
 
-        if ((data_size > 0) && (p_data != NULL))
+        if (data_size)
             memcpy (p_msg->data, p_data, data_size);
 
         nfa_sys_sendmsg (p_msg);
@@ -511,12 +653,26 @@ NFC_API extern tNFA_STATUS NFA_HciSendResponse (tNFA_HANDLE   hci_handle,
     return (NFA_STATUS_FAILED);
 }
 
+
 /*******************************************************************************
 **
 ** Function         NFA_HciSendEvent
 **
-** Description      This function is called to send an event to a particular 
-**                  pipe.
+** Description      This function is called to send any event on a pipe created 
+**                  by the application. 
+**                  The app will be notified by NFA_HCI_EVENT_SENT_EVT 
+**                  after successfully sending the event on the specified pipe
+**                  or if an error occurs. The application should wait for this
+**                  event before releasing event buffer passed as argument.
+**                  If the app is expecting a response to the event then it can 
+**                  provide response buffer for collecting the response. 
+**                  Maximum of NFA_MAX_HCI_EVENT_LEN bytes APDU can be received 
+**                  using internal buffer if no response buffer is provided by 
+**                  the application. The app will be notified by 
+**                  NFA_HCI_EVENT_RCVD_EVT after receiving the response event 
+**                  or if an error occurs. If response buffer if provided by the 
+**                  application, it should wait for this event before releasing
+**                  the buffer.
 **
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_FAILED otherwise
@@ -526,11 +682,32 @@ tNFA_STATUS NFA_HciSendEvent (tNFA_HANDLE  hci_handle,
                               UINT8        pipe, 
                               UINT8        evt_code,
                               UINT16       evt_size,
-                              UINT8        *p_data)
+                              UINT8        *p_data,
+                              UINT16       rsp_size,
+                              UINT8        *p_rsp_buf)
 {
     tNFA_HCI_API_SEND_EVENT_EVT *p_msg;
 
     NFA_TRACE_API3 ("NFA_HciSendEvent(): hci_handle:0x%04x, pipe:0x%02x  Code: %0x%02x", hci_handle, pipe, evt_code);
+
+
+    if ((NFA_HANDLE_GROUP_MASK & hci_handle) != NFA_HANDLE_GROUP_HCI)
+    {
+        NFA_TRACE_API1 ("NFA_HciSendEvent (): Invalid hci_handle:0x%04x", hci_handle);
+        return (NFA_STATUS_FAILED);
+    }
+
+    if (evt_size && (p_data == NULL))
+    {
+        NFA_TRACE_API1 ("NFA_HciSendEvent (): Invalid Event size:0x%02x", evt_size);
+        return (NFA_STATUS_FAILED);
+    }
+
+    if (rsp_size && (p_rsp_buf == NULL))
+    {
+        NFA_TRACE_API1 ("NFA_HciSendEvent (): No Event buffer, but invalid event buffer size :%u", rsp_size);
+        return (NFA_STATUS_FAILED);
+    }
 
     /* Request HCI to post event data on a particular pipe */
     if (  (nfa_hci_cb.hci_state != NFA_HCI_STATE_DISABLED)
@@ -541,8 +718,9 @@ tNFA_STATUS NFA_HciSendEvent (tNFA_HANDLE  hci_handle,
         p_msg->pipe         = pipe;
         p_msg->evt_code     = evt_code;
         p_msg->evt_len      = evt_size;
-
-        memcpy (p_msg->data, p_data, evt_size);
+        p_msg->p_evt_buf    = p_data;
+        p_msg->rsp_len      = rsp_size;
+        p_msg->p_rsp_buf    = p_rsp_buf;
 
         nfa_sys_sendmsg (p_msg);
         return (NFA_STATUS_OK);
@@ -569,6 +747,18 @@ tNFA_STATUS NFA_HciClosePipe (tNFA_HANDLE hci_handle, UINT8 pipe)
     tNFA_HCI_API_CLOSE_PIPE_EVT *p_msg;
 
     NFA_TRACE_API2 ("NFA_HciClosePipe (): hci_handle:0x%04x, pipe:0x%02X", hci_handle, pipe);
+
+    if ((NFA_HANDLE_GROUP_MASK & hci_handle) != NFA_HANDLE_GROUP_HCI)
+    {
+        NFA_TRACE_API1 ("NFA_HciClosePipe (): Invalid hci_handle:0x%04x", hci_handle);
+        return (NFA_STATUS_FAILED);
+    }
+
+    if ((pipe < NFA_HCI_FIRST_DYNAMIC_PIPE) || (pipe > NFA_HCI_LAST_DYNAMIC_PIPE))
+    {
+        NFA_TRACE_API1 ("NFA_HciClosePipe (): Invalid Pipe:0x%02x", pipe);
+        return (NFA_STATUS_FAILED);
+    }
 
     /* Request HCI to close a pipe if it is in opened state */
     if (  (nfa_hci_cb.hci_state != NFA_HCI_STATE_DISABLED)
@@ -604,6 +794,18 @@ tNFA_STATUS NFA_HciClosePipe (tNFA_HANDLE hci_handle, UINT8 pipe)
 tNFA_STATUS NFA_HciDeletePipe (tNFA_HANDLE  hci_handle, UINT8 pipe)
 {
     tNFA_HCI_API_DELETE_PIPE_EVT *p_msg;
+
+    if ((NFA_HANDLE_GROUP_MASK & hci_handle) != NFA_HANDLE_GROUP_HCI)
+    {
+        NFA_TRACE_API1 ("NFA_HciDeletePipe (): Invalid hci_handle:0x%04x", hci_handle);
+        return (NFA_STATUS_FAILED);
+    }
+
+    if ((pipe < NFA_HCI_FIRST_DYNAMIC_PIPE) || (pipe > NFA_HCI_LAST_DYNAMIC_PIPE))
+    {
+        NFA_TRACE_API1 ("NFA_HciDeletePipe (): Invalid Pipe:0x%02x", pipe);
+        return (NFA_STATUS_FAILED);
+    }
 
     NFA_TRACE_API2 ("NFA_HciDeletePipe (): hci_handle:0x%04x, pipe:0x%02X", hci_handle, pipe);
 

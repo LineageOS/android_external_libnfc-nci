@@ -156,10 +156,11 @@
 **
 ******************************************************************************/
 
-#define NCI_VERSION_20791B2         0x0F
+#define NCI_VERSION_0_F             0x0F
+#define NCI_VERSION_1_0             0x10
 
 #ifndef NCI_VERSION
-#define NCI_VERSION                 NCI_VERSION_20791B2
+#define NCI_VERSION                 NCI_VERSION_1_0
 #endif
 
 /* TRUE I2C patch is needed */
@@ -216,11 +217,6 @@
 /* the maximum number of NCI connections allowed. 1-14 */
 #ifndef NCI_MAX_CONN_CBS
 #define NCI_MAX_CONN_CBS        4
-#endif
-
-/* the maximum number of NCI command timeout before reporting NFC_NFCC_TIMEOUT_REVT */
-#ifndef NCI_MAX_CMD_TIMEOUT
-#define NCI_MAX_CMD_TIMEOUT         1
 #endif
 
 /* Define to TRUE to include the NFCEE related functionalities */

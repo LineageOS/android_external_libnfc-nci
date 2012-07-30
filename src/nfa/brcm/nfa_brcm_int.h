@@ -15,6 +15,9 @@
 #include "nfc_api.h"
 #include "nfa_api.h"
 #include "nfa_dm_int.h"
+#if (NFC_NFCEE_INCLUDED == TRUE)
+#include "nfa_ee_int.h"
+#endif
 
 /*****************************************************************************
 **  Constants and data types
@@ -145,6 +148,7 @@ typedef struct
     UINT8               hci_netwk_config_block;             /* Rsp awaiting for hci network configuration block */
 #endif
 } tNFA_BRCM_CB;
+
 
 /* NFA control block for BRCM */
 #if NFA_DYNAMIC_MEMORY == FALSE

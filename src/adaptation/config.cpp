@@ -19,12 +19,16 @@
 #define LOG_TAG "NfcAdaptation"
 
 #if GENERIC_TARGET
-const char generic_config[] = "/data/libnfc-brcm.conf";
+const char alternative_config_path[] = "/data/bcmnfc/";
 #else
-const char generic_config[] = "";
+const char alternative_config_path[] = "";
 #endif
 
-#define transport_config        "/etc/libnfc-brcm.conf"
+const char transport_config_path[] = "/etc/";
+
+#define config_name             "libnfc-brcm.conf"
+#define extra_config_base       "libnfc-brcm-"
+#define extra_config_ext        ".conf"
 #define     IsStringValue       0x80000000
 
 using namespace::std;
@@ -49,6 +53,7 @@ class CNfcConfig : public vector<const CNfcParam*>
 public:
     virtual ~CNfcConfig();
     static CNfcConfig& GetInstance();
+    friend void readOptionalConfig(const char* optional);
 
     bool    getValue(const char* name, char* pValue, size_t len) const;
     bool    getValue(const char* name, unsigned long& rValue) const;
@@ -57,8 +62,9 @@ public:
     void    clean();
 private:
     CNfcConfig();
-    bool    readConfig(const char* name);
+    bool    readConfig(const char* name, bool bResetContent);
     void    moveFromList();
+    void    moveToList();
     void    add(const CNfcParam* pParam);
     list<const CNfcParam*> m_list;
     bool    mValidFile;
@@ -142,7 +148,7 @@ inline int getDigitValue(char c, int base)
 ** Returns:     none
 **
 *******************************************************************************/
-bool CNfcConfig::readConfig(const char* name)
+bool CNfcConfig::readConfig(const char* name, bool bResetContent)
 {
     enum {
         BEGIN_LINE = 1,
@@ -165,17 +171,26 @@ bool CNfcConfig::readConfig(const char* name)
 
     state = BEGIN_LINE;
     /* open config file, read it into a buffer */
-    ALOGD("%s Opening transport config %s\n", __func__, name);
     if ((fd = fopen(name, "rb")) == NULL)
     {
-        ALOGD("%s Cannot open config file, using default values\n", __func__);
+        ALOGD("%s Cannot open config file %s\n", __func__, name);
+        if (bResetContent)
+        {
+            ALOGD("%s Using default value for all settings\n", __func__);
         mValidFile = false;
+        }
         return false;
     }
+    ALOGD("%s Opened %s config %s\n", __func__, (bResetContent ? "base" : "optional"), name);
 
     mValidFile = true;
     if (size() > 0)
+    {
+        if (bResetContent)
         clean();
+        else
+            moveToList();
+    }
 
     while (!feof(fd) && fread(&c, 1, 1, fd) == 1)
     {
@@ -363,13 +378,20 @@ CNfcConfig& CNfcConfig::GetInstance()
 
     if (theInstance.size() == 0 && theInstance.mValidFile)
     {
-        if (generic_config[0] != '\0')
+        string strPath;
+        if (alternative_config_path[0] != '\0')
         {
-            theInstance.readConfig(generic_config);
+            strPath.assign(alternative_config_path);
+            strPath += config_name;
+            theInstance.readConfig(strPath.c_str(), true);
             if (!theInstance.empty())
+            {
                 return theInstance;
         }
-        theInstance.readConfig(transport_config);
+        }
+        strPath.assign(transport_config_path);
+        strPath += config_name;
+        theInstance.readConfig(strPath.c_str(), true);
     }
 
     return theInstance;
@@ -467,11 +489,16 @@ const CNfcParam* CNfcConfig::find(const char* p_name) const
         if (**it < p_name)
             continue;
         else if (**it == p_name)
+        {
+            if((*it)->str_len() > 0)
+                ALOGD("%s found %s=%s\n", __func__, p_name, (*it)->str_value());
+            else
+                ALOGD("%s found %s=(0x%X)\n", __func__, p_name, (*it)->numValue());
             return *it;
+        }
         else
             break;
     }
-    ALOGD("%s Cannot find %s\n", __func__, p_name);
     return NULL;
 }
 
@@ -537,6 +564,25 @@ void CNfcConfig::moveFromList()
     for (list<const CNfcParam*>::iterator it = m_list.begin(), itEnd = m_list.end(); it != itEnd; ++it)
         push_back(*it);
     m_list.clear();
+}
+
+/*******************************************************************************
+**
+** Function:    CNfcConfig::moveToList()
+**
+** Description: move the setting object from array to list
+**
+** Returns:     none
+**
+*******************************************************************************/
+void CNfcConfig::moveToList()
+{
+    if (m_list.size() != 0)
+        m_list.clear();
+
+    for (iterator it = begin(), itEnd = end(); it != itEnd; ++it)
+        m_list.push_back(*it);
+    clear();
 }
 
 /*******************************************************************************
@@ -632,10 +678,16 @@ extern "C" int GetNumValue(const char* name, void* pValue, unsigned long len)
 
     if (pParam == NULL)
         return false;
-    if (pParam->str_len() != 0)
-        return false;
-
     unsigned long v = pParam->numValue();
+    if (v == 0 && pParam->str_len() > 0 && pParam->str_len() < 4)
+    {
+        const unsigned char* p = (const unsigned char*)pParam->str_value();
+        for (int i = 0 ; i < pParam->str_len(); ++i)
+        {
+            v *= 256;
+            v += *p++;
+        }
+    }
     switch (len)
     {
     case sizeof(unsigned long):
@@ -668,3 +720,26 @@ extern void resetConfig()
 
     rConfig.clean();
 }
+
+/*******************************************************************************
+**
+** Function:    readOptionalConfig()
+**
+** Description: read Config settings from an optional conf file
+**
+** Returns:     none
+**
+*******************************************************************************/
+void readOptionalConfig(const char* extra)
+{
+    string strPath;
+    strPath.assign(transport_config_path);
+    if (alternative_config_path[0] != '\0')
+        strPath.assign(alternative_config_path);
+
+    strPath += extra_config_base;
+    strPath += extra;
+    strPath += extra_config_ext;
+    CNfcConfig::GetInstance().readConfig(strPath.c_str(), false);
+}
+

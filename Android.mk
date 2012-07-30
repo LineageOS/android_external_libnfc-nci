@@ -25,7 +25,6 @@ LOG_FILES:= \
 #nfa
 NFA_ADAP_FILES:= \
     src/adaptation/config.cpp \
-    src/adaptation/defconfig.c \
     src/adaptation/NfcAdaptation.cpp \
     src/adaptation/patchram.cpp \
     	src/adaptation/libmain.c

@@ -68,7 +68,7 @@ const UINT8 nfa_ee_proto_list[NFA_EE_NUM_PROTO] =
 };
 
 static void nfa_ee_check_restore_complete(void);
-
+static void nfa_ee_report_discover_req_evt(void);
 
 /*******************************************************************************
 **
@@ -933,6 +933,11 @@ void nfa_ee_nci_disc_ntf(tNFA_EE_MSG *p_data)
                 notify_new_ee = TRUE;
             }
         }
+        else if (p_cb->ecb_flags & NFA_EE_ECB_FLAGS_ORDER)
+        {
+            nfa_ee_cb.cur_ee++;
+            notify_new_ee = TRUE;
+        }
         break;
 
     case NFA_EE_EM_STATE_RESTORING:
@@ -1003,6 +1008,12 @@ void nfa_ee_nci_disc_ntf(tNFA_EE_MSG *p_data)
         }
         else
             nfa_ee_report_disc_done(notify_enable_done);
+
+        if (p_cb->ecb_flags & NFA_EE_ECB_FLAGS_ORDER)
+        {
+            p_cb->ecb_flags &= ~NFA_EE_ECB_FLAGS_ORDER;
+            nfa_ee_report_discover_req_evt();
+        }
     }
 }
 
@@ -1068,7 +1079,10 @@ static void nfa_ee_report_discover_req_evt(void)
 
     /* if this is restoring NFCC */
     if (!nfa_dm_is_active ())
+    {
+        NFA_TRACE_DEBUG0 ("nfa_ee_report_discover_req_evt DM is not active");
         return;
+    }
 
     evt_data.num_ee = 0;
     p_cb            = nfa_ee_cb.ecb;
@@ -1315,8 +1329,18 @@ void nfa_ee_nci_disc_req_ntf(tNFA_EE_MSG *p_data)
         p_cb = nfa_ee_find_ecb (p_cbk->info[xx].nfcee_id);
         if (!p_cb)
         {
-            NFA_TRACE_ERROR1 ("Cannot find cb for NFCEE: 0x%x", p_cbk->info[xx].nfcee_id);
-            continue;
+            NFA_TRACE_DEBUG1 ("Cannot find cb for NFCEE: 0x%x", p_cbk->info[xx].nfcee_id);
+            p_cb = nfa_ee_find_ecb (NFA_EE_INVALID);
+            if (p_cb)
+            {
+                p_cb->nfcee_id   = p_cbk->info[xx].nfcee_id;
+                p_cb->ecb_flags |= NFA_EE_ECB_FLAGS_ORDER;
+            }
+            else
+            {
+                NFA_TRACE_ERROR1 ("Cannot allocate cb for NFCEE: 0x%x", p_cbk->info[xx].nfcee_id);
+                continue;
+            }
         }
 
         p_cb->ecb_flags |= NFA_EE_ECB_FLAGS_DISC_REQ;
@@ -1364,7 +1388,8 @@ void nfa_ee_nci_disc_req_ntf(tNFA_EE_MSG *p_data)
     }
 
     /* Report NFA_EE_DISCOVER_REQ_EVT for all active NFCEE */
-    nfa_ee_report_discover_req_evt();
+    if ((p_cb->ecb_flags & NFA_EE_ECB_FLAGS_ORDER) == 0)
+        nfa_ee_report_discover_req_evt();
 }
 
 /*******************************************************************************

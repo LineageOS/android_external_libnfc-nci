@@ -240,7 +240,7 @@ tNFA_HCI_DYN_GATE *nfa_hciu_alloc_gate (UINT8 gate_id, tNFA_HANDLE app_handle)
                     &&
         (  ((app_handle & NFA_HANDLE_GROUP_MASK) != NFA_HANDLE_GROUP_HCI)
          ||(app_inx >= NFA_HCI_MAX_APP_CB) 
-         ||(nfa_hci_cb.app_info[app_inx].p_app_cback == NULL)  ))
+         ||(nfa_hci_cb.p_app_cback[app_inx] == NULL)  ))
     {
         return (NULL);
     }
@@ -991,9 +991,9 @@ void nfa_hciu_send_to_app (tNFA_HCI_EVT event, tNFA_HCI_EVT_DATA *p_evt, tNFA_HA
     if (  ((app_handle & NFA_HANDLE_GROUP_MASK) == NFA_HANDLE_GROUP_HCI)
         &&(app_inx < NFA_HCI_MAX_APP_CB) )
     {
-        if (nfa_hci_cb.app_info[app_inx].p_app_cback != NULL)
+        if (nfa_hci_cb.p_app_cback[app_inx] != NULL)
         {
-            nfa_hci_cb.app_info[app_inx].p_app_cback (event, p_evt);
+            nfa_hci_cb.p_app_cback[app_inx] (event, p_evt);
             return;
         }
     }
@@ -1020,8 +1020,8 @@ void nfa_hciu_send_to_all_apps (tNFA_HCI_EVT event, tNFA_HCI_EVT_DATA *p_evt)
 
     for (app_inx = 0; app_inx < NFA_HCI_MAX_APP_CB; app_inx++)
     {
-        if (nfa_hci_cb.app_info[app_inx].p_app_cback != NULL)
-            nfa_hci_cb.app_info[app_inx].p_app_cback (event, p_evt);
+        if (nfa_hci_cb.p_app_cback[app_inx] != NULL)
+            nfa_hci_cb.p_app_cback[app_inx] (event, p_evt);
     }
 
 }
@@ -1042,10 +1042,10 @@ void nfa_hciu_send_to_apps_handling_connectivity_evts (tNFA_HCI_EVT event, tNFA_
 
     for (app_inx = 0; app_inx < NFA_HCI_MAX_APP_CB; app_inx++)
     {
-        if (  (nfa_hci_cb.app_info[app_inx].p_app_cback != NULL)
+        if (  (nfa_hci_cb.p_app_cback[app_inx] != NULL)
             &&(nfa_hci_cb.cfg.b_send_conn_evts[app_inx]))
 
-            nfa_hci_cb.app_info[app_inx].p_app_cback (event, p_evt);
+            nfa_hci_cb.p_app_cback[app_inx] (event, p_evt);
     }
 
 }
