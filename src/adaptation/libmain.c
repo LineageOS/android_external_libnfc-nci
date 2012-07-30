@@ -21,6 +21,7 @@
 
 #define LOG_TAG "BrcmNfcNfa"
 #define PRINT(s) __android_log_write(ANDROID_LOG_DEBUG, "BrcmNci", s)
+#define MAX_NCI_PACKET_SIZE  259 
 
 extern UINT32 ScrProtocolTraceFlag;         // = SCR_PROTO_TRACE_ALL; // 0x017F;
 static const char* sTable = "0123456789abcdef";
@@ -359,10 +360,6 @@ void DispHciCmd (BT_HDR *pBuffer)
 
     if (!(ScrProtocolTraceFlag & SCR_PROTO_TRACE_HCI_SUMMARY))
         return;
-
-    BTDISP_LOCK_LOG();
-
-    BTDISP_UNLOCK_LOG();
 }
 
 
@@ -380,10 +377,29 @@ void DispHciEvt (BT_HDR *pBuffer)
 {
     if (!(ScrProtocolTraceFlag & SCR_PROTO_TRACE_HCI_SUMMARY))
         return;
-
-    BTDISP_LOCK_LOG();
-
-    BTDISP_UNLOCK_LOG();
 }
 
+/*******************************************************************************
+**
+** Function         DispNciDump
+**
+** Description      Log raw NCI packet as hex-ascii bytes
+**
+** Returns          None.
+**
+*******************************************************************************/
+void DispNciDump (UINT8 *data, UINT16 len, BOOLEAN is_recv)
+{
+    char line_buf[(MAX_NCI_PACKET_SIZE*2)+1];
+    int i,j;
 
+    for(i = 0, j = 0; i < len && j < sizeof(line_buf)-3; i++)
+    {
+        line_buf[j++] = sTable[(*data >> 4) & 0xf];
+        line_buf[j++] = sTable[*data & 0xf];
+        data++;
+    }
+    line_buf[j] = '\0';
+    
+    __android_log_write(ANDROID_LOG_DEBUG, (is_recv) ? "BrcmNciR": "BrcmNciX", line_buf);
+}

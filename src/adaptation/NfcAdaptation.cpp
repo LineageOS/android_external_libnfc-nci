@@ -22,15 +22,16 @@ extern "C"
 #include "config.h"
 
 #define LOG_TAG "NfcAdaptation"
-tUSERIAL_OPEN_CFG cfg;
-
-extern const UINT8 nfca_version_string[];
 
 extern "C" void GKI_shutdown();
 extern void resetConfig();
 
 NfcAdaptation* NfcAdaptation::mpInstance = NULL;
 ThreadMutex NfcAdaptation::sLock;
+
+UINT32 ScrProtocolTraceFlag = SCR_PROTO_TRACE_ALL; //0x017F00;
+UINT8 appl_trace_level = 0xff;
+char bcm_nfc_location[120];
 
 /*******************************************************************************
 **
@@ -90,8 +91,14 @@ void NfcAdaptation::Initialize ()
 {
     const char* func = "NfcAdaptation::Initialize";
     ALOGD("%s: enter\n", func);
+    unsigned long num;
 
-    readDefaultConfig();
+    if ( !GetStrValue ( NAME_NFA_STORAGE, bcm_nfc_location, sizeof ( bcm_nfc_location ) ) )
+        strcpy ( bcm_nfc_location, "/data/bcmnfc" );
+    if ( GetNumValue ( NAME_PROTOCOL_TRACE, &num, sizeof ( num ) ) )
+        ScrProtocolTraceFlag = num;
+    if ( GetNumValue ( NAME_APPL_TRACE, &num, sizeof ( num ) ) )
+        appl_trace_level = num % 256;
 
     GKI_init ();
     GKI_enable ();
@@ -167,11 +174,76 @@ UINT32 NfcAdaptation::NFCA_TASK (UINT32 arg)
 *******************************************************************************/
 UINT32 NfcAdaptation::Thread (UINT32 arg)
 {
+    unsigned long num;
+    char temp[120];
     ALOGD ("%s: enter", __func__);
+    tUSERIAL_OPEN_CFG cfg;
+    struct tUART_CONFIG  uart;
+
+    if ( GetStrValue ( NAME_UART_PARITY, temp, sizeof ( temp ) ) )
+    {
+        if ( strcmp ( temp, "even" ) == 0 )
+            uart.m_iParity = USERIAL_PARITY_EVEN;
+        else if ( strcmp ( temp, "odd" ) == 0 )
+            uart.m_iParity = USERIAL_PARITY_ODD;
+        else if ( strcmp ( temp, "none" ) == 0 )
+            uart.m_iParity = USERIAL_PARITY_NONE;
+    }
+    else
+        uart.m_iParity = USERIAL_PARITY_NONE;
+
+    if ( GetStrValue ( NAME_UART_STOPBITS, temp, sizeof ( temp ) ) )
+    {
+        if ( strcmp ( temp, "1" ) == 0 )
+            uart.m_iStopbits = USERIAL_STOPBITS_1;
+        else if ( strcmp ( temp, "2" ) == 0 )
+            uart.m_iStopbits = USERIAL_STOPBITS_2;
+        else if ( strcmp ( temp, "1.5" ) == 0 )
+            uart.m_iStopbits = USERIAL_STOPBITS_1_5;
+    }
+    else if ( GetNumValue ( NAME_UART_STOPBITS, &num, sizeof ( num ) ) )
+    {
+        if ( num == 1 )
+            uart.m_iStopbits = USERIAL_STOPBITS_1;
+        else if ( num == 2 )
+            uart.m_iStopbits = USERIAL_STOPBITS_2;
+    }
+    else
+        uart.m_iStopbits = USERIAL_STOPBITS_1;
+
+    if ( GetNumValue ( NAME_UART_DATABITS, &num, sizeof ( num ) ) )
+    {
+        if ( 5 <= num && num <= 8 )
+            uart.m_iDatabits = ( 1 << ( num + 1 ) );
+    }
+    else
+        uart.m_iDatabits = USERIAL_DATABITS_8;
+
+    if ( GetNumValue ( NAME_UART_BAUD, &num, sizeof ( num ) ) )
+    {
+        if ( num == 300 ) uart.m_iBaudrate = USERIAL_BAUD_300;
+        else if ( num == 600 ) uart.m_iBaudrate = USERIAL_BAUD_600;
+        else if ( num == 1200 ) uart.m_iBaudrate = USERIAL_BAUD_1200;
+        else if ( num == 2400 ) uart.m_iBaudrate = USERIAL_BAUD_2400;
+        else if ( num == 9600 ) uart.m_iBaudrate = USERIAL_BAUD_9600;
+        else if ( num == 19200 ) uart.m_iBaudrate = USERIAL_BAUD_19200;
+        else if ( num == 57600 ) uart.m_iBaudrate = USERIAL_BAUD_57600;
+        else if ( num == 115200 ) uart.m_iBaudrate = USERIAL_BAUD_115200;
+        else if ( num == 230400 ) uart.m_iBaudrate = USERIAL_BAUD_230400;
+        else if ( num == 460800 ) uart.m_iBaudrate = USERIAL_BAUD_460800;
+        else if ( num == 921600 ) uart.m_iBaudrate = USERIAL_BAUD_921600;
+    }
+    else if ( GetStrValue ( NAME_UART_BAUD, temp, sizeof ( temp ) ) )
+    {
+        if ( strcmp ( temp, "auto" ) == 0 )
+            uart.m_iBaudrate = USERIAL_BAUD_AUTO;
+    }
+    else
+        uart.m_iBaudrate = USERIAL_BAUD_115200;
 
     memset (&cfg, 0, sizeof(tUSERIAL_OPEN_CFG));
-    cfg.fmt = uartConfig.m_iDatabits | uartConfig.m_iParity | uartConfig.m_iStopbits;
-    cfg.baud = uartConfig.m_iBaudrate;
+    cfg.fmt = uart.m_iDatabits | uart.m_iParity | uart.m_iStopbits;
+    cfg.baud = uart.m_iBaudrate;
 
     ALOGD ("%s: uart config=0x%04x, %d\n", __func__, cfg.fmt, cfg.baud);
     USERIAL_Init(&cfg);

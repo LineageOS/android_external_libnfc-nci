@@ -27,7 +27,7 @@
 **
 ** Description      This function is called to listen to a SAP as server on LLCP.
 **
-**                  NFA_P2P_LISTEN_EVT will be returned with status and handle.
+**                  NFA_P2P_REG_SERVER_EVT will be returned with status and handle.
 **
 **                  If server_sap is set to NFA_P2P_ANY_SAP, then NFA will allocate 
 **                  a SAP between LLCP_LOWER_BOUND_SDP_SAP and LLCP_UPPER_BOUND_SDP_SAP

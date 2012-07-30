@@ -44,6 +44,7 @@ typedef struct
     UINT8   b_calc_cc;
     UINT8   tms;
     BOOLEAN b_otp;
+    UINT8   default_lock_blpb;
 } tT2T_INIT_TAG;
 
 typedef struct

@@ -167,7 +167,6 @@ void nfc_enabled (tNFC_STATUS nfc_status, BT_HDR *p_init_rsp_msg)
 #endif
        nfc_cb.nci_ctrl_size         = *p++; /* Max Control Packet Payload Length */
        STREAM_TO_UINT16(evt_data.enable.max_param_size, p);
-       p_cb->init_credits               = p_cb->num_buff;
        nfc_set_conn_id (p_cb, NFC_RF_CONN_ID);
        evt_data.enable.manufacture_id   = *p++;
        STREAM_TO_ARRAY(evt_data.enable.nfcc_info, p, NFC_NFCC_INFO_LEN);
@@ -234,20 +233,6 @@ void nfc_gen_cleanup(void)
     /* Reset the connection control blocks */
     nfc_reset_all_conn_cbs();
 
-    /* Free buffer for pending fragmented response/notification */
-    if (nfc_cb.p_frag_msg)
-    {
-        GKI_freebuf(nfc_cb.p_frag_msg);
-        nfc_cb.p_frag_msg = NULL;
-    }
-
-    /* Free buffer for pending NCI response (if any) */
-    if (nfc_cb.p_nci_last_cmd)
-    {
-        GKI_freebuf(nfc_cb.p_nci_last_cmd);
-        nfc_cb.p_nci_last_cmd = NULL;
-    }
-
 }
 
 /*******************************************************************************
@@ -306,7 +291,6 @@ void nfc_main_cleanup(void)
 **
 ** Description      Handle BT_EVT_TO_NFC_ERR
 **                  layer_specific field contains error code:
-**                      NFC_
 **
 *******************************************************************************/
 void nfc_main_handle_err(BT_HDR *p_err_msg)
@@ -329,12 +313,40 @@ void nfc_main_handle_err(BT_HDR *p_err_msg)
         }
         break;
 
+    case NFC_ERR_CMD_TIMEOUT:
+        nfc_ncif_event_status(NFC_NFCC_TIMEOUT_REVT, NFC_STATUS_HW_TIMEOUT);
+
+        /* if enabling NFC, notify upper layer of failure */
+        if (nfc_cb.flags & NFC_FL_ENABLE_PENDING)
+        {
+            nfc_enabled(NFC_STATUS_FAILED, NULL);
+            return;
+        }
+        break;
+
     default:
         NFC_TRACE_ERROR1("nfc_main_handle_err unhandled error code (0x%x).", p_err_msg->layer_specific);
         break;
     }
 
     GKI_freebuf(p_err_msg);
+}
+
+
+/*******************************************************************************
+**
+** Function         nfc_main_handle_msgs
+**
+** Description      Handle BT_EVT_TO_NFC_MSGS
+**                  layer_specific field contains Message code:
+**
+*******************************************************************************/
+void nfc_main_handle_msgs(BT_HDR *p_msg)
+{
+    /* NFC_MSGS_RF_DEACT_CONFIRM is the only message code in this direction */
+    nfc_stop_timer(&nfc_cb.deactivate_timer);
+    nfc_cb.flags  &= ~NFC_FL_DEACTIVATING;
+    nci_snd_deactivate_cmd ((UINT8)((TIMER_PARAM_TYPE)nfc_cb.deactivate_timer.param));
 }
 
 /*******************************************************************************
@@ -423,13 +435,11 @@ void NFC_Init (void)
 
     /* NCI init */
     nfc_cb.nfc_state        = NFC_STATE_NONE;
-    nfc_cb.nci_cmd_window   = NCI_MAX_CMD_WINDOW;
-    nfc_cb.nci_num_timeout  = 0;
-    nfc_cb.nci_cmd_cplt_tout= NFC_CMD_CMPL_TIMEOUT;
     nfc_cb.p_disc_maps      = nfc_interface_mapping;
     nfc_cb.num_disc_maps    = NFC_NUM_INTERFACE_MAP;
-    nfc_cb.nci_ctrl_size    = NCI_CTRL_INIT_SIZE;
     nfc_cb.trace_level      = NFC_INITIAL_TRACE_LEVEL;
+    nfc_cb.nci_ctrl_size    = NCI_CTRL_INIT_SIZE;
+
     rw_init();
     ce_init();
     llcp_init();
@@ -763,6 +773,7 @@ tNFC_STATUS NFC_Deactivate(tNFC_DEACT_TYPE deactivate_type)
 {
     tNFC_CONN_CB * p_cb = &nfc_cb.conn_cb[NFC_RF_CONN_ID];
     tNFC_STATUS  status = NFC_STATUS_OK;
+    BT_HDR       *p_msgs;
 
 #if (BT_TRACE_VERBOSE == TRUE)
     NFC_TRACE_API3 ( "NFC_Deactivate %d(%s) deactivate_type:%d", nfc_cb.nfc_state, nfc_state_name(nfc_cb.nfc_state), deactivate_type);
@@ -772,14 +783,20 @@ tNFC_STATUS NFC_Deactivate(tNFC_DEACT_TYPE deactivate_type)
     if (nfc_cb.nfc_state == NFC_STATE_OPEN)
     {
         nfc_set_state (NFC_STATE_CLOSING);
-        NFC_TRACE_DEBUG3 ( "act_protocol %d credits:%d/%d", p_cb->act_protocol, p_cb->init_credits, p_cb->num_buff);
-        if ((p_cb->act_protocol == NCI_PROTOCOL_NFC_DEP) &&
-            (p_cb->init_credits != p_cb->num_buff))
+        NFC_TRACE_DEBUG1 ( "act_protocol %d", p_cb->act_protocol);
+        if (p_cb->act_protocol == NCI_PROTOCOL_NFC_DEP)
         {
-            nfc_cb.flags                 |= NFC_FL_DEACTIVATING;
-            nfc_cb.deactivate_timer.param = (TIMER_PARAM_TYPE)deactivate_type;
-            nfc_start_timer (&nfc_cb.deactivate_timer , (UINT16)(NFC_TTYPE_WAIT_2_DEACTIVATE), NFC_DEACTIVATE_TIMEOUT);
-            return status;
+            p_msgs = (BT_HDR *) GKI_getbuf(sizeof (tNFC_ACTIVATE_MSGS));
+            if (p_msgs)
+            {
+                nfc_cb.flags           |= NFC_FL_DEACTIVATING;
+                p_msgs->event           = BT_EVT_TO_NFC_MSGS;
+                p_msgs->layer_specific  = NFC_MSGS_RF_DEACT_CHECK;
+                GKI_send_msg (NCI_TASK, NCI_TASK_MBOX, p_msgs);
+                nfc_cb.deactivate_timer.param = (TIMER_PARAM_TYPE)deactivate_type;
+                nfc_start_timer (&nfc_cb.deactivate_timer , (UINT16)(NFC_TTYPE_WAIT_2_DEACTIVATE), NFC_DEACTIVATE_TIMEOUT);
+                return status;
+            }
         }
     }
     status = nci_snd_deactivate_cmd (deactivate_type);
@@ -849,32 +866,6 @@ tNFC_STATUS NFC_UpdateRFCommParams (tNFC_RF_COMM_PARAMS *p_params)
 
 /*******************************************************************************
 **
-** Function         nfc_main_flush_cmd_queue
-**
-** Description      This function is called when setting power off sleep state. 
-**
-** Returns          void
-**
-*******************************************************************************/
-void nfc_main_flush_cmd_queue (void)
-{
-    BT_HDR *p_msg;
-
-    /* initialize command window */
-    nfc_cb.nci_cmd_window = NCI_MAX_CMD_WINDOW;
-
-    /* Stop command-pending timer */
-    nfc_stop_timer(&nfc_cb.nci_cmd_cmpl_timer);
-
-    /* dequeue and free buffer */
-    while ((p_msg = (BT_HDR *)GKI_dequeue (&nfc_cb.nci_cmd_xmit_q)) != NULL)
-    {
-        GKI_freebuf (p_msg);
-    }
-}
-
-/*******************************************************************************
-**
 ** Function         NFC_SetPowerOffSleep
 **
 ** Description      This function closes/opens transport and turns off/on NFCC. 
@@ -910,9 +901,6 @@ tNFC_STATUS NFC_SetPowerOffSleep (BOOLEAN enable)
     else if ((enable == TRUE)
            &&(nfc_cb.nfc_state == NFC_STATE_IDLE))
     {
-        /* clear any pending CMD/RSP */
-        nfc_main_flush_cmd_queue ();
-
         nfc_cb.nfc_state = NFC_STATE_NFCC_POWER_OFF_SLEEP;
 
         /* Send terminate signal to nfc task */
@@ -940,9 +928,6 @@ tNFC_STATUS NFC_PowerCycleNFCC (void)
     if ((nfc_cb.nfc_state == NFC_STATE_IDLE)
       &&(!nci_cfg.shared_transport))
     {
-        /* clear any pending CMD/RSP */
-        nfc_main_flush_cmd_queue ();
-
         nfc_cb.nfc_state = NFC_STATE_NFCC_POWER_OFF_SLEEP;
 
         nfc_cb.flags |= NFC_FL_POWER_CYCLE_NFCC;

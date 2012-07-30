@@ -171,7 +171,7 @@ void llcp_util_adjust_dl_rx_congestion (void)
                 }
                 else
                 {
-                    llcp_cb.dlcb[idx].rx_congest_threshold = rx_congest_start;
+                    llcp_cb.dlcb[idx].rx_congest_threshold = LLCP_DL_MIN_RX_CONGEST;
                 }
 
                 LLCP_TRACE_DEBUG3 ("DLC[%d], local_rw=%d, rx_congest_threshold=%d", 

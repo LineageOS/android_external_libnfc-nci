@@ -48,8 +48,8 @@ static void nfa_hci_sys_enable (void);
 static void nfa_hci_sys_disable (void);
 static void nfa_hci_rsp_timeout (tNFA_HCI_EVENT_DATA *p_evt_data);
 static void nfa_hci_conn_cback (UINT8 conn_id, tNFC_CONN_EVT event, tNFC_CONN *p_data);
-static void nfa_hci_set_reassemble_buf (UINT8 pipe);
-static tNFA_STATUS nfa_hci_assemble_msg (UINT8 pipe, UINT8 *p_data, UINT16 data_len);
+static void nfa_hci_set_receive_buf (UINT8 pipe);
+static void nfa_hci_assemble_msg (UINT8 *p_data, UINT16 data_len);
 static void nfa_hci_handle_nv_read (UINT8 block, tNFA_STATUS status);
 
 /*****************************************************************************
@@ -609,21 +609,42 @@ static void nfa_hci_conn_cback (UINT8 conn_id, tNFC_CONN_EVT event, tNFC_CONN *p
 
     if (nfa_hci_cb.assembling == FALSE)
     {
-        nfa_hci_cb.type       = ((*p) >> 0x06) & 0x03;
-        nfa_hci_cb.inst       = (*p & 0x3F);
+        /* First Segment of a packet */
+        nfa_hci_cb.type            = ((*p) >> 0x06) & 0x03;
+        nfa_hci_cb.inst            = (*p++ & 0x3F);
+        if (pkt_len != 0)
+            pkt_len--;
+        nfa_hci_cb.assembly_failed = FALSE;
+        nfa_hci_cb.msg_len         = 0;
 
         if (chaining_bit == NFA_HCI_MESSAGE_FRAGMENTATION)
         {
             nfa_hci_cb.assembling = TRUE;
-            nfa_hci_cb.msg_len    = 0;
-            nfa_hci_set_reassemble_buf (pipe);
-
-            nfa_hci_assemble_msg (pipe, p, pkt_len);
+            nfa_hci_set_receive_buf (pipe);
+            nfa_hci_assemble_msg (p, pkt_len);
+        }
+        else
+        {
+            if ((pipe >= NFA_HCI_FIRST_DYNAMIC_PIPE) && (nfa_hci_cb.type == NFA_HCI_EVENT_TYPE))
+            {
+                nfa_hci_set_receive_buf (pipe);
+                nfa_hci_assemble_msg (p, pkt_len);
+                p = nfa_hci_cb.p_msg_data;
+            }
         }
     }
     else
     {
-        nfa_hci_assemble_msg (pipe, p, pkt_len);
+        if (nfa_hci_cb.assembly_failed)
+        {
+            /* If Reassembly failed because of insufficient buffer, just drop the new segmented packets */
+            NFA_TRACE_ERROR1 ("nfa_hci_conn_cback (): Insufficient buffer to Reassemble HCP packet! Dropping :%u bytes", pkt_len);
+        }
+        else
+        {
+            /* Reassemble the packet */
+            nfa_hci_assemble_msg (p, pkt_len);
+        }
 
         if (chaining_bit == NFA_HCI_NO_MESSAGE_FRAGMENTATION)
         {
@@ -647,18 +668,18 @@ static void nfa_hci_conn_cback (UINT8 conn_id, tNFC_CONN_EVT event, tNFC_CONN *p
     /* If still reassembling fragments, just return */
     if (nfa_hci_cb.assembling)
     {
+        /* if not last packet, release GKI buffer */
         GKI_freebuf (p_pkt);
         return;
     }
 
     /* If we got a response, cancel the response timer. Also, if waiting for */
     /* a single response, we can go back to idle state                       */
-    if (nfa_hci_cb.type == NFA_HCI_RESPONSE_TYPE)
+    if (nfa_hci_cb.hci_state == NFA_HCI_STATE_WAIT_RSP)
     {
         nfa_sys_stop_timer (&nfa_hci_cb.timer);
-
-        if (nfa_hci_cb.hci_state == NFA_HCI_STATE_WAIT_RSP)
-            nfa_hci_cb.hci_state = NFA_HCI_STATE_IDLE;
+        nfa_hci_cb.hci_state  = NFA_HCI_STATE_IDLE;
+        nfa_hci_cb.w4_rsp_evt = FALSE;
     }
 
     switch (pipe)
@@ -667,7 +688,7 @@ static void nfa_hci_conn_cback (UINT8 conn_id, tNFC_CONN_EVT event, tNFC_CONN *p
         /* Check if data packet is a command, response or event */
         if (nfa_hci_cb.type == NFA_HCI_COMMAND_TYPE)
         {
-            nfa_hci_handle_admin_gate_cmd (p, (UINT8) pkt_len);
+            nfa_hci_handle_admin_gate_cmd (p);
         }
             else if (nfa_hci_cb.type == NFA_HCI_RESPONSE_TYPE)
         {
@@ -675,19 +696,19 @@ static void nfa_hci_conn_cback (UINT8 conn_id, tNFC_CONN_EVT event, tNFC_CONN *p
         }
         else if (nfa_hci_cb.type == NFA_HCI_EVENT_TYPE)
         {
-            nfa_hci_handle_admin_gate_evt (p, (UINT8) pkt_len);
+            nfa_hci_handle_admin_gate_evt (p);
         }
         break;
 
     case NFA_HCI_LINK_MANAGEMENT_PIPE:
         /* We don't send Link Management commands, we only get them */
         if (nfa_hci_cb.type == NFA_HCI_COMMAND_TYPE)
-            nfa_hci_handle_link_mgm_gate_cmd (p, (UINT8) pkt_len);
+            nfa_hci_handle_link_mgm_gate_cmd (p);
         break;
 
     default:
         if (pipe >= NFA_HCI_FIRST_DYNAMIC_PIPE)
-            nfa_hci_handle_dyn_pipe_pkt (pipe, p, nfa_hci_cb.type, pkt_len);
+            nfa_hci_handle_dyn_pipe_pkt (pipe, p, pkt_len);
         break;
     }
 
@@ -789,8 +810,21 @@ void nfa_hci_rsp_timeout (tNFA_HCI_EVENT_DATA *p_evt_data)
  
     case NFA_HCI_STATE_WAIT_RSP:
         nfa_hci_cb.hci_state = NFA_HCI_STATE_IDLE;
-        
 
+        if (nfa_hci_cb.w4_rsp_evt)
+        {
+            nfa_hci_cb.w4_rsp_evt       = FALSE;
+            evt                         = NFA_HCI_EVENT_RCVD_EVT;
+            evt_data.rcvd_evt.pipe      = nfa_hci_cb.pipe_in_use;
+            evt_data.rcvd_evt.evt_code  = 0;
+            evt_data.rcvd_evt.evt_len   = 0;
+            evt_data.rcvd_evt.p_evt_buf = NULL;
+            nfa_hci_cb.rsp_buf_size     = 0;
+            nfa_hci_cb.p_rsp_buf        = NULL;
+
+            break;
+        }
+        
         switch (nfa_hci_cb.cmd_sent)
         {
         case NFA_HCI_ANY_SET_PARAMETER:
@@ -881,34 +915,24 @@ void nfa_hci_rsp_timeout (tNFA_HCI_EVENT_DATA *p_evt_data)
 
 /*******************************************************************************
 **
-** Function         nfa_hci_set_reassemble_buf
+** Function         nfa_hci_set_receive_buf
 **
 ** Description      Set reassembly buffer for incoming message
 **
 ** Returns          status
 **
 *******************************************************************************/
-static void nfa_hci_set_reassemble_buf (UINT8 pipe)
+static void nfa_hci_set_receive_buf (UINT8 pipe)
 {
-    tNFA_HANDLE app_handle;
-    UINT8       app_inx;
-
     if (  (pipe >= NFA_HCI_FIRST_DYNAMIC_PIPE)
         &&(nfa_hci_cb.type == NFA_HCI_EVENT_TYPE)  )
     {
-        app_handle = nfa_hciu_get_pipe_owner (pipe);
-
-        if (app_handle != NFA_HANDLE_INVALID)
+        if (  (nfa_hci_cb.rsp_buf_size)
+            &&(nfa_hci_cb.p_rsp_buf != NULL)  )
         {
-            app_inx    = app_handle & NFA_HANDLE_MASK;
-
-            if (  (nfa_hci_cb.app_info[app_inx].buf_size)
-                &&(nfa_hci_cb.app_info[app_inx].p_evt_buf != NULL)  )
-            {
-                nfa_hci_cb.p_msg_data  = nfa_hci_cb.app_info[app_inx].p_evt_buf;
-                nfa_hci_cb.max_msg_len = nfa_hci_cb.app_info[app_inx].buf_size;
-                return;
-            }
+            nfa_hci_cb.p_msg_data  = nfa_hci_cb.p_rsp_buf;
+            nfa_hci_cb.max_msg_len = nfa_hci_cb.rsp_buf_size;
+            return;
         }
     }
     nfa_hci_cb.p_msg_data  = nfa_hci_cb.msg_data;
@@ -921,19 +945,25 @@ static void nfa_hci_set_reassemble_buf (UINT8 pipe)
 **
 ** Description      Reassemble the incoming message
 **
-** Returns          status
+** Returns          None
 **
 *******************************************************************************/
-static tNFA_STATUS nfa_hci_assemble_msg (UINT8 pipe, UINT8 *p_data, UINT16 data_len)
+static void nfa_hci_assemble_msg (UINT8 *p_data, UINT16 data_len)
 {
-    if ((nfa_hci_cb.msg_len + data_len) >= nfa_hci_cb.max_msg_len)
-        return NFA_STATUS_FAILED;
-
-    memcpy (&nfa_hci_cb.p_msg_data[nfa_hci_cb.msg_len], p_data, data_len);
-
-    nfa_hci_cb.msg_len += data_len;
-
-    return NFA_STATUS_OK;
+    if ((nfa_hci_cb.msg_len + data_len) > nfa_hci_cb.max_msg_len)
+    {
+        /* Fill the buffer as much it can hold */
+        memcpy (&nfa_hci_cb.p_msg_data[nfa_hci_cb.msg_len], p_data, (nfa_hci_cb.max_msg_len - nfa_hci_cb.msg_len));
+        nfa_hci_cb.msg_len         = nfa_hci_cb.max_msg_len;
+        /* Set Reassembly failed */
+        nfa_hci_cb.assembly_failed = TRUE;
+        NFA_TRACE_ERROR1 ("nfa_hci_assemble_msg (): Insufficient buffer to Reassemble HCP packet! Dropping :%u bytes", ((nfa_hci_cb.msg_len + data_len) - nfa_hci_cb.max_msg_len));
+    }
+    else
+    {
+        memcpy (&nfa_hci_cb.p_msg_data[nfa_hci_cb.msg_len], p_data, data_len);
+        nfa_hci_cb.msg_len += data_len;
+    }
 }
 
 /*******************************************************************************

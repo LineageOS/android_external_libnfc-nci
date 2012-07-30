@@ -35,7 +35,7 @@ BOOLEAN nci_proc_core_rsp(BT_HDR *p_msg)
     UINT8   *p;
     UINT8   *pp, len, op_code;
     BOOLEAN free = TRUE;
-    UINT8   *p_old = nfc_cb.last_cmd;
+    UINT8   *p_old = ((tNFC_NCI_MSG *)p_msg)->cmd;
 
     /* find the start of the NCI message and parse the NCI header */
     p   = (UINT8 *)(p_msg + 1) + p_msg->offset;
@@ -43,12 +43,6 @@ BOOLEAN nci_proc_core_rsp(BT_HDR *p_msg)
     NCI_MSG_PRS_HDR1(pp, op_code);
     NFC_TRACE_DEBUG1( "nci_proc_core_rsp opcode:0x%x", op_code);
     len = *pp++;
-
-    /*If there's a pending/stored command, get the start of the command byte sequence */
-    if (nfc_cb.p_nci_last_cmd)
-    {
-        p_old = (UINT8 *)(nfc_cb.p_nci_last_cmd + 1) + nfc_cb.p_nci_last_cmd->offset + NCI_MSG_HDR_SIZE;
-    }
 
     /* process the message based on the opcode and message type */
     switch (op_code)
@@ -127,7 +121,6 @@ void nci_proc_core_ntf(BT_HDR *p_msg)
         break;
 
     case NCI_MSG_CORE_CONN_CREDITS:
-        nfc_ncif_proc_credits(pp, len);
         break;
 
     default:
@@ -150,19 +143,13 @@ void nci_proc_rf_management_rsp(BT_HDR *p_msg)
 {
     UINT8   *p;
     UINT8   *pp, len, op_code;
-    UINT8   *p_old = nfc_cb.last_cmd;
+    UINT8   *p_old = ((tNFC_NCI_MSG *)p_msg)->cmd;
 
     /* find the start of the NCI message and parse the NCI header */
     p   = (UINT8 *)(p_msg + 1) + p_msg->offset;
     pp  = p+1;
     NCI_MSG_PRS_HDR1(pp, op_code);
     len = *pp++;
-
-    /*If there's a pending/stored command, get the start of the command byte sequence */
-    if (nfc_cb.p_nci_last_cmd)
-    {
-        p_old = (UINT8 *)(nfc_cb.p_nci_last_cmd + 1) + nfc_cb.p_nci_last_cmd->offset + NCI_MSG_HDR_SIZE;
-    }
 
     switch (op_code)
     {
@@ -288,7 +275,7 @@ void nci_proc_ee_management_rsp(BT_HDR *p_msg)
     tNFC_NFCEE_MODE_SET_REVT    mode_set;
     tNFC_RESPONSE   *p_evt = (tNFC_RESPONSE *)&nfcee_info;
     tNFC_RESPONSE_EVT event = NFC_NFCEE_INFO_REVT;
-    UINT8   *p_old = nfc_cb.last_cmd;
+    UINT8   *p_old = ((tNFC_NCI_MSG *)p_msg)->cmd;
 
     /* find the start of the NCI message and parse the NCI header */
     p   = (UINT8 *)(p_msg + 1) + p_msg->offset;
@@ -296,12 +283,6 @@ void nci_proc_ee_management_rsp(BT_HDR *p_msg)
     NCI_MSG_PRS_HDR1(pp, op_code);
     NFC_TRACE_DEBUG1( "nci_proc_ee_management_rsp opcode:0x%x", op_code);
     len = *pp++;
-
-    /*If there's a pending/stored command, get the start of the command byte sequence */
-    if (nfc_cb.p_nci_last_cmd)
-    {
-        p_old = (UINT8 *)(nfc_cb.p_nci_last_cmd + 1) + nfc_cb.p_nci_last_cmd->offset + NCI_MSG_HDR_SIZE;
-    }
 
     switch (op_code)
     {
@@ -420,7 +401,7 @@ void nci_proc_prop_rsp(BT_HDR *p_msg)
     UINT8   *p;
     UINT8   *p_evt;
     UINT8   *pp, len, op_code;
-    tNFC_VS_CBACK   *p_cback = NULL;
+    tNFC_VS_CBACK   *p_cback = ((tNFC_NCI_MSG *)p_msg)->p_cback;
 
     /* find the start of the NCI message and parse the NCI header */
     p   = p_evt = (UINT8 *)(p_msg + 1) + p_msg->offset;
@@ -429,13 +410,9 @@ void nci_proc_prop_rsp(BT_HDR *p_msg)
     len = *pp++;
 
     /*If there's a pending/stored command, restore the associated address of the callback function */
-    if (nfc_cb.p_nci_last_cmd)
+    if (p_cback != NULL)
     {
-        memcpy(&p_cback, (nfc_cb.p_nci_last_cmd + 1), sizeof (tNFC_VS_CBACK *));
-        if (p_cback != NULL)
-        {
-            (*p_cback)((tNFC_VS_EVT)(NCI_RSP_BIT|op_code), p_msg->len, p_evt);
-        }
+        (*p_cback)((tNFC_VS_EVT)(NCI_RSP_BIT|op_code), p_msg->len, p_evt);
     }
 }
 

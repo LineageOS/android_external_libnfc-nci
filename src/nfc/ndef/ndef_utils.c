@@ -791,17 +791,17 @@ extern tNDEF_STATUS  NDEF_MsgAddRec (UINT8 *p_msg, UINT32 max_size, UINT32 *p_cu
     int     plen = (payload_len < 256) ? 1 : 4;
     int     ilen = (id_len == 0) ? 0 : 1;
 
+    if (tnf > NDEF_TNF_RESERVED)
+    {
+        tnf = NDEF_TNF_UNKNOWN;
+        type_len  = 0;
+    }
+
     /* First, make sure the record will fit. we need at least 2 bytes for header and type length */
     recSize = payload_len + 2 + type_len + plen + ilen + id_len;
 
     if ((*p_cur_size + recSize) > max_size)
         return (NDEF_MSG_INSUFFICIENT_MEM);
-
-    if (tnf > NDEF_TNF_RESERVED)
-    {
-        tnf = NDEF_TNF_UNKNOWN;
-        type_len = 0;
-    }
 
     /* Construct the record header. For the first record, set both begin and end bits */
     if (*p_cur_size == 0)

@@ -19,12 +19,6 @@
 #if (NFC_INCLUDED == TRUE)
 #include "nfc_int.h"
 
-#if (NFC_RW_ONLY == FALSE)
-    /* only allow the entries that our NFCC can support */
-#define NFC_CHECK_MAX_CONN()    { if (max > nfc_cb.max_conn) max = nfc_cb.max_conn;}
-#else
-#define NFC_CHECK_MAX_CONN()    
-#endif
 
 /*******************************************************************************
 **
@@ -42,7 +36,7 @@ tNFC_CONN_CB * nfc_alloc_conn_cb( tNFC_CONN_CBACK *p_cback)
     tNFC_CONN_CB *p_conn_cb = NULL;
 
     NFC_CHECK_MAX_CONN();
-    for (xx=0; xx<max; xx++)
+    for (xx = 0; xx < max; xx++)
     {
         if (nfc_cb.conn_cb[xx].conn_id == NFC_ILLEGAL_CONN_ID)
         {
@@ -106,7 +100,7 @@ tNFC_CONN_CB * nfc_find_conn_cb_by_handle(UINT8 id)
 
 /*******************************************************************************
 **
-** Function         nfc_find_conn_cb_by_handle
+** Function         nfc_find_conn_cb_by_conn_id
 **
 ** Description      This function is called to locate the control block for
 **                  the given connection id
@@ -158,20 +152,17 @@ tNFC_CONN_CB * nfc_find_conn_cb_by_conn_id(UINT8 conn_id)
 *******************************************************************************/
 void nfc_free_conn_cb( tNFC_CONN_CB *p_cb)
 {
-    UINT8   handle;
     void    *p_buf;
 
     if (p_cb == NULL)
         return;
 
-    while ( (p_buf = GKI_dequeue(&p_cb->tx_q)) != NULL)
-        GKI_freebuf (p_buf);
     while ( (p_buf = GKI_dequeue(&p_cb->rx_q)) != NULL)
         GKI_freebuf (p_buf);
-    handle                  = (UINT8)(p_cb - nfc_cb.conn_cb);
-    nfc_cb.conn_id[handle]  = 0;
-    p_cb->p_cback           = NULL;
-    p_cb->conn_id           = NFC_ILLEGAL_CONN_ID;
+
+    nfc_cb.conn_id[p_cb->conn_id]   = 0;
+    p_cb->p_cback                   = NULL;
+    p_cb->conn_id                   = NFC_ILLEGAL_CONN_ID;
 }
 
 /*******************************************************************************

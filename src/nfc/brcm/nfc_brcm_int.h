@@ -55,6 +55,12 @@ extern "C" {
 ** Internal constants and definitions
 ****************************************************************************/
 #define BRCM_BT_HCI_CMD_HDR_SIZE     3   /* opcode (2) +  length (1) */
+#define BRCM_PRM_SPD_TOUT            (6000)  /* timeout for SPD events (in ms)   */
+
+/* Initial Max Control Packet Payload Size (until receiving payload size in INIT_CORE_RSP) */
+#ifndef NFC_BRCM_INIT_CTRL_PAYLOAD_SIZE
+#define NFC_BRCM_INIT_CTRL_PAYLOAD_SIZE     0xFF
+#endif
 
 /*****************************************************************************
 ** BRCM Patch RAM Download Control block
@@ -64,12 +70,6 @@ extern "C" {
 enum
 {
     BRCM_PRM_ST_IDLE,
-    BRCM_PRM_ST_LOADING_MINIDRV,
-    BRCM_PRM_ST_LOADING_MINIDRV_DONE,
-    BRCM_PRM_ST_LOADING_DATA,
-    BRCM_PRM_ST_LOADING_DATA_DONE,
-    BRCM_PRM_ST_LAUNCHING_RAM,
-    BRCM_PRM_ST_LAUNCHING_RAM_DONE,
 
     /* Secure patch download stated */
     BRCM_PRM_ST_SPD_GET_VERSION,
@@ -102,7 +102,6 @@ typedef struct
     UINT32              dest_ram;
 
     /* Secure Patch Download */
-    TIMER_LIST_ENT      timer;
     UINT32              spd_patch_needed_mask;  /* Mask of patches that need to be downloaded */
     UINT32              spd_nvm_patch_mask;     /* Mask of patches currently in NVM */
     UINT16              spd_project_id;         /* Current project_id of patch in nvm */
@@ -206,6 +205,7 @@ typedef struct
     tBRCM_PRM_CB            prm;
     tBRCM_PRM_I2C_FIX       prm_i2c;
     tNFC_STATUS_CBACK       *p_update_baud_cback;       /* Application callback for pending baud-rate change */
+    tNFC_BRCM_FW_BUILD_INFO *p_build_info;              /* Buffer for collecting build and patch info for NFC_BrcmGetFirmwareBuildInfo */
 } tNFC_BRCM_CB;
 
 /* BRCM NCI rcv states */
@@ -219,7 +219,7 @@ enum
 /* BRCM NCI events */
 enum
 {
-    NCI_BRCM_HCI_CMD_EVT,               /* BT message is sent from DH */
+    NCI_BRCM_HCI_CMD_EVT,               /* BT message is sent from NFC task         */
     NCI_BRCM_API_ENABLE_SNOOZE_EVT,     /* NCI_BrcmEnableSnoozeMode () is called    */
     NCI_BRCM_API_DISABLE_SNOOZE_EVT,    /* NCI_BrcmDisableSnoozeMode () is called   */
     NCI_BRCM_API_ENTER_CE_LOW_PWR_EVT,  /* NCI_BrcmEnterCELowPowerMode () is called */
@@ -227,6 +227,11 @@ enum
 };
 
 typedef UINT8 tNCI_BRCM_EVT;
+typedef struct
+{
+    BT_HDR          bt_hdr;
+    UINT8           nfc_wake_active_mode;
+} tNCI_BRCM_SNOOZE_MSG;
 
 typedef BOOLEAN (tNFC_VS_BRCM_PWR_HDLR) (UINT8 event);
 typedef BOOLEAN (tNFC_VS_BRCM_EVT_HDLR) (BT_HDR *p_msg);
@@ -256,8 +261,6 @@ typedef struct
     UINT8                   nfc_wake_active_mode;   /* NFC_LP_ACTIVE_LOW or NFC_LP_ACTIVE_HIGH  */
 
     tNCI_BRCM_INIT_STATE    initializing_state;     /* state of initializing NFCC               */
-    tNFC_VS_CBACK           *p_vs_cback;            /* callback for NCI vendor specific events  */
-    tNFC_BTVSC_CPLT_CBACK   *p_btvs_cback;          /* callback for BT vendor specific events   */
 
     TIMER_LIST_ENT          lp_timer;               /* timer for low power mode                 */
     BUFFER_Q                tx_data_q;              /* NCI command pending queue until NFCC wakes up */
@@ -298,11 +301,8 @@ NFC_API extern tCE_BRCM_CB *ce_brcm_cb_ptr;
 ** Internal functions 
 ****************************************************************************/
 /* nci_brcm.c */
-void nci_brcm_proc_prop_rsp(BT_HDR *p_msg);
-void nci_brcm_proc_prop_ntf(BT_HDR *p_msg);
 void nci_brcm_init (tBRCM_DEV_INIT_CBACK *p_dev_init_cback);
-void nci_brcm_send_nci_data (UINT8 *p_data, UINT16 len, tNFC_VS_CBACK *p_cback);
-void nci_brcm_send_bt_data (UINT8 *p_data, UINT16 len, tNFC_BTVSC_CPLT_CBACK *p_cback);
+void nci_brcm_send_nci_cmd (UINT8 *p_data, UINT16 len, tNFC_VS_CBACK *p_cback);
 void nci_brcm_set_local_baud_rate (UINT8 baud);
 void nci_brcm_set_nfc_wake (UINT8 cmd);
 
@@ -310,7 +310,6 @@ void nci_brcm_set_nfc_wake (UINT8 cmd);
 extern void nfc_brcm_btvscif_process_event (BT_HDR *p_msg);
 
 /* nfc_prm_brcm.c */
-extern void DispNci (UINT8 *p, UINT16 len, BOOLEAN is_recv);
 void nfc_brcm_prm_spd_reset_ntf(UINT8 reset_reason, UINT8 reset_type);
 
 #define ce_brcm_init()

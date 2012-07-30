@@ -106,6 +106,7 @@ typedef UINT8 tNFA_EE_CONN_ST;
 #define NFA_EE_ECB_FLAGS_RESTORE    0x20      /* Restore related                    */
 #define NFA_EE_ECB_FLAGS_ROUTING    0x0E      /* routing flags changed              */
 #define NFA_EE_ECB_FLAGS_DISC_REQ   0x40      /* NFCEE Discover Request NTF is set  */
+#define NFA_EE_ECB_FLAGS_ORDER      0x80      /* DISC_REQ N reported before DISC N  */
 typedef UINT8 tNFA_EE_ECB_FLAGS;
 
 /* part of tNFA_EE_STATUS; for internal use only  */

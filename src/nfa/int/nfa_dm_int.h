@@ -395,7 +395,6 @@ typedef struct
 #define NFA_DM_FLAGS_AUTO_READING_NDEF          0x00000010  /* auto reading of NDEF in progress                                     */
 #define NFA_DM_FLAGS_ENABLE_EVT_PEND            0x00000020  /* NFA_DM_ENABLE_EVT is not reported yet                                */
 #define NFA_DM_FLAGS_SEND_DEACTIVATED_EVT       0x00000040  /* Send NFA_DEACTIVATED_EVT when deactivated                            */
-#define NFA_DM_FLAGS_SEND_EXCL_CTRL_STOPPED_EVT 0x00000080  /* Notify app of NFA_EXCLUSIVE_RF_CONTROL_STOPPED_EVT when deactivated  */
 #define NFA_DM_FLAGS_NFCC_IS_RESTORING          0x00000100  /* NFCC is restoring after back to full power mode                      */
 #define NFA_DM_FLAGS_SETTING_PWR_MODE           0x00000200  /* NFCC power mode is updating                                          */
 
@@ -573,6 +572,7 @@ void nfa_dm_delete_rf_discover (tNFA_HANDLE handle);
 void nfa_dm_start_excl_discovery (tNFA_TECHNOLOGY_MASK poll_tech_mask, 
                                   tNFA_LISTEN_CFG *p_listen_cfg,
                                   tNFA_DISCOVER_CBACK  *p_disc_cback);
+void nfa_dm_rel_excl_rf_control_and_notify (void);
 void nfa_dm_stop_excl_discovery (void);
 void nfa_dm_disc_new_state (tNFA_DM_RF_DISC_STATE new_state);
 

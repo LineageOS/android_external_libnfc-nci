@@ -115,6 +115,7 @@
 #define BT_EVT_TO_NFC_NCI           0x4000      /* NCI Command, Notification or Data*/
 #define BT_EVT_TO_NFC_ERR           0x4100      /* Error notification to NFC Task */
 #define BT_EVT_TO_NFC_NCI_VS        0x4200      /* Vendor specific message */
+#define BT_EVT_TO_NFC_MSGS          0x4300      /* messages between NFC and NCI task */
 
 #define BT_EVT_TO_NFCCSIM_NCI       0x4a00      /* events to NFCC simulation (NCI packets) */
 

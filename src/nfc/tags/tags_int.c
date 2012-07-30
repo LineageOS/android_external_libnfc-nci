@@ -61,16 +61,16 @@ const tT2T_CMD_RSP_INFO t2t_cmd_rsp_infos[] =
 
 const tT2T_INIT_TAG t2t_init_content[] =
 {
-/*  Tag Name        is_multi_v  Ver Block                   Ver No                               Vbitmask   to_calc_cc CC3      OTP */
-    {TAG_MIFARE_MID,    TRUE,   T2T_MIFARE_VERSION_BLOCK,   T2T_MIFARE_ULTRALIGHT_VER_NO,        0xFFFF,    FALSE,     0x06,    FALSE},
-    {TAG_MIFARE_MID,    TRUE,   T2T_MIFARE_VERSION_BLOCK,   T2T_MIFARE_ULTRALIGHT_FAMILY_VER_NO, 0xFFFF,    TRUE,      0x00,    FALSE},
-    {TAG_KOVIO_MID,     FALSE,  0x00,                       0x00,                                0x0000,    FALSE,     0x1D,    TRUE},
-/*    {TAG_INFINEON_MID,  TRUE,   T2T_INFINEON_VERSION_BLOCK, T2T_INFINEON_MYD_MOVE_LEAN,          0xFFF0,    FALSE,     0x06,    FALSE}, */
-    {TAG_INFINEON_MID,  TRUE,   T2T_INFINEON_VERSION_BLOCK, T2T_INFINEON_MYD_MOVE,               0xFFF0,    FALSE,     0x10,    FALSE},
-/*    {TAG_INFINEON_MID,  TRUE,   T2T_INFINEON_VERSION_BLOCK, T2T_INFINEON_MYD_NFC_1K,             0xFFF0,    FALSE,     0x7E,    FALSE}, */
-    {TAG_INFINEON_MID,  TRUE,   T2T_INFINEON_VERSION_BLOCK, T2T_INFINEON_MYD_NFC_2K,             0xFFF0,    FALSE,     0xFE,    FALSE},
-    {TAG_BRCM_MID,      TRUE,   T2T_BRCM_VERSION_BLOCK,     T2T_BRCM_STATIC_MEM,                 0xFFFF,    FALSE,     0x06,    FALSE},
-    {TAG_BRCM_MID,      TRUE,   T2T_BRCM_VERSION_BLOCK,     T2T_BRCM_DYNAMIC_MEM,                0xFFFF,    FALSE,     0x3C,    FALSE}
+/*  Tag Name        is_multi_v  Ver Block                   Ver No                               Vbitmask   to_calc_cc CC3      OTP     BLPB */
+    {TAG_MIFARE_MID,    TRUE,   T2T_MIFARE_VERSION_BLOCK,   T2T_MIFARE_ULTRALIGHT_VER_NO,        0xFFFF,    FALSE,     0x06,    FALSE,  T2T_DEFAULT_LOCK_BLPB},
+    {TAG_MIFARE_MID,    TRUE,   T2T_MIFARE_VERSION_BLOCK,   T2T_MIFARE_ULTRALIGHT_FAMILY_VER_NO, 0xFFFF,    TRUE,      0x00,    FALSE,  T2T_DEFAULT_LOCK_BLPB},
+    {TAG_KOVIO_MID,     FALSE,  0x00,                       0x00,                                0x0000,    FALSE,     0x1D,    TRUE,   0x04},
+/*    {TAG_INFINEON_MID,  TRUE,   T2T_INFINEON_VERSION_BLOCK, T2T_INFINEON_MYD_MOVE_LEAN,          0xFFF0,    FALSE,     0x06,    FALSE,  T2T_DEFAULT_LOCK_BLPB}, */
+    {TAG_INFINEON_MID,  TRUE,   T2T_INFINEON_VERSION_BLOCK, T2T_INFINEON_MYD_MOVE,               0xFFF0,    FALSE,     0x10,    FALSE,  T2T_DEFAULT_LOCK_BLPB},
+/*    {TAG_INFINEON_MID,  TRUE,   T2T_INFINEON_VERSION_BLOCK, T2T_INFINEON_MYD_NFC_1K,             0xFFF0,    FALSE,     0x7E,    FALSE,  T2T_DEFAULT_LOCK_BLPB}, */
+    {TAG_INFINEON_MID,  TRUE,   T2T_INFINEON_VERSION_BLOCK, T2T_INFINEON_MYD_NFC_2K,             0xFFF0,    FALSE,     0xFE,    FALSE,  T2T_DEFAULT_LOCK_BLPB},
+    {TAG_BRCM_MID,      TRUE,   T2T_BRCM_VERSION_BLOCK,     T2T_BRCM_STATIC_MEM,                 0xFFFF,    FALSE,     0x06,    FALSE,  T2T_DEFAULT_LOCK_BLPB},
+    {TAG_BRCM_MID,      TRUE,   T2T_BRCM_VERSION_BLOCK,     T2T_BRCM_DYNAMIC_MEM,                0xFFFF,    FALSE,     0x3C,    FALSE,  T2T_DEFAULT_LOCK_BLPB}
 
 };
 

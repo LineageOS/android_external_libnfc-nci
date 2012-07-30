@@ -120,18 +120,14 @@ void nfc_process_timer_evt(void)
         p_tle = nfc_cb.timer_queue.p_first;
         GKI_remove_from_timer_list (&nfc_cb.timer_queue, p_tle);
 
-        switch (p_tle->event)
+        if (p_tle->event == NFC_TTYPE_WAIT_2_DEACTIVATE)
         {
-        case NFC_TTYPE_NCI_CMD_CMPL:
-            nfc_ncif_cmd_timeout();
-            break;
-        case NFC_TTYPE_WAIT_2_DEACTIVATE:
             nfc_wait_2_deactivate_timeout();
-            break;
-
-        default:
+        }
+        else
+        {
+            NFC_TRACE_DEBUG2("nfc_process_timer_evt: timer:0x%x event (0x%04x)", p_tle, p_tle->event);
             NFC_TRACE_DEBUG1("nfc_process_timer_evt: unhandled timer event (0x%04x)", p_tle->event);
-            break;
         }
     }
 
@@ -162,7 +158,6 @@ void nfc_stop_timer (TIMER_LIST_ENT *p_tle)
     }
 }
 
-#if defined(QUICK_TIMER_TICKS_PER_SEC) && (QUICK_TIMER_TICKS_PER_SEC > 0)
 /*******************************************************************************
 **
 ** Function         nfc_start_quick_timer
@@ -294,7 +289,6 @@ void nfc_process_quick_timer_evt(void)
         GKI_stop_timer(NFC_QUICK_TIMER_ID);
     }
 }
-#endif /* defined(QUICK_TIMER_TICKS_PER_SEC) && (QUICK_TIMER_TICKS_PER_SEC > 0) */
 
 
 
@@ -480,15 +474,18 @@ UINT32 nfc_task (UINT32 param)
                         GKI_start_timer (NFC_TIMER_ID, GKI_SECS_TO_TICKS (1), TRUE);
                         break;
 
-#if defined(QUICK_TIMER_TICKS_PER_SEC) && (QUICK_TIMER_TICKS_PER_SEC > 0)
                     case BT_EVT_TO_START_QUICK_TIMER :
                         /* Quick-timer is required for LLCP */
                         GKI_start_timer (NFC_QUICK_TIMER_ID, ((GKI_SECS_TO_TICKS (1)/QUICK_TIMER_TICKS_PER_SEC)), TRUE);
                         break;
-#endif
+
                     case BT_EVT_TO_NFC_ERR:
                         nfc_main_handle_err(p_msg);
                         free_buf = FALSE;
+                        break;
+
+                    case BT_EVT_TO_NFC_MSGS:
+                        nfc_main_handle_msgs(p_msg);
                         break;
 
                     default:

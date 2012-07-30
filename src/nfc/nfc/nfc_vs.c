@@ -116,17 +116,16 @@ tNFC_STATUS NFC_SendVsCommand(UINT8          oid,
     }
 
     p_data->event   = BT_EVT_TO_NFC_NCI;
-
-    pp           = (UINT8 *)(p_data + 1);
     /* save the callback function in the BT_HDR, to receive the response */
-    memcpy(pp, &p_cback, sizeof (tNFC_VS_CBACK *));
+    ((tNFC_NCI_VS_MSG *)p_data)->p_cback = p_cback;
+
     p_data->offset -= NCI_MSG_HDR_SIZE;
     pp              = (UINT8 *)(p_data + 1) + p_data->offset;
     NCI_MSG_BLD_HDR0(pp, NCI_MT_CMD, NCI_GID_PROP);
     NCI_MSG_BLD_HDR1(pp, oid);
     *pp             = (UINT8)p_data->len;
     p_data->len    += NCI_MSG_HDR_SIZE;
-    nfc_ncif_send_cmd (p_data);
+    nfc_ncif_send_vsc (p_data);
     return status;
 }
 

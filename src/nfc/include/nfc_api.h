@@ -134,6 +134,7 @@ typedef UINT8 tNFC_STATUS;
 
 typedef UINT8 tNFC_PMID;
 #define NFC_TL_SIZE                     2
+#define NFC_SAVED_CMD_SIZE              2
 
 typedef tNCI_DISCOVER_MAPS   tNFC_DISCOVER_MAPS;
 typedef tNCI_DISCOVER_PARAMS tNFC_DISCOVER_PARAMS;

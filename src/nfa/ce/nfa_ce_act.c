@@ -1055,7 +1055,6 @@ void nfa_ce_disable_local_tag (void)
 ** Function         nfa_ce_api_cfg_local_tag
 **
 ** Description      Configure local NDEF tag
-**                      - send NDEF message to controller (for T1T and T2T)
 **                      - store ndef attributes in to control block
 **                      - update discovery configuration
 **

@@ -252,7 +252,7 @@ static void rw_t2t_handle_cc_read_rsp (void)
 static void rw_t2t_ntf_tlv_detect_complete (tNFC_STATUS status)
 {
     tRW_T2T_CB              *p_t2t  = &rw_cb.tcb.t2t;
-    tRW_DETECT_NDEF_DATA    ndef_data;
+    tRW_DETECT_NDEF_DATA    ndef_data = {0};
     tRW_DETECT_TLV_DATA     tlv_data;
     tRW_T2T_DETECT          evt_data;
     UINT8                   xx;
@@ -902,18 +902,24 @@ void rw_t2t_extract_default_locks_info (void)
     UINT8       num_dynamic_lock_bytes;
     UINT8       xx;
     tRW_T2T_CB  *p_t2t = &rw_cb.tcb.t2t;
+    const       tT2T_INIT_TAG *p_ret;
+    UINT8       bytes_locked_per_lock_bit = T2T_DEFAULT_LOCK_BLPB;
+
 
     if (  (p_t2t->num_lock_tlvs == 0)
         &&(p_t2t->tag_hdr[T2T_CC2_TMS_BYTE] > T2T_CC2_TMS_STATIC)  )
     {
         /* No Lock control tlv is detected. Indicates lock bytes are present in default location */
         /* Add a virtual Lock tlv to map this default lock location */
-        num_dynamic_lock_bits   = ((p_t2t->tag_hdr[T2T_CC2_TMS_BYTE] * T2T_TMS_TAG_FACTOR) - 48) / 8;
-        num_dynamic_lock_bytes  = num_dynamic_lock_bits/8;
-        num_dynamic_lock_bytes += (num_dynamic_lock_bits%8 == 0) ? 0:1;
+        if ((p_ret = t2t_tag_init_data (p_t2t->tag_hdr[0], FALSE, 0)) != NULL)
+            bytes_locked_per_lock_bit = p_ret->default_lock_blpb;
+
+        num_dynamic_lock_bits   = ((p_t2t->tag_hdr[T2T_CC2_TMS_BYTE] * T2T_TMS_TAG_FACTOR) - (T2T_STATIC_SIZE - T2T_HEADER_SIZE)) / bytes_locked_per_lock_bit;
+        num_dynamic_lock_bytes  = num_dynamic_lock_bits / 8;
+        num_dynamic_lock_bytes += (num_dynamic_lock_bits % 8 == 0) ? 0:1;
 
         p_t2t->lock_tlv[p_t2t->num_lock_tlvs].offset                = (p_t2t->tag_hdr[T2T_CC2_TMS_BYTE] * T2T_TMS_TAG_FACTOR) + (T2T_FIRST_DATA_BLOCK * T2T_BLOCK_LEN);
-        p_t2t->lock_tlv[p_t2t->num_lock_tlvs].bytes_locked_per_bit  = 8;
+        p_t2t->lock_tlv[p_t2t->num_lock_tlvs].bytes_locked_per_bit  = bytes_locked_per_lock_bit;
         p_t2t->lock_tlv[p_t2t->num_lock_tlvs].num_bits              = num_dynamic_lock_bits;
 
         /* Based on tag data size the number of locks present in the default location changes */
@@ -1468,6 +1474,7 @@ static UINT8 rw_t2t_get_ndef_flags (void)
 {
     UINT8       flags   = 0;
     tRW_T2T_CB  *p_t2t  = &rw_cb.tcb.t2t;
+    const       tT2T_INIT_TAG *p_ret;
 
     flags |= RW_NDEF_FL_SUPPORTED;
 
@@ -1477,6 +1484,16 @@ static UINT8 rw_t2t_get_ndef_flags (void)
     if ((p_t2t->tag_hdr[T2T_CC3_RWA_BYTE] & T2T_CC3_RWA_RO) == T2T_CC3_RWA_RO)
         flags |=RW_NDEF_FL_READ_ONLY;
 
+    if (  ((p_ret = t2t_tag_init_data (p_t2t->tag_hdr[0], FALSE, 0)) != NULL)
+        &&(p_ret->b_otp)  )
+    {
+        /* Set otp flag */
+        flags |=RW_NDEF_FL_OTP;
+
+        /* Set Read only flag if otp tag already has NDEF Message */
+        if (p_t2t->ndef_msg_len)
+            flags |=RW_NDEF_FL_READ_ONLY;
+    }
     return flags;
 }
 

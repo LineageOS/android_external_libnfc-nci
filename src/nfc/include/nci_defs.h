@@ -19,6 +19,7 @@ extern "C" {
 #endif
 
 #define NCI_BRCM_CO_ID              0x2E
+#define NFC_SAVED_CMD_SIZE          2
 
 /* Define the message header size for all NCI Commands and Notifications.
 */
@@ -60,7 +61,6 @@ extern "C" {
 /* the following 2 flags are used in layer_specific for fragmentation/reassembly of data packets */
 #define NCI_LS_DATA         0x00
 #define NCI_LS_DATA_PBF     0x01
-
 
 /* PBF: Packet Boundary Flag (byte 0) */
 #define NCI_PBF_MASK        0x10
@@ -232,6 +232,7 @@ typedef UINT8 tNCI_STATUS;
 
 #define NCI_CORE_PARAM_SIZE_INIT        0x00 /* no payload */
 #define NCI_CORE_PARAM_SIZE_INIT_RSP    0x11
+#define NCI_CORE_INIT_RSP_OFFSET_NUM_INTF   0x05
 
 #define NCI_CORE_PARAM_SIZE_SET_CONFIG_RSP   0x02    /* Status (1 octet) and number of params */
 

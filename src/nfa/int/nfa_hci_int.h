@@ -84,6 +84,10 @@ enum
 
 typedef UINT16 tNFA_HCI_INT_EVT;
 
+#ifndef NFA_HCI_EVT_RSP_TIMEOUT_VAL
+#define NFA_HCI_EVT_RSP_TIMEOUT_VAL    1000
+#endif
+
 /* Internal event structures.
 **
 ** Note, every internal structure starts with a BT_HDR and an app handle
@@ -97,8 +101,6 @@ typedef struct
     char                app_name[NFA_MAX_HCI_APP_NAME_LEN + 1];
     tNFA_HCI_CBACK      *p_cback;
     BOOLEAN             b_send_conn_evts;
-    UINT16              buf_size;
-    UINT8               *p_evt_buf;
 } tNFA_HCI_API_REGISTER_APP;
 
 /* data type for NFA_HCI_API_DEREGISTER_APP_EVT */
@@ -157,7 +159,7 @@ typedef struct
     UINT8               pipe;
     UINT8               reg_inx;
     UINT8               size;
-    UINT8               data[255];
+    UINT8               data[NFA_MAX_HCI_CMD_LEN];
 } tNFA_HCI_API_SET_REGISTRY;
 
 /* data type for NFA_HCI_API_CREATE_PIPE_EVT */
@@ -206,7 +208,9 @@ typedef struct
     UINT8               pipe;
     UINT8               evt_code;
     UINT16              evt_len;
-    UINT8               data[NFA_MAX_HCI_EVENT_LEN];
+    UINT8               *p_evt_buf;
+    UINT16              rsp_len;
+    UINT8               *p_rsp_buf;
 } tNFA_HCI_API_SEND_EVENT_EVT;
 
 /* data type for NFA_HCI_API_SEND_CMD_EVT */
@@ -266,7 +270,7 @@ typedef struct
     UINT8               pipe;
     UINT8               response;
     UINT8               size;
-    UINT8               data[255];
+    UINT8               data[NFA_MAX_HCI_RSP_LEN];
 } tNFA_HCI_API_SEND_RSP_EVT;
 
 /* common data type for internal events */
@@ -355,14 +359,6 @@ typedef struct
     UINT8               hci_version;                    /* HCI Version */
 } tNFA_ID_MGMT_GATE_INFO;
 
-/* Register application control block */
-typedef struct
-{
-    tNFA_HCI_CBACK      *p_app_cback;                   /* Callback function registered by the application */
-    UINT16              buf_size;                       /* Maximum size of APDU buffer */
-    UINT8               *p_evt_buf;                     /* Buffer to hold reassembled event */
-} tNFA_HCI_APP_INFO;
-
 /* Internal flags */
 #define NFA_HCI_FL_DISABLING        0x01                /* sub system is being disabled */
 #define NFA_HCI_FL_NV_CHANGED       0x02                /* NV Ram changed */
@@ -384,7 +380,9 @@ typedef struct
     BOOLEAN                         w4_vsc_init;                        /* Wait for VSC initialization */
     BOOLEAN                         nv_write_needed;                    /* Something changed - NV write is needed */
     BOOLEAN                         assembling;                         /* Set true if in process of assembling a message  */
-    tNFA_HANDLE                     app_in_use;                         /* ??? Index of the application that is waiting for response */
+    BOOLEAN                         assembly_failed;                    /* Set true if Insufficient buffer to Reassemble incoming message */
+    BOOLEAN                         w4_rsp_evt;                         /* Application command sent on HCP Event */
+    tNFA_HANDLE                     app_in_use;                         /* Index of the application that is waiting for response */
     UINT8                           local_gate_in_use;                  /* Local gate currently working with */
     UINT8                           remote_gate_in_use;                 /* Remote gate currently working with */
     UINT8                           remote_host_in_use;                 /* The remote host to which a command is sent */
@@ -401,7 +399,9 @@ typedef struct
 
     BUFFER_Q                        hci_api_q;                          /* Buffer Q to hold incoming API commands */
     tNFA_HCI_SM_ACT                 p_vs_evt_hdlr;                      /* vendor specific event handler    */
-    tNFA_HCI_APP_INFO               app_info[NFA_HCI_MAX_APP_CB];       /* Application specific information */
+    tNFA_HCI_CBACK                  *p_app_cback[NFA_HCI_MAX_APP_CB];   /* Callback functions registered by the applications */
+    UINT16                          rsp_buf_size;                       /* Maximum size of APDU buffer */
+    UINT8                           *p_rsp_buf;                         /* Buffer to hold response to sent event */
     struct
     {
         char                        reg_app_names[NFA_HCI_MAX_APP_CB][NFA_MAX_HCI_APP_NAME_LEN + 1];
@@ -448,12 +448,12 @@ extern void nfa_hci_vsc_cback (tNFC_VS_EVT event, UINT16 data_len, UINT8 *p_data
 /* Action functions in nfa_hci_act.c
 */
 extern void nfa_hci_check_api_requests (void);
-extern void nfa_hci_handle_admin_gate_cmd (UINT8 *p_data, UINT8 data_len);
+extern void nfa_hci_handle_admin_gate_cmd (UINT8 *p_data);
 extern void nfa_hci_handle_admin_gate_rsp (UINT8 *p_data, UINT8 data_len);
-extern void nfa_hci_handle_admin_gate_evt (UINT8 *p_data, UINT8 data_len);
-extern void nfa_hci_handle_link_mgm_gate_cmd (UINT8 *p_data, UINT8 data_len);
-extern void nfa_hci_handle_dyn_pipe_pkt (UINT8 pipe, UINT8  *p_data, UINT8 type, UINT16 data_len);
-extern void nfa_hci_handle_pipe_open_close_cmd (UINT8 instruction, tNFA_HCI_DYN_PIPE *p_pipe);
+extern void nfa_hci_handle_admin_gate_evt (UINT8 *p_data);
+extern void nfa_hci_handle_link_mgm_gate_cmd (UINT8 *p_data);
+extern void nfa_hci_handle_dyn_pipe_pkt (UINT8 pipe, UINT8  *p_data, UINT16 data_len);
+extern void nfa_hci_handle_pipe_open_close_cmd (tNFA_HCI_DYN_PIPE *p_pipe);
 extern void nfa_hci_api_dealloc_gate (tNFA_HCI_EVENT_DATA *p_evt_data);
 extern void nfa_hci_api_deregister (tNFA_HCI_EVENT_DATA *p_evt_data);
 

@@ -40,6 +40,34 @@ int GetNumValue(const char* name, void* p_value, unsigned long len);
 #define NAME_UICC_IDLE_TIMEOUT          "UICC_IDLE_TIMEOUT"
 #define NAME_PREINIT_DSP_CFG            "PREINIT_DSP_CFG"
 #define NAME_DTA_START_CFG              "DTA_START_CFG"
+#define NAME_TRANSPORT_DRIVER           "TRANSPORT_DRIVER"
+#define NAME_POWER_CONTROL_DRIVER       "POWER_CONTROL_DRIVER"
+#define NAME_PROTOCOL_TRACE             "PROTOCOL_TRACE_LEVEL"
+#define NAME_APPL_TRACE                 "APPL_TRACE_LEVEL"
+#define NAME_UART_PORT                  "UART_PORT"
+#define NAME_UART_BAUD                  "UART_BAUD"
+#define NAME_UART_PARITY                "UART_PARITY"
+#define NAME_UART_STOPBITS              "UART_STOPBITS"
+#define NAME_UART_DATABITS              "UART_DATABITS"
+#define NAME_CLIENT_ADDRESS             "BCMI2CNFC_ADDRESS"
+#define NAME_NFA_DM_START_UP_CFG        "NFA_DM_START_UP_CFG"
+#define NAME_NFA_DM_CFG                 "NFA_DM_CFG"
+#define NAME_NFA_DM_LP_CFG              "NFA_DM_LP_CFG"
+#define NAME_LOW_SPEED_TRANSPORT        "LOW_SPEED_TRANSPORT"
+#define NAME_NFC_WAKE_DELAY             "NFC_WAKE_DELAY"
+#define NAME_NFC_WRITE_DELAY            "NFC_WRITE_DELAY"
+#define NAME_PERF_MEASURE_FREQ          "REPORT_PERFORMANCE_MEASURE"
+#define NAME_READ_MULTI_PACKETS         "READ_MULTIPLE_PACKETS"
+#define NAME_POWER_ON_DELAY             "POWER_ON_DELAY"
+#define NAME_NFA_STORAGE                "NFA_STORAGE"
+#define NAME_NFA_DM_START_UP_VSC_CFG    "NFA_DM_START_UP_VSC_CFG"
+#define NAME_UICC_LISTEN_TECH_MASK      "UICC_LISTEN_TECH_MASK"
+
+#define                     LPTD_PARAM_LEN (40)
+
+// default configuration
+#define default_transport       "/dev/bcm2079x"
+#define default_storage_location "/data/bcmnfc"
 
 struct tUART_CONFIG {
     int     m_iBaudrate;            // 115200
@@ -49,5 +77,7 @@ struct tUART_CONFIG {
 };
 
 extern struct tUART_CONFIG  uartConfig;
+#define MAX_CHIPID_LEN  (16)
+void    readOptionalConfig(const char* option);
 
 #endif

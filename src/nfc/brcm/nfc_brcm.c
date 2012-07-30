@@ -91,9 +91,65 @@ static char *nfc_brcm_evt_2_str(UINT16 event)
 
 /*******************************************************************************
 **
+** Function         nfc_brcm_get_patch_version_vs_cback
+**
+** Description      Handle response for NCI_MSG_GET_PATCH_VERSION
+**                  (from calling NFC_BrcmGetFirmwareBuildInfo)
+**
+** Returns          nothing
+**
+*******************************************************************************/
+void nfc_brcm_get_patch_version_vs_cback(tNFC_VS_EVT event, UINT16 data_len, UINT8 *p_data)
+{
+    tNFC_RESPONSE revt_data;
+    UINT8 *p, u8;
+
+    /* Verify that for response is for NCI_MSG_GET_PATCH_VERSION, and buffer for holding result is valid */
+    if ((event == (NFC_VS_GET_PATCH_VERSION_EVT)) && (nfc_brcm_cb.p_build_info))
+    {
+        /* Skip over NCI header */
+        p = p_data + NCI_MSG_HDR_SIZE;
+
+        /* Project ID */
+        STREAM_TO_UINT16(nfc_brcm_cb.p_build_info->patch.project_id, p);
+        STREAM_TO_UINT8(nfc_brcm_cb.p_build_info->patch.rfu, p);
+
+        /* Chip ver string */
+        STREAM_TO_UINT8(u8, p);
+        STREAM_TO_ARRAY(nfc_brcm_cb.p_build_info->patch.chip_ver, p, BRCM_FW_PATCH_CHIP_VER_MAXLEN);
+        nfc_brcm_cb.p_build_info->patch.chip_ver[u8] = '\0';
+
+        /* Version / size / crc info */
+        STREAM_TO_UINT16(nfc_brcm_cb.p_build_info->patch.major_ver, p);
+        STREAM_TO_UINT16(nfc_brcm_cb.p_build_info->patch.minor_ver, p);
+        STREAM_TO_UINT16(nfc_brcm_cb.p_build_info->patch.nvm_max_size, p);
+        STREAM_TO_UINT16(nfc_brcm_cb.p_build_info->patch.patch_code_max_size, p);
+        STREAM_TO_UINT16(nfc_brcm_cb.p_build_info->patch.lpm_patch_code_size, p);
+        STREAM_TO_UINT16(nfc_brcm_cb.p_build_info->patch.fpm_patch_code_size, p);
+        STREAM_TO_UINT8(nfc_brcm_cb.p_build_info->patch.lpm_patch_code_has_bad_crc, p);
+        STREAM_TO_UINT8(nfc_brcm_cb.p_build_info->patch.fpm_patch_code_has_bad_crc, p);
+        STREAM_TO_UINT8(nfc_brcm_cb.p_build_info->patch.nvm_type, p);
+
+        /* Notify upper layer of result */
+        if (nfc_cb.p_resp_cback)
+        {
+            nfc_brcm_cb.p_build_info->status = NCI_STATUS_OK;
+            revt_data.p_vs_evt_data = nfc_brcm_cb.p_build_info;
+            (*nfc_cb.p_resp_cback)(NFC_FIRMWARE_BUILD_INFO_REVT, (tNFC_RESPONSE *)&revt_data);
+        }
+
+        GKI_freebuf(nfc_brcm_cb.p_build_info);
+        nfc_brcm_cb.p_build_info = NULL;
+
+    }
+}
+
+/*******************************************************************************
+**
 ** Function         nfc_brcm_get_bld_info_vs_cback
 **
 ** Description      Handle response for NCI_MSG_GET_BUILD_INFO
+**                  (from calling NFC_BrcmGetFirmwareBuildInfo)
 **
 ** Returns          nothing
 **
@@ -103,43 +159,85 @@ void nfc_brcm_get_bld_info_vs_cback(tNFC_VS_EVT event, UINT16 data_len, UINT8 *p
     tNFC_RESPONSE revt_data;
     tNFC_BRCM_RESPONSE brcm_revt_data;
     UINT8 *p, u8;
+    UINT8 status;
 
     /* Verify that for response is for GET_BUILD_INFO */
     if (event == (NFC_VS_GET_BUILD_INFO_EVT))
     {
-        /* Clear build info structure */
-        memset(&brcm_revt_data, 0, sizeof(tNFC_BRCM_RESPONSE));
-
         /* Skip over NCI header */
         p = p_data + NCI_MSG_HDR_SIZE;
 
         /* Check status */
-        STREAM_TO_UINT8(u8, p);
-        brcm_revt_data.fw_build_info.status = u8;
+        STREAM_TO_UINT8(status, p);
 
-        if (u8 == NCI_STATUS_OK)
+        if (status == NCI_STATUS_OK)
         {
-            /* Parse NCI_MSG_GET_BUILD_INFO */
-            STREAM_TO_ARRAY(brcm_revt_data.fw_build_info.date, p, BRCM_FW_BUILD_INFO_DATE_LEN);
-            STREAM_TO_ARRAY(brcm_revt_data.fw_build_info.time, p, BRCM_FW_BUILD_INFO_TIME_LEN);
-            STREAM_TO_UINT8(brcm_revt_data.fw_build_info.ver_major, p);
-            STREAM_TO_UINT8(brcm_revt_data.fw_build_info.ver_minor, p);
-            STREAM_TO_UINT8(brcm_revt_data.fw_build_info.build_major, p);
-            STREAM_TO_UINT8(brcm_revt_data.fw_build_info.build_minor, p);
-            STREAM_TO_UINT32(brcm_revt_data.fw_build_info.hwt, p);
+            /* Allocate a buffer to collect build info and patch information */
+            if (nfc_brcm_cb.p_build_info == NULL)
+            {
+                if (((nfc_brcm_cb.p_build_info = (tNFC_BRCM_FW_BUILD_INFO *)GKI_getbuf(sizeof(tNFC_BRCM_FW_BUILD_INFO)))) == NULL)
+                {
+                    status = NCI_STATUS_FAILED;
+                }
+            }
 
-            /* Get Chip ID string */
-            STREAM_TO_UINT8(u8, p);
-            if (u8 > BRCM_FW_BUILD_INFO_CHIP_ID_MAXLEN)
-                u8 = BRCM_FW_BUILD_INFO_CHIP_ID_MAXLEN;
-            STREAM_TO_ARRAY(brcm_revt_data.fw_build_info.chip_id, p, u8);
+            if (nfc_brcm_cb.p_build_info)
+            {
+                /* Initialize the buffer */
+                memset(nfc_brcm_cb.p_build_info, 0, sizeof(tNFC_BRCM_FW_BUILD_INFO));
+                nfc_brcm_cb.p_build_info->status = NCI_STATUS_OK;
+
+                /* Parse NCI_MSG_GET_BUILD_INFO */
+                STREAM_TO_ARRAY(nfc_brcm_cb.p_build_info->date, p, BRCM_FW_BUILD_INFO_DATE_LEN);
+                STREAM_TO_ARRAY(nfc_brcm_cb.p_build_info->time, p, BRCM_FW_BUILD_INFO_TIME_LEN);
+                STREAM_TO_UINT8(nfc_brcm_cb.p_build_info->ver_major, p);
+                STREAM_TO_UINT8(nfc_brcm_cb.p_build_info->ver_minor, p);
+                STREAM_TO_UINT8(nfc_brcm_cb.p_build_info->build_major, p);
+                STREAM_TO_UINT8(nfc_brcm_cb.p_build_info->build_minor, p);
+                STREAM_TO_UINT32(nfc_brcm_cb.p_build_info->hwt, p);
+
+                /* Get Chip ID string */
+                STREAM_TO_UINT8(u8, p);
+                if (u8 > BRCM_FW_BUILD_INFO_CHIP_ID_MAXLEN)
+                    u8 = BRCM_FW_BUILD_INFO_CHIP_ID_MAXLEN;
+                STREAM_TO_ARRAY(nfc_brcm_cb.p_build_info->chip_id, p, u8);
+
+                /* If chip is B3 or newer, then get the current patch version */
+                if (nfc_brcm_cb.p_build_info->hwt != 0x20791B02)
+                {
+                    /* Send GET_PATCH_VERSION to the NFCC */ 
+                    if ((status = NFC_SendVsCommand(NCI_MSG_GET_PATCH_VERSION, NULL, nfc_brcm_get_patch_version_vs_cback)) == NCI_STATUS_OK)
+                    {
+                        /* GET_PATCH_VERSION sent to the NFCC. Wait for response */
+                        return;
+                    }
+                }
+            }
         }
 
-        /* Notify app */
+        /* GET_BUILD_INFO complete. Notify app of result */
         if (nfc_cb.p_resp_cback)
         {
-            revt_data.p_vs_evt_data = &brcm_revt_data;
+            if (status == NCI_STATUS_OK)
+            {
+                /* For 20791B2...notify app without getting patch version */
+                revt_data.p_vs_evt_data = nfc_brcm_cb.p_build_info;
+            }
+            else
+            {
+                /* Notify error */
+                brcm_revt_data.fw_build_info.status = status;
+                revt_data.p_vs_evt_data = &brcm_revt_data;
+            }
+
             (*nfc_cb.p_resp_cback)(NFC_FIRMWARE_BUILD_INFO_REVT, (tNFC_RESPONSE *)&revt_data);
+        }
+
+        /* Free buffer for build_info result */
+        if (nfc_brcm_cb.p_build_info)
+        {
+            GKI_freebuf(nfc_brcm_cb.p_build_info);
+            nfc_brcm_cb.p_build_info = NULL;
         }
     }
 
@@ -192,11 +290,11 @@ BOOLEAN nfc_brcm_evt_hdlr (tNFC_INT_EVT event, void *p)
         break;
 
     case NFC_INT_NCI_VS_RSP_EVT:
-        nci_brcm_proc_prop_rsp((BT_HDR *)p);
+        nci_proc_prop_rsp((BT_HDR *)p);
         break;
 
     case NFC_INT_NCI_VS_NTF_EVT:
-        nci_brcm_proc_prop_ntf((BT_HDR *)p);
+        nci_proc_prop_ntf((BT_HDR *)p);
         break;
 
     case NFC_INT_MBOX_EVT:
@@ -250,7 +348,23 @@ void NFC_BrcmInit (tBRCM_DEV_INIT_CBACK *p_dev_init_cback)
     nfc_cb.p_disc_maps      = nfc_brcm_interface_mapping;
     nfc_cb.num_disc_maps    = NFC_NUM_BRCM_INTERFACE_MAP;
     nfc_cb.p_vs_evt_hdlr    = nfc_brcm_evt_hdlr;
+    nfc_cb.nci_ctrl_size    = NFC_BRCM_INIT_CTRL_PAYLOAD_SIZE;
+}
 
+/*******************************************************************************
+**
+** Function         NFC_BrcmGetNciPktSize
+**
+** Description      Get Max NCI Packet size
+**
+** Returns          Max Control Packet Payload Size
+**
+*******************************************************************************/
+UINT8 NFC_BrcmGetNciPktSize(void)
+{
+    NFC_TRACE_API0("NFC_BrcmGetNciPktSize");
+
+    return(nfc_cb.nci_ctrl_size);
 }
 
 /*******************************************************************************
@@ -270,7 +384,6 @@ tNFC_STATUS NFC_BrcmGetFirmwareBuildInfo(void)
 
     return(NFC_SendVsCommand(NCI_MSG_GET_BUILD_INFO, NULL, nfc_brcm_get_bld_info_vs_cback));
 }
-
 
 #endif
 
