@@ -1,5 +1,4 @@
 LOCAL_PATH:= $(call my-dir)
-ASTL:=../astl
 NFA:=src/nfa
 NFC:=src/nfc
 UDRV:=src/udrv
@@ -47,9 +46,6 @@ endif
 D_CFLAGS += -DBUILDCFG=1
 D_CFLAGS += -DNFA_APP_DOWNLOAD_NFC_PATCHRAM=TRUE
 
-#Adaptation include
-NFA_CFLAGS += -I$(LOCAL_PATH)/$(ASTL)/include
-
 #NTAL includes
 NTAL_CFLAGS += -I$(LOCAL_PATH)/src/include
 NTAL_CFLAGS += -I$(LOCAL_PATH)/src/gki/ulinux
@@ -76,9 +72,9 @@ LOCAL_PRELINK_MODULE := false
 LOCAL_ARM_MODE := arm
 LOCAL_MODULE:= libnfc-nci
 LOCAL_MODULE_TAGS := optional
-LOCAL_SHARED_LIBRARIES := libhardware_legacy libcutils libdl
-LOCAL_STATIC_LIBRARIES := libastl
+LOCAL_SHARED_LIBRARIES := libhardware_legacy libcutils libdl libstlport
 LOCAL_CFLAGS := $(COMMON_CFLAGS) $(D_CFLAGS) $(NFA_CFLAGS)
+LOCAL_C_INCLUDES := external/stlport/stlport bionic/ bionic/libstdc++/include
 LOCAL_SRC_FILES := $(NFA_ADAP_FILES) $(GKI_FILES) $(NFA_FILES) $(NFC_FILES) $(NTAL_FILES) $(LOG_FILES)
 include $(BUILD_SHARED_LIBRARY)
 
