@@ -1,0 +1,4 @@
+This file contains version information for the NFC stack code.
+element * NFCA_PI_403.10.0.74
+element * NFA_MI_1.03.33
+

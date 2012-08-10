@@ -18,7 +18,7 @@
 #define HCI_PROTO_VERSION_2_1 0x04      /* Version for BT spec 2.1 [Lisbon] */
 #define HCI_PROTO_VERSION_3_0 0x05      /* Version for BT spec 3.0          */
 #define HCI_PROTO_REVISION    0x000C    /* Current implementation version   */
-/* 
+/*
 **  Definitions for HCI groups
 */
 #define HCI_GRP_LINK_CONTROL_CMDS       (0x01 << 10)            /* 0x0400 */
@@ -201,7 +201,7 @@
 #define HCI_SHORT_RANGE_MODE                  (0x006B | HCI_GRP_HOST_CONT_BASEBAND_CMDS) /* 802.11 only */
 
 #define HCI_CONT_BASEBAND_CMDS_FIRST    HCI_SET_EVENT_MASK
-#define HCI_CONT_BASEBAND_CMDS_LAST     HCI_SHORT_RANGE_MODE 
+#define HCI_CONT_BASEBAND_CMDS_LAST     HCI_SHORT_RANGE_MODE
 
 
 /* Commands of HCI_GRP_INFORMATIONAL_PARAMS group */
@@ -246,7 +246,7 @@
 #define HCI_AMP_TEST_END                (0x0008 | HCI_GRP_TESTING_CMDS)
 #define HCI_AMP_TEST                    (0x0009 | HCI_GRP_TESTING_CMDS)
 
-#define HCI_TESTING_CMDS_FIRST          HCI_READ_LOOPBACK_MODE 
+#define HCI_TESTING_CMDS_FIRST          HCI_READ_LOOPBACK_MODE
 #define HCI_TESTING_CMDS_LAST           HCI_AMP_TEST
 
 #define HCI_VENDOR_CMDS_FIRST           0x0001
@@ -487,19 +487,19 @@
 /* ULP HCI Event */
 #define HCI_BLE_EVENT                   0x03E
 /* ULP Event sub code */
-#define HCI_BLE_CONN_COMPLETE_EVT           0x01 
-#define HCI_BLE_ADV_PKT_RPT_EVT             0x02 
-#define HCI_BLE_LL_CONN_PARAM_UPD_EVT       0x03 
+#define HCI_BLE_CONN_COMPLETE_EVT           0x01
+#define HCI_BLE_ADV_PKT_RPT_EVT             0x02
+#define HCI_BLE_LL_CONN_PARAM_UPD_EVT       0x03
 #define HCI_BLE_READ_REMOTE_FEAT_CMPL_EVT   0x04
 #define HCI_BLE_LTK_REQ_EVT                 0x05
 
-#define HCI_EVENT_RSP_FIRST             HCI_INQUIRY_COMP_EVT 
+#define HCI_EVENT_RSP_FIRST             HCI_INQUIRY_COMP_EVT
 #define HCI_EVENT_RSP_LAST              HCI_AMP_STATUS_CHANGE_EVT
 
 #define HCI_BRCM_H4IBSS_EVT             0xEF  /* Vendor specific events for H4IBSS */
 #define HCI_VENDOR_SPECIFIC_EVT         0xFF  /* Vendor specific events */
 #define HCI_NAP_TRACE_EVT               0xFF  /* was define 0xFE, 0xFD, change to 0xFF
-                                                 because conflict w/ TCI_EVT and per 
+                                                 because conflict w/ TCI_EVT and per
                                                  specification compliant */
 
 
@@ -546,7 +546,7 @@
 #define HCI_ERR_LMP_ERR_TRANS_COLLISION                 0x23
 #define HCI_ERR_LMP_PDU_NOT_ALLOWED                     0x24
 #define HCI_ERR_ENCRY_MODE_NOT_ACCEPTABLE               0x25
-#define HCI_ERR_UNIT_KEY_USED                           0x26  
+#define HCI_ERR_UNIT_KEY_USED                           0x26
 #define HCI_ERR_QOS_NOT_SUPPORTED                       0x27
 #define HCI_ERR_INSTANT_PASSED                          0x28
 #define HCI_ERR_PAIRING_WITH_UNIT_KEY_NOT_SUPPORTED     0x29
@@ -666,7 +666,7 @@
 */
 
 
-/* 
+/*
 ** Definitions for packet type masks (BT1.2 and BT2.0 definitions)
 */
 #define HCI_PKT_TYPES_MASK_NO_2_DH1         0x0002
@@ -692,7 +692,7 @@
                                     && ((t) != 0))
 
 
- 
+
 
 
 /* Packet type should not be invalid and at least one should be specified */
@@ -715,7 +715,7 @@
                                               |  HCI_PKT_TYPES_MASK_DM5        \
                                               |  HCI_PKT_TYPES_MASK_DH5)) != 0))
 
-/* 
+/*
 ** Definitions for eSCO packet type masks (BT1.2 and BT2.0 definitions)
 */
 #define HCI_ESCO_PKT_TYPES_MASK_HV1         0x0001
@@ -748,14 +748,14 @@
                                            |      HCI_ESCO_PKT_TYPES_MASK_EV5)) == 0)) \
                                     && ((t) != 0))
 
-/* 
+/*
 ** Define parameters to allow role switch during create connection
 */
 #define HCI_CR_CONN_NOT_ALLOW_SWITCH    0x00
 #define HCI_CR_CONN_ALLOW_SWITCH        0x01
 
-/* 
-** Hold Mode command destination 
+/*
+** Hold Mode command destination
 */
 #define HOLD_MODE_DEST_LOCAL_DEVICE     0x00
 #define HOLD_MODE_DEST_RMT_DEVICE       0x01
@@ -991,10 +991,10 @@
 #define HCI_CVSD_SUPPORTED(x)       (((x) & HCI_AIR_CODING_FORMAT_MASK) == HCI_AIR_CODING_FORMAT_CVSD)
 #define HCI_U_LAW_SUPPORTED(x)      (((x) & HCI_AIR_CODING_FORMAT_MASK) == HCI_AIR_CODING_FORMAT_U_LAW)
 #define HCI_A_LAW_SUPPORTED(x)      (((x) & HCI_AIR_CODING_FORMAT_MASK) == HCI_AIR_CODING_FORMAT_A_LAW)
-#define HCI_TRANSPNT_SUPPORTED(x)   (((x) & HCI_AIR_CODING_FORMAT_MASK) == HCI_AIR_CODING_FORMAT_TRANSPNT) 
+#define HCI_TRANSPNT_SUPPORTED(x)   (((x) & HCI_AIR_CODING_FORMAT_MASK) == HCI_AIR_CODING_FORMAT_TRANSPNT)
 
 /* Retransmit timer definitions in 0.625 */
-#define HCI_MAX_AUTO_FLUSH_TOUT         0x07FF  
+#define HCI_MAX_AUTO_FLUSH_TOUT         0x07FF
 #define HCI_DEFAULT_AUTO_FLUSH_TOUT     0       /* No auto flush */
 
 /* Broadcast retransmitions */
@@ -1107,7 +1107,7 @@ typedef struct
 
 #define HCIT_LM_DIAG_LENGTH 63
 
-/* Define values for LMP Test Control parameters 
+/* Define values for LMP Test Control parameters
 ** Test Scenario, Hopping Mode, Power Control Mode
 */
 #define LMP_TESTCTL_TESTSC_PAUSE        0
@@ -1133,12 +1133,12 @@ typedef struct
 #define LMP_TESTCTL_POWCTL_ADAPTIVE     1
 
 
-/* 
+/*
 ** Define company IDs (from Bluetooth Assigned Numbers v1.1, section 2.2)
 */
 #define LMP_COMPID_ERICSSON             0
 #define LMP_COMPID_NOKIA                1
-#define LMP_COMPID_INTEL                2   
+#define LMP_COMPID_INTEL                2
 #define LMP_COMPID_IBM                  3
 #define LMP_COMPID_TOSHIBA              4
 #define LMP_COMPID_3COM                 5
@@ -1226,9 +1226,9 @@ typedef struct
 #define LMP_COMPID_HARMON_INTL_IND      87
 #define LMP_COMPID_VIZIO                88
 #define LMP_COMPID_NORDIC SEMI          89
-#define LMP_COMPID_EM MICRO             90 
+#define LMP_COMPID_EM MICRO             90
 #define LMP_COMPID_RALINK TECH          91
-#define LMP_COMPID_BELKIN INC           92  
+#define LMP_COMPID_BELKIN INC           92
 #define LMP_COMPID_REALTEK SEMI         93
 #define LMP_COMPID_STONESTREET ONE      94
 #define LMP_COMPID_WICENTRIC            95
@@ -1236,7 +1236,7 @@ typedef struct
 #define LMP_COMPID_RDA MICRO            97
 #define LMP_COMPID_GIBSON GUITARS       98
 #define LMP_COMPID_MICOMMAND INC        99
-#define LMP_COMPID_BAND XI              100 
+#define LMP_COMPID_BAND XI              100
 #define LMP_COMPID_HP COMPANY           101
 #define LMP_COMPID_9SOLUTIONS OY        102
 #define LMP_COMPID_GN NETCOM            103
@@ -1245,8 +1245,8 @@ typedef struct
 #define LMP_COMPID_MINDTREE LTD         106
 #define LMP_COMPID_POLAR ELECTRO        107
 #define LMP_COMPID_BEAUTIFUL ENTERPRISE 108
-#define LMP_COMPID_BRIARTEK             109 
-#define LMP_COMPID_SUMMIT DATA COMM     110 
+#define LMP_COMPID_BRIARTEK             109
+#define LMP_COMPID_SUMMIT DATA COMM     110
 #define LMP_COMPID_SOUND ID             111
 #define LMP_COMPID_MONSTER LLC          112
 #define LMP_COMPID_CONNECTBLU           113
@@ -1301,7 +1301,7 @@ typedef struct
 #define HCI_EDR3_DH3_PACKET_SIZE    552
 #define HCI_EDR3_DH5_PACKET_SIZE    1021
 
-/* 
+/*
 **   Features encoding - page 0
 */
 #define HCI_NUM_FEATURE_BYTES           8
@@ -1531,14 +1531,14 @@ typedef struct
 #define HCI_FEATURE_EXTENDED_OFF        7
 #define HCI_LMP_EXTENDED_SUPPORTED(x)   ((x)[HCI_FEATURE_EXTENDED_OFF] & HCI_FEATURE_EXTENDED_MASK)
 
-/* 
+/*
 **   Features encoding - page 1
 */
 #define HCI_EXT_FEATURE_SSP_HOST_MASK 0x01
 #define HCI_EXT_FEATURE_SSP_HOST_OFF  0
 #define HCI_SSP_HOST_SUPPORTED(x) ((x)[HCI_EXT_FEATURE_SSP_HOST_OFF] & HCI_EXT_FEATURE_SSP_HOST_MASK)
 
-/* 
+/*
 **   Local Supported Commands encoding
 */
 #define HCI_NUM_SUPP_COMMANDS_BYTES           64
@@ -2258,15 +2258,15 @@ Commands of HCI_GRP_VENDOR_SPECIFIC group for WIDCOMM SW LM Simulator
 #define LM_HOLD_MODE                   (0x00DC | HCI_GRP_VENDOR_SPECIFIC)
 #define LM_EXIT_PARK_MODE              (0x00DD | HCI_GRP_VENDOR_SPECIFIC)
 
-#define LM_SCO_LINK_REQUEST            (0x00E0 | HCI_GRP_VENDOR_SPECIFIC) 
-#define LM_SCO_CHANGE                  (0x00E4 | HCI_GRP_VENDOR_SPECIFIC) 
-#define LM_SCO_REMOVE                  (0x00E8 | HCI_GRP_VENDOR_SPECIFIC) 
-#define LM_MAX_SLOTS                   (0x00F1 | HCI_GRP_VENDOR_SPECIFIC) 
+#define LM_SCO_LINK_REQUEST            (0x00E0 | HCI_GRP_VENDOR_SPECIFIC)
+#define LM_SCO_CHANGE                  (0x00E4 | HCI_GRP_VENDOR_SPECIFIC)
+#define LM_SCO_REMOVE                  (0x00E8 | HCI_GRP_VENDOR_SPECIFIC)
+#define LM_MAX_SLOTS                   (0x00F1 | HCI_GRP_VENDOR_SPECIFIC)
 #define LM_MAX_SLOTS_REQUEST           (0x00F2 | HCI_GRP_VENDOR_SPECIFIC)
 
 #ifdef INCLUDE_OPTIONAL_PAGING_SCHEME
-#define LM_OPTIONAL_PAGE_REQUEST       (0x00F3 | HCI_GRP_VENDOR_SPECIFIC) 
-#define LM_OPTIONAL_PAGESCAN_REQUEST   (0x00F4 | HCI_GRP_VENDOR_SPECIFIC) 
+#define LM_OPTIONAL_PAGE_REQUEST       (0x00F3 | HCI_GRP_VENDOR_SPECIFIC)
+#define LM_OPTIONAL_PAGESCAN_REQUEST   (0x00F4 | HCI_GRP_VENDOR_SPECIFIC)
 #endif
 
 #define LM_SETUP_COMPLETE              (0x00FF | HCI_GRP_VENDOR_SPECIFIC)
@@ -2291,7 +2291,7 @@ Commands of HCI_GRP_VENDOR_SPECIFIC group for WIDCOMM SW LM Simulator
 #define LM_HIST_HCI_UPDATA             (0x0110 | HCI_GRP_VENDOR_SPECIFIC)
 #define LM_HIST_HCI_DNDATA             (0x0111 | HCI_GRP_VENDOR_SPECIFIC)
 
-#define HCI_ENTER_TEST_MODE            (0x0300 | HCI_GRP_VENDOR_SPECIFIC) 
+#define HCI_ENTER_TEST_MODE            (0x0300 | HCI_GRP_VENDOR_SPECIFIC)
 #define HCI_LMP_TEST_CNTRL             (0x0301 | HCI_GRP_VENDOR_SPECIFIC)
 #define HCI_DEBUG_LC_CMD_MIN           (0x0300 | HCI_GRP_VENDOR_SPECIFIC)
 #define HCI_DEBUG_LC_CMD_MAX           (0x03FF | HCI_GRP_VENDOR_SPECIFIC)
@@ -2370,4 +2370,4 @@ Commands of HCI_GRP_VENDOR_SPECIFIC group for WIDCOMM SW LM Simulator
 #define BRCM_PCM2_SETUP_WRITE_SIZE      0x1A
 
 #endif
- 
+

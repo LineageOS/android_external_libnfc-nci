@@ -22,7 +22,7 @@
 ** Function         llcp_sdp_proc_data
 **
 ** Description      Do nothing
-**                  
+**
 **
 ** Returns          void
 **
@@ -40,7 +40,7 @@ void llcp_sdp_proc_data (tLLCP_SAP_CBACK_DATA *p_data)
 ** Function         llcp_sdp_check_send_snl
 **
 ** Description      Enqueue Service Name Lookup PDU into sig_xmit_q for transmitting
-**                  
+**
 **
 ** Returns          void
 **
@@ -62,6 +62,15 @@ void llcp_sdp_check_send_snl (void)
         GKI_enqueue (&llcp_cb.lcb.sig_xmit_q, llcp_cb.sdp_cb.p_snl);
         llcp_cb.sdp_cb.p_snl = NULL;
     }
+    else
+    {
+        /* Notify DTA after sending out SNL with SDRES not to send SNLs in AGF PDU */
+        if ((llcp_cb.p_dta_cback)&&(llcp_cb.dta_snl_resp))
+        {
+            llcp_cb.dta_snl_resp = FALSE;
+            (*llcp_cb.p_dta_cback) ();
+        }
+    }
 }
 
 /*******************************************************************************
@@ -69,7 +78,7 @@ void llcp_sdp_check_send_snl (void)
 ** Function         llcp_sdp_add_sdreq
 **
 ** Description      Add Service Discovery Request into SNL PDU
-**                  
+**
 **
 ** Returns          void
 **
@@ -94,7 +103,7 @@ static void llcp_sdp_add_sdreq (UINT8 tid, char *p_name)
 ** Function         llcp_sdp_send_sdreq
 **
 ** Description      Send Service Discovery Request
-**                  
+**
 **
 ** Returns          LLCP_STATUS
 **
@@ -176,7 +185,7 @@ tLLCP_STATUS llcp_sdp_send_sdreq (UINT8 tid, char *p_name)
 ** Function         llcp_sdp_add_sdres
 **
 ** Description      Add Service Discovery Response into SNL PDU
-**                  
+**
 **
 ** Returns          void
 **
@@ -200,7 +209,7 @@ static void llcp_sdp_add_sdres (UINT8 tid, UINT8 sap)
 ** Function         llcp_sdp_send_sdres
 **
 ** Description      Send Service Discovery Response
-**                  
+**
 **
 ** Returns          LLCP_STATUS
 **
@@ -279,7 +288,7 @@ static tLLCP_STATUS llcp_sdp_send_sdres (UINT8 tid, UINT8 sap)
 ** Function         llcp_sdp_get_sap_by_name
 **
 ** Description      Search SAP by service name
-**                  
+**
 **
 ** Returns          SAP if success
 **
@@ -298,6 +307,12 @@ UINT8 llcp_sdp_get_sap_by_name (char *p_name, UINT8 length)
           &&(strlen((char*)p_app_cb->p_service_name) == length)
           &&(!strncmp((char*)p_app_cb->p_service_name, p_name, length)))
         {
+            /* if device is under LLCP DTA testing */
+            if ((llcp_cb.p_dta_cback)
+              &&(!strncmp((char*)p_app_cb->p_service_name, "urn:nfc:sn:cl-echo-in", length)))
+            {
+                llcp_cb.dta_snl_resp = TRUE;
+            }
             return (sap);
         }
     }
@@ -309,7 +324,7 @@ UINT8 llcp_sdp_get_sap_by_name (char *p_name, UINT8 length)
 ** Function         llcp_sdp_return_sap
 **
 ** Description      Report TID and SAP to requester
-**                  
+**
 **
 ** Returns          void
 **
@@ -337,7 +352,7 @@ static void llcp_sdp_return_sap (UINT8 tid, UINT8 sap)
 ** Function         llcp_sdp_proc_deactivation
 **
 ** Description      Report SDP failure for any pending request because of deactivation
-**                  
+**
 **
 ** Returns          void
 **
@@ -357,6 +372,16 @@ void llcp_sdp_proc_deactivation (void)
             llcp_cb.sdp_cb.transac[i].p_cback = NULL;
         }
     }
+
+    /* free any pending SNL PDU */
+    if (llcp_cb.sdp_cb.p_snl)
+    {
+        GKI_freebuf (llcp_cb.sdp_cb.p_snl);
+        llcp_cb.sdp_cb.p_snl = NULL;
+    }
+
+    llcp_cb.sdp_cb.next_tid = 0;
+    llcp_cb.dta_snl_resp = FALSE;
 }
 
 /*******************************************************************************
@@ -364,7 +389,7 @@ void llcp_sdp_proc_deactivation (void)
 ** Function         llcp_sdp_proc_snl
 **
 ** Description      Process SDREQ and SDRES in SNL
-**                  
+**
 **
 ** Returns          LLCP_STATUS
 **

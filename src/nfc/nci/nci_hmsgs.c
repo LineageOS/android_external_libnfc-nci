@@ -316,7 +316,7 @@ UINT8 nci_snd_nfcee_mode_set (UINT8 nfcee_id, UINT8 nfcee_mode)
 ** Function         nci_snd_discover_cmd
 **
 ** Description      compose and send RF Management DISCOVER command to command queue
-**                 
+**
 ** Returns          status
 **
 *******************************************************************************/
@@ -360,7 +360,7 @@ UINT8 nci_snd_discover_cmd (UINT8 num, tNCI_DISCOVER_PARAMS *p_param)
 **
 ** Description      compose and send RF Management DISCOVER SELECT command
 **                  to command queue
-**                 
+**
 ** Returns          status
 **
 *******************************************************************************/
@@ -395,7 +395,7 @@ UINT8 nci_snd_discover_select_cmd (UINT8 rf_disc_id, UINT8 protocol, UINT8 rf_in
 **
 ** Description      compose and send RF Management DEACTIVATE command
 **                  to command queue
-**                 
+**
 ** Returns          status
 **
 *******************************************************************************/
@@ -428,7 +428,7 @@ UINT8 nci_snd_deactivate_cmd (UINT8 de_act_type )
 **
 ** Description      compose and send RF Management DISCOVER MAP command
 **                  to command queue
-**                 
+**
 ** Returns          status
 **
 *******************************************************************************/
@@ -472,7 +472,7 @@ UINT8 nci_snd_discover_map_cmd (UINT8 num, tNCI_DISCOVER_MAPS *p_maps)
 **
 ** Description      compose and send RF Management T3T POLLING command
 **                  to command queue
-**                 
+**
 ** Returns          status
 **
 *******************************************************************************/
@@ -507,7 +507,7 @@ UINT8 nci_snd_t3t_polling (UINT16 system_code, UINT8 rc, UINT8 tsn)
 **
 ** Description      compose and send RF Management RF Communication Parameter
 **                  Update commandto command queue
-**                 
+**
 ** Returns          status
 **
 *******************************************************************************/
@@ -563,7 +563,7 @@ UINT8 nci_snd_parameter_update_cmd (UINT8 *p_param_tlvs, UINT8 tlv_size)
 **
 ** Description      compose and send RF Management SET_LISTEN_MODE_ROUTING command
 **                  to command queue
-**                 
+**
 ** Returns          status
 **
 *******************************************************************************/
@@ -613,7 +613,7 @@ UINT8 nci_snd_set_routing_cmd (BOOLEAN more, UINT8 target_handle, UINT8 num_tlv,
 **
 ** Description      compose and send RF Management GET_LISTEN_MODE_ROUTING command
 **                  to command queue
-**                 
+**
 ** Returns          status
 **
 *******************************************************************************/

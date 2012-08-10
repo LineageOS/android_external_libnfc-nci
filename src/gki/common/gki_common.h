@@ -61,14 +61,14 @@ typedef struct _buffer_hdr
     UINT8   task_id;              /* task which allocated the buffer*/
     UINT8   status;               /* FREE, UNLINKED or QUEUED */
     UINT8   Type;
-    
+
 #if GKI_BUFFER_DEBUG
     /* for tracking who allocated the buffer */
     #define _GKI_MAX_FUNCTION_NAME_LEN   (50)
     char    _function[_GKI_MAX_FUNCTION_NAME_LEN+1];
     int     _line;
 #endif
-    
+
 } BUFFER_HDR_T;
 
 typedef struct _free_queue
@@ -334,7 +334,7 @@ typedef struct
 
 #if (GKI_DEBUG == TRUE)
     UINT16      ExceptionCnt;                       /* number of GKI exceptions that have happened */
-    EXCEPTION_T Exception[GKI_MAX_EXCEPTION];       
+    EXCEPTION_T Exception[GKI_MAX_EXCEPTION];
 #endif
 
 } tGKI_COM_CB;

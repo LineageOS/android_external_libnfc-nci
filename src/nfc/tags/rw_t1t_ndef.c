@@ -2,7 +2,7 @@
 **
 **  Name:          rw_t1t_ndef.c
 **
-**  Description:   This file contains the implementation for Type 1 tag NDEF 
+**  Description:   This file contains the implementation for Type 1 tag NDEF
 **                 operation in Reader/Writer mode.
 **
 **
@@ -57,7 +57,7 @@ const UINT8 rw_t1t_mask_bits[8] =
 ** Description      This function handles the response received for all commands
 **                  sent to tag
 **
-** Returns          event to be sent to application 
+** Returns          event to be sent to application
 **
 *******************************************************************************/
 tRW_EVENT rw_t1t_handle_rsp (const tT1T_CMD_RSP_INFO * p_info, BOOLEAN *p_notify, UINT8 *p_data, tNFC_STATUS *p_status)
@@ -108,7 +108,7 @@ tRW_EVENT rw_t1t_handle_rsp (const tT1T_CMD_RSP_INFO * p_info, BOOLEAN *p_notify
 **
 ** Description      This function returns RW event code based on the current state
 **
-** Returns          RW event code 
+** Returns          RW event code
 **
 *******************************************************************************/
 tRW_EVENT rw_t1t_info_to_event (const tT1T_CMD_RSP_INFO * p_info)
@@ -156,7 +156,7 @@ tRW_EVENT rw_t1t_info_to_event (const tT1T_CMD_RSP_INFO * p_info)
 **
 ** Function         rw_t1t_extract_lock_bytes
 **
-** Description      This function will extract lock bytes if any present in the 
+** Description      This function will extract lock bytes if any present in the
 **                  response data
 **
 ** Returns          None
@@ -192,7 +192,7 @@ void rw_t1t_extract_lock_bytes (UINT8 *p_data)
     else
         return;
 
-    /* Collect lock bytes that are present in the part of the data read from Tag */ 
+    /* Collect lock bytes that are present in the part of the data read from Tag */
     while (num_locks < p_t1t->num_lockbytes)
     {
         if (p_t1t->lockbyte[num_locks].b_lock_read == FALSE)
@@ -232,11 +232,11 @@ void rw_t1t_extract_lock_bytes (UINT8 *p_data)
 ** Description      This function will update tag attributes based on cc, ndef
 **                  message length
 **
-** Returns          None 
+** Returns          None
 **
 *******************************************************************************/
 void rw_t1t_update_tag_state (void)
-{    
+{
     tRW_T1T_CB  *p_t1t          = &rw_cb.tcb.t1t;
 
     /* Set Tag state based on CC value and NDEF Message length */
@@ -260,7 +260,7 @@ void rw_t1t_update_tag_state (void)
         }
         else
         {
-            /* If NDEF is not yet detected then Tag remains in Initialized state 
+            /* If NDEF is not yet detected then Tag remains in Initialized state
             *  after NDEF Detection the Tag state may be updated */
             p_t1t->tag_attribute = RW_T1_TAG_ATTRB_INITIALIZED;
         }
@@ -306,7 +306,7 @@ tNFC_STATUS rw_t1t_read_locks (void)
                 {
                     /* Reading Locks */
                     status          = NFC_STATUS_CONTINUE;
-                    p_t1t->substate = RW_T1T_SUBSTATE_WAIT_READ_LOCKS;                
+                    p_t1t->substate = RW_T1T_SUBSTATE_WAIT_READ_LOCKS;
                 }
                 break;
             }
@@ -455,7 +455,7 @@ static tNFC_STATUS rw_t1t_handle_write_rsp (BOOLEAN *p_notify, UINT8 *p_data)
                 {
                     offset = p_t1t->lock_tlv[p_t1t->lockbyte[num_locks].tlv_index].offset + p_t1t->lockbyte[num_locks].byte_index;
                     num_bits = ((p_t1t->lockbyte[num_locks].byte_index + 1 )* 8 <= p_t1t->lock_tlv[p_t1t->lockbyte[num_locks].tlv_index].num_bits) ? 8 : p_t1t->lock_tlv[p_t1t->lockbyte[num_locks].tlv_index].num_bits % 8;
-                    
+
                     if ((p_t1t->hr[0] & 0x0F) != 1)
                     {
                         memset (write_block,0,T1T_BLOCK_SIZE);
@@ -578,7 +578,7 @@ static tNFC_STATUS rw_t1t_handle_write_rsp (BOOLEAN *p_notify, UINT8 *p_data)
 **
 ** Function         rw_t1t_handle_read_rsp
 **
-** Description      This function handle the response received for RSEG, 
+** Description      This function handle the response received for RSEG,
 **                  RALL, READ8 commands
 **
 ** Returns          status of the current NDEF/TLV Operation
@@ -707,7 +707,7 @@ tNFC_STATUS rw_t1t_handle_read_rsp (BOOLEAN *p_notify,UINT8 *p_data)
                 if (p_t1t->mem[T1T_CC_NMN_BYTE] == T1T_CC_NMN)
                 {
                     ndef_data.status    = rw_t1t_handle_tlv_detect_rsp (p_t1t->mem);
-                    
+
                     ndef_data.cur_size  = p_t1t->ndef_msg_len;
                     if (ndef_data.status == NFC_STATUS_FAILED)
                     {
@@ -864,11 +864,11 @@ static tNFC_STATUS rw_t1t_handle_rall_rsp (BOOLEAN *p_notify,UINT8 *p_data)
 **
 ** Function         rw_t1t_handle_tlv_detect_rsp
 **
-** Description      Handle response to the last command sent while 
+** Description      Handle response to the last command sent while
 **                  detecting tlv
 **
-** Returns          NFC_STATUS_OK, if tlv detect is complete & success   
-**                  NFC_STATUS_FAILED,if tlv detect failed    
+** Returns          NFC_STATUS_OK, if tlv detect is complete & success
+**                  NFC_STATUS_FAILED,if tlv detect failed
 **
 *******************************************************************************/
 static tNFC_STATUS rw_t1t_handle_tlv_detect_rsp (UINT8 *p_data)
@@ -990,7 +990,7 @@ static tNFC_STATUS rw_t1t_handle_tlv_detect_rsp (UINT8 *p_data)
                 p_t1t->ndef_header_offset = offset + p_t1t->work_offset;
                 if (len == T1T_LONG_NDEF_LEN_FIELD_BYTE0)
                 {
-                    /* The next two bytes constitute length bytes */                    
+                    /* The next two bytes constitute length bytes */
                     tlv_detect_state     = RW_T1T_SUBSTATE_WAIT_READ_TLV_LEN0;
                 }
                 else
@@ -1005,7 +1005,7 @@ static tNFC_STATUS rw_t1t_handle_tlv_detect_rsp (UINT8 *p_data)
             case TAG_PROPRIETARY_TLV:
                 if (len == 0xFF)
                 {
-                    /* The next two bytes constitute length bytes */                    
+                    /* The next two bytes constitute length bytes */
                     tlv_detect_state     = RW_T1T_SUBSTATE_WAIT_READ_TLV_LEN0;
                 }
                 else
@@ -1153,7 +1153,7 @@ static tNFC_STATUS rw_t1t_handle_tlv_detect_rsp (UINT8 *p_data)
                     tlv_value[2 - bytes_count] = p_readbytes[offset];
                     if (bytes_count == 0)
                     {
-                        if (p_t1t->num_mem_tlvs >= RW_T1T_MAX_MEM_TLVS) 
+                        if (p_t1t->num_mem_tlvs >= RW_T1T_MAX_MEM_TLVS)
                         {
                             RW_TRACE_ERROR0 ("rw_t1t_handle_tlv_detect_rsp - Maximum buffer allocated for Memory tlv has reached");
                             failed  = TRUE;
@@ -1197,7 +1197,7 @@ static tNFC_STATUS rw_t1t_handle_tlv_detect_rsp (UINT8 *p_data)
             break;
         }
     }
-    
+
     p_t1t->work_offset += bytes_read;
 
     /* If not found and not failed, try to read next segment in Dynamic Memory structure */
@@ -1230,8 +1230,8 @@ static tNFC_STATUS rw_t1t_handle_tlv_detect_rsp (UINT8 *p_data)
 **
 ** Function         rw_t1t_handle_ndef_rall_rsp
 **
-** Description      Handle response to RALL command sent while reading an 
-**                  NDEF message 
+** Description      Handle response to RALL command sent while reading an
+**                  NDEF message
 **
 ** Returns          NFC_STATUS_CONTINUE, if NDEF read operation is not complete
 **                  NFC_STATUS_OK, if NDEF read is successfull
@@ -1307,8 +1307,8 @@ static tNFC_STATUS rw_t1t_handle_ndef_rall_rsp (void)
 **
 ** Function         rw_t1t_handle_ndef_read_rsp
 **
-** Description      Handle response to commands sent while reading an 
-**                  NDEF message 
+** Description      Handle response to commands sent while reading an
+**                  NDEF message
 **
 ** Returns          NFC_STATUS_CONTINUE, if tlv read is not yet complete
 **                  NFC_STATUS_OK, if tlv read is complete & success
@@ -1409,11 +1409,11 @@ static tNFC_STATUS rw_t1t_handle_ndef_read_rsp (UINT8 *p_data)
 **
 ** Function         rw_t1t_next_ndef_write_block
 **
-** Description      This function prepare and writes ndef blocks 
+** Description      This function prepare and writes ndef blocks
 **
 ** Returns          NFC_STATUS_CONTINUE, if tlv write is not yet complete
-**                  NFC_STATUS_OK, if tlv write is complete & success  
-**                  NFC_STATUS_FAILED,if tlv write failed    
+**                  NFC_STATUS_OK, if tlv write is complete & success
+**                  NFC_STATUS_FAILED,if tlv write failed
 **
 *******************************************************************************/
 static tNFC_STATUS rw_t1t_next_ndef_write_block (void)
@@ -1438,7 +1438,7 @@ static tNFC_STATUS rw_t1t_next_ndef_write_block (void)
         b_block_write_cmd = FALSE;
         block           = p_t1t->ndef_block_written + 1;
         p_t1t->segment  = (block * T1T_BLOCK_SIZE) /T1T_SEGMENT_SIZE;
-        
+
         count = 0;
         while (block <= p_t1t->mem[T1T_CC_TMS_BYTE])
         {
@@ -1549,11 +1549,11 @@ static tNFC_STATUS rw_t1t_next_ndef_write_block (void)
 **
 ** Function         rw_t1t_ndef_write_first_block
 **
-** Description      This function writes ndef first block 
+** Description      This function writes ndef first block
 **
 ** Returns          NFC_STATUS_CONTINUE, if tlv write is not yet complete
-**                  NFC_STATUS_OK, if tlv write is complete & success  
-**                  NFC_STATUS_FAILED,if tlv write failed    
+**                  NFC_STATUS_OK, if tlv write is complete & success
+**                  NFC_STATUS_FAILED,if tlv write failed
 **
 *******************************************************************************/
 static tNFC_STATUS rw_t1t_ndef_write_first_block (void)
@@ -1623,11 +1623,11 @@ static tNFC_STATUS rw_t1t_ndef_write_first_block (void)
 ** Function         rw_t1t_send_ndef_byte
 **
 ** Description      Sends ndef message or length field byte and update
-**                  status 
+**                  status
 **
 ** Returns          NFC_STATUS_CONTINUE, if tlv write is not yet complete
-**                  NFC_STATUS_OK, if tlv write is complete & success  
-**                  NFC_STATUS_FAILED,if tlv write failed    
+**                  NFC_STATUS_OK, if tlv write is complete & success
+**                  NFC_STATUS_FAILED,if tlv write failed
 **
 *******************************************************************************/
 static tNFC_STATUS rw_t1t_send_ndef_byte (UINT8 data, UINT8 block, UINT8 index, UINT8 msg_len)
@@ -1664,7 +1664,7 @@ static tNFC_STATUS rw_t1t_send_ndef_byte (UINT8 data, UINT8 block, UINT8 index, 
 **
 ** Description      prepares ndef block to write
 **
-** Returns          block number where to write  
+** Returns          block number where to write
 **
 *******************************************************************************/
 static UINT8 rw_t1t_prepare_ndef_bytes (UINT8 *p_data, UINT8 *p_length_field, UINT8 *p_index, BOOLEAN b_one_byte, UINT8 block, UINT8 lengthfield_len)
@@ -1692,7 +1692,7 @@ static UINT8 rw_t1t_prepare_ndef_bytes (UINT8 *p_data, UINT8 *p_length_field, UI
                     return block;
             }
             (*p_index)++;
-            if (p_t1t->work_offset == lengthfield_len) 
+            if (p_t1t->work_offset == lengthfield_len)
             {
                 break;
             }
@@ -1726,10 +1726,10 @@ static UINT8 rw_t1t_prepare_ndef_bytes (UINT8 *p_data, UINT8 *p_length_field, UI
 **
 ** Function         rw_t1t_send_ndef_block
 **
-** Description      Sends ndef block and update status 
+** Description      Sends ndef block and update status
 **
 ** Returns          NFC_STATUS_CONTINUE, if tlv write is not yet complete
-**                  NFC_STATUS_OK, if tlv write is complete & success  
+**                  NFC_STATUS_OK, if tlv write is complete & success
 **                  NFC_STATUS_FAILED,if tlv write failed
 **
 *******************************************************************************/
@@ -1761,9 +1761,9 @@ static tNFC_STATUS rw_t1t_send_ndef_block (UINT8 *p_data, UINT8 block)
 **
 ** Function         rw_t1t_get_ndef_flags
 **
-** Description      Prepare NDEF Flags 
+** Description      Prepare NDEF Flags
 **
-** Returns          NDEF Flag value  
+** Returns          NDEF Flag value
 **
 *******************************************************************************/
 static UINT8 rw_t1t_get_ndef_flags (void)
@@ -1787,10 +1787,10 @@ static UINT8 rw_t1t_get_ndef_flags (void)
 **
 ** Function         rw_t1t_get_ndef_max_size
 **
-** Description      Calculate maximum size of NDEF message that can be written 
-**                  on to the tag 
+** Description      Calculate maximum size of NDEF message that can be written
+**                  on to the tag
 **
-** Returns          Maximum size of NDEF Message  
+** Returns          Maximum size of NDEF Message
 **
 *******************************************************************************/
 static UINT16 rw_t1t_get_ndef_max_size (void)
@@ -1807,7 +1807,7 @@ static UINT16 rw_t1t_get_ndef_max_size (void)
     p_t1t->segment  = (UINT8) (p_t1t->ndef_msg_offset/T1T_SEGMENT_SIZE);
 
     if (  (tag_size < T1T_STATIC_SIZE)
-        ||(tag_size > (T1T_SEGMENT_SIZE * T1T_MAX_SEGMENTS)) 
+        ||(tag_size > (T1T_SEGMENT_SIZE * T1T_MAX_SEGMENTS))
         ||((p_t1t->mem[T1T_CC_NMN_BYTE] != T1T_CC_NMN) && (p_t1t->mem[T1T_CC_NMN_BYTE] != 0))  )
     {
         /* Tag not formated, determine maximum NDEF size from HR */
@@ -1859,12 +1859,12 @@ static UINT16 rw_t1t_get_ndef_max_size (void)
 **
 ** Function         rw_t1t_handle_ndef_write_rsp
 **
-** Description      Handle response to commands sent while writing an 
-**                  NDEF message 
+** Description      Handle response to commands sent while writing an
+**                  NDEF message
 **
 ** Returns          NFC_STATUS_CONTINUE, if tlv write is not yet complete
-**                  NFC_STATUS_OK, if tlv write is complete & success  
-**                  NFC_STATUS_FAILED,if tlv write failed    
+**                  NFC_STATUS_OK, if tlv write is complete & success
+**                  NFC_STATUS_FAILED,if tlv write failed
 **
 *******************************************************************************/
 static tNFC_STATUS rw_t1t_handle_ndef_write_rsp (UINT8 *p_data)
@@ -1923,9 +1923,9 @@ static tNFC_STATUS rw_t1t_handle_ndef_write_rsp (UINT8 *p_data)
 **
 ** Function         rw_t1t_update_attributes
 **
-** Description      This function will prepare attributes for the current 
+** Description      This function will prepare attributes for the current
 **                  segment. Every bit in the attribute refers to one byte of
-**                  tag content.The bit corresponding to a tag byte will be set 
+**                  tag content.The bit corresponding to a tag byte will be set
 **                  to '1' when the Tag byte is read only,otherwise will be set
 **                  to '0'
 **
@@ -1941,7 +1941,7 @@ static void rw_t1t_update_attributes (void)
     UINT8       num_bytes;
     UINT16      offset;
     UINT8       bits_per_byte  = 8;
-    
+
     count = 0;
     while (count < T1T_BLOCKS_PER_SEGMENT)
     {
@@ -1960,7 +1960,7 @@ static void rw_t1t_update_attributes (void)
         p_t1t->attr[0x0E] = 0xFF; /* lock/otp bytes */
         p_t1t->attr[0x0F] = 0xFF; /* lock/otp bytes */
     }
-    
+
     /* update attr based on lock control and mem control tlvs */
     count = 0;
     while (count < p_t1t->num_lockbytes)
@@ -1995,7 +1995,7 @@ static void rw_t1t_update_attributes (void)
 **
 ** Function         rw_t1t_get_lock_bits_for_segment
 **
-** Description      This function will identify the index of the dynamic lock 
+** Description      This function will identify the index of the dynamic lock
 **                  byte that covers the current segment
 **
 ** Parameters:      segment, segment number
@@ -2040,7 +2040,7 @@ static UINT8 rw_t1t_get_lock_bits_for_segment (UINT8 segment,UINT8 *p_start_byte
         /* Skip lock bits that covers all previous segments */
         if (bytes_locked_per_bit * num_bits + byte_count <= lower_offset)
         {
-            byte_count += bytes_locked_per_bit * num_bits;            
+            byte_count += bytes_locked_per_bit * num_bits;
             num_dynamic_locks++;
         }
         else
@@ -2049,13 +2049,13 @@ static UINT8 rw_t1t_get_lock_bits_for_segment (UINT8 segment,UINT8 *p_start_byte
             bit_count = 0;
             while (bit_count < num_bits)
             {
-                byte_count += bytes_locked_per_bit;                    
+                byte_count += bytes_locked_per_bit;
                 if (byte_count > lower_offset)
                 {
                     *p_start_byte = num_dynamic_locks;
                     *p_end_byte = num_dynamic_locks;
                     *p_start_bit  = bit_count;
-                    bit_count++;                    
+                    bit_count++;
                     total_bits = 1;
                     break;
                 }
@@ -2079,7 +2079,7 @@ static UINT8 rw_t1t_get_lock_bits_for_segment (UINT8 segment,UINT8 *p_start_byte
         /* Collect all lock bits that covers the current segment */
         if ((bytes_locked_per_bit * (num_bits - bit_count)) + byte_count < upper_offset)
         {
-            byte_count       += bytes_locked_per_bit * (num_bits - bit_count);                
+            byte_count       += bytes_locked_per_bit * (num_bits - bit_count);
             total_bits       += num_bits - bit_count;
             bit_count         = 0;
             *p_end_byte       = num_dynamic_locks;
@@ -2091,7 +2091,7 @@ static UINT8 rw_t1t_get_lock_bits_for_segment (UINT8 segment,UINT8 *p_start_byte
             bit_count = 0;
             while (bit_count < num_bits)
             {
-                byte_count += bytes_locked_per_bit;                    
+                byte_count += bytes_locked_per_bit;
                 if (byte_count >= upper_offset)
                 {
                     *p_end_byte = num_dynamic_locks;
@@ -2109,8 +2109,8 @@ static UINT8 rw_t1t_get_lock_bits_for_segment (UINT8 segment,UINT8 *p_start_byte
 **
 ** Function         rw_t1t_update_lock_attributes
 **
-** Description      This function will check if the tag index passed as 
-**                  argument is a locked byte and return 
+** Description      This function will check if the tag index passed as
+**                  argument is a locked byte and return
 **                  TRUE or FALSE
 **
 ** Parameters:      index, the index of the byte in the tag
@@ -2137,7 +2137,7 @@ static void rw_t1t_update_lock_attributes (void)
     UINT8       num_lock_bits;
     UINT8       total_bits;
 
-    
+
     block_count = 0;
     while (block_count < T1T_BLOCKS_PER_SEGMENT)
     {
@@ -2180,7 +2180,7 @@ static void rw_t1t_update_lock_attributes (void)
         /* update lock_attr based on segment and using dynamic lock bytes */
         if ((total_bits = rw_t1t_get_lock_bits_for_segment (p_t1t->segment,&start_lock_byte, &start_lock_bit,&end_lock_byte)) != 0)
         {
-            xx                       = start_lock_bit;            
+            xx                       = start_lock_bit;
             num_dynamic_lock_bytes   = start_lock_byte;
             bits_covered             = 0;
             bytes_covered            = 0;
@@ -2229,7 +2229,7 @@ static void rw_t1t_update_lock_attributes (void)
 **
 ** Function         rw_t1t_is_lock_reserved_otp_byte
 **
-** Description      This function will check if the tag index passed as 
+** Description      This function will check if the tag index passed as
 **                  argument is a lock or reserved or otp byte
 **
 ** Parameters:      index, the index of the byte in the tag's current segment
@@ -2252,9 +2252,9 @@ static BOOLEAN rw_t1t_is_lock_reserved_otp_byte (UINT16 index)
     }
     index = index % T1T_SEGMENT_SIZE;
 
-    /* Every bit in p_t1t->attr indicates one specific byte of the tag is either a lock/reserved/otp byte or not 
+    /* Every bit in p_t1t->attr indicates one specific byte of the tag is either a lock/reserved/otp byte or not
      * So, each array element in p_t1t->attr covers one block in the tag as T1 block size and array element size is 8
-     * Find the block and offset for the index (passed as argument) and Check if the offset bit in the 
+     * Find the block and offset for the index (passed as argument) and Check if the offset bit in the
      * p_t1t->attr[block] is set or not. If the bit is set then it is a lock/reserved/otp byte, otherwise not */
 
     return ((p_t1t->attr[index /8] & rw_t1t_mask_bits[index % 8]) == 0) ? FALSE:TRUE;
@@ -2264,7 +2264,7 @@ static BOOLEAN rw_t1t_is_lock_reserved_otp_byte (UINT16 index)
 **
 ** Function         rw_t1t_is_read_only_byte
 **
-** Description      This function will check if the tag index passed as 
+** Description      This function will check if the tag index passed as
 **                  argument is a read only byte
 **
 ** Parameters:      index, the index of the byte in the tag's current segment
@@ -2287,9 +2287,9 @@ static BOOLEAN rw_t1t_is_read_only_byte (UINT16 index)
     }
 
     index = index % T1T_SEGMENT_SIZE;
-    /* Every bit in p_t1t->lock_attr indicates one specific byte of the tag is a read only byte or read write byte 
+    /* Every bit in p_t1t->lock_attr indicates one specific byte of the tag is a read only byte or read write byte
      * So, each array element in p_t1t->lock_attr covers one block in the tag as T1 block size and array element size is 8
-     * Find the block and offset for the index (passed as argument) and Check if the offset bit in the 
+     * Find the block and offset for the index (passed as argument) and Check if the offset bit in the
      * p_t1t->lock_attr[block] is set or not. If the bit is set then it is a read only byte, otherwise read write byte */
 
     return ((p_t1t->lock_attr[index /8] & rw_t1t_mask_bits[index % 8]) == 0) ? FALSE:TRUE;
@@ -2398,7 +2398,7 @@ tNFC_STATUS RW_T1tFormatNDef (void)
 **
 ** Function         RW_T1tLocateTlv
 **
-** Description      This function is called to find the start of the given TLV 
+** Description      This function is called to find the start of the given TLV
 **
 ** Parameters:      tlv_type, Type of TLV to find
 **
@@ -2420,7 +2420,7 @@ tNFC_STATUS RW_T1tLocateTlv (UINT8 tlv_type)
         return (NFC_STATUS_FAILED);
     }
     p_t1t->tlv_detect = tlv_type;
-    
+
     if(  (p_t1t->tlv_detect == TAG_NDEF_TLV)
        &&(((p_t1t->hr[0]) & 0xF0) != T1T_NDEF_SUPPORTED)  )
     {
@@ -2485,7 +2485,7 @@ tNFC_STATUS RW_T1tLocateTlv (UINT8 tlv_type)
             p_t1t->work_offset  = 0;
             p_t1t->state        = RW_T1T_STATE_TLV_DETECT;
             p_t1t->substate     = RW_T1T_SUBSTATE_NONE;
-        }        
+        }
 
     }
     return status;
@@ -2495,7 +2495,7 @@ tNFC_STATUS RW_T1tLocateTlv (UINT8 tlv_type)
 **
 ** Function         RW_T1tDetectNDef
 **
-** Description 
+** Description
 **      This function is used to perform NDEF detection on a Type 1 tag, and
 **      retrieve the tag's NDEF attribute information (block 0).
 **
@@ -2512,7 +2512,7 @@ tNFC_STATUS RW_T1tLocateTlv (UINT8 tlv_type)
 tNFC_STATUS RW_T1tDetectNDef (void)
 {
     return RW_T1tLocateTlv (TAG_NDEF_TLV);
-}                     
+}
 
 /*******************************************************************************
 **
@@ -2522,16 +2522,16 @@ tNFC_STATUS RW_T1tDetectNDef (void)
 **
 ** Parameters:      p_buffer:   The buffer into which to read the NDEF message
 **                  buf_len:    The length of the buffer
-**                                                                            
+**
 ** Returns          NCI_STATUS_OK, if read was started. Otherwise, error status.
 **
-*******************************************************************************/                                   
+*******************************************************************************/
 tNFC_STATUS RW_T1tReadNDef (UINT8 *p_buffer, UINT16 buf_len)
 {
-    tNFC_STATUS     status = NFC_STATUS_FAILED;                            
+    tNFC_STATUS     status = NFC_STATUS_FAILED;
     tRW_T1T_CB      *p_t1t = &rw_cb.tcb.t1t;
     BOOLEAN         b_notify;
-    UINT8           adds;                         
+    UINT8           adds;
     const tT1T_CMD_RSP_INFO *p_cmd_rsp_info_rall = t1t_cmd_to_rsp_info (T1T_CMD_RALL);
     const tT1T_CMD_RSP_INFO *p_cmd_rsp_info_rseg = t1t_cmd_to_rsp_info (T1T_CMD_RSEG);
 
@@ -2575,7 +2575,7 @@ tNFC_STATUS RW_T1tReadNDef (UINT8 *p_buffer, UINT16 buf_len)
         /* If already got response to RSEG 0 */
         p_t1t->state = RW_T1T_STATE_READ_NDEF;
         p_t1t->p_cmd_rsp_info = (tT1T_CMD_RSP_INFO *)p_cmd_rsp_info_rseg;
-        
+
         rw_t1t_handle_read_rsp (&b_notify,p_t1t->mem);
         status       = NFC_STATUS_OK;
     }
@@ -2584,7 +2584,7 @@ tNFC_STATUS RW_T1tReadNDef (UINT8 *p_buffer, UINT16 buf_len)
         /* If already got response to RALL */
         p_t1t->state = RW_T1T_STATE_READ_NDEF;
         p_t1t->p_cmd_rsp_info = (tT1T_CMD_RSP_INFO *) p_cmd_rsp_info_rall;
-        
+
         rw_t1t_handle_read_rsp (&b_notify,p_t1t->mem);
         status       = NFC_STATUS_OK;
 
@@ -2640,7 +2640,7 @@ tNFC_STATUS RW_T1tWriteNDef (UINT16 msg_len, UINT8 *p_msg)
         RW_TRACE_WARNING1 ("RW_T1tWriteNDef - Busy - State: %u", p_t1t->state);
         return (NFC_STATUS_FAILED);
     }
-    
+
     /* Check HR0 if NDEF supported by the tag */
     if (((p_t1t->hr[0]) & 0xF0) != T1T_NDEF_SUPPORTED)
     {
@@ -2654,7 +2654,7 @@ tNFC_STATUS RW_T1tWriteNDef (UINT16 msg_len, UINT8 *p_msg)
         RW_TRACE_ERROR0 ("RW_T1tWriteNDef - Tag cannot update NDEF");
         return (NFC_STATUS_REFUSED);
     }
-    
+
     p_t1t->p_ndef_buffer        = p_msg;
     p_t1t->new_ndef_msg_len     = msg_len;
     new_lengthfield_len         = p_t1t->new_ndef_msg_len > 254 ? 3:1;
@@ -2721,7 +2721,7 @@ tNFC_STATUS RW_T1tWriteNDef (UINT16 msg_len, UINT8 *p_msg)
                 p_t1t->state    = RW_T1T_STATE_WRITE_NDEF;
                 p_t1t->substate = RW_T1T_SUBSTATE_WAIT_INVALIDATE_NDEF;
             }
-    
+
         }
     }
 
@@ -2768,7 +2768,7 @@ tNFC_STATUS RW_T1tSetTagReadOnly (BOOLEAN b_hard_lock)
     p_t1t->b_hard_lock = b_hard_lock;
 
     if (  (p_t1t->tag_attribute == RW_T1_TAG_ATTRB_READ_WRITE)
-        ||(p_t1t->tag_attribute == RW_T1_TAG_ATTRB_INITIALIZED) 
+        ||(p_t1t->tag_attribute == RW_T1_TAG_ATTRB_INITIALIZED)
         ||(p_t1t->tag_attribute == RW_T1_TAG_ATTRB_INITIALIZED_NDEF)  )
     {
         /* send WRITE-NE command */

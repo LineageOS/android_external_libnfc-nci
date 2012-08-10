@@ -79,7 +79,7 @@ static void nfa_cho_ndef_cback (tNFA_NDEF_EVT event, tNFA_NDEF_EVT_DATA *p_data)
     if ((p_msg = (tNFA_CHO_NDEF_TYPE_HDLR_EVT *) GKI_getbuf (sizeof (tNFA_CHO_NDEF_TYPE_HDLR_EVT))) != NULL)
     {
         p_msg->hdr.event = NFA_CHO_NDEF_TYPE_HANDLER_EVT;
-        
+
         /* copy NDEF handler callback event and data */
         p_msg->event = event;
         memcpy (&(p_msg->data), p_data, sizeof (tNFA_NDEF_EVT_DATA));
@@ -110,15 +110,15 @@ static void nfa_cho_ndef_cback (tNFA_NDEF_EVT event, tNFA_NDEF_EVT_DATA *p_data)
                 }
             }
 
-            /* 
-            ** NDEF message could be bigger than max GKI buffer 
+            /*
+            ** NDEF message could be bigger than max GKI buffer
             ** so allocate memory from platform.
             */
             p_msg->data.ndef_data.p_data = (UINT8 *) nfa_mem_co_alloc (p_msg->data.ndef_data.len);
 
             if (p_msg->data.ndef_data.p_data)
             {
-                memcpy (p_msg->data.ndef_data.p_data, 
+                memcpy (p_msg->data.ndef_data.p_data,
                         p_data->ndef_data.p_data,
                         p_msg->data.ndef_data.len);
             }
@@ -173,7 +173,7 @@ void nfa_cho_proc_ndef_type_handler_evt (tNFA_CHO_INT_EVENT_DATA *p_evt_data)
         if (nfa_cho_cb.state != NFA_CHO_ST_CONNECTED)
         {
 #if (BT_TRACE_PROTOCOL == TRUE)
-            DispNDEFMsg (p_evt_data->ndef_type_hdlr.data.ndef_data.p_data, 
+            DispNDEFMsg (p_evt_data->ndef_type_hdlr.data.ndef_data.p_data,
                          p_evt_data->ndef_type_hdlr.data.ndef_data.len, TRUE);
 #endif
             msg_type = nfa_cho_get_msg_type (p_evt_data->ndef_type_hdlr.data.ndef_data.len,
@@ -214,7 +214,7 @@ void nfa_cho_proc_ndef_type_handler_evt (tNFA_CHO_INT_EVENT_DATA *p_evt_data)
 *******************************************************************************/
 tNFA_STATUS nfa_cho_proc_api_reg (tNFA_CHO_INT_EVENT_DATA *p_evt_data)
 {
-    CHO_TRACE_DEBUG1 ("nfa_cho_proc_api_reg (): enable_server=%d", 
+    CHO_TRACE_DEBUG1 ("nfa_cho_proc_api_reg (): enable_server=%d",
                       p_evt_data->api_reg.enable_server);
 
     if (p_evt_data->api_reg.enable_server == TRUE)
@@ -236,11 +236,11 @@ tNFA_STATUS nfa_cho_proc_api_reg (tNFA_CHO_INT_EVENT_DATA *p_evt_data)
     }
     else
     {
-        /* 
-        ** Register Handover client on LLCP for negotiated handover 
+        /*
+        ** Register Handover client on LLCP for negotiated handover
         ** LLCP will notify link status through callback
         */
-        nfa_cho_cb.client_sap = LLCP_RegisterClient (LLCP_LINK_TYPE_DATA_LINK_CONNECTION, 
+        nfa_cho_cb.client_sap = LLCP_RegisterClient (LLCP_LINK_TYPE_DATA_LINK_CONNECTION,
                                                      nfa_cho_sm_llcp_cback);
 
         if (nfa_cho_cb.client_sap == LLCP_INVALID_SAP)
@@ -261,13 +261,13 @@ tNFA_STATUS nfa_cho_proc_api_reg (tNFA_CHO_INT_EVENT_DATA *p_evt_data)
     }
     if (nfa_cho_cb.bt_ndef_type_handle == NFA_HANDLE_INVALID)
     {
-        NFA_RegisterNDefTypeHandler (TRUE, NFA_TNF_RFC2046_MEDIA, 
+        NFA_RegisterNDefTypeHandler (TRUE, NFA_TNF_RFC2046_MEDIA,
                                      p_bt_oob_rec_type, (UINT8) strlen ((char *) p_bt_oob_rec_type),
                                      nfa_cho_ndef_cback);
     }
     if (nfa_cho_cb.wifi_ndef_type_handle == NFA_HANDLE_INVALID)
     {
-        NFA_RegisterNDefTypeHandler (TRUE, NFA_TNF_RFC2046_MEDIA, 
+        NFA_RegisterNDefTypeHandler (TRUE, NFA_TNF_RFC2046_MEDIA,
                                      p_wifi_rec_type, (UINT8) strlen ((char *) p_wifi_rec_type),
                                      nfa_cho_ndef_cback);
     }
@@ -337,7 +337,7 @@ void nfa_cho_proc_api_dereg (void)
 ** Function         nfa_cho_create_connection
 **
 ** Description      Create data link connection with handover server in remote
-**                  
+**
 **
 ** Returns          None
 **
@@ -351,7 +351,7 @@ tNFA_STATUS nfa_cho_create_connection (void)
 
     if (nfa_cho_cb.client_sap == LLCP_INVALID_SAP)
     {
-        nfa_cho_cb.client_sap = LLCP_RegisterClient (LLCP_LINK_TYPE_DATA_LINK_CONNECTION, 
+        nfa_cho_cb.client_sap = LLCP_RegisterClient (LLCP_LINK_TYPE_DATA_LINK_CONNECTION,
                                                      nfa_cho_sm_llcp_cback);
     }
 
@@ -364,7 +364,7 @@ tNFA_STATUS nfa_cho_create_connection (void)
         /* create data link connection with server name */
         conn_params.miu = (UINT16) (nfa_cho_cb.local_link_miu >= NFA_CHO_MIU ? NFA_CHO_MIU : nfa_cho_cb.local_link_miu);
         conn_params.rw  = NFA_CHO_RW;
-        BCM_STRNCPY_S (conn_params.sn, sizeof (conn_params.sn), 
+        BCM_STRNCPY_S (conn_params.sn, sizeof (conn_params.sn),
                        p_cho_service_name, LLCP_MAX_SN_LEN);
         conn_params.sn[LLCP_MAX_SN_LEN] = 0;
 
@@ -380,7 +380,7 @@ tNFA_STATUS nfa_cho_create_connection (void)
 ** Function         nfa_cho_process_disconnection
 **
 ** Description      Clean up buffers and notify disconnection to application
-**                  
+**
 **
 ** Returns          None
 **
@@ -424,7 +424,7 @@ void nfa_cho_process_disconnection (tNFA_CHO_DISC_REASON disc_reason)
 ** Function         nfa_cho_notify_tx_fail_evt
 **
 ** Description      Notify application of NFA_CHO_TX_FAIL_EVT
-**                  
+**
 **
 ** Returns          None
 **
@@ -446,7 +446,7 @@ void nfa_cho_notify_tx_fail_evt (tNFA_STATUS status)
 ** Function         nfa_cho_reassemble_ho_msg
 **
 ** Description      Reassemble received data for handover message
-**                  
+**
 **
 ** Returns          tNFA_CHO_RX_NDEF_STATUS
 **
@@ -458,7 +458,7 @@ tNFA_CHO_RX_NDEF_STATUS nfa_cho_reassemble_ho_msg (UINT8 local_sap, UINT8 remote
     nfa_sys_stop_timer (&nfa_cho_cb.timer);
 
     /*
-    ** allocate memory for NDEF message for the first segment 
+    ** allocate memory for NDEF message for the first segment
     ** validate NDEF message to check if received complete message
     */
     rx_status = nfa_cho_read_ndef_msg (local_sap, remote_sap);
@@ -489,9 +489,9 @@ tNFA_CHO_RX_NDEF_STATUS nfa_cho_reassemble_ho_msg (UINT8 local_sap, UINT8 remote
         /* if we are expecting Hr then send Hs Error record */
         if (nfa_cho_cb.substate == NFA_CHO_SUBSTATE_W4_REMOTE_HR)
         {
-            /* 
+            /*
             ** notify our buffer size and ask retry with modified message later
-            ** handover request will disconnect 
+            ** handover request will disconnect
             */
             nfa_cho_send_hs_error (NFA_CHO_ERROR_PERM_MEM, nfa_cho_cb.rx_ndef_buf_size);
         }
@@ -554,7 +554,7 @@ tNFA_STATUS nfa_cho_send_handover_msg (void)
     BT_HDR       *p_msg;
     UINT8        *p_src, *p_dst;
 
-    CHO_TRACE_DEBUG2 ("nfa_cho_send_handover_msg () size=%d, sent=%d", 
+    CHO_TRACE_DEBUG2 ("nfa_cho_send_handover_msg () size=%d, sent=%d",
                       nfa_cho_cb.tx_ndef_cur_size, nfa_cho_cb.tx_ndef_sent_size);
 
     /* while data link connection is not congested */
@@ -611,7 +611,7 @@ tNFA_STATUS nfa_cho_send_handover_msg (void)
         }
     }
 
-    /* 
+    /*
     ** free buffer when receiving response or disconnected because we may need to send
     ** Hr message again due to collision
     */
@@ -657,8 +657,8 @@ tNFA_CHO_RX_NDEF_STATUS nfa_cho_read_ndef_msg (UINT8 local_sap, UINT8 remote_sap
     more = TRUE;
     while (more)
     {
-        more = LLCP_ReadDataLinkData (local_sap, 
-                                      remote_sap, 
+        more = LLCP_ReadDataLinkData (local_sap,
+                                      remote_sap,
                                       (UINT16)(nfa_cho_cb.rx_ndef_buf_size - nfa_cho_cb.rx_ndef_cur_size),
                                       &length,
                                       nfa_cho_cb.p_rx_ndef_msg + nfa_cho_cb.rx_ndef_cur_size);
@@ -724,8 +724,8 @@ tNFA_CHO_RX_NDEF_STATUS nfa_cho_read_ndef_msg (UINT8 local_sap, UINT8 remote_sap
 **
 ** Function         nfa_cho_add_cr_record
 **
-** Description      Adding Collision Resolution record    
-**                  
+** Description      Adding Collision Resolution record
+**
 **
 ** Returns          NDEF_OK if success
 **
@@ -749,7 +749,7 @@ tNDEF_STATUS nfa_cho_add_cr_record (UINT8 *p_msg, UINT32 max_size, UINT32 *p_cur
 #endif
 
     CHO_TRACE_DEBUG1 ("tx_random_number = 0x%04x", nfa_cho_cb.tx_random_number);
-    
+
     /* Add Well-Known Type:Collistion Resolution Record */
     status = NDEF_MsgAddWktCr (p_msg, max_size, p_cur_size,
                                nfa_cho_cb.tx_random_number);
@@ -762,7 +762,7 @@ tNDEF_STATUS nfa_cho_add_cr_record (UINT8 *p_msg, UINT32 max_size, UINT32 *p_cur
 ** Function         nfa_cho_add_ac_record
 **
 ** Description      Adding Alternative Carrier record
-**                  
+**
 **
 ** Returns          NDEF_OK if success
 **
@@ -791,7 +791,7 @@ tNDEF_STATUS nfa_cho_add_ac_record (UINT8 *p_msg, UINT32 max_size, UINT32 *p_cur
     /* Alternative Carrier Records */
     for (xx = 0; (xx < num_ac_info) && (status == NDEF_OK); xx++)
     {
-        if (!p_rec) 
+        if (!p_rec)
         {
             status = NDEF_REC_NOT_FOUND;
             break;
@@ -816,7 +816,7 @@ tNDEF_STATUS nfa_cho_add_ac_record (UINT8 *p_msg, UINT32 max_size, UINT32 *p_cur
         /* auxilary data reference */
         for (yy = 0; yy < p_ac_info[xx].num_aux_data; yy++)
         {
-            if (!p_rec) 
+            if (!p_rec)
             {
                 status = NDEF_REC_NOT_FOUND;
                 break;
@@ -898,7 +898,7 @@ tNFA_STATUS nfa_cho_send_hr (tNFA_CHO_API_SEND_HR *p_api_send_hr)
     /* Alternative Carrier Records */
     if (NDEF_OK != nfa_cho_add_ac_record (p_msg_cr_ac, max_size, &cur_size_cr_ac,
                                           p_api_send_hr->num_ac_info, p_api_send_hr->p_ac_info,
-                                          p_api_send_hr->p_ndef, p_api_send_hr->max_ndef_size, 
+                                          p_api_send_hr->p_ndef, p_api_send_hr->max_ndef_size,
                                           &(p_api_send_hr->cur_ndef_size)))
     {
         CHO_TRACE_ERROR0 ("Failed to add ac record");
@@ -988,7 +988,7 @@ tNFA_STATUS nfa_cho_send_hr (tNFA_CHO_API_SEND_HR *p_api_send_hr)
 ** Function         nfa_cho_send_hs
 **
 ** Description      Send Handover Select Message
-**                  
+**
 **
 ** Returns          NFA_STATUS_OK if success
 **
@@ -1019,7 +1019,7 @@ tNFA_STATUS nfa_cho_send_hs (tNFA_CHO_API_SEND_HS *p_api_select)
 
         if (NDEF_OK != nfa_cho_add_ac_record (p_msg_ac, max_size, &cur_size_ac,
                                               p_api_select->num_ac_info, p_api_select->p_ac_info,
-                                              p_api_select->p_ndef, p_api_select->max_ndef_size, 
+                                              p_api_select->p_ndef, p_api_select->max_ndef_size,
                                               &(p_api_select->cur_ndef_size)))
         {
             CHO_TRACE_ERROR0 ("Failed to add ac record");
@@ -1122,7 +1122,7 @@ tNFA_STATUS nfa_cho_send_hs (tNFA_CHO_API_SEND_HS *p_api_select)
 ** Function         nfa_cho_send_hs_error
 **
 ** Description      Sending Handover Select Message with error record
-**                  
+**
 **
 ** Returns          NFA_STATUS_OK if success
 **
@@ -1133,7 +1133,7 @@ tNFA_STATUS nfa_cho_send_hs_error (UINT8 error_reason, UINT32 error_data)
     UINT8           version;
     UINT32          max_size;
 
-    CHO_TRACE_DEBUG2 ("nfa_cho_send_hs_error () error_reason=0x%x, error_data=0x%x", 
+    CHO_TRACE_DEBUG2 ("nfa_cho_send_hs_error () error_reason=0x%x, error_data=0x%x",
                        error_reason, error_data);
 
     /* Handover Select Message */
@@ -1204,12 +1204,12 @@ tNFA_STATUS nfa_cho_send_hs_error (UINT8 error_reason, UINT32 error_data)
 ** Function         nfa_cho_get_random_number
 **
 ** Description      Return random number in Handover Request message
-**                  
+**
 **
 ** Returns          random number in "cr" record
 **
 *******************************************************************************/
-UINT16 nfa_cho_get_random_number (UINT8 *p_ndef_msg) 
+UINT16 nfa_cho_get_random_number (UINT8 *p_ndef_msg)
 {
     UINT16 random_number;
     UINT8 *p_cr_record, *p_cr_payload;
@@ -1289,12 +1289,12 @@ tNFA_STATUS nfa_cho_parse_ac_records (UINT8 *p_ndef_msg, UINT8 *p_num_ac_rec, tN
         {
             if (p_ac_rec->carrier_data_ref.ref_len > NFA_CHO_MAX_REF_NAME_LEN)
             {
-                CHO_TRACE_ERROR1 ("Too many bytes for carrier_data_ref, ref_len = %d", 
+                CHO_TRACE_ERROR1 ("Too many bytes for carrier_data_ref, ref_len = %d",
                                    p_ac_rec->carrier_data_ref.ref_len);
                 return NFA_STATUS_FAILED;
             }
 
-            BE_STREAM_TO_ARRAY (p_ac_payload, 
+            BE_STREAM_TO_ARRAY (p_ac_payload,
                                 p_ac_rec->carrier_data_ref.ref_name,
                                 p_ac_rec->carrier_data_ref.ref_len);
             ac_payload_len -= p_ac_rec->carrier_data_ref.ref_len;
@@ -1321,13 +1321,13 @@ tNFA_STATUS nfa_cho_parse_ac_records (UINT8 *p_ndef_msg, UINT8 *p_num_ac_rec, tN
                 {
                     if (p_ac_rec->aux_data_ref[yy].ref_len > NFA_CHO_MAX_REF_NAME_LEN)
                     {
-                        CHO_TRACE_ERROR2 ("Too many bytes for aux_data_ref[%d], ref_len=%d", 
+                        CHO_TRACE_ERROR2 ("Too many bytes for aux_data_ref[%d], ref_len=%d",
                                            yy, p_ac_rec->aux_data_ref[yy].ref_len);
                         return NFA_STATUS_FAILED;
                     }
 
-                    BE_STREAM_TO_ARRAY (p_ac_payload, 
-                                        p_ac_rec->aux_data_ref[yy].ref_name, 
+                    BE_STREAM_TO_ARRAY (p_ac_payload,
+                                        p_ac_rec->aux_data_ref[yy].ref_name,
                                         p_ac_rec->aux_data_ref[yy].ref_len);
                     ac_payload_len -= p_ac_rec->aux_data_ref[yy].ref_len;
                 }
@@ -1367,7 +1367,7 @@ tNFA_STATUS nfa_cho_parse_ac_records (UINT8 *p_ndef_msg, UINT8 *p_num_ac_rec, tN
 **
 ** Description      Parsing Handover Request message to retrieve version, random number,
 **                  Alternative Carrier records and store into tNFA_CHO_AC_REC
-**                  
+**
 **
 ** Returns          tNFA_STATUS
 **
@@ -1432,7 +1432,7 @@ tNFA_STATUS nfa_cho_parse_hr_record (UINT8  *p_ndef_msg,
 ** Function         nfa_cho_parse_carrier_config
 **
 ** Description      Parse Alternative Carrier Configuration and Aux Data
-**                  
+**
 **
 ** Returns          tNFA_STATUS
 **
@@ -1447,8 +1447,8 @@ tNFA_STATUS nfa_cho_parse_carrier_config (UINT8 *p_ndef_msg, UINT8 num_ac_rec, t
     /* Parse Alternative Carrier Configuration and Aux Data */
     for (xx = 0; xx < num_ac_rec; xx++)
     {
-        p_record = NDEF_MsgGetFirstRecById (p_ndef_msg, 
-                                            p_ac_rec->carrier_data_ref.ref_name, 
+        p_record = NDEF_MsgGetFirstRecById (p_ndef_msg,
+                                            p_ac_rec->carrier_data_ref.ref_name,
                                             p_ac_rec->carrier_data_ref.ref_len);
 
         if (!p_record)
@@ -1462,8 +1462,8 @@ tNFA_STATUS nfa_cho_parse_carrier_config (UINT8 *p_ndef_msg, UINT8 num_ac_rec, t
         for (yy = 0; yy < p_ac_rec->aux_data_ref_count; yy++)
         {
             /* Get aux data record by Payload ID */
-            p_record = NDEF_MsgGetFirstRecById (p_ndef_msg, 
-                                                p_ac_rec->aux_data_ref[yy].ref_name, 
+            p_record = NDEF_MsgGetFirstRecById (p_ndef_msg,
+                                                p_ac_rec->aux_data_ref[yy].ref_name,
                                                 p_ac_rec->aux_data_ref[yy].ref_len);
 
             if (!p_record)
@@ -1487,7 +1487,7 @@ tNFA_STATUS nfa_cho_parse_carrier_config (UINT8 *p_ndef_msg, UINT8 num_ac_rec, t
 **
 ** Description      Parse Handover Request Message
 **                  In case of parsing error, let peer got timeout (1 sec).
-**                  
+**
 **
 ** Returns          None
 **
@@ -1502,7 +1502,7 @@ void nfa_cho_proc_hr (UINT32 length, UINT8 *p_ndef_msg)
     CHO_TRACE_DEBUG1 ("nfa_cho_proc_hr () length=%d", length);
 
     /* Parse Handover Request record */
-    if (NDEF_OK != nfa_cho_parse_hr_record (p_ndef_msg, &version, &random_number, 
+    if (NDEF_OK != nfa_cho_parse_hr_record (p_ndef_msg, &version, &random_number,
                                             &evt_data.request.num_ac_rec,
                                             &evt_data.request.ac_rec[0]))
     {
@@ -1524,7 +1524,7 @@ void nfa_cho_proc_hr (UINT32 length, UINT8 *p_ndef_msg)
         }
     }
 
-    if (NFA_STATUS_OK != nfa_cho_parse_carrier_config (p_ndef_msg, 
+    if (NFA_STATUS_OK != nfa_cho_parse_carrier_config (p_ndef_msg,
                                                        evt_data.request.num_ac_rec,
                                                        &evt_data.request.ac_rec[0]))
     {
@@ -1562,12 +1562,12 @@ void nfa_cho_proc_hr (UINT32 length, UINT8 *p_ndef_msg)
 ** Function         nfa_cho_get_error
 **
 ** Description      Search Error record and parse it
-**                  
+**
 **
 ** Returns          tNFA_STATUS
 **
 *******************************************************************************/
-tNFA_STATUS nfa_cho_get_error (UINT8 *p_ndef_msg, UINT8 *p_error_reason, UINT32 *p_error_data) 
+tNFA_STATUS nfa_cho_get_error (UINT8 *p_ndef_msg, UINT8 *p_error_reason, UINT32 *p_error_data)
 {
     UINT8 *p_err_record, *p_err_payload, u8;
     UINT32 err_payload_len;
@@ -1606,7 +1606,7 @@ tNFA_STATUS nfa_cho_get_error (UINT8 *p_ndef_msg, UINT8 *p_error_reason, UINT32 
     }
     else
     {
-        CHO_TRACE_ERROR2 ("Unknown error reason = %d, err_payload_len = %d", 
+        CHO_TRACE_ERROR2 ("Unknown error reason = %d, err_payload_len = %d",
                           *p_error_reason, err_payload_len);
         return NFA_STATUS_SYNTAX_ERROR;
     }
@@ -1621,7 +1621,7 @@ tNFA_STATUS nfa_cho_get_error (UINT8 *p_ndef_msg, UINT8 *p_error_reason, UINT32 
 ** Function         nfa_cho_parse_hs_record
 **
 ** Description      Parse Handover Select record
-**                  
+**
 **
 ** Returns          tNFA_STATUS
 **
@@ -1630,7 +1630,7 @@ tNFA_STATUS nfa_cho_parse_hs_record (UINT8  *p_ndef_msg,
                                      UINT8  *p_version,
                                      UINT8  *p_num_ac_rec,
                                      tNFA_CHO_AC_REC *p_ac_rec,
-                                     UINT8  *p_error_reason, 
+                                     UINT8  *p_error_reason,
                                      UINT32 *p_error_data)
 {
     tNFA_STATUS status;
@@ -1705,7 +1705,7 @@ tNFA_STATUS nfa_cho_parse_hs_record (UINT8  *p_ndef_msg,
 ** Function         nfa_cho_proc_hs
 **
 ** Description      Parse Handover Select Message
-**                  
+**
 **
 ** Returns          FALSE if we need to select one from inactive ACs
 **
@@ -1721,9 +1721,9 @@ void nfa_cho_proc_hs (UINT32 length, UINT8 *p_ndef_msg)
     evt_data.select.status = NFA_STATUS_OK;
 
     /* Parse Handover Select record */
-    if (NFA_STATUS_OK != nfa_cho_parse_hs_record (p_ndef_msg, &version, 
-                                                  &evt_data.select.num_ac_rec, 
-                                                  &evt_data.select.ac_rec[0], 
+    if (NFA_STATUS_OK != nfa_cho_parse_hs_record (p_ndef_msg, &version,
+                                                  &evt_data.select.num_ac_rec,
+                                                  &evt_data.select.ac_rec[0],
                                                   &error_reason, &error_data))
     {
         CHO_TRACE_ERROR0 ("Failed to parse hs record");
@@ -1753,9 +1753,9 @@ void nfa_cho_proc_hs (UINT32 length, UINT8 *p_ndef_msg)
     /* parse Alternative Carrier information */
 
     if (  (evt_data.select.status == NFA_STATUS_OK)
-        &&(NFA_STATUS_OK != nfa_cho_parse_carrier_config (p_ndef_msg, 
+        &&(NFA_STATUS_OK != nfa_cho_parse_carrier_config (p_ndef_msg,
                                                           evt_data.select.num_ac_rec,
-                                                          &evt_data.select.ac_rec[0]))  ) 
+                                                          &evt_data.select.ac_rec[0]))  )
     {
         CHO_TRACE_ERROR0 ("Failed to parse carrier configuration");
 
@@ -1792,7 +1792,7 @@ void nfa_cho_proc_hs (UINT32 length, UINT8 *p_ndef_msg)
 ** Function         nfa_cho_proc_simplified_format
 **
 ** Description      Parse simplified BT OOB/Wifi Message
-**                  
+**
 **
 ** Returns          void
 **
@@ -1822,7 +1822,7 @@ void nfa_cho_proc_simplified_format (UINT32 length, UINT8 *p_ndef_msg)
 ** Function         nfa_cho_get_msg_type
 **
 ** Description      Get handover message type to check collision
-**                  
+**
 **
 ** Returns          NFA_CHO_MSG_HR if it has Handover Request record
 **                  NFA_CHO_MSG_HS if it has Handover Select record
@@ -1853,7 +1853,7 @@ tNFA_CHO_MSG_TYPE nfa_cho_get_msg_type (UINT32 length, UINT8 *p_ndef_msg)
         return NFA_CHO_MSG_HS;
     }
 
-    p_record = NDEF_MsgGetFirstRecByType (p_ndef_msg, NDEF_TNF_MEDIA, 
+    p_record = NDEF_MsgGetFirstRecByType (p_ndef_msg, NDEF_TNF_MEDIA,
                                           p_bt_oob_rec_type, BT_OOB_REC_TYPE_LEN);
 
     if (p_record)
@@ -1862,7 +1862,7 @@ tNFA_CHO_MSG_TYPE nfa_cho_get_msg_type (UINT32 length, UINT8 *p_ndef_msg)
         return NFA_CHO_MSG_BT_OOB;
     }
 
-    p_record = NDEF_MsgGetFirstRecByType (p_ndef_msg, NDEF_TNF_MEDIA, 
+    p_record = NDEF_MsgGetFirstRecByType (p_ndef_msg, NDEF_TNF_MEDIA,
                                           p_wifi_rec_type, (UINT8) strlen ((char *) p_wifi_rec_type));
 
     if (p_record)
@@ -1881,7 +1881,7 @@ tNFA_CHO_MSG_TYPE nfa_cho_get_msg_type (UINT32 length, UINT8 *p_ndef_msg)
 ** Function         nfa_cho_get_local_device_role
 **
 ** Description      Resolve collision and get role of local device
-**                  
+**
 **
 ** Returns          tNFA_CHO_ROLE_TYPE
 **
@@ -1929,7 +1929,7 @@ tNFA_CHO_ROLE_TYPE nfa_cho_get_local_device_role (UINT32 length, UINT8 *p_ndef_m
 ** Function         nfa_cho_update_random_number
 **
 ** Description      Replace random number
-**                  
+**
 **
 ** Returns          tNFA_STATUS
 **
@@ -1984,7 +1984,7 @@ tNFA_STATUS nfa_cho_update_random_number (UINT8 *p_ndef_msg)
 #endif
 
     CHO_TRACE_DEBUG1 ("tx_random_number = 0x%04x", nfa_cho_cb.tx_random_number);
-    
+
     /* update random number in payload */
     UINT16_TO_BE_STREAM (p_cr_payload, nfa_cho_cb.tx_random_number);
 

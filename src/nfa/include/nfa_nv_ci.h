@@ -47,7 +47,7 @@ extern "C"
 **
 ** Function         nfa_nv_ci_write
 **
-** Description      This function sends an event to NFAA indicating the phone 
+** Description      This function sends an event to NFAA indicating the phone
 **                  has written the number of bytes specified in the call-out
 **                  function, nfa_nv_co_write (), and is ready for more data.
 **                  This function is used to control the TX data flow.
@@ -58,7 +58,7 @@ extern "C"
 **                  evt - Used Internally by NFA -> MUST be same value passed
 **                       in call-out function.
 **
-** Returns          void 
+** Returns          void
 **
 *******************************************************************************/
 NFC_API extern void nfa_nv_ci_write (tNFA_NV_CO_STATUS status);
@@ -71,7 +71,7 @@ NFC_API extern void nfa_nv_ci_write (tNFA_NV_CO_STATUS status);
 **                  read in the requested amount of data specified in the
 **                  nfa_nv_co_read () call-out function.  It should only be called
 **                  when the requested number of bytes has been read.
-**                  
+**
 ** Parameters       num_bytes_read - number of bytes read into the buffer
 **                      specified in the read callout-function.
 **                  status - NFA_NV_CO_OK if full buffer of data,
@@ -80,7 +80,7 @@ NFC_API extern void nfa_nv_ci_write (tNFA_NV_CO_STATUS status);
 **                  evt - Used Internally by NFA -> MUST be same value passed
 **                       in call-out function.
 **
-** Returns          void 
+** Returns          void
 **
 *******************************************************************************/
 NFC_API extern void nfa_nv_ci_read (UINT16            num_bytes_read,

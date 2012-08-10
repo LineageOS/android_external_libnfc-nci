@@ -185,6 +185,10 @@ typedef void (tLLCP_APP_CBACK) (tLLCP_SAP_CBACK_DATA *p_data);
 
 typedef void (tLLCP_SDP_CBACK) (UINT8 tid, UINT8 remote_sap);
 
+/* LLCP DTA Callback - notify DTA responded SNL for connectionless echo service */
+
+typedef void (tLLCP_DTA_CBACK) (void);
+
 /*****************************************************************************
 **  External Function Declarations
 *****************************************************************************/
@@ -211,10 +215,10 @@ extern "C"
 ** Returns          void
 **
 *******************************************************************************/
-LLCP_API extern void LLCP_SetConfig (UINT16 link_miu, 
+LLCP_API extern void LLCP_SetConfig (UINT16 link_miu,
                                      UINT8  opt,
-                                     UINT8  wt,      
-                                     UINT16 link_timeout, 
+                                     UINT8  wt,
+                                     UINT16 link_timeout,
                                      UINT16 inact_timeout_init,
                                      UINT16 inact_timeout_target,
                                      UINT16 symm_delay,
@@ -239,10 +243,10 @@ LLCP_API extern void LLCP_SetConfig (UINT16 link_miu,
 ** Returns          void
 **
 *******************************************************************************/
-LLCP_API extern void LLCP_GetConfig (UINT16 *p_link_miu, 
+LLCP_API extern void LLCP_GetConfig (UINT16 *p_link_miu,
                                      UINT8  *p_opt,
-                                     UINT8  *p_wt,      
-                                     UINT16 *p_link_timeout, 
+                                     UINT8  *p_wt,
+                                     UINT16 *p_link_timeout,
                                      UINT16 *p_inact_timeout_init,
                                      UINT16 *p_inact_timeout_target,
                                      UINT16 *p_symm_delay,
@@ -256,10 +260,10 @@ LLCP_API extern void LLCP_GetConfig (UINT16 *p_link_miu,
 ** Description      Returns discovery config for LLCP MAC link activation
 **                  This function is called to get general bytes for NFC_PMID_ATR_REQ_GEN_BYTES
 **                  or NFC_PMID_ATR_RES_GEN_BYTES before starting discovery.
-**                  
+**
 **                  wt:Waiting time 0 - 8, only for listen
 **                  p_gen_bytes: pointer to store LLCP magic number and paramters
-**                  p_gen_bytes_len: length of buffer for gen bytes as input 
+**                  p_gen_bytes_len: length of buffer for gen bytes as input
 **                                   (NOTE:it must be bigger than LLCP_MIN_GEN_BYTES)
 **                                   actual gen bytes size as output
 **
@@ -272,7 +276,7 @@ LLCP_API extern void LLCP_GetConfig (UINT16 *p_link_miu,
 **
 *******************************************************************************/
 LLCP_API extern void LLCP_GetDiscoveryConfig (UINT8 *p_wt,
-                                              UINT8 *p_gen_bytes, 
+                                              UINT8 *p_gen_bytes,
                                               UINT8 *p_gen_bytes_len);
 
 /*******************************************************************************
@@ -281,7 +285,7 @@ LLCP_API extern void LLCP_GetDiscoveryConfig (UINT8 *p_wt,
 **
 ** Description      This function will activate LLCP link with LR, WT and Gen Bytes
 **                  in activation NTF from NFCC.
-**                  
+**
 **                  LLCP_LINK_ACTIVATION_COMPLETE_EVT will be returned through
 **                  callback function if successful.
 **                  Otherwise, LLCP_LINK_ACTIVATION_FAILED_EVT will be returned.
@@ -289,7 +293,7 @@ LLCP_API extern void LLCP_GetDiscoveryConfig (UINT8 *p_wt,
 ** Returns          LLCP_STATUS_SUCCESS if success
 **
 *******************************************************************************/
-LLCP_API extern tLLCP_STATUS LLCP_ActivateLink (tLLCP_ACTIVATE_CONFIG config, 
+LLCP_API extern tLLCP_STATUS LLCP_ActivateLink (tLLCP_ACTIVATE_CONFIG config,
                                                 tLLCP_LINK_CBACK     *p_link_cback);
 
 /*******************************************************************************
@@ -315,7 +319,7 @@ LLCP_API extern tLLCP_STATUS LLCP_DeactivateLink (void);
 **                  reg_sap : Well-Known SAP except LM and SDP (0x02 - 0x0F)
 **                            Advertized by SDP (0x10 - 0x1F)
 **                            LLCP_INVALID_SAP, LLCP will allocate between 0x10 and 0x1F
-**                  link_type : LLCP_LINK_TYPE_LOGICAL_DATA_LINK 
+**                  link_type : LLCP_LINK_TYPE_LOGICAL_DATA_LINK
 **                              and/or LLCP_LINK_TYPE_DATA_LINK_CONNECTION
 **                  p_service_name : Null-terminated string up to LLCP_MAX_SN_LEN
 **
@@ -323,9 +327,9 @@ LLCP_API extern tLLCP_STATUS LLCP_DeactivateLink (void);
 **                  LLCP_INVALID_SAP, otherwise
 **
 *******************************************************************************/
-LLCP_API extern UINT8 LLCP_RegisterServer (UINT8           reg_sap, 
+LLCP_API extern UINT8 LLCP_RegisterServer (UINT8           reg_sap,
                                            UINT8           link_type,
-                                           char            *p_service_name, 
+                                           char            *p_service_name,
                                            tLLCP_APP_CBACK *p_sap_cback);
 
 /*******************************************************************************
@@ -334,7 +338,7 @@ LLCP_API extern UINT8 LLCP_RegisterServer (UINT8           reg_sap,
 **
 ** Description      Register client and callback function
 **
-**                  link_type : LLCP_LINK_TYPE_LOGICAL_DATA_LINK 
+**                  link_type : LLCP_LINK_TYPE_LOGICAL_DATA_LINK
 **                              and/or LLCP_LINK_TYPE_DATA_LINK_CONNECTION
 **
 ** Returns          SAP between 0x20 and 0x3F, if success
@@ -366,7 +370,7 @@ LLCP_API extern tLLCP_STATUS LLCP_Deregister (UINT8 sap);
 ** Returns          TRUE if congested
 **
 *******************************************************************************/
-LLCP_API extern BOOLEAN LLCP_IsLogicalLinkCongested (UINT8 local_sap, 
+LLCP_API extern BOOLEAN LLCP_IsLogicalLinkCongested (UINT8 local_sap,
                                                      UINT8 num_pending_ui_pdu,
                                                      UINT8 total_pending_ui_pdu,
                                                      UINT8 total_pending_i_pdu);
@@ -399,7 +403,7 @@ LLCP_API extern tLLCP_STATUS LLCP_SendUI (UINT8 ssap, UINT8 dsap, BT_HDR *p_buf)
 ** Returns          TRUE if more information of UI PDU or more UI PDU in queue
 **
 *******************************************************************************/
-LLCP_API extern BOOLEAN LLCP_ReadLogicalLinkData (UINT8  local_sap, 
+LLCP_API extern BOOLEAN LLCP_ReadLogicalLinkData (UINT8  local_sap,
                                                   UINT32 max_data_len,
                                                   UINT8  *p_remote_sap,
                                                   UINT32 *p_data_len,
@@ -421,7 +425,7 @@ LLCP_API extern UINT32 LLCP_FlushLogicalLinkRxData (UINT8 local_sap);
 **
 ** Function         LLCP_ConnectReq
 **
-** Description      Create data link connection between registered SAP and DSAP 
+** Description      Create data link connection between registered SAP and DSAP
 **                  in peer LLCP,
 **
 **
@@ -429,7 +433,7 @@ LLCP_API extern UINT32 LLCP_FlushLogicalLinkRxData (UINT8 local_sap);
 **                  LLCP_STATUS_FAIL, otherwise
 **
 *******************************************************************************/
-LLCP_API extern tLLCP_STATUS LLCP_ConnectReq (UINT8 reg_sap, UINT8 dsap, 
+LLCP_API extern tLLCP_STATUS LLCP_ConnectReq (UINT8 reg_sap, UINT8 dsap,
                                               tLLCP_CONNECTION_PARAMS *p_params);
 
 /*******************************************************************************
@@ -443,8 +447,8 @@ LLCP_API extern tLLCP_STATUS LLCP_ConnectReq (UINT8 reg_sap, UINT8 dsap,
 **                  LLCP_STATUS_FAIL, otherwise
 **
 *******************************************************************************/
-LLCP_API extern tLLCP_STATUS LLCP_ConnectCfm (UINT8 local_sap, 
-                                              UINT8 remote_sap, 
+LLCP_API extern tLLCP_STATUS LLCP_ConnectCfm (UINT8 local_sap,
+                                              UINT8 remote_sap,
                                               tLLCP_CONNECTION_PARAMS *p_params);
 
 /*******************************************************************************
@@ -463,8 +467,8 @@ LLCP_API extern tLLCP_STATUS LLCP_ConnectCfm (UINT8 local_sap,
 **                  LLCP_STATUS_FAIL, otherwise
 **
 *******************************************************************************/
-LLCP_API extern tLLCP_STATUS LLCP_ConnectReject (UINT8 local_sap, 
-                                                 UINT8 remote_sap, 
+LLCP_API extern tLLCP_STATUS LLCP_ConnectReject (UINT8 local_sap,
+                                                 UINT8 remote_sap,
                                                  UINT8 reason);
 
 /*******************************************************************************
@@ -477,7 +481,7 @@ LLCP_API extern tLLCP_STATUS LLCP_ConnectReject (UINT8 local_sap,
 ** Returns          TRUE if congested
 **
 *******************************************************************************/
-LLCP_API extern BOOLEAN LLCP_IsDataLinkCongested (UINT8 local_sap, 
+LLCP_API extern BOOLEAN LLCP_IsDataLinkCongested (UINT8 local_sap,
                                                   UINT8 remote_sap,
                                                   UINT8 num_pending_i_pdu,
                                                   UINT8 total_pending_ui_pdu,
@@ -494,8 +498,8 @@ LLCP_API extern BOOLEAN LLCP_IsDataLinkCongested (UINT8 local_sap,
 **                  LLCP_STATUS_CONGESTED if data link is congested
 **
 *******************************************************************************/
-LLCP_API extern tLLCP_STATUS LLCP_SendData (UINT8 local_sap, 
-                                            UINT8 remote_sap, 
+LLCP_API extern tLLCP_STATUS LLCP_SendData (UINT8 local_sap,
+                                            UINT8 remote_sap,
                                             BT_HDR *p_buf);
 
 /*******************************************************************************
@@ -512,8 +516,8 @@ LLCP_API extern tLLCP_STATUS LLCP_SendData (UINT8 local_sap,
 ** Returns          TRUE if more data in queue
 **
 *******************************************************************************/
-LLCP_API extern BOOLEAN LLCP_ReadDataLinkData (UINT8  local_sap, 
-                                               UINT8  remote_sap, 
+LLCP_API extern BOOLEAN LLCP_ReadDataLinkData (UINT8  local_sap,
+                                               UINT8  remote_sap,
                                                UINT32 max_data_len,
                                                UINT32 *p_data_len,
                                                UINT8  *p_data);
@@ -528,7 +532,7 @@ LLCP_API extern BOOLEAN LLCP_ReadDataLinkData (UINT8  local_sap,
 ** Returns          length of rx data flushed
 **
 *******************************************************************************/
-LLCP_API extern UINT32 LLCP_FlushDataLinkRxData (UINT8  local_sap, 
+LLCP_API extern UINT32 LLCP_FlushDataLinkRxData (UINT8  local_sap,
                                                  UINT8  remote_sap);
 
 /*******************************************************************************
@@ -541,8 +545,8 @@ LLCP_API extern UINT32 LLCP_FlushDataLinkRxData (UINT8  local_sap,
 ** Returns          LLCP_STATUS_SUCCESS if success
 **
 *******************************************************************************/
-LLCP_API extern tLLCP_STATUS LLCP_DisconnectReq (UINT8 local_sap, 
-                                                 UINT8 remote_sap, 
+LLCP_API extern tLLCP_STATUS LLCP_DisconnectReq (UINT8 local_sap,
+                                                 UINT8 remote_sap,
                                                  BOOLEAN flush);
 
 /*******************************************************************************
@@ -570,8 +574,8 @@ LLCP_API extern tLLCP_STATUS LLCP_SetTxCompleteNtf (UINT8   local_sap,
 ** Returns          LLCP_STATUS_SUCCESS if success
 **
 *******************************************************************************/
-LLCP_API extern tLLCP_STATUS LLCP_SetLocalBusyStatus (UINT8 local_sap, 
-                                                      UINT8 remote_sap, 
+LLCP_API extern tLLCP_STATUS LLCP_SetLocalBusyStatus (UINT8 local_sap,
+                                                      UINT8 remote_sap,
                                                       BOOLEAN is_busy);
 
 /*******************************************************************************
@@ -620,7 +624,7 @@ LLCP_API extern void LLCP_GetLinkMIU (UINT16 *p_local_link_miu, UINT16 *p_remote
 ** Returns          LLCP_STATUS_SUCCESS if success
 **
 *******************************************************************************/
-LLCP_API extern tLLCP_STATUS LLCP_DiscoverService (char *p_name, 
+LLCP_API extern tLLCP_STATUS LLCP_DiscoverService (char *p_name,
                                                    tLLCP_SDP_CBACK *p_cback,
                                                    UINT8 *p_tid);
 
@@ -635,6 +639,18 @@ LLCP_API extern tLLCP_STATUS LLCP_DiscoverService (char *p_name,
 **
 *******************************************************************************/
 LLCP_API extern UINT8 LLCP_SetTraceLevel (UINT8 new_level);
+
+/*******************************************************************************
+**
+** Function         LLCP_RegisterDtaCback
+**
+** Description      Register callback function for LLCP DTA testing
+**
+**
+** Returns          void
+**
+*******************************************************************************/
+LLCP_API extern void LLCP_RegisterDtaCback (tLLCP_DTA_CBACK *p_dta_cback);
 
 #if (LLCP_TEST_INCLUDED == TRUE)
 /*******************************************************************************

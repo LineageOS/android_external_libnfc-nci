@@ -30,7 +30,7 @@
 #define TAG_MAX_UID_LEN         0x0A  /* Max UID Len of type 1 and type 2 tag           */
 
 #define TAG_LONG_NDEF_LEN_FIELD_BYTE0   0xFF  /* Byte 0 Length field to indicate LNDEF  */
-#define TAG_DEFAULT_TLV_LEN             3     /* Tlv len for LOCK_CTRL/MEM TLV per spec */     
+#define TAG_DEFAULT_TLV_LEN             3     /* Tlv len for LOCK_CTRL/MEM TLV per spec */
 
 /* Type 1 Tag related definitions */
 
@@ -63,7 +63,7 @@
 /* Capability Container definitions */
 #define T1T_CC_BLOCK            1     /* Capability container block                     */
 #define T1T_CC_LEN              4     /* the len of CC used in T1T tag                  */
-/* CC offset */ 
+/* CC offset */
 #define T1T_CC_NMN_OFFSET       0x00  /* Offset for NDEF magic number in CC             */
 #define T1T_CC_VNO_OFFSET       0x01  /* Offset for Version number in CC                */
 #define T1T_CC_TMS_OFFSET       0x02  /* Offset for Tag memory size in CC               */
@@ -118,7 +118,7 @@
 
 
 /* Type 2 Tag related definitions */
-#define T2T_STATIC_MEM_STR      0 
+#define T2T_STATIC_MEM_STR      0
 #define T2T_DYNAMIC_MEM_STR     1
 #define T2T_STATIC_SIZE         64
 #define T2T_STATIC_BLOCKS       16      /* block 0 to Block 15 */
@@ -170,8 +170,8 @@
 #define T2T_RSP_NACK1           0x1     /* Nack can be either 1    */
 
 #define T2T_FIRST_DATA_BLOCK    4
-#define T2T_READ_BLOCKS         4       
-#define T2T_BLOCK_LEN           4       
+#define T2T_READ_BLOCKS         4
+#define T2T_BLOCK_LEN           4
 #define T2T_READ_DATA_LEN       (T2T_BLOCK_LEN * T2T_READ_BLOCKS)
 #define T2T_WRITE_DATA_LEN      4
 
@@ -315,7 +315,7 @@ typedef UINT8 tT3T_POLL_RC;
 #define T4T_CMD_INS_SELECT              0xA4
 #define T4T_CMD_INS_READ_BINARY         0xB0
 #define T4T_CMD_INS_UPDATE_BINARY       0xD6
-#define T4T_CMD_P1_SELECT_BY_NAME       0x04 
+#define T4T_CMD_P1_SELECT_BY_NAME       0x04
 #define T4T_CMD_P1_SELECT_BY_FILE_ID    0x00
 #define T4T_CMD_P2_FIRST_OR_ONLY_00H    0x00
 #define T4T_CMD_P2_FIRST_OR_ONLY_0CH    0x0C
@@ -450,7 +450,7 @@ typedef UINT8 tT3T_POLL_RC;
 /* Information flags definition */
 #define I93_INFO_FLAG_DSFID                 0x01    /* DSFID is supported and DSFID field is present */
 #define I93_INFO_FLAG_AFI                   0x02    /* AFI is supported and AFI field is present     */
-#define I93_INFO_FLAG_MEM_SIZE              0x04    /* VICC memory size field is present             */    
+#define I93_INFO_FLAG_MEM_SIZE              0x04    /* VICC memory size field is present             */
 #define I93_INFO_FLAG_IC_REF                0x08    /* IC reference field is present                 */
 
 #define I93_MAX_BLOCK_LENGH                 32      /* Max block size in bytes */

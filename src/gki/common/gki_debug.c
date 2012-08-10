@@ -93,7 +93,7 @@ void GKI_PrintBuffer(void)
 ** Function         gki_calc_stack
 **
 ** Description      This function tries to calculate the amount of
-**                  stack used by looking non magic num. Magic num is consider 
+**                  stack used by looking non magic num. Magic num is consider
 **                  the first byte in the stack.
 **
 ** Returns          the number of unused byte on the stack. 4 in case of stack overrun
@@ -145,7 +145,7 @@ void GKI_print_task(void)
 
         }
     }
-#endif 
+#endif
 }
 
 
@@ -287,7 +287,7 @@ void gki_print_exception(FP_PRINT print)
     {
         pExp =     &gki_cb.com.Exception[i];
         print("%d: Type=%d, Task=%d: %s\n", i,
-            (INT32)pExp->type, (INT32)pExp->taskid, (INT8 *)pExp->msg); 
+            (INT32)pExp->type, (INT32)pExp->taskid, (INT8 *)pExp->msg);
     }
 }
 

@@ -3,7 +3,7 @@
 **
 **  Description:
 **
-**  This file contains NV definitions from WIDCOMM's Universal Embedded 
+**  This file contains NV definitions from WIDCOMM's Universal Embedded
 **  Drivers API.
 **
 **  Copyright (c) 2002-2004, WIDCOMM Inc., All Rights Reserved.
@@ -44,12 +44,12 @@ typedef void  (tUNV_DEFAULT_FUNC)(void);
 extern "C" {
 #endif
 
-#ifndef UDRV_API 
+#ifndef UDRV_API
 #define UDRV_API
 #endif
 
 UDRV_API extern void        UNV_Init(void *);
-UDRV_API extern BOOLEAN     UNV_MapBlock(UINT16, tUNV_STORAGE_PREF, UINT16, 
+UDRV_API extern BOOLEAN     UNV_MapBlock(UINT16, tUNV_STORAGE_PREF, UINT16,
                                          UINT16, UINT16 *, void *);
 UDRV_API extern BOOLEAN     UNV_ReadMap(UINT16, tUNV_STORAGE_PREF *, UINT16 *,
                                         UINT16 *, UINT16 *);

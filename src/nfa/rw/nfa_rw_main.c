@@ -21,10 +21,10 @@ tNFA_RW_CB nfa_rw_cb;
 /*****************************************************************************
 ** Constants and types
 *****************************************************************************/
-static const tNFA_SYS_REG nfa_rw_sys_reg = 
+static const tNFA_SYS_REG nfa_rw_sys_reg =
 {
     NULL,
-    nfa_rw_handle_event, 
+    nfa_rw_handle_event,
     nfa_rw_sys_disable,
     NULL
 };
@@ -71,7 +71,7 @@ void nfa_rw_init (void)
 ** Function         nfa_rw_sys_disable
 **
 ** Description      Clean up rw sub-system
-**                  
+**
 **
 ** Returns          void
 **
@@ -102,7 +102,7 @@ void nfa_rw_sys_disable (void)
 ** Function         nfa_rw_proc_disc_evt
 **
 ** Description      Called by nfa_dm to handle ACTIVATED/DEACTIVATED  events
-**                  
+**
 ** Returns          void
 **
 *******************************************************************************/
@@ -136,7 +136,7 @@ void nfa_rw_proc_disc_evt (tNFA_DM_RF_DISC_EVT event, tNFC_DISCOVER *p_data, BOO
 ** Function         nfa_rw_send_raw_frame
 **
 ** Description      Called by nfa_dm to send raw frame
-**                  
+**
 ** Returns          tNFA_STATUS
 **
 *******************************************************************************/
@@ -158,7 +158,7 @@ tNFA_STATUS nfa_rw_send_raw_frame (BT_HDR *p_data)
 ** Function         nfa_rw_handle_event
 **
 ** Description      nfa rw main event handling function.
-**                  
+**
 ** Returns          TRUE if caller should free p_msg buffer
 **
 *******************************************************************************/

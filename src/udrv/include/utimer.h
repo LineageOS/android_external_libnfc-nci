@@ -3,7 +3,7 @@
 **
 **  Description:
 **
-**  This file contains timer definitions from WIDCOMM's Universal Embedded 
+**  This file contains timer definitions from WIDCOMM's Universal Embedded
 **  Drivers API.
 **
 **  Copyright (c) 2001-2004, WIDCOMM Inc., All Rights Reserved.
@@ -43,7 +43,7 @@ typedef UINT32 tUTIMER_TIME;
 
 /**** Timer configuration ****/
 
-typedef struct 
+typedef struct
 {
     tUTIMER_TIME period;
     tUTIMER_TYPE type;

@@ -198,7 +198,7 @@ typedef union
 
 typedef struct
 {
-    UINT8               flags;                      /* internal flags for data link connection  */ 
+    UINT8               flags;                      /* internal flags for data link connection  */
     UINT8               local_sap;                  /* local SAP of data link connection        */
     UINT8               remote_sap;                 /* remote SAP of data link connection       */
     UINT16              remote_miu;                 /* MIU of remote end point                  */
@@ -212,13 +212,13 @@ typedef struct
 
 typedef struct
 {
-    UINT8              flags;                       /* internal flags for local SAP             */ 
+    UINT8              flags;                       /* internal flags for local SAP             */
     tNFA_P2P_CBACK     *p_cback;                    /* callback function for local SAP          */
     UINT8              num_pending_ui_pdu;          /* number of tx UI PDU not processed by NFA */
 } tNFA_P2P_SAP_CB;
 
 /* NFA P2P SDP control block */
-typedef struct 
+typedef struct
 {
     UINT8            tid;                           /* transaction ID */
     UINT8            local_sap;

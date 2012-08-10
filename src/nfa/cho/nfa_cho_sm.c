@@ -47,7 +47,7 @@ static char *nfa_cho_evt_code (tNFA_CHO_INT_EVT evt_code);
 ** Function         nfa_cho_sm_llcp_cback
 **
 ** Description      Processing event from LLCP
-**                  
+**
 **
 ** Returns          None
 **
@@ -211,7 +211,7 @@ static void nfa_cho_sm_idle (tNFA_CHO_INT_EVT event, tNFA_CHO_INT_EVENT_DATA *p_
         params.rw  = NFA_CHO_RW;
         params.sn[0] = 0;
 
-        LLCP_ConnectCfm (p_data->llcp_cback_data.connect_ind.local_sap, 
+        LLCP_ConnectCfm (p_data->llcp_cback_data.connect_ind.local_sap,
                          p_data->llcp_cback_data.connect_ind.remote_sap,
                          &params);
 
@@ -233,7 +233,7 @@ static void nfa_cho_sm_idle (tNFA_CHO_INT_EVT event, tNFA_CHO_INT_EVENT_DATA *p_
         **  before sending NFA_CHO_LLCP_LINK_STATUS_EVT for deactivation.
         **  This event can be received only in this state.
         */
-        
+
         if (p_data->llcp_cback_data.link_status.is_activated == TRUE)
         {
             nfa_cho_cb.flags |= NFA_CHO_FLAGS_LLCP_ACTIVATED;
@@ -309,8 +309,8 @@ static void nfa_cho_sm_w4_cc (tNFA_CHO_INT_EVT event, tNFA_CHO_INT_EVENT_DATA *p
         /* disconnect collision connection accepted by local device */
         if (nfa_cho_cb.flags & NFA_CHO_FLAGS_CONN_COLLISION)
         {
-            LLCP_DisconnectReq (nfa_cho_cb.collision_local_sap, 
-                                nfa_cho_cb.collision_remote_sap, 
+            LLCP_DisconnectReq (nfa_cho_cb.collision_local_sap,
+                                nfa_cho_cb.collision_remote_sap,
                                 FALSE);
 
             /* clear collision flag */
@@ -342,21 +342,21 @@ static void nfa_cho_sm_w4_cc (tNFA_CHO_INT_EVT event, tNFA_CHO_INT_EVENT_DATA *p
         /* if already collision of connection */
         if (nfa_cho_cb.flags & NFA_CHO_FLAGS_CONN_COLLISION)
         {
-            LLCP_ConnectReject (p_data->llcp_cback_data.connect_ind.local_sap, 
-                                p_data->llcp_cback_data.connect_ind.remote_sap, 
+            LLCP_ConnectReject (p_data->llcp_cback_data.connect_ind.local_sap,
+                                p_data->llcp_cback_data.connect_ind.remote_sap,
                                 LLCP_SAP_DM_REASON_TEMP_REJECT_THIS);
         }
         else
         {
-            /* 
+            /*
             ** accept connection request and set collision flag
-            ** wait for accepting connection request from peer or Hr message 
+            ** wait for accepting connection request from peer or Hr message
             */
             params.miu = (UINT16) (nfa_cho_cb.local_link_miu >= NFA_CHO_MIU ? NFA_CHO_MIU : nfa_cho_cb.local_link_miu);
             params.rw  = NFA_CHO_RW;
             params.sn[0] = 0;
 
-            LLCP_ConnectCfm (p_data->llcp_cback_data.connect_ind.local_sap, 
+            LLCP_ConnectCfm (p_data->llcp_cback_data.connect_ind.local_sap,
                              p_data->llcp_cback_data.connect_ind.remote_sap,
                              &params);
 
@@ -390,9 +390,9 @@ static void nfa_cho_sm_w4_cc (tNFA_CHO_INT_EVT event, tNFA_CHO_INT_EVENT_DATA *p
         break;
 
     case NFA_CHO_LLCP_DISCONNECT_RESP_EVT:
-        /* 
+        /*
         ** if peer rejected our connection request or there is no handover service in peer
-        ** but we already accepted connection from peer 
+        ** but we already accepted connection from peer
         */
         if (nfa_cho_cb.flags & NFA_CHO_FLAGS_CONN_COLLISION)
         {
@@ -496,16 +496,16 @@ static void nfa_cho_sm_connected (tNFA_CHO_INT_EVT event, tNFA_CHO_INT_EVENT_DAT
         /* disconnect collision connection accepted by local device */
         if (nfa_cho_cb.flags & NFA_CHO_FLAGS_CONN_COLLISION)
         {
-            LLCP_DisconnectReq (nfa_cho_cb.collision_local_sap, 
-                                nfa_cho_cb.collision_remote_sap, 
+            LLCP_DisconnectReq (nfa_cho_cb.collision_local_sap,
+                                nfa_cho_cb.collision_remote_sap,
                                 FALSE);
 
             /* clear collision flag */
             nfa_cho_cb.flags &= ~NFA_CHO_FLAGS_CONN_COLLISION;
         }
 
-        LLCP_DisconnectReq (nfa_cho_cb.local_sap, 
-                            nfa_cho_cb.remote_sap, 
+        LLCP_DisconnectReq (nfa_cho_cb.local_sap,
+                            nfa_cho_cb.remote_sap,
                             FALSE);
 
         /* store disconnect reason */
@@ -588,14 +588,14 @@ static void nfa_cho_sm_connected (tNFA_CHO_INT_EVT event, tNFA_CHO_INT_EVENT_DAT
     case NFA_CHO_LLCP_CONNECT_RESP_EVT:
         /* peer accepted connection after we accepted and received Hr */
         /* disconnect data link connection created by local device    */
-        LLCP_DisconnectReq (p_data->llcp_cback_data.connect_resp.local_sap, 
-                            p_data->llcp_cback_data.connect_resp.remote_sap, 
+        LLCP_DisconnectReq (p_data->llcp_cback_data.connect_resp.local_sap,
+                            p_data->llcp_cback_data.connect_resp.remote_sap,
                             FALSE);
         break;
 
     case NFA_CHO_LLCP_CONNECT_IND_EVT:
-        LLCP_ConnectReject (p_data->llcp_cback_data.connect_ind.local_sap, 
-                            p_data->llcp_cback_data.connect_ind.remote_sap, 
+        LLCP_ConnectReject (p_data->llcp_cback_data.connect_ind.local_sap,
+                            p_data->llcp_cback_data.connect_ind.remote_sap,
                             LLCP_SAP_DM_REASON_TEMP_REJECT_THIS);
         break;
 
@@ -663,8 +663,8 @@ static void nfa_cho_sm_connected (tNFA_CHO_INT_EVT event, tNFA_CHO_INT_EVENT_DAT
 
         /* store disconnect reason and disconnect */
         nfa_cho_cb.disc_reason = NFA_CHO_DISC_REASON_TIMEOUT;
-        LLCP_DisconnectReq (nfa_cho_cb.local_sap, 
-                            nfa_cho_cb.remote_sap, 
+        LLCP_DisconnectReq (nfa_cho_cb.local_sap,
+                            nfa_cho_cb.remote_sap,
                             FALSE);
         break;
 
@@ -747,8 +747,8 @@ void nfa_cho_resolve_collision (BOOLEAN *p_free_hr)
         if (nfa_cho_cb.flags & NFA_CHO_FLAGS_CONN_COLLISION)
         {
             /* disconnect data link connection created by local device */
-            LLCP_DisconnectReq (nfa_cho_cb.local_sap, 
-                                nfa_cho_cb.remote_sap, 
+            LLCP_DisconnectReq (nfa_cho_cb.local_sap,
+                                nfa_cho_cb.remote_sap,
                                 FALSE);
 
             nfa_cho_cb.remote_miu = nfa_cho_cb.collision_remote_miu;
@@ -771,7 +771,7 @@ void nfa_cho_resolve_collision (BOOLEAN *p_free_hr)
         if (nfa_cho_cb.p_tx_ndef_msg)
         {
             status = nfa_cho_update_random_number (nfa_cho_cb.p_tx_ndef_msg);
-            
+
             if (status == NFA_STATUS_OK)
             {
                 nfa_cho_cb.tx_ndef_sent_size = 0;
@@ -790,8 +790,8 @@ void nfa_cho_resolve_collision (BOOLEAN *p_free_hr)
             nfa_cho_cb.disc_reason = NFA_CHO_DISC_REASON_INTERNAL_ERROR;
 
             /* disconnect and notify application */
-            LLCP_DisconnectReq (nfa_cho_cb.local_sap, 
-                                nfa_cho_cb.remote_sap, 
+            LLCP_DisconnectReq (nfa_cho_cb.local_sap,
+                                nfa_cho_cb.remote_sap,
                                 FALSE);
         }
         else
@@ -824,8 +824,8 @@ void nfa_cho_check_disconnect_collision (void)
     if (nfa_cho_cb.flags & NFA_CHO_FLAGS_CONN_COLLISION)
     {
         /* disconnect collision connection */
-        LLCP_DisconnectReq (nfa_cho_cb.collision_local_sap, 
-                            nfa_cho_cb.collision_remote_sap, 
+        LLCP_DisconnectReq (nfa_cho_cb.collision_local_sap,
+                            nfa_cho_cb.collision_remote_sap,
                             FALSE);
     }
 }
@@ -863,7 +863,7 @@ void nfa_cho_proc_rx_handover_msg (void)
 
             nfa_cho_cb.substate = NFA_CHO_SUBSTATE_W4_LOCAL_HR;
         }
-        else 
+        else
         {
             CHO_TRACE_ERROR0 ("nfa_cho_proc_rx_handover_msg (): Unknown Message Type");
 
@@ -871,8 +871,8 @@ void nfa_cho_proc_rx_handover_msg (void)
 
             nfa_cho_cb.disc_reason = NFA_CHO_DISC_REASON_UNKNOWN_MSG;
 
-            LLCP_DisconnectReq (nfa_cho_cb.local_sap, 
-                                nfa_cho_cb.remote_sap, 
+            LLCP_DisconnectReq (nfa_cho_cb.local_sap,
+                                nfa_cho_cb.remote_sap,
                                 FALSE);
         }
     }
@@ -897,8 +897,8 @@ void nfa_cho_proc_rx_handover_msg (void)
 
             nfa_cho_cb.disc_reason = NFA_CHO_DISC_REASON_SEMANTIC_ERROR;
 
-            LLCP_DisconnectReq (nfa_cho_cb.local_sap, 
-                                nfa_cho_cb.remote_sap, 
+            LLCP_DisconnectReq (nfa_cho_cb.local_sap,
+                                nfa_cho_cb.remote_sap,
                                 FALSE);
         }
     }
@@ -910,8 +910,8 @@ void nfa_cho_proc_rx_handover_msg (void)
 
         nfa_cho_cb.disc_reason = NFA_CHO_DISC_REASON_SEMANTIC_ERROR;
 
-        LLCP_DisconnectReq (nfa_cho_cb.local_sap, 
-                            nfa_cho_cb.remote_sap, 
+        LLCP_DisconnectReq (nfa_cho_cb.local_sap,
+                            nfa_cho_cb.remote_sap,
                             FALSE);
     }
 
@@ -934,7 +934,7 @@ void nfa_cho_proc_rx_handover_msg (void)
 **
 ** Function         nfa_cho_state_code
 **
-** Description      
+** Description
 **
 ** Returns          string of state
 **
@@ -958,7 +958,7 @@ static char *nfa_cho_state_code (tNFA_CHO_STATE state_code)
 **
 ** Function         nfa_cho_evt_code
 **
-** Description      
+** Description
 **
 ** Returns          string of event
 **

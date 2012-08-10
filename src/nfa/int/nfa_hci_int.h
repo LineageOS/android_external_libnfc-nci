@@ -56,7 +56,7 @@ enum
     NFA_HCI_API_REGISTER_APP_EVT = NFA_SYS_EVT_START (NFA_ID_HCI),/* Register APP with HCI */
     NFA_HCI_API_DEREGISTER_APP_EVT,                               /* Deregister an app from HCI */
     NFA_HCI_API_GET_APP_GATE_PIPE_EVT,                            /* Get the list of gate and pipe associated to the application */
-    NFA_HCI_API_ALLOC_GATE_EVT,                                   /* Allocate a dyanmic gate for the application */ 
+    NFA_HCI_API_ALLOC_GATE_EVT,                                   /* Allocate a dyanmic gate for the application */
     NFA_HCI_API_DEALLOC_GATE_EVT,                                 /* Deallocate a previously allocated gate to the application */
     NFA_HCI_API_GET_HOST_LIST_EVT,                                /* Get the list of Host in the network */
     NFA_HCI_API_GET_REGISTRY_EVT,                                 /* Get a registry entry from a host */
@@ -69,7 +69,7 @@ enum
     NFA_HCI_API_SEND_RSP_EVT,                                     /* Application Response to a command */
     NFA_HCI_API_SEND_EVENT_EVT,                                   /* Send event via pipe */
 
-    NFA_HCI_RSP_NV_READ_EVT,                                      /* Non volatile read complete event */                                 
+    NFA_HCI_RSP_NV_READ_EVT,                                      /* Non volatile read complete event */
     NFA_HCI_RSP_NV_WRITE_EVT,                                     /* Non volatile write complete event */
     NFA_HCI_VSC_INIT_EVT,                                         /* Vendor specific initialization is completed */
     NFA_HCI_EE_DISC_CMPLT_EVT,
@@ -330,7 +330,7 @@ typedef struct
 typedef struct
 {
     UINT8                   gate_id;                /* local gate id */
-    tNFA_HANDLE             gate_owner;             /* NFA-HCI handle assigned to the application which owns the gate */ 
+    tNFA_HANDLE             gate_owner;             /* NFA-HCI handle assigned to the application which owns the gate */
     UINT32                  pipe_inx_mask;          /* Bit 0 == pipe inx 0, etc */
 } tNFA_HCI_DYN_GATE;
 

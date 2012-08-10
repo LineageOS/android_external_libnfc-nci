@@ -1,3 +1,11 @@
+define all-cpp-files-under
+$(patsubst ./%,%, \
+  $(shell cd $(LOCAL_PATH) ; \
+          find $(1) -name "*.cpp" -and -not -name ".*") \
+ )
+endef
+
+
 LOCAL_PATH:= $(call my-dir)
 NFA:=src/nfa
 NFC:=src/nfc
@@ -12,21 +20,12 @@ GKI_FILES:=$(call all-c-files-under, src/gki)
 NTAL_FILES:= src/ntal/userial_linux.c
 
 #
-# app_logging
-#
-LOG_FILES:= \
-	    src/adaptation/bte_logmsg.c \
-	    src/adaptation/android_logmsg.cpp
-
-#
 # libnfc-nci
 #
 #nfa
 NFA_ADAP_FILES:= \
-    src/adaptation/config.cpp \
-    src/adaptation/NfcAdaptation.cpp \
-    src/adaptation/patchram.cpp \
-    	src/adaptation/libmain.c
+    $(call all-c-files-under, src/adaptation) \
+    $(call all-cpp-files-under, src/adaptation)
 
 #nfa
 NFA_FILES:= $(call all-c-files-under, $(NFA))

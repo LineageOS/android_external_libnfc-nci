@@ -40,10 +40,10 @@ static char *nfa_snep_evt_code (UINT16 evt_code);
 /*****************************************************************************
 **  Constants
 *****************************************************************************/
-static const tNFA_SYS_REG nfa_snep_sys_reg = 
+static const tNFA_SYS_REG nfa_snep_sys_reg =
 {
     NULL,
-    nfa_snep_evt_hdlr, 
+    nfa_snep_evt_hdlr,
     nfa_snep_sys_disable,
     NULL
 };
@@ -74,7 +74,7 @@ const tNFA_SNEP_ACTION nfa_snep_action[] =
 ** Function         nfa_snep_init
 **
 ** Description      Initialize NFA SNEP
-**                  
+**
 **
 ** Returns          None
 **
@@ -99,7 +99,7 @@ void nfa_snep_init (BOOLEAN is_dta_mode)
 ** Function         nfa_snep_sys_disable
 **
 ** Description      Clean up and deregister NFA SNEP from NFA SYS/DM
-**                  
+**
 **
 ** Returns          None
 **
@@ -129,7 +129,7 @@ static void nfa_snep_sys_disable (void)
 ** Function         nfa_snep_evt_hdlr
 **
 ** Description      Processing event for NFA SNEP
-**                  
+**
 **
 ** Returns          TRUE if p_msg needs to be deallocated
 **
@@ -168,7 +168,7 @@ static BOOLEAN nfa_snep_evt_hdlr (BT_HDR *p_hdr)
 **
 ** Function         nfa_snep_evt_code
 **
-** Description      
+** Description
 **
 ** Returns          string of event
 **

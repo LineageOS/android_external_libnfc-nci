@@ -2,7 +2,7 @@
 **
 **  Name:          rw_t2t_ndef.c
 **
-**  Description:   This file contains the implementation for Type 2 tag NDEF 
+**  Description:   This file contains the implementation for Type 2 tag NDEF
 **                 operation in Reader/Writer mode.
 **
 **
@@ -146,7 +146,7 @@ void rw_t2t_handle_rsp (UINT8 *p_data)
     case RW_T2T_STATE_FORMAT_TAG:
         rw_t2t_handle_format_tag_rsp (p_data);
         break;
- 
+
     case RW_T2T_STATE_READ_NDEF:
         rw_t2t_handle_ndef_read_rsp (p_data);
         break;
@@ -163,7 +163,7 @@ void rw_t2t_handle_rsp (UINT8 *p_data)
 **
 ** Description      This function returns RW event code based on the current state
 **
-** Returns          RW event code 
+** Returns          RW event code
 **
 *******************************************************************************/
 tRW_EVENT rw_t2t_info_to_event (const tT2T_CMD_RSP_INFO *p_info)
@@ -212,7 +212,7 @@ tRW_EVENT rw_t2t_info_to_event (const tT2T_CMD_RSP_INFO *p_info)
 **
 ** Function         rw_t2t_handle_cc_read_rsp
 **
-** Description      Handle read cc bytes  
+** Description      Handle read cc bytes
 **
 ** Returns          none
 **
@@ -244,7 +244,7 @@ static void rw_t2t_handle_cc_read_rsp (void)
 **
 ** Function         rw_t2t_ntf_tlv_detect_complete
 **
-** Description      Notify TLV detection complete to upper layer  
+** Description      Notify TLV detection complete to upper layer
 **
 ** Returns          none
 **
@@ -323,7 +323,7 @@ static void rw_t2t_ntf_tlv_detect_complete (tNFC_STATUS status)
 **
 ** Function         rw_t2t_handle_lock_read_rsp
 **
-** Description      Handle response to reading lock bytes  
+** Description      Handle response to reading lock bytes
 **
 ** Returns          none
 **
@@ -413,7 +413,7 @@ static void rw_t2t_handle_lock_read_rsp (UINT8 *p_data)
 **
 ** Function         rw_t2t_handle_tlv_detect_rsp
 **
-** Description      Handle TLV detection.  
+** Description      Handle TLV detection.
 **
 ** Returns          none
 **
@@ -478,13 +478,13 @@ static void rw_t2t_handle_tlv_detect_rsp (UINT8 *p_data)
                 else if (  ((tlvtype == TAG_LOCK_CTRL_TLV) && (p_t2t->num_lockbytes > 0))
                          ||((tlvtype == TAG_MEM_CTRL_TLV) && (p_t2t->num_mem_tlvs > 0))  )
                 {
-                    /* Lock / Memory control tlv cannot exist after NDEF TLV 
+                    /* Lock / Memory control tlv cannot exist after NDEF TLV
                      * So when NDEF is found, we stop searching for Lock and Memory control tlv */
                     found = TRUE;
                 }
                 else
                 {
-                    /* While searching for Lock / Memory control tlv, if NDEF TLV is found 
+                    /* While searching for Lock / Memory control tlv, if NDEF TLV is found
                      * first then our search for Lock /Memory control tlv failed and we stop here */
                     failed = TRUE;
                 }
@@ -540,7 +540,7 @@ static void rw_t2t_handle_tlv_detect_rsp (UINT8 *p_data)
                 p_t2t->ndef_header_offset = offset + p_t2t->work_offset;
                 if (len == TAG_LONG_NDEF_LEN_FIELD_BYTE0)
                 {
-                    /* The next two bytes constitute length bytes */                    
+                    /* The next two bytes constitute length bytes */
                     p_t2t->substate     = RW_T2T_SUBSTATE_WAIT_READ_TLV_LEN0;
                 }
                 else
@@ -555,7 +555,7 @@ static void rw_t2t_handle_tlv_detect_rsp (UINT8 *p_data)
             case TAG_PROPRIETARY_TLV:
                 if (len == T2T_LONG_NDEF_LEN_FIELD_BYTE0)
                 {
-                    /* The next two bytes constitute length bytes */                    
+                    /* The next two bytes constitute length bytes */
                     p_t2t->substate     = RW_T2T_SUBSTATE_WAIT_READ_TLV_LEN0;
                 }
                 else
@@ -697,7 +697,7 @@ static void rw_t2t_handle_tlv_detect_rsp (UINT8 *p_data)
                     p_t2t->tlv_value[2 - p_t2t->bytes_count] = p_data[offset];
                     if (p_t2t->bytes_count == 0)
                     {
-                        if (p_t2t->num_mem_tlvs >= RW_T2T_MAX_MEM_TLVS) 
+                        if (p_t2t->num_mem_tlvs >= RW_T2T_MAX_MEM_TLVS)
                         {
                             RW_TRACE_ERROR0 ("rw_t2t_handle_tlv_detect_rsp - Maximum buffer allocated for Memory tlv has reached");
                             failed  = TRUE;
@@ -753,7 +753,7 @@ static void rw_t2t_handle_tlv_detect_rsp (UINT8 *p_data)
     /* If not found and not failed, read next block and search tlv */
     if (!found && !failed)
     {
-        
+
         if (p_t2t->work_offset >= (p_t2t->tag_hdr[T2T_CC2_TMS_BYTE] * T2T_TMS_TAG_FACTOR))
         {
             if (  ((tlvtype == TAG_LOCK_CTRL_TLV) && (p_t2t->num_lockbytes > 0))
@@ -939,12 +939,12 @@ void rw_t2t_extract_default_locks_info (void)
 ** Function         rw_t2t_read_ndef_last_block
 **
 ** Description      This function will locate and read the last ndef block.
-**                  The last ndef block refers to the tag block where last byte 
-**                  of new ndef message will reside. Also this function will 
+**                  The last ndef block refers to the tag block where last byte
+**                  of new ndef message will reside. Also this function will
 **                  locate the offset of Terminator TLV based on the size of
 **                  new NDEF Message
 **
-** Returns          NCI_STATUS_OK,if able to locate last ndef block & read started 
+** Returns          NCI_STATUS_OK,if able to locate last ndef block & read started
 **                  Otherwise, error status.
 **
 *******************************************************************************/
@@ -1025,7 +1025,7 @@ tNFC_STATUS rw_t2t_read_ndef_last_block (void)
 **
 ** Function         rw_t2t_read_terminator_tlv_block
 **
-** Description      This function will read the block where terminator tlv will 
+** Description      This function will read the block where terminator tlv will
 **                  be added later
 **
 ** Returns          NCI_STATUS_OK, if read was started. Otherwise, error status.
@@ -1076,11 +1076,11 @@ tNFC_STATUS rw_t2t_read_ndef_next_block (UINT16 block)
 ** Function         rw_t2t_is_read_before_write_block
 **
 ** Description      This function will check if the block has to be read before
-**                  writting to avoid over writting in to lock/reserved bytes 
+**                  writting to avoid over writting in to lock/reserved bytes
 **                  present in the block.
 **                  If no bytes in the block can be overwritten it moves in to
 **                  next block and check. Finally it finds a block where part of
-**                  ndef bytes can exist and check if the whole block can be 
+**                  ndef bytes can exist and check if the whole block can be
 **                  updated or only part of block can be modified.
 **
 ** Returns          TRUE, if the block returned should be read before writting
@@ -1163,10 +1163,10 @@ static BOOLEAN rw_t2t_is_read_before_write_block (UINT16 block, UINT16 *p_block_
 **
 ** Function         rw_t2t_write_ndef_first_block
 **
-** Description      This function will write the first NDEF block with Length 
+** Description      This function will write the first NDEF block with Length
 **                  field reset to zero.
-**                  Also after writting NDEF this function may be called to 
-**                  update new NDEF length 
+**                  Also after writting NDEF this function may be called to
+**                  update new NDEF length
 **
 ** Returns          NCI_STATUS_OK, if write was started. Otherwise, error status.
 **
@@ -1214,7 +1214,7 @@ tNFC_STATUS rw_t2t_write_ndef_first_block (UINT16 msg_len, BOOLEAN b_update_len)
 
     index = p_t2t->ndef_header_offset % T2T_BLOCK_SIZE;
     block = (UINT8) (p_t2t->ndef_header_offset / T2T_BLOCK_SIZE);
-    
+
     while (p_t2t->work_offset == 0 && block < total_blocks)
     {
         /* update length field */
@@ -1226,7 +1226,7 @@ tNFC_STATUS rw_t2t_write_ndef_first_block (UINT16 msg_len, BOOLEAN b_update_len)
                 p_t2t->work_offset++;
             }
             index++;
-            if (p_t2t->work_offset == new_lengthfield_len) 
+            if (p_t2t->work_offset == new_lengthfield_len)
             {
                 break;
             }
@@ -1355,7 +1355,7 @@ tNFC_STATUS rw_t2t_write_ndef_next_block (UINT16 block, UINT16 msg_len, BOOLEAN 
                     p_t2t->work_offset++;
                 }
                 index++;
-                if (p_t2t->work_offset == new_lengthfield_len) 
+                if (p_t2t->work_offset == new_lengthfield_len)
                 {
                     break;
                 }
@@ -1465,9 +1465,9 @@ static void rw_t2t_update_cb (UINT16 block, UINT8 *p_write_block, BOOLEAN b_upda
 **
 ** Function         rw_t2t_get_ndef_flags
 **
-** Description      Prepare NDEF Flags 
+** Description      Prepare NDEF Flags
 **
-** Returns          NDEF Flag value  
+** Returns          NDEF Flag value
 **
 *******************************************************************************/
 static UINT8 rw_t2t_get_ndef_flags (void)
@@ -1501,10 +1501,10 @@ static UINT8 rw_t2t_get_ndef_flags (void)
 **
 ** Function         rw_t2t_get_ndef_max_size
 **
-** Description      Calculate maximum size of NDEF message that can be written 
-**                  on to the tag 
+** Description      Calculate maximum size of NDEF message that can be written
+**                  on to the tag
 **
-** Returns          Maximum size of NDEF Message  
+** Returns          Maximum size of NDEF Message
 **
 *******************************************************************************/
 static UINT16 rw_t2t_get_ndef_max_size (void)
@@ -1522,7 +1522,7 @@ static UINT16 rw_t2t_get_ndef_max_size (void)
     offset  = p_t2t->ndef_msg_offset;
 
     if (  (tag_size < T2T_STATIC_SIZE)
-        ||(tag_size > (T2T_SECTOR_SIZE * T2T_MAX_SECTOR)) 
+        ||(tag_size > (T2T_SECTOR_SIZE * T2T_MAX_SECTOR))
         ||((p_t2t->tag_hdr[T2T_CC0_NMN_BYTE] != T2T_CC0_NMN) && (p_t2t->tag_hdr[T2T_CC0_NMN_BYTE] != 0))  )
     {
         /* Tag not formated, assume static tag */
@@ -1632,7 +1632,7 @@ static void rw_t2t_handle_ndef_read_rsp (UINT8 *p_data)
     if (failed || done)
     {
         evt_data.status = failed ? NFC_STATUS_FAILED : NFC_STATUS_OK;
-        evt_data.p_data = NULL;    
+        evt_data.p_data = NULL;
         rw_t2t_handle_op_complete ();
         (*rw_cb.p_cback) (RW_T2T_NDEF_READ_EVT, (tRW_DATA *) &evt_data);
     }
@@ -1704,7 +1704,7 @@ static void rw_t2t_handle_ndef_write_rsp (UINT8 *p_data)
         break;
 
     case RW_T2T_SUBSTATE_WAIT_READ_NDEF_NEXT_BLOCK:
-        
+
         offset = (UINT8) (p_t2t->ndef_read_block_num - p_t2t->block_read) * T2T_BLOCK_SIZE;
         /* Backup read block */
         memcpy (p_t2t->ndef_read_block, &p_data[offset], T2T_BLOCK_LEN);
@@ -1719,7 +1719,7 @@ static void rw_t2t_handle_ndef_write_rsp (UINT8 *p_data)
         if (rw_t2t_is_read_before_write_block ((UINT16) (p_t2t->block_written + 1), &block) == TRUE)
         {
             p_t2t->ndef_read_block_num = block;
-            /* If only part of the block is going to be updated read the block to retain previous data for 
+            /* If only part of the block is going to be updated read the block to retain previous data for
                unchanged part of the block */
             if (rw_t2t_read_ndef_next_block (block) !=  NFC_STATUS_OK)
                 failed = TRUE;
@@ -1746,12 +1746,12 @@ static void rw_t2t_handle_ndef_write_rsp (UINT8 *p_data)
         p_t2t->ndef_write_block = p_t2t->ndef_header_offset / T2T_BLOCK_SIZE;
         if (rw_t2t_is_read_before_write_block ((UINT16) (p_t2t->ndef_write_block), &block) == TRUE)
         {
-            /* If only part of the block is going to be updated read the block to retain previous data for 
+            /* If only part of the block is going to be updated read the block to retain previous data for
                part of the block thats not going to be changed */
             p_t2t->substate = RW_T2T_SUBSTATE_WAIT_READ_NDEF_LEN_BLOCK;
             if (rw_t2t_read (block) !=  NFC_STATUS_OK)
                 failed = TRUE;
-                
+
         }
         else
         {
@@ -1814,7 +1814,7 @@ static void rw_t2t_handle_ndef_write_rsp (UINT8 *p_data)
 **
 ** Function         rw_t2t_get_tag_size
 **
-** Description      This function calculates tag data area size from data read 
+** Description      This function calculates tag data area size from data read
 **                  from block with version number
 **
 ** Returns          TMS of the tag
@@ -1825,7 +1825,7 @@ static UINT8 rw_t2t_get_tag_size (UINT8 *p_data)
     UINT16  LchunkSize = 0;
     UINT16  Num_LChuncks = 0;
     UINT16  tms = 0;
-    
+
     LchunkSize   = (UINT16) p_data[2] << 8 | p_data[3];
     Num_LChuncks = (UINT16) p_data[4] << 8 | p_data[5];
 
@@ -1902,7 +1902,7 @@ static void rw_t2t_handle_config_tag_readonly (UINT8 *p_data)
             }
             num_locks++;
         }
-        
+
         if (b_pending)
         {
             /* Read the block where dynamic lock bits are present to avoid writing to NDEF bytes in the same block */
@@ -2005,10 +2005,10 @@ static void rw_t2t_handle_format_tag_rsp (UINT8 *p_data)
         version_no = (UINT16) p_t2t->tag_data[0] << 8 | p_t2t->tag_data[1];
         if (  (version_no == 0)
             ||((p_ret = t2t_tag_init_data (p_t2t->tag_hdr[0], TRUE, version_no)) == NULL)
-            ||(!p_ret->b_multi_version)  
+            ||(!p_ret->b_multi_version)
             ||(!p_ret->b_calc_cc)  )
         {
-            /* Currently Formating a non blank tag or a blank tag with manufacturer 
+            /* Currently Formating a non blank tag or a blank tag with manufacturer
              * has only one variant of tag. Set Null NDEF TLV and complete Format Operation */
             next_block = T2T_FIRST_DATA_BLOCK;
             p = p_t2t->ndef_final_block;
@@ -2088,7 +2088,7 @@ static void rw_t2t_update_attributes (void)
     UINT16      upper_offset;
     UINT16      offset;
     UINT8       num_bytes;
-    
+
     /* Prepare attr for the current segment */
     memset (p_t2t->attr, 0, RW_T2T_SEGMENT_SIZE * sizeof (UINT8));
 
@@ -2097,7 +2097,7 @@ static void rw_t2t_update_attributes (void)
     /* calculate offset where the current segment ends in the tag */
     upper_offset   = (p_t2t->segment + 1 ) * RW_T2T_SEGMENT_BYTES;
 
-    
+
     /* check offset of lock bytes in the tag and update p_t2t->attr
      * for every lock byte that is present in the current segment */
     count = 0;
@@ -2108,7 +2108,7 @@ static void rw_t2t_update_attributes (void)
         {
             /* Calculate offset in the current segment as p_t2t->attr is prepared for one segment only */
             offset %= RW_T2T_SEGMENT_BYTES;
-            /* Every bit in p_t2t->attr indicates one byte of the tag is either a lock/reserved byte or not 
+            /* Every bit in p_t2t->attr indicates one byte of the tag is either a lock/reserved byte or not
              * So, each array element in p_t2t->attr covers two blocks in the tag as T2 block size is 4 and array element size is 8
              * Set the corresponding bit in attr to indicate - reserved byte */
             p_t2t->attr[offset / TAG_BITS_PER_BYTE] |= rw_t2t_mask_bits[offset % TAG_BITS_PER_BYTE];
@@ -2131,7 +2131,7 @@ static void rw_t2t_update_attributes (void)
             {
                 /* Let offset represents offset in the current segment as p_t2t->attr is prepared for one segment only */
                 offset %= RW_T2T_SEGMENT_BYTES;
-                /* Every bit in p_t2t->attr indicates one byte of the tag is either a lock/reserved byte or not 
+                /* Every bit in p_t2t->attr indicates one byte of the tag is either a lock/reserved byte or not
                  * So, each array element in p_t2t->attr covers two blocks in the tag as T2 block size is 4 and array element size is 8
                  * Set the corresponding bit in attr to indicate - reserved byte */
                 p_t2t->attr[offset /TAG_BITS_PER_BYTE] |= rw_t2t_mask_bits[offset % TAG_BITS_PER_BYTE];
@@ -2153,7 +2153,7 @@ static void rw_t2t_update_attributes (void)
 **                  p_start_byte: The offset of lock byte that contains the first
 **                                lock bit for the segment
 **                  p_start_bit:  The offset of the lock bit in the lock byte
-**                  
+**
 **                  p_end_byte:   The offset of the last bit associcated to the
 **                                segment
 **
@@ -2166,7 +2166,7 @@ static UINT8 rw_t2t_get_lock_bits_for_segment (UINT8 segment, UINT8 *p_start_byt
     UINT16      byte_count = 0;
     UINT16      lower_offset, upper_offset;
     UINT8       num_dynamic_locks = 0;
-    UINT8       bit_count  = 0;  
+    UINT8       bit_count  = 0;
     UINT8       bytes_locked_per_bit;
     UINT8       num_bits;
     tRW_T2T_CB  *p_t2t = &rw_cb.tcb.t2t;
@@ -2206,7 +2206,7 @@ static UINT8 rw_t2t_get_lock_bits_for_segment (UINT8 segment, UINT8 *p_start_byt
         if (((bytes_locked_per_bit * num_bits) + byte_count) <= lower_offset)
         {
             /* Skip this lock byte as it covers different segment */
-            byte_count += bytes_locked_per_bit * num_bits;            
+            byte_count += bytes_locked_per_bit * num_bits;
             num_dynamic_locks++;
         }
         else
@@ -2214,14 +2214,14 @@ static UINT8 rw_t2t_get_lock_bits_for_segment (UINT8 segment, UINT8 *p_start_byt
             bit_count = 0;
             while (bit_count < num_bits)
             {
-                byte_count += bytes_locked_per_bit;                    
+                byte_count += bytes_locked_per_bit;
                 if (byte_count > lower_offset)
                 {
                     /* First lock bit that is used to lock this segment */
                     *p_start_byte = num_dynamic_locks;
                     *p_end_byte   = num_dynamic_locks;
                     *p_start_bit  = bit_count;
-                    bit_count++;                    
+                    bit_count++;
                     total_bits    = 1;
                     break;
                 }
@@ -2234,7 +2234,7 @@ static UINT8 rw_t2t_get_lock_bits_for_segment (UINT8 segment, UINT8 *p_start_byt
         return 0;
     }
     while (  (byte_count < upper_offset)
-           &&(num_dynamic_locks < p_t2t->num_lockbytes)  )  
+           &&(num_dynamic_locks < p_t2t->num_lockbytes)  )
     {
         bytes_locked_per_bit = p_t2t->lock_tlv[p_t2t->lockbyte[num_dynamic_locks].tlv_index].bytes_locked_per_bit;
         /* Number of bits in the current lock byte */
@@ -2244,7 +2244,7 @@ static UINT8 rw_t2t_get_lock_bits_for_segment (UINT8 segment, UINT8 *p_start_byt
         if ((bytes_locked_per_bit * (num_bits - bit_count)) + byte_count < upper_offset)
         {
             /* Collect all lock bits that covers the current segment */
-            byte_count += bytes_locked_per_bit * (num_bits - bit_count);                
+            byte_count += bytes_locked_per_bit * (num_bits - bit_count);
             total_bits += num_bits - bit_count;
             bit_count   = 0;
             *p_end_byte = num_dynamic_locks;
@@ -2275,7 +2275,7 @@ static UINT8 rw_t2t_get_lock_bits_for_segment (UINT8 segment, UINT8 *p_start_byt
 **
 ** Function         rw_t2t_update_lock_attributes
 **
-** Description      This function will check if the tag index passed as 
+** Description      This function will check if the tag index passed as
 **                  argument is a locked byte and return TRUE or FALSE
 **
 ** Parameters:      index, the index of the byte in the tag
@@ -2347,7 +2347,7 @@ static void rw_t2t_update_lock_attributes (void)
     if ((total_bits = rw_t2t_get_lock_bits_for_segment (p_t2t->segment,&start_lock_byte, &start_lock_bit, &end_lock_byte)) != 0)
     {
         /* update lock_attributes based on current segment using dynamic lock bytes */
-        xx                            = start_lock_bit;            
+        xx                            = start_lock_bit;
         num_dyn_lock_bytes            = start_lock_byte;
         bits_covered                  = 0;
         bytes_covered                 = 0;
@@ -2375,7 +2375,7 @@ static void rw_t2t_update_lock_attributes (void)
                     bits_covered++;
                     if (bits_covered == TAG_BITS_PER_BYTE)
                     {
-                        /* Move to next 8 bytes */ 
+                        /* Move to next 8 bytes */
                         bits_covered = 0;
                         block_count++;
                         /* Assume unlocked before updating using locks */
@@ -2394,8 +2394,8 @@ static void rw_t2t_update_lock_attributes (void)
 **
 ** Function         rw_t2t_is_lock_res_byte
 **
-** Description      This function will check if the tag index passed as 
-**                  argument is a lock or reserved or otp byte and return 
+** Description      This function will check if the tag index passed as
+**                  argument is a lock or reserved or otp byte and return
 **                  TRUE or FALSE
 **
 ** Parameters:      index, the index of the byte in the tag
@@ -2420,9 +2420,9 @@ static BOOLEAN rw_t2t_is_lock_res_byte (UINT16 index)
     }
 
     index = index % RW_T2T_SEGMENT_BYTES;
-    /* Every bit in p_t2t->attr indicates one specific byte of the tag is either a lock/reserved byte or not 
+    /* Every bit in p_t2t->attr indicates one specific byte of the tag is either a lock/reserved byte or not
      * So, each array element in p_t2t->attr covers two blocks in the tag as T2 block size is 4 and array element size is 8
-     * Find the block and offset for the index (passed as argument) and Check if the offset bit in the 
+     * Find the block and offset for the index (passed as argument) and Check if the offset bit in the
      * p_t2t->attr[block/2] is set or not. If the bit is set then it is a lock/reserved byte, otherwise not */
 
     return ((p_t2t->attr[index /8] & rw_t2t_mask_bits[index % 8]) == 0) ? FALSE:TRUE;
@@ -2432,8 +2432,8 @@ static BOOLEAN rw_t2t_is_lock_res_byte (UINT16 index)
 **
 ** Function         rw_t2t_is_read_only_byte
 **
-** Description      This function will check if the tag index passed as 
-**                  argument is a locked and return 
+** Description      This function will check if the tag index passed as
+**                  argument is a locked and return
 **                  TRUE or FALSE
 **
 ** Parameters:      index, the index of the byte in the tag
@@ -2458,9 +2458,9 @@ static BOOLEAN rw_t2t_is_read_only_byte (UINT16 index)
     }
 
     index = index % RW_T2T_SEGMENT_BYTES;
-    /* Every bit in p_t2t->lock_attr indicates one specific byte of the tag is a read only byte or read write byte 
+    /* Every bit in p_t2t->lock_attr indicates one specific byte of the tag is a read only byte or read write byte
      * So, each array element in p_t2t->lock_attr covers two blocks of the tag as T2 block size is 4 and array element size is 8
-     * Find the block and offset for the index (passed as argument) and Check if the offset bit in  
+     * Find the block and offset for the index (passed as argument) and Check if the offset bit in
      * p_t2t->lock_attr[block/2] is set or not. If the bit is set then it is a read only byte, otherwise read write byte */
 
     return ((p_t2t->lock_attr[index /8] & rw_t2t_mask_bits[index % 8]) == 0) ? FALSE:TRUE;
@@ -2470,7 +2470,7 @@ static BOOLEAN rw_t2t_is_read_only_byte (UINT16 index)
 **
 ** Function         rw_t2t_set_dynamic_lock_bits
 **
-** Description      This function will set dynamic lock bits as part of 
+** Description      This function will set dynamic lock bits as part of
 **                  configuring tag as read only
 **
 ** Returns
@@ -2552,7 +2552,7 @@ tNFC_STATUS rw_t2t_set_dynamic_lock_bits (UINT8 *p_data)
 **
 ** Function         rw_t2t_set_lock_tlv
 **
-** Description      This function will set lock control tlv on the blank 
+** Description      This function will set lock control tlv on the blank
 **                  activated type 2 tag based on values read from version block
 **
 ** Parameters:      TAG data memory size
@@ -2578,7 +2578,7 @@ tNFC_STATUS rw_t2t_set_lock_tlv (UINT16 addr, UINT8 num_dyn_lock_bits, UINT16 lo
     {
         a  = (UINT8) (addr / xx);
         a += (addr % xx) ? 1:0;
-        
+
         BytePerPage = (INT8) tags_log2 (a);
         ByteOffset  = (INT8) (addr - xx * tags_pow (2, BytePerPage));
 
@@ -2768,7 +2768,7 @@ tNFC_STATUS rw_t2t_soft_lock_tag (void)
 
     if (p_t2t->b_hard_lock)
     {
-        /* Should have performed NDEF Detection on dynamic memory structure tag, before permanently converting to Read only 
+        /* Should have performed NDEF Detection on dynamic memory structure tag, before permanently converting to Read only
          * Even when no lock control tlv is present, default lock bytes should be present */
 
         if ((p_t2t->tag_hdr[T2T_CC2_TMS_BYTE] != T2T_CC2_TMS_STATIC) && (p_t2t->num_lockbytes == 0))
@@ -2847,11 +2847,11 @@ tNFC_STATUS RW_T2tFormatNDef (void)
 **
 ** Function         RW_T2tLocateTlv
 **
-** Description      This function is used to perform TLV detection on a Type 2 
+** Description      This function is used to perform TLV detection on a Type 2
 **                  tag, and retrieve the tag's TLV attribute information.
 **
-**                  Before using this API, the application must call 
-**                  RW_SelectTagType to indicate that a Type 2 tag has been 
+**                  Before using this API, the application must call
+**                  RW_SelectTagType to indicate that a Type 2 tag has been
 **                  activated.
 **
 ** Parameters:      tlv_type : TLV to detect
@@ -2889,6 +2889,7 @@ tNFC_STATUS RW_T2tLocateTlv (UINT8 tlv_type)
         &&(p_t2t->tag_hdr[T2T_CC0_NMN_BYTE] != T2T_CC0_NMN)  )
     {
         RW_TRACE_WARNING3 ("RW_T2tLocateTlv - Invalid NDEF Magic Number!, CC[0]: 0x%02x, CC[1]: 0x%02x, CC[3]: 0x%02x", p_t2t->tag_hdr[T2T_CC0_NMN_BYTE], p_t2t->tag_hdr[T2T_CC1_VNO_BYTE], p_t2t->tag_hdr[T2T_CC3_RWA_BYTE]);
+        return (NFC_STATUS_FAILED);
     }
 
     p_t2t->work_offset = 0;
@@ -2947,11 +2948,11 @@ tNFC_STATUS RW_T2tLocateTlv (UINT8 tlv_type)
 **
 ** Function         RW_T2tDetectNDef
 **
-** Description      This function is used to perform NDEF detection on a Type 2 
+** Description      This function is used to perform NDEF detection on a Type 2
 **                  tag, and retrieve the tag's NDEF attribute information.
 **
-**                  Before using this API, the application must call 
-**                  RW_SelectTagType to indicate that a Type 2 tag has been 
+**                  Before using this API, the application must call
+**                  RW_SelectTagType to indicate that a Type 2 tag has been
 **                  activated.
 **
 ** Parameters:      none
@@ -2970,14 +2971,14 @@ tNFC_STATUS RW_T2tDetectNDef (void)
 **
 ** Description      Retrieve NDEF contents from a Type2 tag.
 **
-**                  The RW_T2T_NDEF_READ_EVT event is used to notify the 
+**                  The RW_T2T_NDEF_READ_EVT event is used to notify the
 **                  application after reading the NDEF message.
 **
-**                  Before using this API, the RW_T2tDetectNDef function must 
-**                  be called to verify that the tag contains NDEF data, and to 
+**                  Before using this API, the RW_T2tDetectNDef function must
+**                  be called to verify that the tag contains NDEF data, and to
 **                  retrieve the NDEF attributes.
 **
-**                  Internally, this command will be separated into multiple Tag2 
+**                  Internally, this command will be separated into multiple Tag2
 **                  Read commands (if necessary) - depending on the NDEF Msg size
 **
 ** Parameters:      p_buffer:   The buffer into which to read the NDEF message
@@ -2989,7 +2990,7 @@ tNFC_STATUS RW_T2tDetectNDef (void)
 tNFC_STATUS RW_T2tReadNDef (UINT8 *p_buffer, UINT16 buf_len)
 {
     tRW_T2T_CB  *p_t2t = &rw_cb.tcb.t2t;
-    tNFC_STATUS status;
+    tNFC_STATUS status = NFC_STATUS_OK;
     UINT16      block;
 
     if (p_t2t->state != RW_T2T_STATE_IDLE)
@@ -3048,15 +3049,15 @@ tNFC_STATUS RW_T2tReadNDef (UINT8 *p_buffer, UINT16 buf_len)
 ** Function         RW_T2tWriteNDef
 **
 ** Description      Write NDEF contents to a Type2 tag.
-**                  
-**                  Before using this API, the RW_T2tDetectNDef 
-**                  function must be called to verify that the tag contains 
+**
+**                  Before using this API, the RW_T2tDetectNDef
+**                  function must be called to verify that the tag contains
 **                  NDEF data, and to retrieve the NDEF attributes.
 **
-**                  The RW_T2T_NDEF_WRITE_EVT callback event will be used to 
+**                  The RW_T2T_NDEF_WRITE_EVT callback event will be used to
 **                  notify the application of the response.
 **
-**                  Internally, this command will be separated into multiple Tag2 
+**                  Internally, this command will be separated into multiple Tag2
 **                  Write commands (if necessary) - depending on the NDEF Msg size
 **
 ** Parameters:      msg_len:    The length of the buffer
@@ -3073,7 +3074,7 @@ tNFC_STATUS RW_T2tWriteNDef (UINT16 msg_len, UINT8 *p_msg)
     UINT16      block;
     const       tT2T_INIT_TAG *p_ret;
 
-    tNFC_STATUS status;
+    tNFC_STATUS status          = NFC_STATUS_OK;
 
     if (p_t2t->state != RW_T2T_STATE_IDLE)
     {

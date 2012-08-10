@@ -55,10 +55,10 @@ static void nfa_hci_handle_nv_read (UINT8 block, tNFA_STATUS status);
 /*****************************************************************************
 **  Constants
 *****************************************************************************/
-static const tNFA_SYS_REG nfa_hci_sys_reg = 
+static const tNFA_SYS_REG nfa_hci_sys_reg =
 {
     nfa_hci_sys_enable,
-    nfa_hci_evt_hdlr, 
+    nfa_hci_evt_hdlr,
     nfa_hci_sys_disable,
     nfa_hci_proc_nfcc_power_mode
 };
@@ -220,7 +220,7 @@ BOOLEAN nfa_hci_is_valid_cfg (void)
         if (pipe_inx_mask & 1)
         {
             /* Check if the pipe is valid one */
-            if (nfa_hci_cb.cfg.dyn_pipes[xx].pipe_id < NFA_HCI_FIRST_DYNAMIC_PIPE)               
+            if (nfa_hci_cb.cfg.dyn_pipes[xx].pipe_id < NFA_HCI_FIRST_DYNAMIC_PIPE)
                 return FALSE;
         }
     }
@@ -327,7 +327,7 @@ void nfa_hci_restore_default_config (UINT64 session_id)
 ** Function         nfa_hci_proc_nfcc_power_mode
 **
 ** Description      Restore NFA HCI sub-module
-**                  
+**
 ** Returns          None
 **
 *******************************************************************************/
@@ -364,7 +364,7 @@ void nfa_hci_proc_nfcc_power_mode (UINT8 nfcc_power_mode)
 **
 ** Description      Initialization of terminal host in HCI Network is completed
 **                  Wait for other host in the network to initialize
-**                  
+**
 ** Returns          None
 **
 *******************************************************************************/
@@ -385,13 +385,13 @@ void nfa_hci_dh_startup_complete (void)
 ** Function         nfa_hci_startup_complete
 **
 ** Description      HCI network initialization is completed
-**                  
+**
 ** Returns          None
 **
 *******************************************************************************/
 void nfa_hci_startup_complete (tNFA_STATUS status)
 {
-    tNFA_HCI_EVT_DATA   evt_data; 
+    tNFA_HCI_EVT_DATA   evt_data;
 
     NFA_TRACE_EVENT1 ("nfa_hci_startup_complete (): Status: %u", status);
 
@@ -410,7 +410,7 @@ void nfa_hci_startup_complete (tNFA_STATUS status)
         nfa_sys_cback_notify_enable_complete (NFA_ID_HCI);
     }
 
-    if (status == NFA_STATUS_OK) 
+    if (status == NFA_STATUS_OK)
         nfa_hci_cb.hci_state = NFA_HCI_STATE_IDLE;
 
     else
@@ -534,7 +534,7 @@ static void nfa_hci_sys_disable (void)
 ** Function         nfa_hci_conn_cback
 **
 ** Description      This function Process event from NCI
-**                  
+**
 ** Returns          None
 **
 *******************************************************************************/
@@ -723,7 +723,7 @@ static void nfa_hci_conn_cback (UINT8 conn_id, tNFC_CONN_EVT event, tNFC_CONN *p
 ** Function         nfa_hci_handle_nv_read
 **
 ** Description      handler function for nv read complete event
-**                  
+**
 ** Returns          None
 **
 *******************************************************************************/
@@ -755,7 +755,7 @@ void nfa_hci_handle_nv_read (UINT8 block, tNFA_STATUS status)
 ** Function         nfa_hci_rsp_timeout
 **
 ** Description      action function to process timeout
-**                  
+**
 ** Returns          None
 **
 *******************************************************************************/
@@ -807,7 +807,7 @@ void nfa_hci_rsp_timeout (tNFA_HCI_EVENT_DATA *p_evt_data)
             nfa_hci_api_deregister (NULL);
         }
         break;
- 
+
     case NFA_HCI_STATE_WAIT_RSP:
         nfa_hci_cb.hci_state = NFA_HCI_STATE_IDLE;
 
@@ -824,12 +824,12 @@ void nfa_hci_rsp_timeout (tNFA_HCI_EVENT_DATA *p_evt_data)
 
             break;
         }
-        
+
         switch (nfa_hci_cb.cmd_sent)
         {
         case NFA_HCI_ANY_SET_PARAMETER:
-            /* 
-             * As no response to the command sent on this pipe, we may assume the pipe is 
+            /*
+             * As no response to the command sent on this pipe, we may assume the pipe is
              * deleted already and release the pipe. But still send delete pipe command to be safe.
              */
             nfa_hciu_send_delete_pipe_cmd (nfa_hci_cb.pipe_in_use);
@@ -841,8 +841,8 @@ void nfa_hci_rsp_timeout (tNFA_HCI_EVENT_DATA *p_evt_data)
             break;
 
         case NFA_HCI_ANY_GET_PARAMETER:
-            /* 
-             * As no response to the command sent on this pipe, we may assume the pipe is 
+            /*
+             * As no response to the command sent on this pipe, we may assume the pipe is
              * deleted already and release the pipe. But still send delete pipe command to be safe.
              */
             nfa_hciu_send_delete_pipe_cmd (nfa_hci_cb.pipe_in_use);
@@ -854,8 +854,8 @@ void nfa_hci_rsp_timeout (tNFA_HCI_EVENT_DATA *p_evt_data)
             break;
 
         case NFA_HCI_ANY_OPEN_PIPE:
-            /* 
-             * As no response to the command sent on this pipe, we may assume the pipe is 
+            /*
+             * As no response to the command sent on this pipe, we may assume the pipe is
              * deleted already and release the pipe. But still send delete pipe command to be safe.
              */
             nfa_hciu_send_delete_pipe_cmd (nfa_hci_cb.pipe_in_use);
@@ -865,8 +865,8 @@ void nfa_hci_rsp_timeout (tNFA_HCI_EVENT_DATA *p_evt_data)
             break;
 
         case NFA_HCI_ANY_CLOSE_PIPE:
-            /* 
-             * As no response to the command sent on this pipe, we may assume the pipe is 
+            /*
+             * As no response to the command sent on this pipe, we may assume the pipe is
              * deleted already and release the pipe. But still send delete pipe command to be safe.
              */
             nfa_hciu_send_delete_pipe_cmd (nfa_hci_cb.pipe_in_use);
@@ -887,16 +887,16 @@ void nfa_hci_rsp_timeout (tNFA_HCI_EVENT_DATA *p_evt_data)
             nfa_hciu_release_pipe (nfa_hci_cb.pipe_in_use);
             evt_data.deleted.pipe = nfa_hci_cb.pipe_in_use;
             evt                   = NFA_HCI_DELETE_PIPE_EVT;
-            /* 
-             * As no response to the command sent on this pipe, we may assume the pipe is 
+            /*
+             * As no response to the command sent on this pipe, we may assume the pipe is
              * deleted already. Just release the pipe.
              */
             nfa_hciu_release_pipe (nfa_hci_cb.pipe_in_use);
             break;
 
         default:
-            /* 
-             * As no response to the command sent on this pipe, we may assume the pipe is 
+            /*
+             * As no response to the command sent on this pipe, we may assume the pipe is
              * deleted already and release the pipe. But still send delete pipe command to be safe.
              */
             nfa_hciu_send_delete_pipe_cmd (nfa_hci_cb.pipe_in_use);
@@ -982,7 +982,7 @@ static BOOLEAN nfa_hci_evt_hdlr (BT_HDR *p_msg)
 
 #if (BT_TRACE_VERBOSE == TRUE)
     NFA_TRACE_EVENT4 ("nfa_hci_evt_hdlr state: %s (%d) event: %s (0x%04x)",
-                      nfa_hciu_get_state_name (nfa_hci_cb.hci_state), nfa_hci_cb.hci_state, 
+                      nfa_hciu_get_state_name (nfa_hci_cb.hci_state), nfa_hci_cb.hci_state,
                       nfa_hciu_get_event_name (p_evt_data->hdr.event), p_evt_data->hdr.event);
 #else
     NFA_TRACE_EVENT2 ("nfa_hci_evt_hdlr state: %d event: 0x%04x", nfa_hci_cb.hci_state, p_evt_data->hdr.event);
@@ -1039,7 +1039,7 @@ static BOOLEAN nfa_hci_evt_hdlr (BT_HDR *p_msg)
                 }
             }
             break;
-        }        
+        }
     }
 
     if (nfa_hci_cb.p_vs_evt_hdlr)

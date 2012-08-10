@@ -512,7 +512,7 @@ void ce_t3t_handle_check_cmd(tCE_CB *p_ce_cb, BT_HDR *p_cmd_msg)
 
                 p_dst = p_status;
                 UINT8_TO_STREAM(p_dst, T3T_MSG_RSP_STATUS_ERROR);
-                UINT8_TO_STREAM(p_dst, T3T_MSG_RSP_STATUS2_ERROR_MEMORY);                    
+                UINT8_TO_STREAM(p_dst, T3T_MSG_RSP_STATUS2_ERROR_MEMORY);
                 break;
             }
         }
@@ -642,7 +642,7 @@ void ce_t3t_handle_non_nfc_forum_cmd(tCE_CB *p_mem_cb, UINT8 cmd_id, BT_HDR *p_c
 **
 ** Function         ce_t3t_data_cback
 **
-** Description      This callback function receives the data from NFCC.  
+** Description      This callback function receives the data from NFCC.
 **
 ** Returns          none
 **
@@ -758,7 +758,7 @@ void ce_t3t_data_cback (UINT8 conn_id, BT_HDR *p_msg)
                         /* Validate service code index and size of block-list */
                         if ((bl0 & T3T_MSG_SERVICE_LIST_MASK) >= p_cb->cur_cmd.num_services)
                         {
-                            /* Invalid service code */ 
+                            /* Invalid service code */
                             CE_TRACE_ERROR1("CE: received invalid T3t message (invalid service index: %i)", (bl0 & T3T_MSG_SERVICE_LIST_MASK));
                             block_list_ok = FALSE;
                             break;
@@ -823,7 +823,7 @@ void ce_t3t_data_cback (UINT8 conn_id, BT_HDR *p_msg)
 **
 ** Function         ce_t3t_conn_cback
 **
-** Description      This callback function receives the events/data from NFCC.  
+** Description      This callback function receives the events/data from NFCC.
 **
 ** Returns          none
 **
@@ -865,12 +865,12 @@ void ce_t3t_conn_cback(UINT8 conn_id, tNFC_CONN_EVT event, tNFC_CONN *p_data)
 **
 ** Function         ce_select_t3t
 **
-** Description      Select Type 3 Tag  
-**                  
+** Description      Select Type 3 Tag
+**
 ** Returns          NFC_STATUS_OK if success
 **
 *******************************************************************************/
-tNFC_STATUS ce_select_t3t (UINT16 system_code, UINT8 nfcid2[NCI_RF_F_UID_LEN]) 
+tNFC_STATUS ce_select_t3t (UINT16 system_code, UINT8 nfcid2[NCI_RF_F_UID_LEN])
 {
     tCE_T3T_MEM *p_cb = &ce_cb.mem.t3t;
 
@@ -895,7 +895,7 @@ tNFC_STATUS ce_select_t3t (UINT16 system_code, UINT8 nfcid2[NCI_RF_F_UID_LEN])
 **
 *******************************************************************************/
 tNFC_STATUS CE_T3tSetLocalNDEFMsg (BOOLEAN read_only,
-                                UINT32 size_max, 
+                                UINT32 size_max,
                                 UINT32 size_current,
                                 UINT8 *p_buf,
                                 UINT8 *p_scratch_buf)

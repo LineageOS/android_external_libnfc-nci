@@ -118,7 +118,7 @@ static void rw_t3t_handle_fmt_poll_rsp(tRW_T3T_CB *p_cb, UINT8 nci_status, UINT8
                                                             T3T_MSG_NDEF_WRITEF_OFF +               \
                                                             T3T_MSG_NDEF_RWFLAG_RW) & 0xFFFF)
 
-const UINT8 rw_t3t_default_attrib_info[T3T_MSG_BLOCKSIZE] = 
+const UINT8 rw_t3t_default_attrib_info[T3T_MSG_BLOCKSIZE] =
 {
     T3T_MSG_NDEF_VERSION,                   /* Ver                          */
     RW_T3T_DEFAULT_FELICALITE_NBR,          /* NBr (max block reads per cmd)*/
@@ -644,7 +644,7 @@ tNFC_STATUS rw_t3t_send_next_ndef_update_cmd(tRW_T3T_CB *p_cb)
 
         /* Calculate number of blocks remaining to write */
         ndef_blocks_remaining = (UINT8)((ndef_bytes_remaining+15)>>4);      /* ndef blocks remaining (rounded upward) */
-    
+
         /* Calculate first NDEF block ID for this UPDATE command */
         first_block_to_write = (UINT8)((p_cb->ndef_msg_bytes_sent >> 4) + 1);
 
@@ -719,7 +719,7 @@ tNFC_STATUS rw_t3t_send_next_ndef_update_cmd(tRW_T3T_CB *p_cb)
             ndef_padding = (16 - (ndef_bytes_remaining & 0x0F)) & 0x0F;
             if (ndef_padding)
             {
-                flags |= RW_T3T_FL_PADDING; 
+                flags |= RW_T3T_FL_PADDING;
                 ndef_blocks_to_write--;         /* handle the last block separately if it needs padding */
             }
         }
@@ -808,7 +808,7 @@ tNFC_STATUS rw_t3t_send_next_ndef_check_cmd(tRW_T3T_CB *p_cb)
 
         RW_TRACE_DEBUG3("rw_t3t_send_next_ndef_check_cmd: bytes_remaining: %i, cur_blocks_to_read: %i, is_final: %i",
             ndef_bytes_remaining, cur_blocks_to_read, (p_cb->flags & RW_T3T_FL_IS_FINAL_NDEF_SEGMENT));
-    
+
         /* Write to command header for UPDATE */
 
         /* Add UPDATE opcode to message  */
@@ -1162,11 +1162,11 @@ void rw_t3t_act_handle_ndef_detect_rsp(tRW_T3T_CB *p_cb, BT_HDR *p_msg_rsp)
 
                 /* Set data for RW_T3T_NDEF_DETECT_EVT */
                 evt_data.status = p_cb->ndef_attrib.status;
-                evt_data.cur_size = p_cb->ndef_attrib.ln; 
+                evt_data.cur_size = p_cb->ndef_attrib.ln;
                 evt_data.max_size = (UINT32)p_cb->ndef_attrib.nmaxb * 16;
                 evt_data.protocol = NFC_PROTOCOL_T3T;
                 evt_data.flags    = (RW_NDEF_FL_SUPPORTED | RW_NDEF_FL_FORMATED);
-                if (p_cb->ndef_attrib.rwflag == T3T_MSG_NDEF_RWFLAG_RO) 
+                if (p_cb->ndef_attrib.rwflag == T3T_MSG_NDEF_RWFLAG_RO)
                     evt_data.flags    |= RW_NDEF_FL_READ_ONLY;
             }
         }
@@ -1375,7 +1375,7 @@ void rw_t3t_act_handle_check_ndef_rsp(tRW_T3T_CB *p_cb, BT_HDR *p_msg_rsp)
 ** Function         rw_t3t_act_handle_update_ndef_rsp
 **
 ** Description      Handle response to NDEF write segment
-**                  
+**
 ** Returns          Nothing
 **
 *****************************************************************************/
@@ -1460,7 +1460,7 @@ static void rw_t3t_handle_get_sc_poll_rsp(tRW_T3T_CB *p_cb, UINT8 nci_status, UI
     if (p_cb->rw_substate == RW_T3T_GET_SC_SST_POLL_WILDCARD)
     {
         /* Get the system code from the response */
-        if ((nci_status == NCI_STATUS_OK) && 
+        if ((nci_status == NCI_STATUS_OK) &&
             (num_responses > 0) && (sensf_res_buf_size>=(RW_T3T_SENSF_RES_RD_OFFSET + RW_T3T_SENSF_RES_RD_LEN)))
         {
             p = &p_sensf_res_buf[RW_T3T_SENSF_RES_RD_OFFSET];
@@ -1868,7 +1868,7 @@ void rw_t3t_act_handle_fmt_rsp(tRW_T3T_CB *p_cb, BT_HDR *p_msg_rsp)
 **
 ** Function         rw_t3t_data_cback
 **
-** Description      This callback function receives the data from NFCC.  
+** Description      This callback function receives the data from NFCC.
 **
 ** Returns          none
 **
@@ -1890,7 +1890,7 @@ void rw_t3t_data_cback (UINT8 conn_id, BT_HDR *p_msg)
     /* Check if we are expecting a response */
     if (p_cb->rw_state != RW_T3T_STATE_COMMAND_PENDING)
     {
-        /* 
+        /*
         **  This must be raw frame response
         **  send raw frame to app with SoD
         */
@@ -1904,7 +1904,7 @@ void rw_t3t_data_cback (UINT8 conn_id, BT_HDR *p_msg)
 
         rw_t3t_process_frame_error();
     }
-    else 
+    else
     {
         /* Check for RF frame error */
         p = (UINT8 *)(p_msg+1) + p_msg->offset;
@@ -1978,7 +1978,7 @@ void rw_t3t_data_cback (UINT8 conn_id, BT_HDR *p_msg)
 **
 ** Function         rw_t3t_conn_cback
 **
-** Description      This callback function receives the events/data from NFCC.  
+** Description      This callback function receives the events/data from NFCC.
 **
 ** Returns          none
 **
@@ -2177,7 +2177,7 @@ static char *rw_t3t_state_str (UINT8 state_id)
 **
 ** Function         RW_T3tDetectNDef
 **
-** Description 
+** Description
 **      This function is used to perform NDEF detection on a Type 3 tag, and
 **      retrieve the tag's NDEF attribute information (block 0).
 **
@@ -2188,7 +2188,7 @@ static char *rw_t3t_state_str (UINT8 state_id)
 ** Returns
 **      NFC_STATUS_OK: ndef detection procedure started
 **      NFC_STATUS_NO_BUFFERS: unable to allocate a buffer for this operation
-**      NFC_STATUS_FAILED: other error   
+**      NFC_STATUS_FAILED: other error
 **
 *****************************************************************************/
 tNFC_STATUS RW_T3tDetectNDef (void)
@@ -2430,7 +2430,7 @@ tNFC_STATUS RW_T3tUpdate (UINT8 num_blocks, tT3T_BLOCK_DESC *t3t_blocks, UINT8 *
 **
 ** Description
 **      Check if the tag is still in the field.
-**      
+**
 **      The RW_T3T_PRESENCE_CHECK_EVT w/ status is used to indicate presence
 **      or non-presence.
 **
@@ -2502,7 +2502,7 @@ tNFC_STATUS RW_T3tPresenceCheck (void)
 **
 ** Description
 **      Send POLL command
-**      
+**
 ** Returns
 **      NFC_STATUS_OK, if raw data frame sent
 **      NFC_STATUS_NO_BUFFERS: unable to allocate a buffer for this operation
@@ -2634,16 +2634,16 @@ tNFC_STATUS RW_T3tGetSystemCodes (void)
 **
 ** Function         RW_T3tFormatNDef
 **
-** Description 
+** Description
 **      Format a type-3 tag for NDEF.
 **
-**      Only Felica-Lite tags are supported by this API. The 
+**      Only Felica-Lite tags are supported by this API. The
 **      RW_T3T_FORMAT_CPLT_EVT is used to notify the status of the operation.
 **
 ** Returns
 **      NFC_STATUS_OK: ndef detection procedure started
 **      NFC_STATUS_NO_BUFFERS: unable to allocate a buffer for this operation
-**      NFC_STATUS_FAILED: other error   
+**      NFC_STATUS_FAILED: other error
 **
 *****************************************************************************/
 tNFC_STATUS RW_T3tFormatNDef (void)

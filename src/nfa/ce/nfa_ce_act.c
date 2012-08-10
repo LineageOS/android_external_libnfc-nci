@@ -222,7 +222,7 @@ void nfa_ce_handle_t4t_aid_evt (tCE_EVENT event, tCE_DATA *p_ce_data)
 ** Function         nfa_ce_discovery_cback
 **
 ** Description      Processing event from discovery callback
-**                  
+**
 ** Returns          None
 **
 *******************************************************************************/
@@ -398,8 +398,8 @@ tNFA_STATUS nfa_ce_start_listening (void)
                 /* set T3T config params */
                 nfc_ce_t3t_set_listen_params ();
 
-                disc_handle = nfa_dm_add_rf_discover (NFA_DM_DISC_MASK_LF_T3T, 
-                                                      NFA_DM_DISC_HOST_ID_DH, 
+                disc_handle = nfa_dm_add_rf_discover (NFA_DM_DISC_MASK_LF_T3T,
+                                                      NFA_DM_DISC_HOST_ID_DH,
                                                       nfa_ce_discovery_cback);
 
                 if (disc_handle == NFA_HANDLE_INVALID)
@@ -409,8 +409,8 @@ tNFA_STATUS nfa_ce_start_listening (void)
             }
             else if (p_cb->listen_info[listen_info_idx].flags & NFA_CE_LISTEN_INFO_T4T_AID)
             {
-                disc_handle = nfa_dm_add_rf_discover (nfa_ce_cb.isodep_disc_mask, 
-                                                       NFA_DM_DISC_HOST_ID_DH, 
+                disc_handle = nfa_dm_add_rf_discover (nfa_ce_cb.isodep_disc_mask,
+                                                       NFA_DM_DISC_HOST_ID_DH,
                                                        nfa_ce_discovery_cback);
 
                 if (disc_handle == NFA_HANDLE_INVALID)
@@ -477,7 +477,7 @@ tNFA_STATUS nfa_ce_start_listening (void)
 **
 ** Description      Called on deactivation. Check if any active listen_info entries to listen for
 **
-** Returns          TRUE if listening is restarted. 
+** Returns          TRUE if listening is restarted.
 **                  FALSE if listening not restarted
 **
 *******************************************************************************/
@@ -899,7 +899,7 @@ BOOLEAN nfa_ce_activate_ntf (tNFA_CE_MSG *p_ce_msg)
 **
 **                  - If deactivate due to NFA_Stop, then remove its entry from
 **                      listen_info table
-**                      
+**
 **                  - If NDEF was modified while activated, then restore
 **                      original NDEF contents
 **
@@ -968,7 +968,7 @@ BOOLEAN nfa_ce_deactivate_ntf (tNFA_CE_MSG *p_ce_msg)
                     }
                 }
             }
-            else if (  (p_cb->activation_params.protocol == NFA_PROTOCOL_T3T) 
+            else if (  (p_cb->activation_params.protocol == NFA_PROTOCOL_T3T)
                      &&(p_cb->listen_info[i].protocol_mask & NFA_PROTOCOL_MASK_T3T))
             {
                 if (i == NFA_CE_LISTEN_INFO_IDX_NDEF)
@@ -1073,7 +1073,7 @@ BOOLEAN nfa_ce_api_cfg_local_tag (tNFA_CE_MSG *p_ce_msg)
         return TRUE;
     }
 
-    NFA_TRACE_DEBUG5 ("Configuring local NDEF tag: protocol_mask=%01x cur_size=%i, max_size=%i, readonly=%i", 
+    NFA_TRACE_DEBUG5 ("Configuring local NDEF tag: protocol_mask=%01x cur_size=%i, max_size=%i, readonly=%i",
             p_ce_msg->local_tag.protocol_mask,
             p_ce_msg->local_tag.ndef_cur_size,
             p_ce_msg->local_tag.ndef_max_size,
@@ -1135,7 +1135,7 @@ BOOLEAN nfa_ce_api_cfg_local_tag (tNFA_CE_MSG *p_ce_msg)
 **
 ** Description      Register listen params for Felica system code, T4T AID,
 **                  or UICC
-**                  
+**
 ** Returns          TRUE (message buffer to be freed by caller)
 **
 *******************************************************************************/
@@ -1165,7 +1165,7 @@ BOOLEAN nfa_ce_api_reg_listen (tNFA_CE_MSG *p_ce_msg)
             return TRUE;
         }
         /* If this is a free entry, and we haven't found one yet, remember it */
-        else if (  (!(p_cb->listen_info[i].flags & NFA_CE_LISTEN_INFO_IN_USE)) 
+        else if (  (!(p_cb->listen_info[i].flags & NFA_CE_LISTEN_INFO_IN_USE))
                  &&(listen_info_idx == NFA_CE_LISTEN_INFO_IDX_INVALID)  )
         {
             listen_info_idx = i;
@@ -1212,7 +1212,7 @@ BOOLEAN nfa_ce_api_reg_listen (tNFA_CE_MSG *p_ce_msg)
 
             /* Register this AID with CE_T4T */
             if ((p_cb->listen_info[listen_info_idx].t4t_aid_handle = CE_T4tRegisterAID (p_ce_msg->reg_listen.aid_len,
-                                                                                        p_ce_msg->reg_listen.aid, 
+                                                                                        p_ce_msg->reg_listen.aid,
                                                                                         nfa_ce_handle_t4t_aid_evt)) == 0xFF)
             {
                 NFA_TRACE_ERROR0 ("Unable to register AID");
@@ -1329,7 +1329,7 @@ BOOLEAN nfa_ce_api_dereg_listen (tNFA_CE_MSG *p_ce_msg)
             nfa_dm_conn_cback_event_notify (NFA_CE_UICC_LISTEN_CONFIGURED_EVT, &conn_evt);
         }
     }
-    else 
+    else
 #endif
     {
         /* Deregistering virtual secure element listen */

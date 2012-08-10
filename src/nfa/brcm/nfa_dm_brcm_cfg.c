@@ -93,15 +93,18 @@ const tNFA_DM_LP_CFG nfa_dm_lp_cfg =
     NFC_LP_IDLE_THRESHOLD_HC,   /* Idle Threshold HC    */
     NFC_LP_ACTIVE_LOW,          /* NFC_WAKE Active Mode */
     NFC_LP_ACTIVE_HIGH,         /* DH_WAKE Active Mode  */
-    NFC_LP_POWER_CYCLE_TO_FULL  /* Power cycle to full power mode from CEx */
+    NFC_LP_POWER_CYCLE_TO_FULL, /* Power cycle to full power mode from CEx */
+    NFC_LP_COMMAND_PARAMS,      /* parameter for low power mode command    */
+    NFC_LP_PRIMARY_THRESHOLD,   /* Primary Threshold for battery monitor   */
+    NFC_LP_SECONDARY_THRESHOLD  /* Secondary Threshold for battery monitor */
 };
 
 tNFA_DM_LP_CFG *p_nfa_dm_lp_cfg = (tNFA_DM_LP_CFG *) &nfa_dm_lp_cfg;
 
-/* LPTD parameters (LowPowerTagDetection) 
+/* LPTD parameters (LowPowerTagDetection)
  * This is typical values for 20791B2
  * The timing and threshold parameters used for a customer handset/hardware may vary
- * depending on antenna and should be verified during a customer testing phase. 
+ * depending on antenna and should be verified during a customer testing phase.
  * the data fields without comments are too complicated. Please see ""
  * */
 const UINT8 nfa_dm_lptd_cfg[] =
@@ -130,8 +133,24 @@ const UINT8 nfa_dm_lptd_cfg[] =
 
 UINT8 *p_nfa_dm_lptd_cfg = (UINT8 *) &nfa_dm_lptd_cfg[0];
 
+/* This must be configured before setting reader mode for 20791. No need to configure for 43341. */
+const UINT8 nfa_dm_pll_325_cfg[BRCM_XTAL_INDEX_MAX][NFA_DM_BRCM_PLL_325_SETCONFIG_PARAM_LEN] =
+{
+    {NCI_PARAM_ID_PLL325_CFG_PARAM, NCI_PARAM_LEN_PLL325_CFG_PARAM, 0x9A, 0x99, 0x99, 0x99, 0xD7, 0x03, 0x00, 0x87, 0x04, 0x1C, 0x0F, 0x00, 0x0B, FALSE}, /*  9.6 MHz */
+    {NCI_PARAM_ID_PLL325_CFG_PARAM, NCI_PARAM_LEN_PLL325_CFG_PARAM, 0xEF, 0x90, 0xA8, 0x22, 0xD0, 0x03, 0x00, 0x64, 0x06, 0x26, 0x0F, 0x00, 0x08, FALSE}, /* 13.0 MHz */
+    {NCI_PARAM_ID_PLL325_CFG_PARAM, NCI_PARAM_LEN_PLL325_CFG_PARAM, 0x5B, 0xB0, 0x05, 0x5B, 0xD8, 0x03, 0x00, 0x50, 0x07, 0x30, 0x0F, 0x00, 0x06, FALSE}, /* 16.2 MHz */
+    {NCI_PARAM_ID_PLL325_CFG_PARAM, NCI_PARAM_LEN_PLL325_CFG_PARAM, 0xCD, 0xCC, 0xCC, 0xCC, 0xD7, 0x03, 0x00, 0x43, 0x09, 0x39, 0x0F, 0x00, 0x04, FALSE}, /* 19.2 MHz */
+    {NCI_PARAM_ID_PLL325_CFG_PARAM, NCI_PARAM_LEN_PLL325_CFG_PARAM, 0xD7, 0xA3, 0x70, 0x3D, 0xD0, 0x03, 0x00, 0x36, 0x0B, 0x47, 0x0F, 0x00, 0x03, FALSE}, /* 24.0 MHz */
+    {NCI_PARAM_ID_PLL325_CFG_PARAM, NCI_PARAM_LEN_PLL325_CFG_PARAM, 0x78, 0x48, 0x54, 0x11, 0xD0, 0x03, 0x00, 0x32, 0x0C, 0x4D, 0x0F, 0x00, 0x02, FALSE}, /* 26.0 MHz */
+    {NCI_PARAM_ID_PLL325_CFG_PARAM, NCI_PARAM_LEN_PLL325_CFG_PARAM, 0xCD, 0xCC, 0xCC, 0xCC, 0xD7, 0x03, 0x00, 0x43, 0x09, 0x39, 0x0F, 0x00, 0x04, TRUE},  /* 38.4 MHz */
+    {NCI_PARAM_ID_PLL325_CFG_PARAM, NCI_PARAM_LEN_PLL325_CFG_PARAM, 0x78, 0x48, 0x54, 0x11, 0xD0, 0x03, 0x00, 0x32, 0x0C, 0x4D, 0x0F, 0x00, 0x02, TRUE},  /* 52.0 MHz */
+    {NCI_PARAM_ID_PLL325_CFG_PARAM, NCI_PARAM_LEN_PLL325_CFG_PARAM, 0x29, 0xB4, 0xE2, 0x9C, 0xCF, 0x03, 0x00, 0x45, 0x08, 0x37, 0x0F, 0x00, 0x04, TRUE}   /* 37.4 MHz */
+};
+
+UINT8 *p_nfa_dm_pll_325_cfg = (UINT8 *) nfa_dm_pll_325_cfg;
+
 /* the SetConfig for full power mode */
-const UINT8 nfa_power_bitmap_full[] = 
+const UINT8 nfa_power_bitmap_full[] =
 {
     /* TLV len */   5,
     /* B0 */        NCI_PARAM_ID_PWR_SETTING_BITMAP,
@@ -144,7 +163,7 @@ const UINT8 nfa_power_bitmap_full[] =
 UINT8 *p_nfa_power_bitmap_full = (UINT8 *) nfa_power_bitmap_full;
 
 /* the SetConfig for CE low power mode */
-const UINT8 nfa_power_bitmap_ce_lp[] = 
+const UINT8 nfa_power_bitmap_ce_lp[] =
 {
     /* TLV len */   5,
     /* B0 */        NCI_PARAM_ID_PWR_SETTING_BITMAP,

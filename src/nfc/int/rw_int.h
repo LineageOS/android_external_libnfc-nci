@@ -1,5 +1,5 @@
 /****************************************************************************
-** 
+**
 **  File:        rw_int.h
 **
 ** Description:   This file contains the Near Field Communication (NFC)
@@ -23,7 +23,7 @@
 #define RW_T1T_IS_TOPAZ                         0x10    /* TOPAZ Tag                                                */
 #define RW_T1T_IS_TOPAZ96                       0x11    /* TOPAZ96 Tag                                              */
 #define RW_T1T_IS_TOPAZ512                      0x12    /* TOPAZ512 Tag                                             */
-#define RW_T1T_HR1_MIN                          0x49    /* Supports dynamic commands on static tag if HR1 > 0x49    */ 
+#define RW_T1T_HR1_MIN                          0x49    /* Supports dynamic commands on static tag if HR1 > 0x49    */
 
 #define RW_T1T_MAX_MEM_TLVS                     0x05    /* Maximum supported Memory control TLVS in the tag         */
 #define RW_T1T_MAX_LOCK_TLVS                    0x05    /* Maximum supported Lock control TLVS in the tag           */
@@ -99,7 +99,7 @@ typedef struct
     UINT8               tlv_index;                      /* Index of Lock control tlv that points to this address*/
     UINT8               byte_index;                     /* Index of Lock byte pointed by the TLV                */
     UINT8               lock_byte;                      /* Value in the lock byte                               */
-    tRW_T1T_LOCK_STATUS lock_status;                    /* Indicates if it is modifed to set tag as Read only   */ 
+    tRW_T1T_LOCK_STATUS lock_status;                    /* Indicates if it is modifed to set tag as Read only   */
     BOOLEAN             b_lock_read;                    /* Is the lock byte is already read from tag            */
 } tRW_T1T_LOCK;
 
@@ -243,7 +243,7 @@ typedef UINT8 tRW_T2T_LOCK_STATUS;
 #define RW_T2T_SUBSTATE_WAIT_READ_NDEF_NEXT_BLOCK       0x0D    /* waiting for rsp to reading block where nxt NDEF write    */
 #define RW_T2T_SUBSTATE_WAIT_WRITE_NDEF_NEXT_BLOCK      0x0E    /* waiting for rsp to writting NDEF block                   */
 #define RW_T2T_SUBSTATE_WAIT_WRITE_NDEF_LAST_BLOCK      0x0F    /* waiting for rsp to last NDEF block write cmd             */
-#define RW_T2T_SUBSTATE_WAIT_READ_NDEF_LEN_BLOCK        0x10    /* waiting for rsp to reading NDEF len field block          */ 
+#define RW_T2T_SUBSTATE_WAIT_READ_NDEF_LEN_BLOCK        0x10    /* waiting for rsp to reading NDEF len field block          */
 #define RW_T2T_SUBSTATE_WAIT_WRITE_NDEF_LEN_BLOCK       0x11    /* waiting for rsp of updating first NDEF len field block   */
 #define RW_T2T_SUBSTATE_WAIT_WRITE_NDEF_LEN_NEXT_BLOCK  0x12    /* waiting for rsp of updating next NDEF len field block    */
 #define RW_T2T_SUBSTATE_WAIT_WRITE_TERM_TLV_CMPLT       0x13    /* waiting for rsp to writing to Terminator tlv             */
@@ -278,7 +278,7 @@ typedef struct
     UINT8               tlv_index;                          /* Index of Lock control tlv that points to this address    */
     UINT8               byte_index;                         /* Index of Lock byte pointed by the TLV                    */
     UINT8               lock_byte;                          /* Value in the lock byte                                   */
-    tRW_T2T_LOCK_STATUS lock_status;                        /* Indicates if it is modifed to set tag as Read only       */ 
+    tRW_T2T_LOCK_STATUS lock_status;                        /* Indicates if it is modifed to set tag as Read only       */
     BOOLEAN             b_lock_read;                        /* Is the lock byte is already read from tag                */
 } tRW_T2T_LOCK;
 
@@ -328,7 +328,7 @@ typedef struct
     UINT16              ndef_msg_offset;                    /* Offset on Tag where first NDEF message is present            */
     UINT16              ndef_msg_len;                       /* Lenght of NDEF Message                                       */
     UINT16              new_ndef_msg_len;                   /* Lenght of new updating NDEF Message                          */
-    UINT16              ndef_write_block;                   
+    UINT16              ndef_write_block;
     UINT16              prop_msg_len;                       /* Proprietary tlv length                                       */
     UINT8               *p_new_ndef_buffer;                 /* Pointer to updating NDEF Message                             */
     UINT8               *p_ndef_buffer;                     /* Pointer to NDEF Message                                      */
@@ -393,10 +393,10 @@ typedef struct
 */
 
 /* Max data size using a single ReadBinary. 2 bytes are for status bytes */
-#define RW_T4T_MAX_DATA_PER_READ           (NFC_RW_POOL_BUF_SIZE - BT_HDR_SIZE - NCI_DATA_HDR_SIZE - T4T_RSP_STATUS_WORDS_SIZE)    
+#define RW_T4T_MAX_DATA_PER_READ           (NFC_RW_POOL_BUF_SIZE - BT_HDR_SIZE - NCI_DATA_HDR_SIZE - T4T_RSP_STATUS_WORDS_SIZE)
 
 /* Max data size using a single UpdateBinary. 6 bytes are for CLA, INS, P1, P2, Lc */
-#define RW_T4T_MAX_DATA_PER_WRITE          (NFC_RW_POOL_BUF_SIZE - BT_HDR_SIZE - NCI_MSG_OFFSET_SIZE - NCI_DATA_HDR_SIZE - T4T_CMD_MAX_HDR_SIZE)    
+#define RW_T4T_MAX_DATA_PER_WRITE          (NFC_RW_POOL_BUF_SIZE - BT_HDR_SIZE - NCI_MSG_OFFSET_SIZE - NCI_DATA_HDR_SIZE - T4T_CMD_MAX_HDR_SIZE)
 
 
 

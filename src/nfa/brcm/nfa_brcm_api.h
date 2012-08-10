@@ -2,7 +2,7 @@
 **
 **  Name:           nfa_brcm_api.h
 **
-**  Description:    This is the public interface file for NFA, Broadcom's 
+**  Description:    This is the public interface file for NFA, Broadcom's
 **                  NFC application layer for mobile phones.
 **
 **  Copyright (c) 2010-2011, Broadcom Corp., All Rights Reserved.
@@ -22,7 +22,7 @@
 typedef tNFC_BRCM_FW_BUILD_INFO tNFA_BRCM_FW_BUILD_INFO;    /* BRCM firmware build info                 */
 
 /* Broadcom-specific NFA_DM events */
-enum 
+enum
 {
     NFA_DM_LPTD_EVT = (NFA_DM_VS_EVT_BASE + 1),             /* False detect in LPTD mode                */
     NFA_DM_FIRMWARE_BUILD_INFO_EVT,                         /* Result of  NFA_BrcmGetFirmwareBuildInfo  */
@@ -33,7 +33,7 @@ enum
 
 /* Data types for BRCM-specific NFA_DM event notification */
 /* Dereference using tNFA_DM_CBACK_DATA->p_vs_data        */
-typedef union 
+typedef union
 {
     tNFA_STATUS             status;                         /* Data for NFA_DM_SNOOZE_ENABLED_EVT       */
                                                             /* Data for NFA_DM_SNOOZE_DISABLED_EVT      */
@@ -45,13 +45,18 @@ typedef struct
 {
     UINT8   snooze_mode;                /* Snooze Mode */
     UINT8   idle_threshold_dh;          /* Idle Threshold Host */
-    UINT8   idle_threshold_nfcc;        /* Idle Threshold HC   */
+    UINT8   idle_threshold_nfcc;        /* Idle Threshold NFCC   */
     UINT8   nfc_wake_active_mode;       /* NFC_LP_ACTIVE_LOW or NFC_LP_ACTIVE_HIGH */
     UINT8   dh_wake_active_mode;        /* NFC_LP_ACTIVE_LOW or NFC_LP_ACTIVE_HIGH */
     BOOLEAN power_cycle_to_full;        /* Power cycle to full power mode from CEx */
+    UINT8   lp_params;                  /* parameter for low power mode command    */
+    UINT8   primary_threshold;          /* Primary Threshold for battery monitor   */
+    UINT8   secondary_threshold;        /* Secondary Threshold for battery monitor */
 } tNFA_DM_LP_CFG;
 
 extern tNFA_DM_LP_CFG *p_nfa_dm_lp_cfg;
+
+#define NFA_DM_BRCM_PLL_325_SETCONFIG_PARAM_LEN     (2 + NCI_PARAM_LEN_PLL325_CFG_PARAM)
 
 /*****************************************************************************
 **  External Function Declarations
@@ -66,13 +71,19 @@ extern "C"
 ** Function         NFA_BrcmInit
 **
 ** Description      This function initializes Broadcom specific control blocks for NFA
-**                  and registers a callback to be called after the NFCC is reset, 
+**                  and registers a callback to be called after the NFCC is reset,
 **                  to perform any platform-specific initialization (e.g. patch download).
-**                  
+**
+**                  tBRCM_DEV_INIT_CONFIG
+**                      BRCM_DEV_INIT_FLAGS_AUTO_BAUD     : UART auto baud detection
+**                      BRCM_DEV_INIT_FLAGS_SET_XTAL_FREQ : set crystal frequency
+**                      xtal_freq : crystal frequency in KHz
+**
 ** Returns          none
 **
 *******************************************************************************/
-NFC_API extern void NFA_BrcmInit (tBRCM_DEV_INIT_CBACK *p_dev_init_cback);
+NFC_API extern void NFA_BrcmInit (tBRCM_DEV_INIT_CONFIG *p_dev_init_config,
+                                  tBRCM_DEV_INIT_CBACK  *p_dev_init_cback);
 
 /*******************************************************************************
 **
@@ -94,7 +105,7 @@ NFC_API extern tNFA_STATUS NFA_BrcmGetFirmwareBuildInfo (void);
 ** Description      This function is called to enable Snooze Mode as configured
 **                  in nfa_dm_brcm_cfg.c.
 **                  NFA_DM_SNOOZE_ENABLED_EVT will be sent to indicate status.
-**                  
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_FAILED otherwise
 **
@@ -107,7 +118,7 @@ NFC_API extern tNFA_STATUS NFA_EnableSnoozeMode (void);
 **
 ** Description      This function is called to disable Snooze Mode
 **                  NFA_DM_SNOOZE_DISABLED_EVT will be sent to indicate status.
-**                  
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_FAILED otherwise
 **
@@ -118,7 +129,7 @@ NFC_API extern tNFA_STATUS NFA_DisableSnoozeMode (void);
 **
 ** Function         NFA_HciAddStaticPipe
 **
-** Description      This function is called to add a static pipe for sending 
+** Description      This function is called to add a static pipe for sending
 **                  7816 APDUs.
 **
 ** Returns          NFA_STATUS_OK if successfully added
@@ -133,7 +144,7 @@ NFC_API extern tNFA_STATUS NFA_HciAddStaticPipe (tNFA_HANDLE hci_handle, UINT8 p
 **
 ** Description      Enable or disable NFCC responding more than one technology
 **                  during listen discovry. No returning event.
-**                  
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_FAILED otherwise
 **

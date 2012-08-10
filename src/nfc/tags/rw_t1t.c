@@ -37,7 +37,7 @@ static char *rw_t1t_get_event_name (UINT8 event);
 **
 ** Function         rw_t1t_data_cback
 **
-** Description      This callback function handles data from NFCC.  
+** Description      This callback function handles data from NFCC.
 **
 ** Returns          none
 **
@@ -65,12 +65,12 @@ static void rw_t1t_data_cback (UINT8 conn_id, tNFC_CONN_EVT event, tNFC_CONN *p_
 #endif
 
     evt_data.status = NFC_STATUS_OK;
-    
+
     if(  (p_t1t->state == RW_T1T_STATE_IDLE)
        ||(!p_cmd_rsp_info)  )
     {
-        /* If previous command was retransmitted and if response is pending to previous command retransmission, 
-         * check if lenght and ADD/ADD8/ADDS field matches the expected value of previous 
+        /* If previous command was retransmitted and if response is pending to previous command retransmission,
+         * check if lenght and ADD/ADD8/ADDS field matches the expected value of previous
          * retransmited command response. However, ignore ADD field if the command was RALL/RID
          */
         if (  (p_t1t->prev_cmd_rsp_info.pend_retx_rsp)
@@ -101,8 +101,8 @@ static void rw_t1t_data_cback (UINT8 conn_id, tNFC_CONN_EVT event, tNFC_CONN *p_
         ||((p_cmd_rsp_info->opcode != T1T_CMD_RALL)&&(p_cmd_rsp_info->opcode != T1T_CMD_RID)&&(*p != p_t1t->addr))  )
 
     {
-        /* If previous command was retransmitted and if response is pending to previous command retransmission, 
-         * then check if lenght and ADD/ADD8/ADDS field matches the expected value of previous 
+        /* If previous command was retransmitted and if response is pending to previous command retransmission,
+         * then check if lenght and ADD/ADD8/ADDS field matches the expected value of previous
          * retransmited command response. However, ignore ADD field if the command was RALL/RID
          */
         if (  (p_t1t->prev_cmd_rsp_info.pend_retx_rsp)
@@ -184,7 +184,7 @@ static void rw_t1t_data_cback (UINT8 conn_id, tNFC_CONN_EVT event, tNFC_CONN *p_
 **
 ** Function         rw_t1t_conn_cback
 **
-** Description      This callback function receives the events/data from NFCC.  
+** Description      This callback function receives the events/data from NFCC.
 **
 ** Returns          none
 **
@@ -280,11 +280,11 @@ void rw_t1t_conn_cback (UINT8 conn_id, tNFC_CONN_EVT event, tNFC_CONN *p_data)
 **
 ** Function         rw_t1t_send_static_cmd
 **
-** Description      This function composes a Type 1 Tag command for static 
-**                  memory and send through NCI to NFCC.  
+** Description      This function composes a Type 1 Tag command for static
+**                  memory and send through NCI to NFCC.
 **
 ** Returns          NFC_STATUS_OK if the command is successfuly sent to NCI
-**                  otherwise, error status 
+**                  otherwise, error status
 **
 *******************************************************************************/
 tNFC_STATUS rw_t1t_send_static_cmd (UINT8 opcode, UINT8 add, UINT8 dat)
@@ -324,7 +324,7 @@ tNFC_STATUS rw_t1t_send_static_cmd (UINT8 opcode, UINT8 add, UINT8 dat)
             RW_TRACE_EVENT2 ("RW SENT [%s]:0x%x CMD", t1t_info_to_str (p_cmd_rsp_info), p_cmd_rsp_info->opcode);
             if ((status = NFC_SendData (NFC_RF_CONN_ID, p_data)) == NFC_STATUS_OK)
             {
-                nfc_start_quick_timer (&p_t1t->timer, NFC_TTYPE_RW_T1T_RESPONSE, 
+                nfc_start_quick_timer (&p_t1t->timer, NFC_TTYPE_RW_T1T_RESPONSE,
                        (RW_T1T_TOUT_RESP*QUICK_TIMER_TICKS_PER_SEC) / 1000);
             }
         }
@@ -341,10 +341,10 @@ tNFC_STATUS rw_t1t_send_static_cmd (UINT8 opcode, UINT8 add, UINT8 dat)
 ** Function         rw_t1t_send_dyn_cmd
 **
 ** Description      This function composes a Type 1 Tag command for dynamic memory
-**                  and send through NCI to NFCC.  
+**                  and send through NCI to NFCC.
 **
 ** Returns          NFC_STATUS_OK if the command is successfuly sent to NCI
-**                  otherwise, error status 
+**                  otherwise, error status
 **
 *******************************************************************************/
 tNFC_STATUS rw_t1t_send_dyn_cmd (UINT8 opcode, UINT8 add, UINT8 *p_dat)
@@ -393,7 +393,7 @@ tNFC_STATUS rw_t1t_send_dyn_cmd (UINT8 opcode, UINT8 add, UINT8 *p_dat)
 
             if ((status = NFC_SendData (NFC_RF_CONN_ID, p_data)) == NFC_STATUS_OK)
             {
-                nfc_start_quick_timer (&p_t1t->timer, NFC_TTYPE_RW_T1T_RESPONSE, 
+                nfc_start_quick_timer (&p_t1t->timer, NFC_TTYPE_RW_T1T_RESPONSE,
                        (RW_T1T_TOUT_RESP*QUICK_TIMER_TICKS_PER_SEC) / 1000);
             }
         }
@@ -455,7 +455,7 @@ static tRW_EVENT rw_t1t_handle_rid_rsp (BT_HDR *p_pkt)
 **
 ** Function         rw_t1t_select
 **
-** Description      This function will set the callback function to 
+** Description      This function will set the callback function to
 **                  receive data from lower layers and also send rid command
 **
 ** Returns          none
@@ -580,7 +580,7 @@ static void rw_t1t_process_error (void)
             if (NFC_SendData (NFC_RF_CONN_ID, p_cmd_buf) == NFC_STATUS_OK)
             {
                 /* Start timer for waiting for response */
-                nfc_start_quick_timer (&p_t1t->timer, NFC_TTYPE_RW_T1T_RESPONSE, 
+                nfc_start_quick_timer (&p_t1t->timer, NFC_TTYPE_RW_T1T_RESPONSE,
                                        (RW_T1T_TOUT_RESP*QUICK_TIMER_TICKS_PER_SEC)/1000);
 
                 return;
@@ -589,7 +589,7 @@ static void rw_t1t_process_error (void)
     }
     else
     {
-    /* we might get response later to all or some of the retrasnmission 
+    /* we might get response later to all or some of the retrasnmission
      * of the current command, update previous command response information */
         RW_TRACE_DEBUG1 ("T1T maximum retransmission attempts reached (%i)", RW_MAX_RETRIES);
         p_t1t->prev_cmd_rsp_info.addr          = ((p_cmd_rsp_info->opcode != T1T_CMD_RALL) && (p_cmd_rsp_info->opcode != T1T_CMD_RID))? p_t1t->addr:0;
@@ -668,7 +668,7 @@ void rw_t1t_handle_op_complete (void)
 **
 ** Description
 **      Check if the tag is still in the field.
-**      
+**
 **      The RW_T1T_PRESENCE_CHECK_EVT w/ status is used to indicate presence
 **      or non-presence.
 **
@@ -709,7 +709,7 @@ tNFC_STATUS RW_T1tPresenceCheck (void)
         if((retval = rw_t1t_send_static_cmd (T1T_CMD_RID, 0, 0))== NFC_STATUS_OK)
         {
             p_rw_cb->tcb.t1t.state = RW_T1T_STATE_CHECK_PRESENCE;
-        }    
+        }
     }
 
     return (retval);
@@ -720,7 +720,7 @@ tNFC_STATUS RW_T1tPresenceCheck (void)
 ** Function         RW_T1tRid
 **
 ** Description
-**      This function sends a RID command for Reader/Writer mode.  
+**      This function sends a RID command for Reader/Writer mode.
 **
 ** Returns
 **      NFC_STATUS_OK, if raw data frame sent
@@ -745,7 +745,7 @@ tNFC_STATUS RW_T1tRid (void)
     if((status = rw_t1t_send_static_cmd (T1T_CMD_RID, 0, 0))== NFC_STATUS_OK)
     {
         p_t1t->state = RW_T1T_STATE_READ;
-    }    
+    }
 
     return (status);
 }
@@ -754,7 +754,7 @@ tNFC_STATUS RW_T1tRid (void)
 **
 ** Function         RW_T1tReadAll
 **
-** Description      This function sends a RALL command for Reader/Writer mode.  
+** Description      This function sends a RALL command for Reader/Writer mode.
 **
 ** Returns          tNFC_STATUS
 **
@@ -777,7 +777,7 @@ tNFC_STATUS RW_T1tReadAll (void)
     {
         p_t1t->state = RW_T1T_STATE_READ;
     }
-        
+
     return status;
 }
 
@@ -785,7 +785,7 @@ tNFC_STATUS RW_T1tReadAll (void)
 **
 ** Function         RW_T1tRead
 **
-** Description      This function sends a READ command for Reader/Writer mode.  
+** Description      This function sends a READ command for Reader/Writer mode.
 **
 ** Returns          tNFC_STATUS
 **
@@ -815,7 +815,7 @@ tNFC_STATUS RW_T1tRead (UINT8 block, UINT8 byte)
 **
 ** Function         RW_T1tWriteErase
 **
-** Description      This function sends a WRITE-E command for Reader/Writer mode.  
+** Description      This function sends a WRITE-E command for Reader/Writer mode.
 **
 ** Returns          tNFC_STATUS
 **
@@ -868,7 +868,7 @@ tNFC_STATUS RW_T1tWriteErase (UINT8 block, UINT8 byte, UINT8 new_byte)
 **
 ** Function         RW_T1tWriteNoErase
 **
-** Description      This function sends a WRITE-NE command for Reader/Writer mode.  
+** Description      This function sends a WRITE-NE command for Reader/Writer mode.
 **
 ** Returns          tNFC_STATUS
 **
@@ -921,7 +921,7 @@ tNFC_STATUS RW_T1tWriteNoErase (UINT8 block, UINT8 byte, UINT8 new_byte)
 **
 ** Function         RW_T1tReadSeg
 **
-** Description      This function sends a RSEG command for Reader/Writer mode.  
+** Description      This function sends a RSEG command for Reader/Writer mode.
 **
 ** Returns          tNFC_STATUS
 **
@@ -989,7 +989,7 @@ tNFC_STATUS RW_T1tRead8 (UINT8 block)
 **
 ** Function         RW_T1tWriteErase8
 **
-** Description      This function sends a WRITE-E8 command for Reader/Writer mode.  
+** Description      This function sends a WRITE-E8 command for Reader/Writer mode.
 **
 ** Returns          tNFC_STATUS
 **
@@ -1039,7 +1039,7 @@ tNFC_STATUS RW_T1tWriteErase8 (UINT8 block, UINT8 *p_new_dat)
 **
 ** Function         RW_T1tWriteNoErase8
 **
-** Description      This function sends a WRITE-NE8 command for Reader/Writer mode.  
+** Description      This function sends a WRITE-NE8 command for Reader/Writer mode.
 **
 ** Returns          tNFC_STATUS
 **

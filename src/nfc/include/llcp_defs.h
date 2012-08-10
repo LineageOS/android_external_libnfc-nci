@@ -12,8 +12,8 @@
 #ifndef LLCP_DEFS_H
 #define LLCP_DEFS_H
 
-/* 
-** LLCP PDU Descriptions 
+/*
+** LLCP PDU Descriptions
 */
 
 #define LLCP_PDU_HEADER_SIZE    2       /* DSAP:PTYPE:SSAP excluding Sequence */
@@ -78,8 +78,8 @@
 #define LLCP_GET_FRMR_VSA(u16)         (((UINT16)(u16) >>  4) & 0x000F)
 #define LLCP_GET_FRMR_VRA(u16)         (((UINT16)(u16) >>  0) & 0x000F)
 
-/* 
-** LLCP Parameter Descriptions 
+/*
+** LLCP Parameter Descriptions
 */
 
 /* Version */
@@ -96,11 +96,12 @@
 /* Maximum Information Unit Extension */
 #define LLCP_MIUX_TYPE      0x02
 #define LLCP_MIUX_LEN       0x02
+#define LLCP_MIUX_MASK      0x07FF  /* MIUX bit 10:0 */
 #define LLCP_DEFAULT_MIU    128     /* if local LLC doesn't receive MIUX */
 #define LLCP_MAX_MIU        2175    /* 2047 (11bits) + 128 */
 
 /* Well-Known Service */
-#define LLCP_WKS_TYPE       0x03    
+#define LLCP_WKS_TYPE       0x03
 #define LLCP_WKS_LEN        0x02
 
 /* Well-Known Service Bitmap */
@@ -139,7 +140,7 @@
 
 /* Service Discovery Request, SDREQ */
 #define LLCP_SDREQ_TYPE     0x08
-#define LLCP_SDREQ_MIN_LEN  0x03    /* type(1 byte), length(1 byte), TID(1 byte) */ 
+#define LLCP_SDREQ_MIN_LEN  0x03    /* type(1 byte), length(1 byte), TID(1 byte) */
 
 /* Service Discovery Response, SDRES */
 #define LLCP_SDRES_TYPE     0x09

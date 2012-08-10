@@ -179,7 +179,7 @@ static void nfa_rw_handle_ndef_detect(tRW_EVENT event, tRW_DATA *p_rw_data)
             nfa_rw_cb.flags |= NFA_RW_FL_TAG_IS_READONLY;
         else
             nfa_rw_cb.flags &= ~NFA_RW_FL_TAG_IS_READONLY;
-        
+
         /* Determine what operation triggered the NDEF detection procedure */
         if (nfa_rw_cb.cur_op == NFA_RW_OP_READ_NDEF)
         {
@@ -199,7 +199,7 @@ static void nfa_rw_handle_ndef_detect(tRW_EVENT event, tRW_DATA *p_rw_data)
             if ((conn_evt_data.status = nfa_rw_start_ndef_write()) != NFA_STATUS_OK)
             {
                 /* Failed to start NDEF Write.  */
-                
+
                 /* Command complete - perform cleanup, notify app */
                 nfa_rw_command_complete();
                 nfa_dm_act_conn_cback_notify(NFA_WRITE_CPLT_EVT, &conn_evt_data);
@@ -350,7 +350,7 @@ static void nfa_rw_handle_tlv_detect(tRW_EVENT event, tRW_DATA *p_rw_data)
                 nfa_dm_act_conn_cback_notify(NFA_SET_TAG_RO_EVT, &conn_evt_data);
             }
         }
-    }    
+    }
 }
 
 
@@ -856,7 +856,7 @@ static void nfa_rw_handle_t4t_evt (tRW_EVENT event, tRW_DATA *p_rw_data)
 
     case RW_T4T_NDEF_UPDATE_CPLT_EVT:       /* Update operation completed         */
     case RW_T4T_NDEF_UPDATE_FAIL_EVT:       /* Update operation failed            */
-        
+
         if (nfa_rw_cb.cur_op == NFA_RW_OP_WRITE_NDEF)
         {
             /* Update local cursize of ndef message */
@@ -910,7 +910,7 @@ static void nfa_rw_handle_t4t_evt (tRW_EVENT event, tRW_DATA *p_rw_data)
         else if (nfa_rw_cb.cur_op == NFA_RW_OP_WRITE_NDEF)
         {
             nfa_dm_act_conn_cback_notify(NFA_WRITE_CPLT_EVT, &conn_evt_data);
-        } 
+        }
         else if (nfa_rw_cb.cur_op == NFA_RW_OP_DETECT_NDEF)
         {
             conn_evt_data.ndef_detect.cur_size = 0;
@@ -1007,7 +1007,7 @@ static void nfa_rw_handle_i93_evt (tRW_EVENT event, tRW_DATA *p_rw_data)
 
     case RW_I93_NDEF_UPDATE_CPLT_EVT:       /* Update operation completed         */
     case RW_I93_NDEF_UPDATE_FAIL_EVT:       /* Update operation failed            */
-        
+
         if (nfa_rw_cb.cur_op == NFA_RW_OP_WRITE_NDEF)
         {
             /* Update local cursize of ndef message */
@@ -1076,7 +1076,7 @@ static void nfa_rw_handle_i93_evt (tRW_EVENT event, tRW_DATA *p_rw_data)
             else if (nfa_rw_cb.cur_op == NFA_RW_OP_WRITE_NDEF)
             {
                 nfa_dm_act_conn_cback_notify(NFA_WRITE_CPLT_EVT, &conn_evt_data);
-            } 
+            }
             else if (nfa_rw_cb.cur_op == NFA_RW_OP_DETECT_NDEF)
             {
                 conn_evt_data.ndef_detect.cur_size = 0;
@@ -1099,7 +1099,7 @@ static void nfa_rw_handle_i93_evt (tRW_EVENT event, tRW_DATA *p_rw_data)
         nfa_rw_handle_presence_check_rsp(p_rw_data->status);
         break;
 
-    case RW_I93_FORMAT_CPLT_EVT:                /* Format procedure complete          */ 
+    case RW_I93_FORMAT_CPLT_EVT:                /* Format procedure complete          */
         if (p_rw_data->data.status == NFA_STATUS_OK)
             nfa_rw_cb.ndef_st = NFA_RW_NDEF_ST_UNKNOWN;
 
@@ -1152,10 +1152,10 @@ static void nfa_rw_handle_i93_evt (tRW_EVENT event, tRW_DATA *p_rw_data)
             conn_evt_data.i93_cmd_cplt.sent_command = I93_CMD_INVENTORY;
 
             conn_evt_data.i93_cmd_cplt.params.inventory.dsfid = p_rw_data->i93_inventory.dsfid;
-            memcpy (conn_evt_data.i93_cmd_cplt.params.inventory.uid, 
-                    p_rw_data->i93_inventory.uid, 
+            memcpy (conn_evt_data.i93_cmd_cplt.params.inventory.uid,
+                    p_rw_data->i93_inventory.uid,
                     I93_UID_BYTE_LEN);
-        
+
             nfa_dm_act_conn_cback_notify(NFA_I93_CMD_CPLT_EVT, &conn_evt_data);
         }
 
@@ -1223,15 +1223,15 @@ static void nfa_rw_handle_i93_evt (tRW_EVENT event, tRW_DATA *p_rw_data)
             conn_evt_data.i93_cmd_cplt.sent_command = I93_CMD_GET_SYS_INFO;
 
             conn_evt_data.i93_cmd_cplt.params.sys_info.info_flags = p_rw_data->i93_sys_info.info_flags;
-            memcpy (conn_evt_data.i93_cmd_cplt.params.sys_info.uid, 
-                    p_rw_data->i93_sys_info.uid, 
+            memcpy (conn_evt_data.i93_cmd_cplt.params.sys_info.uid,
+                    p_rw_data->i93_sys_info.uid,
                     I93_UID_BYTE_LEN);
             conn_evt_data.i93_cmd_cplt.params.sys_info.dsfid        = p_rw_data->i93_sys_info.dsfid;
             conn_evt_data.i93_cmd_cplt.params.sys_info.afi          = p_rw_data->i93_sys_info.afi;
             conn_evt_data.i93_cmd_cplt.params.sys_info.num_block    = p_rw_data->i93_sys_info.num_block;
             conn_evt_data.i93_cmd_cplt.params.sys_info.block_size   = p_rw_data->i93_sys_info.block_size;
             conn_evt_data.i93_cmd_cplt.params.sys_info.IC_reference = p_rw_data->i93_sys_info.IC_reference;
-        
+
             /* store tag memory information for writing blocks */
             nfa_rw_cb.i93_block_size = p_rw_data->i93_sys_info.block_size;
             nfa_rw_cb.i93_num_block  = p_rw_data->i93_sys_info.num_block;
@@ -1430,7 +1430,7 @@ static tNFC_STATUS nfa_rw_start_ndef_read(void)
 **
 ** Function         nfa_rw_detect_ndef
 **
-** Description      Handler for NFA_RW_API_DETECT_NDEF_EVT 
+** Description      Handler for NFA_RW_API_DETECT_NDEF_EVT
 **
 ** Returns          TRUE (message buffer to be freed by caller)
 **
@@ -1517,7 +1517,7 @@ static tNFC_STATUS nfa_rw_start_ndef_write(void)
 **
 ** Function         nfa_rw_read_ndef
 **
-** Description      Handler for NFA_RW_API_READ_NDEF_EVT 
+** Description      Handler for NFA_RW_API_READ_NDEF_EVT
 **
 ** Returns          TRUE (message buffer to be freed by caller)
 **
@@ -1563,7 +1563,7 @@ static BOOLEAN nfa_rw_read_ndef(tNFA_RW_MSG *p_data)
 **
 ** Function         nfa_rw_write_ndef
 **
-** Description      Handler for NFA_RW_API_WRITE_NDEF_EVT 
+** Description      Handler for NFA_RW_API_WRITE_NDEF_EVT
 **
 ** Returns          TRUE (message buffer to be freed by caller)
 **
@@ -1736,7 +1736,7 @@ static void nfa_rw_format_tag (tNFA_RW_MSG *p_data)
 **
 ** Function         nfa_rw_detect_tlv
 **
-** Description      Handler for NFA_RW_API_DETECT_NDEF_EVT 
+** Description      Handler for NFA_RW_API_DETECT_NDEF_EVT
 **
 ** Returns          TRUE (message buffer to be freed by caller)
 **
@@ -1771,7 +1771,7 @@ static BOOLEAN nfa_rw_detect_tlv (tNFA_RW_MSG *p_data, UINT8 tlv)
 **
 ** Function         nfa_rw_config_tag_ro
 **
-** Description      Handler for NFA_RW_OP_SET_TAG_RO 
+** Description      Handler for NFA_RW_OP_SET_TAG_RO
 **
 ** Returns          TRUE (message buffer to be freed by caller)
 **
@@ -1832,7 +1832,7 @@ static tNFC_STATUS nfa_rw_config_tag_ro (BOOLEAN b_hard_lock)
 **
 ** Function         nfa_rw_t1t_rid
 **
-** Description      Handler for T1T_RID API 
+** Description      Handler for T1T_RID API
 **
 ** Returns          TRUE (message buffer to be freed by caller)
 **
@@ -1849,7 +1849,7 @@ static BOOLEAN nfa_rw_t1t_rid(tNFA_RW_MSG *p_data)
 **
 ** Function         nfa_rw_t1t_rall
 **
-** Description      Handler for T1T_ReadAll API 
+** Description      Handler for T1T_ReadAll API
 **
 ** Returns          TRUE (message buffer to be freed by caller)
 **
@@ -1866,7 +1866,7 @@ static BOOLEAN nfa_rw_t1t_rall(tNFA_RW_MSG *p_data)
 **
 ** Function         nfa_rw_t1t_read
 **
-** Description      Handler for T1T_Read API 
+** Description      Handler for T1T_Read API
 **
 ** Returns          TRUE (message buffer to be freed by caller)
 **
@@ -1885,7 +1885,7 @@ static BOOLEAN nfa_rw_t1t_read (tNFA_RW_MSG *p_data)
 **
 ** Function         nfa_rw_t1t_write
 **
-** Description      Handler for T1T_WriteErase/T1T_WriteNoErase API 
+** Description      Handler for T1T_WriteErase/T1T_WriteNoErase API
 **
 ** Returns          TRUE (message buffer to be freed by caller)
 **
@@ -1921,7 +1921,7 @@ static BOOLEAN nfa_rw_t1t_write (tNFA_RW_MSG *p_data)
 **
 ** Function         nfa_rw_t1t_rseg
 **
-** Description      Handler for T1t_ReadSeg API 
+** Description      Handler for T1t_ReadSeg API
 **
 ** Returns          TRUE (message buffer to be freed by caller)
 **
@@ -1940,7 +1940,7 @@ static BOOLEAN nfa_rw_t1t_rseg (tNFA_RW_MSG *p_data)
 **
 ** Function         nfa_rw_t1t_read8
 **
-** Description      Handler for T1T_Read8 API 
+** Description      Handler for T1T_Read8 API
 **
 ** Returns          TRUE (message buffer to be freed by caller)
 **
@@ -1959,7 +1959,7 @@ static BOOLEAN nfa_rw_t1t_read8 (tNFA_RW_MSG *p_data)
 **
 ** Function         nfa_rw_t1t_write8
 **
-** Description      Handler for T1T_WriteErase8/T1T_WriteNoErase8 API 
+** Description      Handler for T1T_WriteErase8/T1T_WriteNoErase8 API
 **
 ** Returns          TRUE (message buffer to be freed by caller)
 **
@@ -1995,7 +1995,7 @@ static BOOLEAN nfa_rw_t1t_write8 (tNFA_RW_MSG *p_data)
 **
 ** Function         nfa_rw_t2t_read
 **
-** Description      Handler for T2T_Read API 
+** Description      Handler for T2T_Read API
 **
 ** Returns          TRUE (message buffer to be freed by caller)
 **
@@ -2018,7 +2018,7 @@ static BOOLEAN nfa_rw_t2t_read (tNFA_RW_MSG *p_data)
 **
 ** Function         nfa_rw_t2t_write
 **
-** Description      Handler for T2T_Write API 
+** Description      Handler for T2T_Write API
 **
 ** Returns          TRUE (message buffer to be freed by caller)
 **
@@ -2044,7 +2044,7 @@ static BOOLEAN nfa_rw_t2t_write (tNFA_RW_MSG *p_data)
 **
 ** Function         nfa_rw_t2t_sector_select
 **
-** Description      Handler for T2T_Sector_Select API 
+** Description      Handler for T2T_Sector_Select API
 **
 ** Returns          TRUE (message buffer to be freed by caller)
 **
@@ -2063,7 +2063,7 @@ static BOOLEAN nfa_rw_t2t_sector_select(tNFA_RW_MSG *p_data)
 **
 ** Function         nfa_rw_t3t_read
 **
-** Description      Handler for T3T_Read API 
+** Description      Handler for T3T_Read API
 **
 ** Returns          TRUE (message buffer to be freed by caller)
 **
@@ -2082,7 +2082,7 @@ static BOOLEAN nfa_rw_t3t_read (tNFA_RW_MSG *p_data)
 **
 ** Function         nfa_rw_t3t_write
 **
-** Description      Handler for T3T_Write API 
+** Description      Handler for T3T_Write API
 **
 ** Returns          TRUE (message buffer to be freed by caller)
 **
@@ -2130,7 +2130,7 @@ static BOOLEAN nfa_rw_t3t_get_system_codes (tNFA_RW_MSG *p_data)
 **
 ** Function         nfa_rw_i93_command
 **
-** Description      Handler for ISO 15693 command 
+** Description      Handler for ISO 15693 command
 **
 ** Returns          TRUE (message buffer to be freed by caller)
 **
@@ -2147,7 +2147,7 @@ static BOOLEAN nfa_rw_i93_command (tNFA_RW_MSG *p_data)
         i93_command = I93_CMD_INVENTORY;
         if (p_data->op_req.params.i93_cmd.uid_present)
         {
-            status = RW_I93Inventory (p_data->op_req.params.i93_cmd.afi, 
+            status = RW_I93Inventory (p_data->op_req.params.i93_cmd.afi,
                                       p_data->op_req.params.i93_cmd.uid);
         }
         else
@@ -2281,7 +2281,7 @@ static void nfa_rw_raw_mode_data_cback (UINT8 conn_id, tNFC_CONN_EVT event, tNFC
             evt_data.data.len    = p_msg->len;
 
             nfa_dm_conn_cback_event_notify (NFA_DATA_EVT, &evt_data);
-        
+
             GKI_freebuf (p_msg);
         }
         else
@@ -2443,7 +2443,7 @@ BOOLEAN nfa_rw_activate_ntf(tNFA_RW_MSG *p_data)
 **
 ** Function         nfa_rw_deactivate_ntf
 **
-** Description      Handler for NFA_RW_DEACTIVATE_NTF 
+** Description      Handler for NFA_RW_DEACTIVATE_NTF
 **
 ** Returns          TRUE (message buffer to be freed by caller)
 **
@@ -2563,7 +2563,7 @@ BOOLEAN nfa_rw_handle_op_req (tNFA_RW_MSG *p_data)
         nfa_rw_cb.b_hard_lock = p_data->op_req.params.set_readonly.b_hard_lock;
         nfa_rw_config_tag_ro(nfa_rw_cb.b_hard_lock);
         break;
-        
+
     case NFA_RW_OP_T1T_RID:
         nfa_rw_t1t_rid(p_data);
         break;
@@ -2692,7 +2692,7 @@ static BOOLEAN nfa_rw_op_req_while_busy(tNFA_RW_MSG *p_data)
             conn_evt_data.ndef_detect.cur_size = 0;
             conn_evt_data.ndef_detect.max_size = 0;
             conn_evt_data.ndef_detect.flags    = RW_NDEF_FL_UNKNOWN;
-            event = NFA_NDEF_DETECT_EVT;    
+            event = NFA_NDEF_DETECT_EVT;
             break;
         case NFA_RW_OP_READ_NDEF:
         case NFA_RW_OP_T1T_RID:
@@ -2702,27 +2702,27 @@ static BOOLEAN nfa_rw_op_req_while_busy(tNFA_RW_MSG *p_data)
         case NFA_RW_OP_T1T_READ8:
         case NFA_RW_OP_T2T_READ:
         case NFA_RW_OP_T3T_READ:
-            event = NFA_READ_CPLT_EVT;      
+            event = NFA_READ_CPLT_EVT;
             break;
-        case NFA_RW_OP_WRITE_NDEF:  
+        case NFA_RW_OP_WRITE_NDEF:
         case NFA_RW_OP_T1T_WRITE:
         case NFA_RW_OP_T1T_WRITE8:
         case NFA_RW_OP_T2T_WRITE:
         case NFA_RW_OP_T3T_WRITE:
-            event = NFA_WRITE_CPLT_EVT;     
+            event = NFA_WRITE_CPLT_EVT;
             break;
-        case NFA_RW_OP_FORMAT_TAG:  
-            event = NFA_FORMAT_CPLT_EVT;    
+        case NFA_RW_OP_FORMAT_TAG:
+            event = NFA_FORMAT_CPLT_EVT;
             break;
             case NFA_RW_OP_DETECT_LOCK_TLV:
-        case NFA_RW_OP_DETECT_MEM_TLV:  
-            event = NFA_TLV_DETECT_EVT;    
+        case NFA_RW_OP_DETECT_MEM_TLV:
+            event = NFA_TLV_DETECT_EVT;
             break;
-        case NFA_RW_OP_SET_TAG_RO:      
-            event = NFA_SET_TAG_RO_EVT;    
+        case NFA_RW_OP_SET_TAG_RO:
+            event = NFA_SET_TAG_RO_EVT;
             break;
-        case NFA_RW_OP_T2T_SECTOR_SELECT:      
-            event = NFA_SELECT_CPLT_EVT;    
+        case NFA_RW_OP_T2T_SECTOR_SELECT:
+            event = NFA_SELECT_CPLT_EVT;
             break;
         case NFA_RW_OP_I93_INVENTORY:
         case NFA_RW_OP_I93_STAY_QUIET:
@@ -2738,8 +2738,8 @@ static BOOLEAN nfa_rw_op_req_while_busy(tNFA_RW_MSG *p_data)
         case NFA_RW_OP_I93_WRITE_DSFID:
         case NFA_RW_OP_I93_LOCK_DSFID:
         case NFA_RW_OP_I93_GET_SYS_INFO:
-        case NFA_RW_OP_I93_GET_MULTI_BLOCK_STATUS:      
-            event = NFA_I93_CMD_CPLT_EVT;    
+        case NFA_RW_OP_I93_GET_MULTI_BLOCK_STATUS:
+            event = NFA_I93_CMD_CPLT_EVT;
             break;
         default:
             return (freebuf);

@@ -23,10 +23,10 @@ tNFA_CE_CB nfa_ce_cb;
 *****************************************************************************/
 #define NFA_CE_DEFAULT_ISODEP_DISC_MASK (NFA_DM_DISC_MASK_LA_ISO_DEP | NFA_DM_DISC_MASK_LB_ISO_DEP)
 
-static const tNFA_SYS_REG nfa_ce_sys_reg = 
+static const tNFA_SYS_REG nfa_ce_sys_reg =
 {
     NULL,
-    nfa_ce_hdl_event, 
+    nfa_ce_hdl_event,
     nfa_ce_sys_disable,
     nfa_ce_proc_nfcc_power_mode
 };
@@ -81,7 +81,7 @@ void nfa_ce_init (void)
 ** Function         nfa_ce_proc_nfcc_power_mode
 **
 ** Description      Restore NFA CE sub-module
-**                  
+**
 ** Returns          None
 **
 *******************************************************************************/
@@ -97,7 +97,7 @@ void nfa_ce_proc_nfcc_power_mode (UINT8 nfcc_power_mode)
 ** Function         nfa_ce_sys_disable
 **
 ** Description      Clean up ce sub-system
-**                  
+**
 **
 ** Returns          void
 **
@@ -118,7 +118,7 @@ void nfa_ce_sys_disable (void)
         if ((p_info->flags & NFA_CE_LISTEN_INFO_IN_USE) && (p_info->rf_disc_handle != NFA_HANDLE_INVALID))
         {
             nfa_dm_delete_rf_discover (p_info->rf_disc_handle);
-            p_info->rf_disc_handle = NFA_HANDLE_INVALID;            
+            p_info->rf_disc_handle = NFA_HANDLE_INVALID;
         }
     }
 
@@ -130,7 +130,7 @@ void nfa_ce_sys_disable (void)
 ** Function         nfa_ce_hdl_event
 **
 ** Description      nfa rw main event handling function.
-**                  
+**
 ** Returns          BOOLEAN
 **
 *******************************************************************************/

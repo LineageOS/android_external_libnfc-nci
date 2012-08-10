@@ -31,7 +31,7 @@ tNFA_SYS_CB nfa_sys_cb = {0};   /* nfa_sys control block. statically initialize 
 ** Function         nfa_sys_init
 **
 ** Description      NFA initialization; called from task initialization.
-**                  
+**
 **
 ** Returns          void
 **
@@ -52,7 +52,7 @@ void nfa_sys_init (void)
 ** Function         nfa_sys_event
 **
 ** Description      BTA event handler; called from task event handler.
-**                  
+**
 **
 ** Returns          void
 **
@@ -106,7 +106,7 @@ void nfa_sys_timer_update (void)
 **
 ** Description      Called by other BTA subsystems to register their event
 **                  handler.
-**                  
+**
 **
 ** Returns          void
 **
@@ -170,7 +170,7 @@ void nfa_sys_check_disabled (void)
 **
 ** Description      Called by other BTA subsystems to de-register
 **                  handler.
-**                  
+**
 **
 ** Returns          void
 **
@@ -201,7 +201,7 @@ void nfa_sys_deregister (UINT8 id)
 **
 ** Description      Called by other BTA subsystems to get registeration
 **                  status.
-**                  
+**
 **
 ** Returns          void
 **
@@ -217,7 +217,7 @@ BOOLEAN nfa_sys_is_register (UINT8 id)
 **
 ** Description      Called by other BTA subsystems to get disable
 **                  parameter.
-**                  
+**
 **
 ** Returns          void
 **
@@ -337,7 +337,7 @@ void nfa_sys_notify_nfcc_power_mode (UINT8 nfcc_power_mode)
 ** Description      Send a GKI message to BTA.  This function is designed to
 **                  optimize sending of messages to BTA.  It is called by BTA
 **                  API functions and call-in functions.
-**                  
+**
 **
 ** Returns          void
 **

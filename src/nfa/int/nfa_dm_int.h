@@ -55,7 +55,7 @@ enum
 /* data type for NFA_DM_API_ENABLE_EVT */
 typedef struct
 {
-    BT_HDR                  hdr;      
+    BT_HDR                  hdr;
     tNFA_DM_CBACK           *p_dm_cback;
     tNFA_CONN_CBACK         *p_conn_cback;
 } tNFA_DM_API_ENABLE;
@@ -63,14 +63,14 @@ typedef struct
 /* data type for NFA_DM_API_DISABLE_EVT */
 typedef struct
 {
-    BT_HDR              hdr;      
+    BT_HDR              hdr;
     BOOLEAN             graceful;
 } tNFA_DM_API_DISABLE;
 
 /* data type for NFA_DM_API_SET_CONFIG_EVT */
 typedef struct
 {
-    BT_HDR              hdr;      
+    BT_HDR              hdr;
     tNFA_PMID           param_id;
     UINT8               length;
     UINT8              *p_data;
@@ -79,7 +79,7 @@ typedef struct
 /* data type for NFA_DM_API_GET_CONFIG_EVT */
 typedef struct
 {
-    BT_HDR              hdr;      
+    BT_HDR              hdr;
     UINT8               num_ids;
     tNFA_PMID          *p_pmids;
 } tNFA_DM_API_GET_CONFIG;
@@ -111,7 +111,7 @@ typedef struct
 /* data type for NFA_DM_API_SELECT_EVT */
 typedef struct
 {
-    BT_HDR              hdr;      
+    BT_HDR              hdr;
     UINT8               rf_disc_id;
     tNFA_NFC_PROTOCOL   protocol;
     tNFA_INTF_TYPE      rf_interface;
@@ -120,21 +120,21 @@ typedef struct
 /* data type for NFA_DM_API_UPDATE_RF_PARAMS_EVT */
 typedef struct
 {
-    BT_HDR              hdr;      
+    BT_HDR              hdr;
     tNFA_RF_COMM_PARAMS params;
 } tNFA_DM_API_UPDATE_RF_PARAMS;
 
 /* data type for NFA_DM_API_DEACTIVATE_EVT */
 typedef struct
 {
-    BT_HDR              hdr;      
+    BT_HDR              hdr;
     BOOLEAN             sleep_mode;
 } tNFA_DM_API_DEACTIVATE;
 
 /* data type for NFA_DM_API_SET_RF_DISC_DURATION_EVT */
 typedef struct
 {
-    BT_HDR              hdr;      
+    BT_HDR              hdr;
     UINT16              rf_disc_dur_ms;
 } tNFA_DM_API_SET_RF_DISC_DUR;
 #define NFA_RF_DISC_DURATION_MAX                0xFFFF
@@ -159,14 +159,14 @@ typedef struct
 /* data type for NFA_DM_API_DEREG_NDEF_HDLR_EVT */
 typedef struct
 {
-    BT_HDR      hdr;      
+    BT_HDR      hdr;
     tNFA_HANDLE ndef_type_handle;
 } tNFA_DM_API_DEREG_NDEF_HDLR;
 
 /* data type for NFA_DM_API_REG_VSC_EVT */
 typedef struct
 {
-    BT_HDR          hdr;      
+    BT_HDR          hdr;
     tNFA_VSC_CBACK  *p_cback;
     BOOLEAN         is_register;
 } tNFA_DM_API_REG_VSC;
@@ -174,7 +174,7 @@ typedef struct
 /* data type for NFA_DM_API_SEND_VSC_EVT */
 typedef struct
 {
-    BT_HDR          hdr;      
+    BT_HDR          hdr;
     tNFA_VSC_CBACK  *p_cback;
     UINT8           oid;
     UINT8           cmd_params_len;
@@ -185,7 +185,7 @@ typedef struct
 /* data type for NFA_DM_NFC_CBACK_DATA_EVT */
 typedef struct
 {
-    BT_HDR              hdr;      
+    BT_HDR              hdr;
     tNFC_RESPONSE_EVT   event;
     tNFC_RESPONSE       *p_data;
 } tNFA_DM_NFC_CBACK_DATA;
@@ -194,8 +194,8 @@ typedef struct
 typedef union
 {
     /* GKI event buffer header */
-    BT_HDR                          hdr;                /* NFA_DM_API_RAW_FRAME_EVT             */   
-                                                        /* NFA_DM_API_MULTI_TECH_RSP_EVT        */   
+    BT_HDR                          hdr;                /* NFA_DM_API_RAW_FRAME_EVT             */
+                                                        /* NFA_DM_API_MULTI_TECH_RSP_EVT        */
                                                         /* NFA_DM_API_RELEASE_EXCL_RF_CTRL      */
                                                         /* NFA_DM_API_DISABLE_POLLING_EVT       */
                                                         /* NFA_DM_API_START_RF_DISCOVERY_EVT    */
@@ -219,7 +219,7 @@ typedef union
 } tNFA_DM_MSG;
 
 /* DM RF discovery state */
-enum 
+enum
 {
     NFA_DM_RFST_IDLE,               /* idle state                     */
     NFA_DM_RFST_DISCOVERY,          /* discovery state                */
@@ -234,7 +234,7 @@ enum
 typedef UINT8 tNFA_DM_RF_DISC_STATE;
 
 /* DM RF discovery state machine event */
-enum 
+enum
 {
     NFA_DM_RF_DISCOVER_CMD,         /* start RF discovery                    */
     NFA_DM_RF_DISCOVER_RSP,         /* discover response from NFCC           */
@@ -267,7 +267,7 @@ typedef union
 } tNFA_DM_RF_DISC_DATA;
 
 /* Callback event from NFA DM RF Discovery to other NFA sub-modules */
-enum 
+enum
 {
     NFA_DM_RF_DISC_START_EVT,           /* discovery started with protocol, technology and mode       */
     NFA_DM_RF_DISC_ACTIVATED_EVT,       /* activated with configured protocol, technology and mode    */
@@ -461,7 +461,7 @@ typedef struct
 
     UINT8                      *p_activate_ntf;     /* temp holding activation notfication  */
 
-    UINT8                       activated_nfcid[NCI_NFCID1_MAX_LEN]; 
+    UINT8                       activated_nfcid[NCI_NFCID1_MAX_LEN];
                                                     /* NFCID 0/1/2 or UID of ISO15694       */
     UINT8                       activated_nfcid_len;/* length of NFCID ot UID               */
 
@@ -569,7 +569,7 @@ void nfa_dm_conn_cback_event_notify (UINT8 event, tNFA_CONN_EVT_DATA *p_data);
 void nfa_dm_disc_sm_execute (tNFA_DM_RF_DISC_SM_EVENT event, tNFA_DM_RF_DISC_DATA *p_data);
 tNFA_HANDLE nfa_dm_add_rf_discover (tNFA_DM_DISC_TECH_PROTO_MASK disc_mask, tNFA_DM_DISC_HOST_ID host_id, tNFA_DISCOVER_CBACK *p_disc_cback);
 void nfa_dm_delete_rf_discover (tNFA_HANDLE handle);
-void nfa_dm_start_excl_discovery (tNFA_TECHNOLOGY_MASK poll_tech_mask, 
+void nfa_dm_start_excl_discovery (tNFA_TECHNOLOGY_MASK poll_tech_mask,
                                   tNFA_LISTEN_CFG *p_listen_cfg,
                                   tNFA_DISCOVER_CBACK  *p_disc_cback);
 void nfa_dm_rel_excl_rf_control_and_notify (void);

@@ -50,7 +50,7 @@ static void nfa_dm_poll_disc_cback (tNFA_DM_RF_DISC_EVT event, tNFC_DISCOVER *p_
 ** Function         nfa_dm_module_init_cback
 **
 ** Description      Processing initialization complete event from sub-modules
-**                  
+**
 ** Returns          None
 **
 *******************************************************************************/
@@ -69,9 +69,9 @@ static void nfa_dm_module_init_cback (void)
 **
 ** Function         nfa_dm_nfcc_power_mode_proc_complete_cback
 **
-** Description      Processing complete of processing NFCC power state change 
+** Description      Processing complete of processing NFCC power state change
 **                  from all sub-modules
-**                  
+**
 ** Returns          None
 **
 *******************************************************************************/
@@ -103,7 +103,7 @@ static void nfa_dm_nfcc_power_mode_proc_complete_cback (void)
 **
 ** Description      This function on enable
 **
-** Returns          void                 
+** Returns          void
 **
 *******************************************************************************/
 void nfa_dm_sys_enable (void)
@@ -117,7 +117,7 @@ void nfa_dm_sys_enable (void)
 **
 ** Description      Set initial NCI configuration parameters
 **
-** Returns          void                 
+** Returns          void
 **
 *******************************************************************************/
 static void nfa_dm_set_init_nci_params (void)
@@ -125,7 +125,7 @@ static void nfa_dm_set_init_nci_params (void)
     UINT8   xx;
 
     /* set NCI default value if other than zero */
-    
+
     /* LF_T3T_IDENTIFIERS_1/2/.../16 */
     for (xx = 0; xx < NFA_CE_LISTEN_INFO_MAX; xx++)
     {
@@ -141,7 +141,7 @@ static void nfa_dm_set_init_nci_params (void)
         nfa_dm_cb.params.lf_t3t_pmm[xx] = 0xFF;
     }
 
-    /* LF_T3T_FLAGS: 
+    /* LF_T3T_FLAGS:
     ** DH needs to set this configuration, even if default value (not listening) is used,
     ** to let NFCC know of intention (not listening) of DH.
     */
@@ -169,7 +169,7 @@ static void nfa_dm_set_init_nci_params (void)
 ** Function         nfa_dm_proc_nfcc_power_mode
 **
 ** Description      Processing NFCC power mode changes
-**                  
+**
 ** Returns          None
 **
 *******************************************************************************/
@@ -195,7 +195,7 @@ void nfa_dm_proc_nfcc_power_mode (UINT8 nfcc_power_mode)
 **
 ** Description      report disable event
 **
-** Returns          void                 
+** Returns          void
 **
 *******************************************************************************/
 static void nfa_dm_disable_event (void)
@@ -214,7 +214,7 @@ static void nfa_dm_disable_event (void)
 **
 ** Description      Call DM event hanlder with NFC response callback data
 **
-** Returns          void                 
+** Returns          void
 **
 *******************************************************************************/
 static void nfa_dm_nfc_response_cback (tNFC_RESPONSE_EVT event, tNFC_RESPONSE *p_data)
@@ -401,7 +401,7 @@ BOOLEAN nfa_dm_act_nfc_cback_data (tNFA_DM_MSG *p_msg)
 **
 ** Function         nfa_dm_enable
 **
-** Description      Initialises the NFC device manager 
+** Description      Initialises the NFC device manager
 **
 ** Returns          TRUE (message buffer to be freed by caller)
 **
@@ -440,8 +440,8 @@ BOOLEAN nfa_dm_enable (tNFA_DM_MSG *p_data)
 **
 ** Function         nfa_dm_disable
 **
-** Description      Disables the NFC device manager 
-**                  
+** Description      Disables the NFC device manager
+**
 ** Returns          TRUE (message buffer to be freed by caller)
 **
 *******************************************************************************/
@@ -477,7 +477,7 @@ BOOLEAN nfa_dm_disable (tNFA_DM_MSG *p_data)
 ** Description      Called when all NFA subsytems are disabled.
 **
 **                  NFC core stack can now be disabled.
-**                  
+**
 ** Returns          void
 **
 *******************************************************************************/
@@ -576,7 +576,7 @@ void nfa_dm_conn_cback_event_notify (UINT8 event, tNFA_CONN_EVT_DATA *p_data)
 **
 ** Function         nfa_dm_rel_excl_rf_control_and_notify
 **
-** Description      Stop exclusive RF control and notify app of 
+** Description      Stop exclusive RF control and notify app of
 **                  NFA_EXCLUSIVE_RF_CONTROL_STOPPED_EVT
 **
 ** Returns          void
@@ -664,10 +664,10 @@ BOOLEAN nfa_dm_act_release_excl_rf_ctrl (tNFA_DM_MSG *p_data)
     /* nfa_dm_rel_excl_rf_control_and_notify() is called when discovery state goes IDLE */
     nfa_dm_cb.disc_cb.disc_flags |= NFA_DM_DISC_FLAGS_STOPPING;
 
-    /* if discover command has been sent in IDLE state and waiting for response 
+    /* if discover command has been sent in IDLE state and waiting for response
     ** then just wait for responose. Otherwise initiate deactivating.
     */
-    if (!(  (nfa_dm_cb.disc_cb.disc_state == NFA_DM_RFST_IDLE) 
+    if (!(  (nfa_dm_cb.disc_cb.disc_state == NFA_DM_RFST_IDLE)
           &&(nfa_dm_cb.disc_cb.disc_flags & NFA_DM_DISC_FLAGS_W4_RSP)  ))
     {
         nfa_dm_rf_deactivate (NFA_DEACTIVATE_TYPE_IDLE);
@@ -810,7 +810,7 @@ tNFA_STATUS nfa_dm_start_polling (void)
     tNFA_DM_DISC_TECH_PROTO_MASK poll_disc_mask = 0;
 
     NFA_TRACE_DEBUG0 ("nfa_dm_start_polling ()");
-    
+
     poll_tech_mask = nfa_dm_cb.poll_mask;
 
     /* start RF discovery with discovery callback */
@@ -1011,7 +1011,7 @@ BOOLEAN nfa_dm_act_send_raw_frame (tNFA_DM_MSG *p_data)
         ||(nfa_dm_cb.disc_cb.disc_state == NFA_DM_RFST_LISTEN_ACTIVE)  )
     {
         /* If not in exclusive mode, and not activated for LISTEN, then forward raw data to NFA_RW to send */
-        if (  !(nfa_dm_cb.flags & NFA_DM_FLAGS_EXCL_RF_ACTIVE) 
+        if (  !(nfa_dm_cb.flags & NFA_DM_FLAGS_EXCL_RF_ACTIVE)
             &&!(nfa_dm_cb.disc_cb.disc_state == NFA_DM_RFST_LISTEN_ACTIVE)
             &&(  (nfa_dm_cb.disc_cb.activated_protocol == NFA_PROTOCOL_T1T)
                ||(nfa_dm_cb.disc_cb.activated_protocol == NFA_PROTOCOL_T2T)
@@ -1026,7 +1026,7 @@ BOOLEAN nfa_dm_act_send_raw_frame (tNFA_DM_MSG *p_data)
         else
         {
             status = NFC_SendData (NFC_RF_CONN_ID, (BT_HDR*) p_data);
-        }    
+        }
     }
 
     if (status == NFC_STATUS_FAILED)
@@ -1198,7 +1198,7 @@ BOOLEAN nfa_dm_act_update_rf_params (tNFA_DM_MSG *p_data)
 ** Function         nfa_dm_act_disable_timeout
 **
 ** Description      timeout on disable process. Shutdown immediately
-**                  
+**
 ** Returns          TRUE (message buffer to be freed by caller)
 **
 *******************************************************************************/
@@ -1216,7 +1216,7 @@ BOOLEAN nfa_dm_act_disable_timeout (tNFA_DM_MSG *p_data)
 ** Function         nfa_dm_act_conn_cback_notify
 **
 ** Description      Notify app of reader/writer/ndef events
-**                  
+**
 ** Returns          nothing
 **
 *******************************************************************************/
@@ -1258,7 +1258,7 @@ void nfa_dm_act_conn_cback_notify (UINT8 event, tNFA_CONN_EVT_DATA *p_data)
 ** Function         nfa_dm_act_data_cback
 **
 ** Description      Processing data from RF link
-**                  
+**
 ** Returns          None
 **
 *******************************************************************************/
@@ -1277,7 +1277,7 @@ static void nfa_dm_act_data_cback (UINT8 conn_id, tNFC_CONN_EVT event, tNFC_CONN
             evt_data.data.len    = p_msg->len;
 
             nfa_dm_conn_cback_event_notify (NFA_DATA_EVT, &evt_data);
-            
+
             GKI_freebuf (p_msg);
         }
         else
@@ -1296,7 +1296,7 @@ static void nfa_dm_act_data_cback (UINT8 conn_id, tNFC_CONN_EVT event, tNFC_CONN
 ** Function         nfa_dm_excl_disc_cback
 **
 ** Description      Processing event from discovery callback
-**                  
+**
 ** Returns          None
 **
 *******************************************************************************/
@@ -1338,7 +1338,7 @@ static void nfa_dm_excl_disc_cback (tNFA_DM_RF_DISC_EVT event, tNFC_DISCOVER *p_
             if (nfa_dm_cb.p_activate_ntf)
             {
                 memcpy (nfa_dm_cb.p_activate_ntf,
-                        &(p_data->activate), 
+                        &(p_data->activate),
                         sizeof (tNFC_ACTIVATE_DEVT));
 
                 if (  (nfa_dm_cb.disc_cb.activated_protocol  == NFC_PROTOCOL_T1T)
@@ -1415,7 +1415,7 @@ static void nfa_dm_excl_disc_cback (tNFA_DM_RF_DISC_EVT event, tNFC_DISCOVER *p_
 ** Function         nfa_dm_poll_disc_cback
 **
 ** Description      Processing event from discovery callback
-**                  
+**
 ** Returns          None
 **
 *******************************************************************************/
@@ -1444,7 +1444,7 @@ static void nfa_dm_poll_disc_cback (tNFA_DM_RF_DISC_EVT event, tNFC_DISCOVER *p_
         if (nfa_dm_cb.p_activate_ntf)
         {
             memcpy (nfa_dm_cb.p_activate_ntf,
-                    &(p_data->activate), 
+                    &(p_data->activate),
                     sizeof (tNFC_ACTIVATE_DEVT));
 
             if (  (nfa_dm_cb.disc_cb.activated_protocol     == NFC_PROTOCOL_NFC_DEP)
@@ -1485,7 +1485,7 @@ static void nfa_dm_poll_disc_cback (tNFA_DM_RF_DISC_EVT event, tNFC_DISCOVER *p_
         if (  (nfa_dm_cb.disc_cb.activated_protocol     == NFC_PROTOCOL_NFC_DEP)
             &&(nfa_dm_cb.disc_cb.activated_rf_interface == NFC_INTERFACE_NFC_DEP)  )
         {
-            /* 
+            /*
             ** If LLCP link is not deactivated yet,
             ** LLCP will receive deactivation ntf through data callback.
             ** NFA P2P will receive callback event from LLCP.
@@ -1534,7 +1534,7 @@ static void nfa_dm_poll_disc_cback (tNFA_DM_RF_DISC_EVT event, tNFC_DISCOVER *p_
                 nfa_dm_conn_cback_event_notify (NFA_POLL_DISABLED_EVT, &evt_data);
             }
         }
- 
+
         break;
 
     case NFA_DM_RF_DISC_CMD_IDLE_CMPL_EVT:
@@ -1569,7 +1569,7 @@ static void nfa_dm_poll_disc_cback (tNFA_DM_RF_DISC_EVT event, tNFC_DISCOVER *p_
 ** Function         nfa_dm_notify_activation_status
 **
 ** Description      Processing activation status from sub-modules
-**                  
+**
 ** Returns          None
 **
 *******************************************************************************/
@@ -1591,7 +1591,7 @@ void nfa_dm_notify_activation_status (tNFA_STATUS status, tNFA_TAG_PARAMS *p_par
     {
         /* notify NFC link activation */
         memcpy ( &(evt_data.activated.activate_ntf),
-                 nfa_dm_cb.p_activate_ntf, 
+                 nfa_dm_cb.p_activate_ntf,
                  sizeof (tNFC_ACTIVATE_DEVT));
 
         p_tech_params = &evt_data.activated.activate_ntf.rf_tech_param;
@@ -1599,7 +1599,7 @@ void nfa_dm_notify_activation_status (tNFA_STATUS status, tNFA_TAG_PARAMS *p_par
         if (p_params)
         {
             memcpy (&(evt_data.activated.params),
-                    p_params, 
+                    p_params,
                     sizeof (tNFA_TAG_PARAMS));
         }
 
@@ -1629,15 +1629,15 @@ void nfa_dm_notify_activation_status (tNFA_STATUS status, tNFA_TAG_PARAMS *p_par
             nfcid_len = 0;
         }
 
-        /* 
+        /*
         ** If not in exlusive RF mode, and
         **      P2P activation, then push default NDEF message through SNEP
         **      TAG activation, then read NDEF message
         */
         if (nfa_dm_cb.disc_cb.activated_protocol == NFC_PROTOCOL_NFC_DEP)
         {
-            /* 
-            ** Default NDEF message will be put to NFC Forum defualt SNEP server 
+            /*
+            ** Default NDEF message will be put to NFC Forum defualt SNEP server
             ** after receiving NFA_LLCP_ACTIVATED_EVT.
             */
         }
@@ -1648,7 +1648,7 @@ void nfa_dm_notify_activation_status (tNFA_STATUS status, tNFA_TAG_PARAMS *p_par
         }
         else if (!(nfa_dm_cb.flags & NFA_DM_FLAGS_EXCL_RF_ACTIVE))
         {
-            /* 
+            /*
             ** if the same tag is activated then do not perform auto NDEF detection.
             ** Application may put a tag into sleep mode and reactivate the same tag.
             */

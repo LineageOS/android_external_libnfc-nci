@@ -2,7 +2,7 @@
 **
 ** File:         ndef_cho_utils.c
 **
-** Description:   This file contains source code for some utility functions to 
+** Description:   This file contains source code for some utility functions to
 **                help parse and build NFC Data Exchange Format (NDEF) messages
 **                for Connection Handover
 **
@@ -63,7 +63,7 @@ tNDEF_STATUS NDEF_MsgCreateWktHr (UINT8 *p_msg, UINT32 max_size, UINT32 *p_cur_s
     NDEF_MsgInit (p_msg, max_size, p_cur_size);
 
     /* Add record with version */
-    status = NDEF_MsgAddRec (p_msg, max_size, p_cur_size, 
+    status = NDEF_MsgAddRec (p_msg, max_size, p_cur_size,
                              NDEF_TNF_WKT, hr_rec_type, HR_REC_TYPE_LEN,
                              NULL, 0, &version, 1);
 
@@ -87,7 +87,7 @@ tNDEF_STATUS NDEF_MsgCreateWktHs (UINT8 *p_msg, UINT32 max_size, UINT32 *p_cur_s
     NDEF_MsgInit (p_msg, max_size, p_cur_size);
 
     /* Add record with version */
-    status = NDEF_MsgAddRec (p_msg, max_size, p_cur_size, 
+    status = NDEF_MsgAddRec (p_msg, max_size, p_cur_size,
                              NDEF_TNF_WKT, hs_rec_type, HS_REC_TYPE_LEN,
                              NULL, 0, &version, 1);
 
@@ -104,7 +104,7 @@ tNDEF_STATUS NDEF_MsgCreateWktHs (UINT8 *p_msg, UINT32 max_size, UINT32 *p_cur_s
 **
 *******************************************************************************/
 tNDEF_STATUS NDEF_MsgAddWktHc (UINT8 *p_msg, UINT32 max_size, UINT32 *p_cur_size,
-                               char  *p_id_str, UINT8 ctf, 
+                               char  *p_id_str, UINT8 ctf,
                                UINT8 carrier_type_len, UINT8 *p_carrier_type,
                                UINT8 carrier_data_len, UINT8 *p_carrier_data)
 {
@@ -187,7 +187,7 @@ tNDEF_STATUS NDEF_MsgAddWktAc (UINT8 *p_msg, UINT32 max_size, UINT32 *p_cur_size
         ARRAY_TO_BE_STREAM (p, p_carrier_data_ref_str, ref_str_len);
 
         /* Aux Data Reference Count */
-        UINT8_TO_BE_STREAM (p, aux_data_ref_count);   
+        UINT8_TO_BE_STREAM (p, aux_data_ref_count);
 
         for (xx = 0; xx < aux_data_ref_count; xx++)
         {
@@ -350,14 +350,14 @@ tNDEF_STATUS NDEF_MsgAppendMediaBtOobCod (UINT8 *p_msg, UINT32 max_size, UINT32 
 **
 ** Function         NDEF_MsgAppendMediaBtOobName
 **
-** Description      This function appends Bluetooth Local Name EIR data 
+** Description      This function appends Bluetooth Local Name EIR data
 **                  at the end of BT OOB Record.
 **
 ** Returns          NDEF_OK if all OK
 **
 *******************************************************************************/
 tNDEF_STATUS NDEF_MsgAppendMediaBtOobName (UINT8 *p_msg, UINT32 max_size, UINT32 *p_cur_size,
-                                           char *p_id_str, BOOLEAN is_complete, 
+                                           char *p_id_str, BOOLEAN is_complete,
                                            UINT8 name_len, UINT8 *p_name)
 {
     tNDEF_STATUS    status;
@@ -467,7 +467,7 @@ tNDEF_STATUS NDEF_MsgAppendMediaBtOobHashCRandR (UINT8 *p_msg, UINT32 max_size, 
 **
 *******************************************************************************/
 tNDEF_STATUS NDEF_MsgAppendMediaBtOobEirData (UINT8 *p_msg, UINT32 max_size, UINT32 *p_cur_size,
-                                              char *p_id_str, 
+                                              char *p_id_str,
                                               UINT8 eir_type, UINT8 data_len, UINT8 *p_data)
 {
     tNDEF_STATUS    status;

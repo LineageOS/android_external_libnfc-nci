@@ -2,7 +2,7 @@
 **
 ** File:         ndef_utils.h
 **
-** Description:   This file contains definitions for some utility functions to 
+** Description:   This file contains definitions for some utility functions to
 **                help parse and build NFC Data Exchange Format (NDEF) messages
 **
 ** Copyright (c) 2010-2010  Broadcom Corp.  All Rights Reserved.
@@ -254,7 +254,7 @@ NFC_API extern tNDEF_STATUS  NDEF_MsgAddRec (UINT8 *p_msg, UINT32 max_size, UINT
 **
 ** Function         NDEF_MsgInsertRec
 **
-** Description      This function inserts a record at a specific index into the 
+** Description      This function inserts a record at a specific index into the
 **                  given NDEF message
 **
 ** Returns          OK, or error if the record did not fit
@@ -283,7 +283,7 @@ NFC_API extern tNDEF_STATUS  NDEF_MsgAppendRec (UINT8 *p_msg, UINT32 max_size, U
 **
 ** Function         NDEF_MsgAppendPayload
 **
-** Description      This function appends extra payload to a specific record in the 
+** Description      This function appends extra payload to a specific record in the
 **                  given NDEF message
 **
 ** Returns          OK, or error if the extra payload did not fit
@@ -297,7 +297,7 @@ NFC_API extern tNDEF_STATUS NDEF_MsgAppendPayload (UINT8 *p_msg, UINT32 max_size
 **
 ** Function         NDEF_MsgReplacePayload
 **
-** Description      This function replaces the payload of a specific record in the 
+** Description      This function replaces the payload of a specific record in the
 **                  given NDEF message
 **
 ** Returns          OK, or error if the new payload did not fit
@@ -311,7 +311,7 @@ NFC_API extern tNDEF_STATUS NDEF_MsgReplacePayload (UINT8 *p_msg, UINT32 max_siz
 **
 ** Function         NDEF_MsgReplaceType
 **
-** Description      This function replaces the type field of a specific record in the 
+** Description      This function replaces the type field of a specific record in the
 **                  given NDEF message
 **
 ** Returns          OK, or error if the new type field did not fit
@@ -325,7 +325,7 @@ NFC_API extern tNDEF_STATUS NDEF_MsgReplaceType (UINT8 *p_msg, UINT32 max_size, 
 **
 ** Function         NDEF_MsgReplaceId
 **
-** Description      This function replaces the ID field of a specific record in the 
+** Description      This function replaces the ID field of a specific record in the
 **                  given NDEF message
 **
 ** Returns          OK, or error if the new ID field did not fit
@@ -396,7 +396,7 @@ NFC_API extern tNDEF_STATUS NDEF_MsgCreateWktHs (UINT8 *p_msg, UINT32 max_size, 
 **
 *******************************************************************************/
 NFC_API extern tNDEF_STATUS NDEF_MsgAddWktHc (UINT8 *p_msg, UINT32 max_size, UINT32 *p_cur_size,
-                                              char  *p_id_str, UINT8 ctf, 
+                                              char  *p_id_str, UINT8 ctf,
                                               UINT8 carrier_type_len, UINT8 *p_carrier_type,
                                               UINT8 carrier_data_len, UINT8 *p_carrier_data);
 
@@ -465,14 +465,14 @@ NFC_API extern tNDEF_STATUS NDEF_MsgAppendMediaBtOobCod (UINT8 *p_msg, UINT32 ma
 **
 ** Function         NDEF_MsgAppendMediaBtOobName
 **
-** Description      This function appends Bluetooth Local Name EIR data 
+** Description      This function appends Bluetooth Local Name EIR data
 **                  at the end of BT OOB Record.
 **
 ** Returns          NDEF_OK if all OK
 **
 *******************************************************************************/
 NFC_API extern tNDEF_STATUS NDEF_MsgAppendMediaBtOobName (UINT8 *p_msg, UINT32 max_size, UINT32 *p_cur_size,
-                                                          char *p_id_str, BOOLEAN is_complete, 
+                                                          char *p_id_str, BOOLEAN is_complete,
                                                           UINT8 name_len, UINT8 *p_name);
 
 /*******************************************************************************
@@ -497,7 +497,7 @@ NFC_API extern tNDEF_STATUS NDEF_MsgAppendMediaBtOobHashCRandR (UINT8 *p_msg, UI
 **
 *******************************************************************************/
 NFC_API extern tNDEF_STATUS NDEF_MsgAppendMediaBtOobEirData (UINT8 *p_msg, UINT32 max_size, UINT32 *p_cur_size,
-                                                             char *p_id_str, 
+                                                             char *p_id_str,
                                                              UINT8 eir_type, UINT8 data_len, UINT8 *p_data);
 
 #ifdef __cplusplus

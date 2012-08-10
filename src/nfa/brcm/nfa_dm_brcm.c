@@ -44,18 +44,18 @@ static void nfa_brcm_post_proc_nfcc_power_mode (UINT8 nfcc_power_mode);
 /*****************************************************************************
 ** Constants and types
 *****************************************************************************/
-static const tNFA_SYS_REG nfa_brcm_pre_sys_reg = 
+static const tNFA_SYS_REG nfa_brcm_pre_sys_reg =
 {
     nfa_brcm_pre_sys_enable,
-    nfa_brcm_pre_evt_hdlr, 
+    nfa_brcm_pre_evt_hdlr,
     nfa_brcm_pre_sys_disable,
     nfa_brcm_pre_proc_nfcc_power_mode
 };
 
-static const tNFA_SYS_REG nfa_brcm_post_sys_reg = 
+static const tNFA_SYS_REG nfa_brcm_post_sys_reg =
 {
     nfa_brcm_post_sys_enable,
-    nfa_brcm_post_evt_hdlr, 
+    nfa_brcm_post_evt_hdlr,
     nfa_brcm_post_sys_disable,
     nfa_brcm_post_proc_nfcc_power_mode
 };
@@ -136,7 +136,7 @@ static void nfa_dm_brcm_vse_cback (tNFC_VS_EVT event, UINT16 data_len, UINT8 *p_
 **
 ** Description      Enable or disable FW FSM
 **
-** Returns          void                 
+** Returns          void
 **
 *******************************************************************************/
 void nfa_dm_brcm_set_fw_fsm (BOOLEAN enable)
@@ -170,7 +170,7 @@ void nfa_dm_brcm_set_fw_fsm (BOOLEAN enable)
 ** Description      Initialize BRCM DM control block
 **                  Initialize BRCM NFCC with VS configuration and CMD
 **
-** Returns          void                 
+** Returns          void
 **
 *******************************************************************************/
 void nfa_dm_brcm_init (void)
@@ -195,7 +195,7 @@ void nfa_dm_brcm_init (void)
 ** Description      Initialize BRCM DM control block
 **                  Initialize BRCM NFCC with VS configuration and CMD
 **
-** Returns          void                 
+** Returns          void
 **
 *******************************************************************************/
 void nfa_dm_brcm_restore (void)
@@ -212,6 +212,12 @@ void nfa_dm_brcm_restore (void)
         len   = p_nfa_dm_lptd_cfg[0] + 2; /* 2 is for T and L */
         memcpy (p, &p_nfa_dm_lptd_cfg[1], p_nfa_dm_lptd_cfg[0]);
         nfa_dm_check_set_config (len, tlv_params, FALSE);
+    }
+
+    if ((p_nfa_dm_pll_325_cfg)&&(nfa_brcm_cb.xtal_index < BRCM_XTAL_INDEX_MAX))
+    {
+        p = p_nfa_dm_pll_325_cfg + (nfa_brcm_cb.xtal_index * NFA_DM_BRCM_PLL_325_SETCONFIG_PARAM_LEN);
+        nfa_dm_check_set_config (NFA_DM_BRCM_PLL_325_SETCONFIG_PARAM_LEN, p, FALSE);
     }
 
     if (p_nfa_dm_start_up_cfg[0])
@@ -354,8 +360,8 @@ BOOLEAN nfa_dm_brcm_act_enable_snooze (BT_HDR *p_msg)
         UINT8_TO_STREAM(p, p_nfa_dm_lp_cfg->nfc_wake_active_mode); /* BT Wake Active Mode      */
         UINT8_TO_STREAM(p, p_nfa_dm_lp_cfg->dh_wake_active_mode);  /* Host Wake Active Mode    */
 
-        status = NFC_SendBtVsCommand (HCI_BRCM_WRITE_SLEEP_MODE, 
-                                      HCI_BRCM_WRITE_SLEEP_MODE_LENGTH, 
+        status = NFC_SendBtVsCommand (HCI_BRCM_WRITE_SLEEP_MODE,
+                                      HCI_BRCM_WRITE_SLEEP_MODE_LENGTH,
                                       (UINT8 *)data,
                                       nfa_dm_brcm_snooze_vsc_cback);
 
@@ -423,8 +429,8 @@ BOOLEAN nfa_dm_brcm_act_disable_snooze (BT_HDR *p_msg)
 
         UINT8_TO_STREAM(p, NFC_LP_SNOOZE_MODE_NONE);          /* Sleep Mode               */
 
-        status = NFC_SendBtVsCommand (HCI_BRCM_WRITE_SLEEP_MODE, 
-                                      HCI_BRCM_WRITE_SLEEP_MODE_LENGTH, 
+        status = NFC_SendBtVsCommand (HCI_BRCM_WRITE_SLEEP_MODE,
+                                      HCI_BRCM_WRITE_SLEEP_MODE_LENGTH,
                                       (UINT8 *)data,
                                       nfa_dm_brcm_snooze_vsc_cback);
 
@@ -449,8 +455,8 @@ BOOLEAN nfa_dm_brcm_act_disable_snooze (BT_HDR *p_msg)
 **
 ** Function         nfa_dm_brcm_act_multi_tech_rsp
 **
-** Description      Enable or disable FW FSM feature 
-**                  
+** Description      Enable or disable FW FSM feature
+**
 ** Returns          TRUE (message buffer to be freed by caller)
 **
 *******************************************************************************/
@@ -470,7 +476,7 @@ BOOLEAN nfa_dm_brcm_act_multi_tech_rsp (BT_HDR *p_msg)
 ** Function         nfa_dm_brcm_act_get_build_info
 **
 ** Description      Get firmware build info
-**                  
+**
 ** Returns          TRUE (message buffer to be freed by caller)
 **
 *******************************************************************************/
@@ -486,7 +492,7 @@ BOOLEAN nfa_dm_brcm_act_get_build_info (BT_HDR *p_msg)
 ** Function         nfa_dm_brcm_evt_hdlr
 **
 ** Description      BRCM specific event handling function for DM
-**                  
+**
 **
 ** Returns          void
 **
@@ -563,7 +569,7 @@ static char *nfa_dm_brcm_evt_2_str (UINT16 event)
 **
 ** Function         nfa_brcm_pre_sys_enable
 **
-** Description      Enable BRCM specific Pre NFA 
+** Description      Enable BRCM specific Pre NFA
 **
 ** Returns          None
 **
@@ -607,8 +613,8 @@ static void nfa_brcm_pre_sys_enable (void)
 **
 ** Function         nfa_brcm_pre_evt_hdlr
 **
-** Description      Processing BRCM specific Pre NFA 
-**                  
+** Description      Processing BRCM specific Pre NFA
+**
 **
 ** Returns          TRUE if p_msg needs to be deallocated
 **
@@ -621,8 +627,8 @@ static BOOLEAN nfa_brcm_pre_evt_hdlr (BT_HDR *p_msg)
 **
 ** Function         nfa_brcm_pre_sys_disable
 **
-** Description      Disable BRCM specific before NFA 
-**                  
+** Description      Disable BRCM specific before NFA
+**
 **
 ** Returns          None
 **
@@ -636,8 +642,8 @@ static void nfa_brcm_pre_sys_disable (void)
 **
 ** Function         nfa_brcm_pre_proc_nfcc_power_mode
 **
-** Description      Process change of power mode for BRCM specific before NFA 
-**                  
+** Description      Process change of power mode for BRCM specific before NFA
+**
 ** Returns          None
 **
 *******************************************************************************/
@@ -659,7 +665,7 @@ static void nfa_brcm_pre_proc_nfcc_power_mode (UINT8 nfcc_power_mode)
 **
 ** Function         nfa_brcm_post_sys_enable
 **
-** Description      Enable BRCM specific after NFA 
+** Description      Enable BRCM specific after NFA
 **
 ** Returns          None
 **
@@ -674,8 +680,8 @@ static void nfa_brcm_post_sys_enable (void)
 **
 ** Function         nfa_brcm_post_evt_hdlr
 **
-** Description      Processing BRCM specific Post NFA 
-**                  
+** Description      Processing BRCM specific Post NFA
+**
 **
 ** Returns          TRUE if p_msg needs to be deallocated
 **
@@ -688,8 +694,8 @@ static BOOLEAN nfa_brcm_post_evt_hdlr (BT_HDR *p_msg)
 **
 ** Function         nfa_brcm_post_sys_disable
 **
-** Description      Disable BRCM specific Post NFA 
-**                  
+** Description      Disable BRCM specific Post NFA
+**
 **
 ** Returns          None
 **
@@ -705,8 +711,8 @@ static void nfa_brcm_post_sys_disable (void)
 **
 ** Function         nfa_brcm_post_proc_nfcc_power_mode
 **
-** Description      Process change of power mode for BRCM specific after NFA 
-**                  
+** Description      Process change of power mode for BRCM specific after NFA
+**
 ** Returns          None
 **
 *******************************************************************************/
@@ -724,22 +730,54 @@ static void nfa_brcm_post_proc_nfcc_power_mode (UINT8 nfcc_power_state)
 ** Function         NFA_BrcmInit
 **
 ** Description      This function initializes Broadcom specific control blocks for NFA
-**                  and registers a callback to be called after the NFCC is reset, 
+**                  and registers a callback to be called after the NFCC is reset,
 **                  to perform any platform-specific initialization (e.g. patch download).
-**                  
+**
+**                  tBRCM_DEV_INIT_CONFIG
+**                      BRCM_DEV_INIT_FLAGS_AUTO_BAUD     : UART auto baud detection
+**                      BRCM_DEV_INIT_FLAGS_SET_XTAL_FREQ : set crystal frequency
+**                      xtal_freq : crystal frequency in KHz
+**
 ** Returns          none
 **
 *******************************************************************************/
-void NFA_BrcmInit (tBRCM_DEV_INIT_CBACK *p_dev_init_cback)
+void NFA_BrcmInit (tBRCM_DEV_INIT_CONFIG *p_dev_init_config,
+                   tBRCM_DEV_INIT_CBACK  *p_dev_init_cback)
 {
+    NFA_TRACE_API0 ("NFA_BrcmInit ()");
+
     nfa_dm_brcm_init ();
     nfa_dm_vs_brcm_init ();
     nfa_ee_brcm_init ();
     nfa_hci_brcm_init ();
-    NFC_BrcmInit (p_dev_init_cback);
+    NFC_BrcmInit (p_dev_init_config, p_dev_init_cback);
+
     /* register message handler on NFA SYS */
     nfa_sys_register ( NFA_ID_VS_PRE,  &nfa_brcm_pre_sys_reg);
     nfa_sys_register ( NFA_ID_VS_POST, &nfa_brcm_post_sys_reg);
+
+    if (p_dev_init_config)
+    {
+        switch (p_dev_init_config->xtal_freq)
+        {
+        case  9600: nfa_brcm_cb.xtal_index = BRCM_XTAL_INDEX_9600;  break;
+        case 13000: nfa_brcm_cb.xtal_index = BRCM_XTAL_INDEX_13000; break;
+        case 16200: nfa_brcm_cb.xtal_index = BRCM_XTAL_INDEX_16200; break;
+        case 19200: nfa_brcm_cb.xtal_index = BRCM_XTAL_INDEX_19200; break;
+        case 24000: nfa_brcm_cb.xtal_index = BRCM_XTAL_INDEX_24000; break;
+        case 26000: nfa_brcm_cb.xtal_index = BRCM_XTAL_INDEX_26000; break;
+        case 38400: nfa_brcm_cb.xtal_index = BRCM_XTAL_INDEX_38400; break;
+        case 52000: nfa_brcm_cb.xtal_index = BRCM_XTAL_INDEX_52000; break;
+        case 37400: nfa_brcm_cb.xtal_index = BRCM_XTAL_INDEX_37400; break;
+        default :   nfa_brcm_cb.xtal_index = BRCM_XTAL_INDEX_MAX;
+                    NFA_TRACE_DEBUG1 ("No matchec xtal index for %d", p_dev_init_config->xtal_freq);
+                    break;
+        }
+    }
+    else
+    {
+        nfa_brcm_cb.xtal_index = BRCM_XTAL_INDEX_MAX;
+    }
 }
 
 
@@ -783,7 +821,7 @@ tNFA_STATUS NFA_BrcmGetFirmwareBuildInfo (void)
 ** Description      This function is called to enable Snooze Mode as configured
 **                  in nfa_dm_brcm_cfg.c.
 **                  NFA_DM_SNOOZE_ENABLED_EVT will be sent to indicate status.
-**                  
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_FAILED otherwise
 **
@@ -827,7 +865,7 @@ tNFA_STATUS NFA_EnableSnoozeMode (void)
 **
 ** Description      This function is called to disable Snooze Mode
 **                  NFA_DM_SNOOZE_DISABLED_EVT will be sent to indicate status.
-**                  
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_FAILED otherwise
 **
@@ -871,7 +909,7 @@ tNFA_STATUS NFA_DisableSnoozeMode (void)
 **
 ** Description      Enable or disable NFCC responding more than one technology
 **                  during listen discovry.
-**                  
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_FAILED otherwise
 **

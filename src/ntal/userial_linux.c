@@ -11,6 +11,7 @@
 **
 *****************************************************************************/
 
+#include "OverrideLog.h"
 #include "bt_target.h"
 #include <string.h>
 #include "gki.h"
@@ -22,7 +23,6 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <stdio.h>
-#include <cutils/log.h>
 #include <gki_int.h>
 #include <hcidefs.h>
 #include <poll.h>
@@ -74,10 +74,10 @@ static char spi_negotiation[10] = { 0xF0, /* CMD */
                                     0xFF, /* Sleep timeout Lower Byte */
                                     0xFF, /* Sleep timeout Upper Byte */
                                     0x00, /* Reserved */
-                                    0x00 /* Reserved */ 
+                                    0x00 /* Reserved */
 };
-static char spi_nego_res[20];  
- 
+static char spi_nego_res[20];
+
 #include <ctype.h>
 
 #define USING_BRCM_USB TRUE

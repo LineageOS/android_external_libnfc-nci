@@ -38,7 +38,7 @@ tNFA_SNEP_DEFAULT_CB nfa_snep_default_cb;
 ** Function         nfa_snep_default_init
 **
 ** Description      Initialize NFA SNEP default server
-**                  
+**
 **
 ** Returns          None
 **
@@ -66,7 +66,7 @@ void nfa_snep_default_init (void)
 ** Function         nfa_snep_default_service_cback
 **
 ** Description      Processing event to default SNEP server/client
-**                  
+**
 **
 ** Returns          None
 **
@@ -106,7 +106,7 @@ void nfa_snep_default_service_cback (tNFA_SNEP_EVT event, tNFA_SNEP_EVT_DATA *p_
 
             if (xx >= NFA_SNEP_DEFAULT_MAX_CONN)
             {
-                SNEP_TRACE_ERROR1 ("Default SNEP server cannot handle more than %d connections", 
+                SNEP_TRACE_ERROR1 ("Default SNEP server cannot handle more than %d connections",
                                   NFA_SNEP_DEFAULT_MAX_CONN);
 
                 api_disconnect.conn_handle = p_data->connect.conn_handle;
@@ -119,7 +119,7 @@ void nfa_snep_default_service_cback (tNFA_SNEP_EVT event, tNFA_SNEP_EVT_DATA *p_
     case NFA_SNEP_ALLOC_BUFF_EVT:
         if (p_data->alloc.req_code == NFA_SNEP_REQ_CODE_GET)
         {
-            /* 
+            /*
             ** Default server doesn't support GET
             ** Send NFA_SNEP_RESP_CODE_NOT_IMPLM to peer
             */
@@ -135,8 +135,11 @@ void nfa_snep_default_service_cback (tNFA_SNEP_EVT event, tNFA_SNEP_EVT_DATA *p_
             {
                 if (nfa_snep_default_cb.conn[xx].conn_handle == p_data->alloc.conn_handle)
                 {
-                    /* allocate memory, allocated buffer will be returned in NFA_SNEP_PUT_REQ_EVT */
-                    p_data->alloc.p_buff = (UINT8*) nfa_mem_co_alloc (p_data->alloc.ndef_length);
+                    if (p_data->alloc.ndef_length <= NFA_SNEP_DEFAULT_SERVER_MAX_NDEF_SIZE)
+                    {
+                        /* allocate memory, allocated buffer will be returned in NFA_SNEP_PUT_REQ_EVT */
+                        p_data->alloc.p_buff = (UINT8*) nfa_mem_co_alloc (p_data->alloc.ndef_length);
+                    }
 
                     /* store buffer pointer in case of failure in the middle */
                     nfa_snep_default_cb.conn[xx].p_rx_ndef = p_data->alloc.p_buff;
@@ -153,14 +156,14 @@ void nfa_snep_default_service_cback (tNFA_SNEP_EVT event, tNFA_SNEP_EVT_DATA *p_
             {
                 if (!nfa_snep_cb.is_dta_mode)
                 {
-                    nfa_dm_ndef_handle_message (NFA_STATUS_OK, 
-                                                p_data->put_req.p_ndef, 
+                    nfa_dm_ndef_handle_message (NFA_STATUS_OK,
+                                                p_data->put_req.p_ndef,
                                                 p_data->put_req.ndef_length);
                 }
 #if (BT_TRACE_PROTOCOL == TRUE)
                 else
                 {
-                    DispNDEFMsg (p_data->put_req.p_ndef, 
+                    DispNDEFMsg (p_data->put_req.p_ndef,
                                  p_data->put_req.ndef_length, TRUE);
                 }
 #endif
@@ -206,7 +209,7 @@ void nfa_snep_default_service_cback (tNFA_SNEP_EVT event, tNFA_SNEP_EVT_DATA *p_
 ** Function         nfa_snep_start_default_server
 **
 ** Description      Launching default SNEP server
-**                  
+**
 **
 ** Returns          TRUE to deallocate message
 **
@@ -221,7 +224,7 @@ BOOLEAN nfa_snep_start_default_server (tNFA_SNEP_MSG *p_msg)
     {
         msg.server_sap = NFA_SNEP_DEFAULT_SERVER_SAP;
 
-        BCM_STRNCPY_S (msg.service_name, sizeof (msg.service_name), 
+        BCM_STRNCPY_S (msg.service_name, sizeof (msg.service_name),
                       "urn:nfc:sn:snep", LLCP_MAX_SN_LEN);
         msg.service_name[LLCP_MAX_SN_LEN] = 0;
 
@@ -239,7 +242,7 @@ BOOLEAN nfa_snep_start_default_server (tNFA_SNEP_MSG *p_msg)
 ** Function         nfa_snep_stop_default_server
 **
 ** Description      Stoppping default SNEP server
-**                  
+**
 **
 ** Returns          TRUE to deallocate message
 **

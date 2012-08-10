@@ -2,7 +2,7 @@
 **
 **  Name:           nfa_cho_int.h
 **
-**  Description:    This is the private interface file for the NFA Connection 
+**  Description:    This is the private interface file for the NFA Connection
 **                  Handover.
 **
 **  Copyright (c) 2010-2012, Broadcom Corp., All Rights Reserved.

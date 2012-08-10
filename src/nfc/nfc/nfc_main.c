@@ -40,7 +40,7 @@
 #define ce_init()
 #define llcp_init()
 
-#define NFC_SET_MAX_CONN_DEFAULT()    
+#define NFC_SET_MAX_CONN_DEFAULT()
 
 #endif /* NFC_RW_ONLY */
 /****************************************************************************
@@ -358,13 +358,13 @@ void nfc_main_handle_msgs(BT_HDR *p_msg)
 **                  - GKI must be enabled
 **                  - NFC_TASK must be started
 **                  - NCI_TASK must be started (if using dedicated NCI transport)
-**                      
+**
 **                  This function opens the NCI transport (if applicable),
 **                  resets the NFC controller, and initializes the NFC subsystems.
 **
-**                  When the NFC startup procedure is completed, an 
-**                  NFC_ENABLE_REVT is returned to the application using the 
-**                  tNFC_RESPONSE_CBACK. 
+**                  When the NFC startup procedure is completed, an
+**                  NFC_ENABLE_REVT is returned to the application using the
+**                  tNFC_RESPONSE_CBACK.
 **
 ** Returns          tNFC_STATUS
 **
@@ -398,9 +398,9 @@ tNFC_STATUS NFC_Enable (tNFC_RESPONSE_CBACK *p_cback)
 **                  NFC and closes the NCI transport (if using dedicated NCI
 **                  transport).
 **
-**                  When the NFC shutdown procedure is completed, an 
-**                  NFC_DISABLED_REVT is returned to the application using the 
-**                  tNFC_RESPONSE_CBACK. 
+**                  When the NFC shutdown procedure is completed, an
+**                  NFC_DISABLED_REVT is returned to the application using the
+**                  tNFC_RESPONSE_CBACK.
 **
 ** Returns          nothing
 **
@@ -596,8 +596,8 @@ tNFC_STATUS NFC_DiscoveryStart(UINT8                 num_params,
 **
 ** Description      If tNFC_DISCOVER_CBACK reports status=NFC_MULTIPLE_PROT,
 **                  the application needs to use this function to select the
-**                  the logical endpoint to continue. The response from NFCC is 
-**                  reported by tNFC_DISCOVER_CBACK as NFC_SELECT_DEVT. 
+**                  the logical endpoint to continue. The response from NFCC is
+**                  reported by tNFC_DISCOVER_CBACK as NFC_SELECT_DEVT.
 **
 ** Parameters       rf_disc_id - The ID identifies the remote device.
 **                  protocol - the logical endpoint on the remote devide
@@ -757,10 +757,10 @@ tNFC_STATUS NFC_SendData(UINT8       conn_id,
 ** Function         NFC_Deactivate
 **
 ** Description      This function is called to stop the discovery process or
-**                  put the listen device in sleep mode or terminate the NFC link. 
+**                  put the listen device in sleep mode or terminate the NFC link.
 **
 **                  The response from NFCC is reported by tNFC_DISCOVER_CBACK
-**                  as NFC_DEACTIVATE_DEVT. 
+**                  as NFC_DEACTIVATE_DEVT.
 **
 ** Parameters       deactivate_type - NFC_DEACTIVATE_TYPE_IDLE, to IDLE mode.
 **                                    NFC_DEACTIVATE_TYPE_SLEEP to SLEEP mode.
@@ -784,19 +784,18 @@ tNFC_STATUS NFC_Deactivate(tNFC_DEACT_TYPE deactivate_type)
     {
         nfc_set_state (NFC_STATE_CLOSING);
         NFC_TRACE_DEBUG1 ( "act_protocol %d", p_cb->act_protocol);
-        if (p_cb->act_protocol == NCI_PROTOCOL_NFC_DEP)
+        /* notify NCI task to stop sending data */
+        p_msgs = (BT_HDR *) GKI_getbuf(sizeof (tNFC_ACTIVATE_MSGS));
+        if (p_msgs)
         {
-            p_msgs = (BT_HDR *) GKI_getbuf(sizeof (tNFC_ACTIVATE_MSGS));
-            if (p_msgs)
-            {
-                nfc_cb.flags           |= NFC_FL_DEACTIVATING;
-                p_msgs->event           = BT_EVT_TO_NFC_MSGS;
-                p_msgs->layer_specific  = NFC_MSGS_RF_DEACT_CHECK;
-                GKI_send_msg (NCI_TASK, NCI_TASK_MBOX, p_msgs);
-                nfc_cb.deactivate_timer.param = (TIMER_PARAM_TYPE)deactivate_type;
-                nfc_start_timer (&nfc_cb.deactivate_timer , (UINT16)(NFC_TTYPE_WAIT_2_DEACTIVATE), NFC_DEACTIVATE_TIMEOUT);
-                return status;
-            }
+            nfc_cb.flags           |= NFC_FL_DEACTIVATING;
+            p_msgs->event           = BT_EVT_TO_NFC_MSGS;
+            p_msgs->layer_specific  = NFC_MSGS_RF_DEACT_CHECK;
+            p_msgs->offset          = p_cb->act_protocol;
+            GKI_send_msg (NCI_TASK, NCI_TASK_MBOX, p_msgs);
+            nfc_cb.deactivate_timer.param = (TIMER_PARAM_TYPE)deactivate_type;
+            nfc_start_timer (&nfc_cb.deactivate_timer , (UINT16)(NFC_TTYPE_WAIT_2_DEACTIVATE), NFC_DEACTIVATE_TIMEOUT);
+            return status;
         }
     }
     status = nci_snd_deactivate_cmd (deactivate_type);
@@ -808,10 +807,10 @@ tNFC_STATUS NFC_Deactivate(tNFC_DEACT_TYPE deactivate_type)
 ** Function         NFC_UpdateRFCommParams
 **
 ** Description      This function is called to update RF Communication parameters
-**                  once the Frame RF Interface has been activated. 
+**                  once the Frame RF Interface has been activated.
 **
 **                  The response from NFCC is reported by tNFC_RESPONSE_CBACK
-**                  as NFC_RF_COMM_PARAMS_UPDATE_REVT. 
+**                  as NFC_RF_COMM_PARAMS_UPDATE_REVT.
 **
 ** Returns          tNFC_STATUS
 **
@@ -868,7 +867,7 @@ tNFC_STATUS NFC_UpdateRFCommParams (tNFC_RF_COMM_PARAMS *p_params)
 **
 ** Function         NFC_SetPowerOffSleep
 **
-** Description      This function closes/opens transport and turns off/on NFCC. 
+** Description      This function closes/opens transport and turns off/on NFCC.
 **
 ** Returns          tNFC_STATUS
 **
@@ -916,7 +915,7 @@ tNFC_STATUS NFC_SetPowerOffSleep (BOOLEAN enable)
 **
 ** Function         NFC_PowerCycleNFCC
 **
-** Description      This function turns off and then on NFCC. 
+** Description      This function turns off and then on NFCC.
 **
 ** Returns          tNFC_STATUS
 **

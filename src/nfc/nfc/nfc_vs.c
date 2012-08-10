@@ -2,7 +2,7 @@
 **
 **  Name:          nfc_vs.c
 **
-**  Description:   This file contains functions that NCI vendor specific 
+**  Description:   This file contains functions that NCI vendor specific
 **                 interface with the NFCC.
 **                 On the receive side, it routes events to
 **                 the appropriate handler (callback). On the
@@ -78,9 +78,9 @@ tNFC_STATUS NFC_RegVSCback (BOOLEAN          is_register,
 **
 ** Function         NFC_SendVsCommand
 **
-** Description      This function is called to send the given vendor specific 
-**                  command to NFCC. The response from NFCC is reported to the 
-**                  given tNFC_VS_CBACK as (oid).  
+** Description      This function is called to send the given vendor specific
+**                  command to NFCC. The response from NFCC is reported to the
+**                  given tNFC_VS_CBACK as (oid).
 **
 ** Parameters       oid - The opcode of the VS command.
 **                  p_data - The parameters for the VS command

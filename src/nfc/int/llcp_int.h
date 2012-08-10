@@ -13,7 +13,7 @@
 #include "llcp_api.h"
 #include "nfc_api.h"
 
-/* 
+/*
 ** LLCP link states
 */
 enum
@@ -24,14 +24,14 @@ enum
 };
 typedef UINT8 tLLCP_LINK_STATE;
 
-/* 
-** LLCP Symmetric state 
+/*
+** LLCP Symmetric state
 */
 
 #define LLCP_LINK_SYMM_LOCAL_XMIT_NEXT   0
 #define LLCP_LINK_SYMM_REMOTE_XMIT_NEXT  1
 
-/* 
+/*
 ** LLCP link control block
 */
 typedef struct
@@ -78,7 +78,7 @@ typedef struct
 
 } tLLCP_LCB;
 
-/* 
+/*
 ** LLCP Application's registration control block on service access point (SAP)
 */
 
@@ -94,7 +94,7 @@ typedef struct
 
 } tLLCP_APP_CB;
 
-/* 
+/*
 ** LLCP data link connection states
 */
 enum
@@ -108,7 +108,7 @@ enum
 };
 typedef UINT8 tLLCP_DLC_STATE;
 
-/* 
+/*
 ** LLCP data link connection events
 */
 enum
@@ -133,7 +133,7 @@ enum
 };
 typedef UINT8 tLLCP_DLC_EVENT;
 
-/* 
+/*
 ** LLCP data link connection control block
 */
 
@@ -174,7 +174,7 @@ typedef struct
 
 } tLLCP_DLCB;
 
-/* 
+/*
 ** LLCP service discovery control block
 */
 
@@ -192,7 +192,7 @@ typedef struct
 } tLLCP_SDP_CB;
 
 
-/* 
+/*
 ** LLCP control block
 */
 
@@ -211,7 +211,7 @@ typedef struct
     UINT8           max_num_tx_buff;                /* max number of tx UI/I PDU in queue           */
 
     UINT8           num_logical_data_link;          /* number of logical data link                  */
-    UINT8           num_data_link_connection;       /* number of established data link connection   */   
+    UINT8           num_data_link_connection;       /* number of established data link connection   */
 
     /* these two thresholds (number of tx UI PDU) are dynamically adjusted based on number of logical links */
     UINT8           ll_tx_congest_start;            /* congest start threshold for each logical link*/
@@ -225,7 +225,7 @@ typedef struct
     UINT8           ll_tx_uncongest_ntf_start_sap;  /* next start of logical data link              */
     UINT8           dl_tx_uncongest_ntf_start_idx;  /* next start of data link connection           */
 
-    /* 
+    /*
     ** when overall rx link congestion starts, RNR is sent to remote end point of data link connection
     ** while rx link is congested, UI PDU is discarded.
     */
@@ -234,9 +234,9 @@ typedef struct
     UINT8           overall_rx_congest_end;         /* threshold of overall rx congestion end       */
     UINT8           max_num_ll_rx_buff;             /* max number of rx UI PDU in queue             */
 
-    /* 
-    ** threshold (number of rx UI PDU) is dynamically adjusted based on number of logical links 
-    ** when number of rx UI PDU is more than ll_rx_congest_start, the oldest UI PDU is discarded 
+    /*
+    ** threshold (number of rx UI PDU) is dynamically adjusted based on number of logical links
+    ** when number of rx UI PDU is more than ll_rx_congest_start, the oldest UI PDU is discarded
     */
     UINT8           ll_rx_congest_start;            /* rx congest start threshold for each logical link */
 
@@ -244,6 +244,8 @@ typedef struct
     UINT8           total_rx_i_pdu;                 /* total number of rx I PDU in all of i_rx_q    */
     BOOLEAN         overall_rx_congested;           /* TRUE if overall rx link is congested         */
 
+    tLLCP_DTA_CBACK *p_dta_cback;                   /* callback to notify DTA when respoding SNL    */
+    BOOLEAN         dta_snl_resp;                   /* TRUE if need to notify DTA when respoding SNL*/
 } tLLCP_CB;
 
 #if (LLCP_TEST_INCLUDED == TRUE) /* this is for LLCP testing */
@@ -260,7 +262,7 @@ extern "C" {
 #endif
 
 
-/* 
+/*
 ** LLCP global data
 */
 
@@ -271,14 +273,14 @@ LLCP_API extern tLLCP_CB *llcp_cb_ptr;
 #define llcp_cb (*llcp_cb_ptr)
 #endif
 
-/* 
+/*
 ** Functions provided by llcp_main.c
 */
 void llcp_init (void);
 void llcp_cleanup (void);
 void llcp_process_timeout (TIMER_LIST_ENT *p_tle);
 
-/* 
+/*
 ** Functions provided by llcp_link.c
 */
 tLLCP_STATUS llcp_link_activate (tLLCP_ACTIVATE_CONFIG *p_config);
@@ -288,7 +290,7 @@ void llcp_link_deactivate (UINT8 reason);
 void llcp_link_check_send_data (void);
 void llcp_link_connection_cback (UINT8 conn_id, tNFC_CONN_EVT event, tNFC_CONN *p_data);
 
-/* 
+/*
 **  Functions provided by llcp_util.c
 */
 void         llcp_util_adjust_ll_congestion (void);
@@ -308,7 +310,7 @@ void         llcp_util_build_info_pdu (tLLCP_DLCB *p_dlcb, BT_HDR *p_msg);
 tLLCP_STATUS llcp_util_send_frmr (tLLCP_DLCB *p_dlcb, UINT8 flags, UINT8 ptype, UINT8 sequence);
 void         llcp_util_send_rr_rnr (tLLCP_DLCB *p_dlcb);
 tLLCP_APP_CB *llcp_util_get_app_cb (UINT8 sap);
-/* 
+/*
 ** Functions provided by llcp_dlc.c
 */
 tLLCP_STATUS llcp_dlsm_execute (tLLCP_DLCB *p_dlcb, tLLCP_DLC_EVENT event, void *p_data);
@@ -321,7 +323,7 @@ BOOLEAN      llcp_dlc_is_rw_open (tLLCP_DLCB *p_dlcb);
 BT_HDR      *llcp_dlc_get_next_pdu (tLLCP_DLCB *p_dlcb);
 UINT16       llcp_dlc_get_next_pdu_length (tLLCP_DLCB *p_dlcb);
 
-/* 
+/*
 ** Functions provided by llcp_sdp.c
 */
 void         llcp_sdp_proc_data (tLLCP_SAP_CBACK_DATA *p_data);

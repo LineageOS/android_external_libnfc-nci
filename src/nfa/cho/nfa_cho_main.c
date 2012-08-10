@@ -38,10 +38,10 @@ static void nfa_cho_sys_disable (void);
 /*****************************************************************************
 **  Constants
 *****************************************************************************/
-static const tNFA_SYS_REG nfa_cho_sys_reg = 
+static const tNFA_SYS_REG nfa_cho_sys_reg =
 {
     NULL,
-    nfa_cho_evt_hdlr, 
+    nfa_cho_evt_hdlr,
     nfa_cho_sys_disable,
     NULL
 };
@@ -51,7 +51,7 @@ static const tNFA_SYS_REG nfa_cho_sys_reg =
 ** Function         nfa_cho_timer_cback
 **
 ** Description      Process timeout event when timer expires
-**                  
+**
 **
 ** Returns          None
 **
@@ -66,7 +66,7 @@ static void nfa_cho_timer_cback (void *p_tle)
 ** Function         nfa_cho_init
 **
 ** Description      Initialize NFA Connection Handover
-**                  
+**
 **
 ** Returns          None
 **
@@ -100,7 +100,7 @@ void nfa_cho_init (void)
 ** Function         nfa_cho_sys_disable
 **
 ** Description      Deregister NFA Connection Handover from NFA SYS/DM
-**                  
+**
 **
 ** Returns          None
 **
@@ -124,7 +124,7 @@ static void nfa_cho_sys_disable (void)
 ** Function         nfa_cho_evt_hdlr
 **
 ** Description      Processing event for NFA Connection Handover
-**                  
+**
 **
 ** Returns          TRUE if p_msg needs to be deallocated
 **

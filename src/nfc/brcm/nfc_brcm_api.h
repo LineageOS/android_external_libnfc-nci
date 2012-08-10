@@ -1,7 +1,7 @@
 /****************************************************************************
-** 
+**
 ** Name:         nfc_brcm_api.h
-** 
+**
 ** Description:  Broadcom specific NFC API function external definitions.
 **
 ** Copyright (c) 2009-2012, BROADCOM Inc., All Rights Reserved.
@@ -18,14 +18,14 @@
 /*****************************************************************************
 ** Broadcom-specific events for tNFC_RESPONSE_CBACK
 *****************************************************************************/
-enum 
+enum
 {
     NFC_FIRMWARE_BUILD_INFO_REVT = NFC_FIRST_VS_REVT
 };
 
 /* Definitions for NFC_FIRMWARE_BUILD_INFO_REVT */
 #define BRCM_FW_PATCH_CHIP_VER_MAXLEN       16
-typedef struct 
+typedef struct
 {
     UINT16      project_id;
     UINT8       rfu;
@@ -44,7 +44,7 @@ typedef struct
 #define BRCM_FW_BUILD_INFO_DATE_LEN         11
 #define BRCM_FW_BUILD_INFO_TIME_LEN         8
 #define BRCM_FW_BUILD_INFO_CHIP_ID_MAXLEN   64
-typedef struct 
+typedef struct
 {
     tNFC_STATUS status;
     UINT8       date[BRCM_FW_BUILD_INFO_DATE_LEN+1];
@@ -57,19 +57,19 @@ typedef struct
     UINT8       chip_id[BRCM_FW_BUILD_INFO_CHIP_ID_MAXLEN+1];
 
     /* Patch info (not valid for hwt=20791B02) */
-    tNFC_BRCM_FW_PATCH_INFO patch;         
+    tNFC_BRCM_FW_PATCH_INFO patch;
 } tNFC_BRCM_FW_BUILD_INFO;
 
 /* Data types for BRCM-specific tNFC_RESPONSE_CBACK event notification */
 /* Dereference using tNFC_RESPONSE->p_vs_data                          */
-typedef union 
+typedef union
 {
     tNFC_BRCM_FW_BUILD_INFO fw_build_info;
 } tNFC_BRCM_RESPONSE;
 
 /*****************************************************************************
-** Bluetooth Vendor specific command complete callback 
-** Structure returned with Vendor Specific Command complete callback 
+** Bluetooth Vendor specific command complete callback
+** Structure returned with Vendor Specific Command complete callback
 *****************************************************************************/
 typedef struct
 {
@@ -81,7 +81,7 @@ typedef struct
 typedef void (tNFC_BTVSC_CPLT_CBACK) (tNFC_BTVSC_CPLT *p1);
 
 /* Header for HCI BT VSC */
-typedef struct 
+typedef struct
 {
     BT_HDR                bt_hdr;
     tNFC_BTVSC_CPLT_CBACK *p_cback;     /* Callback for BT VSC complete */
@@ -107,7 +107,7 @@ typedef struct
 #define NCI_MSG_GET_NFCEE_INFO          0x0E
 #define NCI_MSG_DISABLE_INIT_CHECK      0x0F
 #define NCI_MSG_ANTENNA_SELF_TEST       0x10
-#define NCI_MSG_WI_COMM                 0x11
+#define NCI_MSG_SET_MAX_PKT_SIZE        0x11
 #define NCI_MSG_NCIP_CLK_REQ_OR_CAR_DET 0x12
 #define NCI_MSG_NCIP_CONFIG_DBUART      0x13
 #define NCI_MSG_NCIP_ENABLE_DVT_DRIVER  0x14
@@ -165,8 +165,8 @@ typedef struct
 /* The event is (NCI_NTF_BIT|oid) or (NCI_RSP_BIT|oid) */
 #define NFC_VS_HCI_NETWK_EVT            (NCI_NTF_BIT|NCI_MSG_HCI_NETWK)
 #define NFC_VS_HCI_NETWK_RSP            (NCI_RSP_BIT|NCI_MSG_HCI_NETWK)
-#define NFC_VS_UICC_READER_ACTION_EVT   (NCI_NTF_BIT|NCI_MSG_UICC_READER_ACTION)      
-#define NFC_VS_POWER_LEVEL_RSP          (NCI_RSP_BIT|NCI_MSG_POWER_LEVEL)      
+#define NFC_VS_UICC_READER_ACTION_EVT   (NCI_NTF_BIT|NCI_MSG_UICC_READER_ACTION)
+#define NFC_VS_POWER_LEVEL_RSP          (NCI_RSP_BIT|NCI_MSG_POWER_LEVEL)
 #define NFC_VS_GET_NV_DEVICE_EVT        (NCI_RSP_BIT|NCI_MSG_GET_NV_DEVICE)
 #define NFC_VS_LPTD_EVT                 (NCI_NTF_BIT|NCI_MSG_LPTD)
 #define NFC_VS_GET_BUILD_INFO_EVT       (NCI_RSP_BIT|NCI_MSG_GET_BUILD_INFO)
@@ -306,6 +306,7 @@ typedef struct
  **********************************************/
 #define NCI_PARAM_LEN_PWR_SETTING_BITMAP    3
 #define NCI_PARAM_LEN_HOST_LISTEN_MASK      2
+#define NCI_PARAM_LEN_PLL325_CFG_PARAM      14
 
 /*****************************************************************************
 **  Low Power Mode definitions
@@ -350,9 +351,9 @@ typedef void (tBRCM_PRM_CBACK) (UINT8 event);
 #define BRCM_PRM_FORMAT_NCD  0x02
 typedef UINT8 tBRCM_PRM_FORMAT;
 
-/* 
-** Callback function for application to start device initialization 
-** When platform-specific initialization is completed, 
+/*
+** Callback function for application to start device initialization
+** When platform-specific initialization is completed,
 ** NCI_BrcmDevInitDone() must be called to proceed with stack start up.
 */
 
@@ -363,7 +364,7 @@ typedef void (tBRCM_DEV_INIT_CBACK) (UINT32 brcm_hw_id);
 *****************************/
 enum
 {
-    /* Note: the order of these events can not be changed. 
+    /* Note: the order of these events can not be changed.
      * If new events are needed, add them after CE_T1T_SETMEM_HR_EVT */
     CE_T1T_SETMEM_HR_EVT = CE_T1T_FIRST_EVT,
     CE_T1T_NDEF_UPDATE_START_EVT,
@@ -377,6 +378,33 @@ enum
     CE_T2T_MAX_EVT
 };
 
+/* Crystal Frequency Index (in 1 KHz) */
+enum
+{
+    BRCM_XTAL_INDEX_9600,
+    BRCM_XTAL_INDEX_13000,
+    BRCM_XTAL_INDEX_16200,
+    BRCM_XTAL_INDEX_19200,
+    BRCM_XTAL_INDEX_24000,
+    BRCM_XTAL_INDEX_26000,
+    BRCM_XTAL_INDEX_38400,
+    BRCM_XTAL_INDEX_52000,
+    BRCM_XTAL_INDEX_37400,
+    BRCM_XTAL_INDEX_MAX
+};
+
+/* Broadcom specific device initialization before sending NCI reset */
+#define BRCM_DEV_INIT_FLAGS_AUTO_BAUD      0x01    /* UART auto baud detection */
+#define BRCM_DEV_INIT_FLAGS_SET_XTAL_FREQ  0x02    /* set crystal frequency    */
+typedef UINT8 tBRCM_DEV_INIT_FLAGS;
+
+typedef struct
+{
+    tBRCM_DEV_INIT_FLAGS    flags;
+    UINT16                  xtal_freq;
+} tBRCM_DEV_INIT_CONFIG;
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -389,13 +417,19 @@ extern "C" {
 ** Function         NFC_BrcmInit
 **
 ** Description      This function initializes Broadcom specific control blocks for NFC
-**                  and registers a callback to be called after the NFCC is reset, 
+**                  and registers a callback to be called after the NFCC is reset,
 **                  to perform any platform-specific initialization (e.g. patch download).
+**
+**                  tBRCM_DEV_INIT_CONFIG
+**                      BRCM_DEV_INIT_FLAGS_AUTO_BAUD     : UART auto baud detection
+**                      BRCM_DEV_INIT_FLAGS_SET_XTAL_FREQ : set crystal frequency
+**                      xtal_freq : crystal frequency in KHz
 **
 ** Returns          void
 **
 *******************************************************************************/
-NFC_API extern void NFC_BrcmInit (tBRCM_DEV_INIT_CBACK *p_dev_init_cback);
+NFC_API extern void NFC_BrcmInit (tBRCM_DEV_INIT_CONFIG *p_dev_init_config,
+                                  tBRCM_DEV_INIT_CBACK  *p_dev_init_cback);
 
 /*******************************************************************************
 **
@@ -426,11 +460,11 @@ NFC_API extern tNFC_STATUS NFC_BrcmGetFirmwareBuildInfo(void);
 ** Function         NFC_UpdateBaudRate
 **
 ** Description      Reconfigure controller's NCI transport baud rate.
-**                  Only used for dedicated transport; for shared BT/NFC 
+**                  Only used for dedicated transport; for shared BT/NFC
 **                  transport, the baud rate is controlled by BT.
 **
 **                  Upon success notification, the host must reconfigure
-**                  its baud rate to match the controller baud rate.  
+**                  its baud rate to match the controller baud rate.
 **
 ** Returns          tNFC_STATUS
 **
@@ -447,8 +481,8 @@ NFC_API extern tNFC_STATUS NFC_UpdateBaudRate (UINT32               baud,
 ** Returns          tNFC_STATUS
 **
 *******************************************************************************/
-NFC_API extern tNFC_STATUS NFC_SendBtVsCommand (UINT16 opcode, 
-                                                UINT8  param_len, 
+NFC_API extern tNFC_STATUS NFC_SendBtVsCommand (UINT16 opcode,
+                                                UINT8  param_len,
                                                 UINT8 *p_param,
                                                 tNFC_BTVSC_CPLT_CBACK *p_cback);
 
@@ -456,7 +490,7 @@ NFC_API extern tNFC_STATUS NFC_SendBtVsCommand (UINT16 opcode,
 **
 ** Function         CE_BrcmSetActivatedTagType
 **
-** Description      This function selects the tag type for Reader/Writer mode.  
+** Description      This function selects the tag type for Reader/Writer mode.
 **
 ** Returns          tNFC_STATUS
 **
@@ -471,7 +505,7 @@ NFC_API extern tNFC_STATUS CE_BrcmSetActivatedTagType (tNFC_ACTIVATE_DEVT *p_act
 **
 ** Function         NCI_BrcmEnableSnoozeMode
 **
-** Description      Notify NCI transport that snooze mode has been enabled. 
+** Description      Notify NCI transport that snooze mode has been enabled.
 **
 ** Returns          tNFC_STATUS
 **
@@ -482,7 +516,7 @@ NFC_API extern tNFC_STATUS NCI_BrcmEnableSnoozeMode (UINT8 nfc_wake_active_mode)
 **
 ** Function         NCI_BrcmDisableSnoozeMode
 **
-** Description      Notify NCI transport that snooze mode has been disabled.  
+** Description      Notify NCI transport that snooze mode has been disabled.
 **
 ** Returns          tNFC_STATUS
 **
@@ -497,7 +531,7 @@ NFC_API extern tNFC_STATUS NCI_BrcmDisableSnoozeMode (void);
 **
 **                  The following event may be returned
 **                      CE_T1T_NDEF_UPDATE_CPLT_EVT for complete update
-**                  
+**
 **                  read_only:      TRUE if read only
 **                  ndef_msg_max:   Max NDEF message size
 **                  ndef_msg_len:   NDEF message size
@@ -507,16 +541,16 @@ NFC_API extern tNFC_STATUS NCI_BrcmDisableSnoozeMode (void);
 **                  uid_len:        UID size
 **                  p_uid:          UID
 **
-**                  If the NDEF Message size is less than or equal to 86 bytes, 
+**                  If the NDEF Message size is less than or equal to 86 bytes,
 **                  the tag is configured as static memory structure tag.
-**                  However based on Max NDEF size, one or more static lock 
-**                  bits will get set. 
-**                  If the size is more than 86 bytes, the tag is configured as 
+**                  However based on Max NDEF size, one or more static lock
+**                  bits will get set.
+**                  If the size is more than 86 bytes, the tag is configured as
 **                  dynamic memory structure tag. Based on Max NDEF size one or
 **                  more Dynamic and static lock bits will get set.
 **
 **                  uid_len value will be ignored if p_uid is set to NULL
-**                  
+**
 ** Returns          NFC_STATUS_OK if successfully initiated to set NDEF
 **                  NFC_STATUS_BUSY,if busy updating/reading NDEF from controller
 **                  NFC_STATUS_FAILED otherwise
@@ -539,7 +573,7 @@ NFC_API extern tNFC_STATUS CE_T1tSetLocalNDEFMsg (BOOLEAN    read_only,
 **
 **                  The following event may be returned
 **                      CE_T2T_NDEF_UPDATE_CPLT_EVT for complete update
-**                  
+**
 **                  read_only:      TRUE if read only
 **                  ndef_msg_max:   Max NDEF message size
 **                  ndef_msg_len:   NDEF message size
@@ -549,11 +583,11 @@ NFC_API extern tNFC_STATUS CE_T1tSetLocalNDEFMsg (BOOLEAN    read_only,
 **                  uid_len:        UID size
 **                  p_uid:          UID
 **
-**                  If the NDEF Message size is less than 46 bytes, the tag 
-**                  is configured as static memory structure tag. 
-**                  However based on Max NDEF size, one or more static lock 
-**                  bits will get set. 
-**                  If the size is more than 46 bytes, the tag is configured as 
+**                  If the NDEF Message size is less than 46 bytes, the tag
+**                  is configured as static memory structure tag.
+**                  However based on Max NDEF size, one or more static lock
+**                  bits will get set.
+**                  If the size is more than 46 bytes, the tag is configured as
 **                  dynamic memory structure tag. Based on Max NDEF size one or
 **                  more Dynamic and static lock bits will get set.
 **
@@ -582,14 +616,14 @@ NFC_API extern tNFC_STATUS CE_T2tSetLocalNDEFMsg (BOOLEAN    read_only,
 ** Returns          void
 **
 *******************************************************************************/
-NFC_API extern void NCI_BrcmSetBaudRate (UINT8             userial_baud_rate, 
+NFC_API extern void NCI_BrcmSetBaudRate (UINT8             userial_baud_rate,
                                          tNFC_STATUS_CBACK *p_update_baud_cback);
 
 /*******************************************************************************
 **
 ** Function         NCI_BrcmDevInitDone
 **
-** Description      Notify NCI transport that device is initialized 
+** Description      Notify NCI transport that device is initialized
 **
 ** Returns          void
 **
@@ -606,11 +640,11 @@ NFC_API extern void NCI_BrcmDevInitDone (void);
 ** Description      Initiate patch download
 **
 ** Input Params
-**                  format_type     patch format type (HCI or BIN) 
+**                  format_type     patch format type (HCI or BIN)
 **
 **                  dest_address    destination adderess (needed for BIN format only)
 **
-**                  p_patchram_buf  pointer to patchram buffer. If NULL, 
+**                  p_patchram_buf  pointer to patchram buffer. If NULL,
 **                                  then app must call PRM_DownloadContinue when
 **                                  PRM_CONTINUE_EVT is received, to send the next
 **                                  segment of patchram
@@ -621,7 +655,7 @@ NFC_API extern void NCI_BrcmDevInitDone (void);
 **
 **
 ** Returns          TRUE if successful, otherwise FALSE
-**                  
+**
 **
 *******************************************************************************/
 EXPORT_API extern BOOLEAN PRM_DownloadStart (tBRCM_PRM_FORMAT format_type,
@@ -639,10 +673,10 @@ EXPORT_API extern BOOLEAN PRM_DownloadStart (tBRCM_PRM_FORMAT format_type,
 **
 **                  Only needed if PRM_DownloadStart was called with
 **                  p_patchram_buf=NULL
-**                  
+**
 ** Input Params     p_patch_data    pointer to patch data
 **                  patch_data_len  patch data len
-**                  
+**
 ** Returns          TRUE if successful, otherwise FALSE
 **
 *******************************************************************************/
@@ -660,7 +694,7 @@ EXPORT_API extern BOOLEAN PRM_DownloadContinue (UINT8 *p_patch_data,
 **
 **                  (Note: not needed if using .hcd patches with LAUNCH_RAM
 **                  embedded in the .hcd file)
-**                 
+**
 **
 ** Input Param      None
 **
@@ -680,10 +714,10 @@ EXPORT_API extern BOOLEAN PRM_LaunchRam (void);
 **
 ** Input Params     p_i2c_patchfile_buf: pointer to patch for i2c fix
 **                  i2c_patchfile_len: length of patch
-**                  
+**
 **
 ** Returns          Nothing
-**                  
+**
 **
 *******************************************************************************/
 EXPORT_API extern void PRM_SetI2cPatch (UINT8 *p_i2c_patchfile_buf, UINT16 i2c_patchfile_len);
@@ -695,7 +729,7 @@ EXPORT_API extern void PRM_SetI2cPatch (UINT8 *p_i2c_patchfile_buf, UINT16 i2c_p
 ** Description      Set Host-to-NFCC NCI message size for secure patch download
 **
 **                  This API must be called before calling PRM_DownloadStart.
-**                  If the API is not called, then PRM will use the default 
+**                  If the API is not called, then PRM will use the default
 **                  message size.
 **
 **                  Typically, this API is only called for platforms that have
@@ -705,7 +739,7 @@ EXPORT_API extern void PRM_SetI2cPatch (UINT8 *p_i2c_patchfile_buf, UINT16 i2c_p
 **
 ** Returns          NFC_STATUS_OK if successful
 **                  NFC_STATUS_INVALID_PARAM otherwise
-**                  
+**
 **
 *******************************************************************************/
 EXPORT_API extern tNFC_STATUS PRM_SetSpdNciCmdPayloadSize (UINT8 max_payload_size);

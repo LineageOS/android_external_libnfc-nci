@@ -1,9 +1,9 @@
 /****************************************************************************
-** 
+**
 **  File:        nfc_int.h
 **
 **  Description:   this file contains the main NFC Upper Layer
-**                 internal definitions and functions.                   
+**                 internal definitions and functions.
 **
 **  Copyright (c) 2009-2012, Broadcom Corp., All Rights Reserved.
 **  Broadcom Bluetooth Core. Proprietary and confidential.
@@ -92,7 +92,7 @@ typedef UINT8 tNFC_STATE;
 /* only allow the entries that the NFCC can support */
 #define NFC_CHECK_MAX_CONN()    { if (max > nfc_cb.max_conn) max = nfc_cb.max_conn;}
 #else
-#define NFC_CHECK_MAX_CONN()    
+#define NFC_CHECK_MAX_CONN()
 #endif
 
 typedef struct
@@ -193,7 +193,7 @@ NFC_API extern tNFC_CB *nfc_cb_ptr;
 #endif
 
 /****************************************************************************
-** Internal nfc functions 
+** Internal nfc functions
 ****************************************************************************/
 
 NFC_API extern void nfc_init(void);
@@ -257,7 +257,7 @@ void nfc_start_timer (TIMER_LIST_ENT *p_tle, UINT16 type, UINT32 timeout);
 UINT32 nfc_remaining_time (TIMER_LIST_ENT *p_tle);
 void nfc_stop_timer (TIMER_LIST_ENT *p_tle);
 
-void nfc_start_quick_timer (TIMER_LIST_ENT *p_tle, UINT16 type, UINT32 timeout); 
+void nfc_start_quick_timer (TIMER_LIST_ENT *p_tle, UINT16 type, UINT32 timeout);
 void nfc_stop_quick_timer (TIMER_LIST_ENT *p_tle);
 void nfc_process_quick_timer_evt (void);
 #ifdef __cplusplus

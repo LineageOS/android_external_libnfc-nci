@@ -60,7 +60,7 @@ typedef UINT8 tNFA_EE_INTERFACE;
 typedef UINT8 tNFA_EE_TAG;
 
 /* for NFA_EeModeSet () */
-#define NFA_EE_MD_ACTIVATE          NFC_MODE_ACTIVATE  
+#define NFA_EE_MD_ACTIVATE          NFC_MODE_ACTIVATE
 #define NFA_EE_MD_DEACTIVATE        NFC_MODE_DEACTIVATE
 typedef UINT8 tNFA_EE_MD;
 
@@ -125,7 +125,7 @@ typedef union
     tNFA_NFC_PROTOCOL   protocol;   /* NFA_EE_TRGR_RF_PROTOCOL: the protocol that triggers this event */
     tNFC_RF_TECH        technology; /* NFA_EE_TRGR_RF_TECHNOLOGY:the technology that triggers this event */
     tNFC_AID            aid;        /* NFA_EE_TRGR_SELECT      : the AID in the received SELECT AID command */
-    tNFC_APP_INIT       app_init;   /* NFA_EE_TRGR_APP_INIT:     The information for the application initiated trigger */ 
+    tNFC_APP_INIT       app_init;   /* NFA_EE_TRGR_APP_INIT:     The information for the application initiated trigger */
 } tNFA_EE_ACTION_PARAM;
 
 typedef struct
@@ -201,7 +201,7 @@ extern "C"
 **
 **                  This function may be called when a system supports removable
 **                  NFCEEs,
-**                  
+**
 ** Returns          NFA_STATUS_OK if information is retrieved successfully
 **                  NFA_STATUS_FAILED If wrong state (retry later)
 **                  NFA_STATUS_INVALID_PARAM If bad parameter
@@ -216,7 +216,7 @@ NFC_API extern tNFA_STATUS NFA_EeDiscover (tNFA_EE_CBACK *p_cback);
 ** Description      This function retrieves the NFCEE information from NFA.
 **                  The actual number of NFCEE is returned in p_num_nfcee
 **                  and NFCEE information is returned in p_info
-**                  
+**
 ** Returns          NFA_STATUS_OK if information is retrieved successfully
 **                  NFA_STATUS_FAILED If wrong state (retry later)
 **                  NFA_STATUS_INVALID_PARAM If bad parameter
@@ -231,7 +231,7 @@ NFC_API extern tNFA_STATUS NFA_EeGetInfo (UINT8        *p_num_nfcee,
 **
 ** Description      This function registers a callback function to receive the
 **                  events from NFA-EE module.
-**                  
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_FAILED otherwise
 **                  NFA_STATUS_INVALID_PARAM If bad parameter
@@ -244,7 +244,7 @@ NFC_API extern tNFA_STATUS NFA_EeRegister (tNFA_EE_CBACK *p_cback);
 ** Function         NFA_EeDeregister
 **
 ** Description      This function de-registers the callback function
-**                  
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_FAILED otherwise
 **                  NFA_STATUS_INVALID_PARAM If bad parameter
@@ -258,9 +258,9 @@ NFC_API extern tNFA_STATUS NFA_EeDeregister (tNFA_EE_CBACK *p_cback);
 **
 ** Description      This function is called to activate (mode = NFA_EE_MD_ACTIVATE)
 **                  or deactivate (mode = NFA_EE_MD_DEACTIVATE) the NFCEE
-**                  identified by the given ee_handle. The result of this 
+**                  identified by the given ee_handle. The result of this
 **                  operation is reported with the NFA_EE_MODE_SET_EVT.
-**                  
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_FAILED otherwise
 **                  NFA_STATUS_INVALID_PARAM If bad parameter
@@ -274,7 +274,7 @@ NFC_API extern tNFA_STATUS NFA_EeModeSet (tNFA_HANDLE    ee_handle,
 **
 ** Function         NFA_EeSetDefaultTechRouting
 **
-** Description      This function is called to add, change or remove the 
+** Description      This function is called to add, change or remove the
 **                  default routing based on RF technology in the listen mode
 **                  routing table for the given ee_handle. The status of this
 **                  operation is reported as the NFA_EE_SET_TECH_CFG_EVT.
@@ -303,7 +303,7 @@ NFC_API extern tNFA_STATUS NFA_EeSetDefaultTechRouting (tNFA_HANDLE          ee_
 **                  default routing based on Protocol in the listen mode routing
 **                  table for the given ee_handle. The status of this
 **                  operation is reported as the NFA_EE_SET_PROTO_CFG_EVT.
-**                  
+**
 ** Note:            If RF discovery is started, NFA_StopRfDiscovery()/NFA_RF_DISCOVERY_STOPPED_EVT
 **                  should happen before calling this function
 **
@@ -324,10 +324,10 @@ NFC_API extern tNFA_STATUS NFA_EeSetDefaultProtoRouting (tNFA_HANDLE         ee_
 **
 ** Function         NFA_EeAddAidRouting
 **
-** Description      This function is called to add an AID entry in the 
+** Description      This function is called to add an AID entry in the
 **                  listen mode routing table in NFCC. The status of this
-**                  operation is reported as the NFA_EE_ADD_AID_EVT. 
-**                  
+**                  operation is reported as the NFA_EE_ADD_AID_EVT.
+**
 ** Note:            If RF discovery is started, NFA_StopRfDiscovery()/NFA_RF_DISCOVERY_STOPPED_EVT
 **                  should happen before calling this function
 **
@@ -340,7 +340,7 @@ NFC_API extern tNFA_STATUS NFA_EeSetDefaultProtoRouting (tNFA_HANDLE         ee_
 **
 *******************************************************************************/
 NFC_API extern tNFA_STATUS NFA_EeAddAidRouting (tNFA_HANDLE          ee_handle,
-                                                UINT8                aid_len, 
+                                                UINT8                aid_len,
                                                 UINT8               *p_aid,
                                                 tNFA_EE_PWR_STATE    power_state);
 
@@ -348,11 +348,11 @@ NFC_API extern tNFA_STATUS NFA_EeAddAidRouting (tNFA_HANDLE          ee_handle,
 **
 ** Function         NFA_EeRemoveAidRouting
 **
-** Description      This function is called to remove the given AID entry from the 
-**                  listen mode routing table. If the entry configures VS, 
-**                  it is also removed. The status of this operation is reported 
+** Description      This function is called to remove the given AID entry from the
+**                  listen mode routing table. If the entry configures VS,
+**                  it is also removed. The status of this operation is reported
 **                  as the NFA_EE_REMOVE_AID_EVT.
-**                  
+**
 ** Note:            If RF discovery is started, NFA_StopRfDiscovery()/NFA_RF_DISCOVERY_STOPPED_EVT
 **                  should happen before calling this function
 **
@@ -373,7 +373,7 @@ NFC_API extern tNFA_STATUS NFA_EeRemoveAidRouting (UINT8     aid_len,
 **
 ** Description      This function is called to send the current listen mode
 **                  routing table and VS configuration to the NFCC
-**                  
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_FAILED otherwise
 **
@@ -405,7 +405,7 @@ NFC_API extern tNFA_STATUS NFA_EeConnect (tNFA_HANDLE    ee_handle,
 ** Description      Send data to the given NFCEE.
 **                  This function shall be called after NFA_EE_CONNECT_EVT is reported
 **                  and before NFA_EeDisconnect is called on the given ee_handle.
-**                  
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_FAILED otherwise
 **                  NFA_STATUS_INVALID_PARAM If bad parameter
@@ -422,7 +422,7 @@ NFC_API extern tNFA_STATUS NFA_EeSendData (tNFA_HANDLE  ee_handle,
 ** Description      Disconnect (if a connection is currently open) from an
 **                  NFCEE interface. The result of this operation is reported
 **                  with the NFA_EE_DISCONNECT_EVT.
-**                  
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_FAILED otherwise
 **                  NFA_STATUS_INVALID_PARAM If bad parameter

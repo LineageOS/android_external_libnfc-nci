@@ -46,7 +46,7 @@ static void nfa_hci_brcm_init_complete (tNFA_STATUS status);
 ** Function         nfa_hci_brcm_evt_hdlr
 **
 ** Description      Processing event for NFA HCI
-**                  
+**
 ** Returns          None
 **
 *******************************************************************************/
@@ -58,7 +58,7 @@ static void nfa_hci_brcm_evt_hdlr (tNFA_HCI_EVENT_DATA *p_evt_data)
     UINT8               nfcee_id;
     UINT8               count = 0;
     UINT8               active_host_bit_mask = 0;
-
+    UINT8               nci_pkt_size = NFC_BrcmGetNciPktSize ();
 
     switch (p_evt_data->hdr.event)
     {
@@ -113,6 +113,9 @@ static void nfa_hci_brcm_evt_hdlr (tNFA_HCI_EVENT_DATA *p_evt_data)
         break;
 
     case NFA_HCI_HCP_CONN_CREATE_EVT:
+        if (nfa_hci_cb.buff_size > nci_pkt_size)
+            nfa_hci_cb.buff_size = nci_pkt_size;
+
         break;
 
     default:
@@ -126,7 +129,7 @@ static void nfa_hci_brcm_evt_hdlr (tNFA_HCI_EVENT_DATA *p_evt_data)
 **
 ** Description      Program nv data on to controller
 **
-** Returns          void                 
+** Returns          void
 **
 *******************************************************************************/
 void nfa_hci_brcm_enable (void)
@@ -151,7 +154,7 @@ void nfa_hci_brcm_enable (void)
 **
 ** Description      Initialize the Broadcom control block for NFA-HCI
 **
-** Returns          void                 
+** Returns          void
 **
 *******************************************************************************/
 void nfa_hci_brcm_init (void)
@@ -161,7 +164,7 @@ void nfa_hci_brcm_init (void)
     nfa_brcm_cb.p_hci_netwk_dh_info_buf = NULL;
     nfa_brcm_cb.hci_netwk_config_block = 0;
     nfa_hci_cb.w4_vsc_init = TRUE;
-    nfa_hci_cb.p_vs_evt_hdlr  = nfa_hci_brcm_evt_hdlr; 
+    nfa_hci_cb.p_vs_evt_hdlr  = nfa_hci_brcm_evt_hdlr;
 }
 
 /*******************************************************************************
@@ -171,7 +174,7 @@ void nfa_hci_brcm_init (void)
 ** Description      Initialize BRCM HCI control block
 **                  Initialize BRCM NFCC with VS configuration and CMD
 **
-** Returns          void                 
+** Returns          void
 **
 *******************************************************************************/
 void nfa_hci_brcm_proc_nfcc_power_mode (UINT8 nfcc_power_mode)
@@ -220,7 +223,7 @@ void nfa_hci_handle_hci_netwk_info (UINT8 *p_data)
     NFA_TRACE_DEBUG0 ("nfa_hci_handle_hci_netwk_info()");
 
     /* skip NCI header byte0 (MT,GID), byte1 (OID) */
-    p += 2; 
+    p += 2;
 
     STREAM_TO_UINT8 (data_len, p);
     target_handle = *(UINT8 *) p;
@@ -245,7 +248,7 @@ void nfa_hci_handle_hci_netwk_info (UINT8 *p_data)
 ** Function         nfa_hci_brcm_handle_nv_read
 **
 ** Description      handler function for nv read complete event
-**                  
+**
 ** Returns          None
 **
 *******************************************************************************/
@@ -299,7 +302,7 @@ void nfa_hci_brcm_handle_nv_read (UINT8 block, tNFA_STATUS status, UINT16 size)
         }
     }
     else if (  (status == NFA_STATUS_OK)
-             &&(block == HC_DH_NV_BLOCK) 
+             &&(block == HC_DH_NV_BLOCK)
              &&(size <= sizeof (tNCI_HCI_NETWK_DH))
              &&(nfa_brcm_cb.p_hci_netwk_dh_info_buf) )
     {
@@ -337,7 +340,7 @@ void nfa_hci_brcm_handle_nv_read (UINT8 block, tNFA_STATUS status, UINT16 size)
 ** Function         nfa_hci_brcm_init_complete
 **
 ** Description      Notify VSC initialization is complete
-**                  
+**
 ** Returns          None
 **
 *******************************************************************************/
@@ -374,7 +377,7 @@ void nfa_hci_brcm_init_complete (tNFA_STATUS status)
 ** Function         nfa_hci_set_next_hci_netwk_config
 **
 ** Description      set next hci network configuration
-**                  
+**
 ** Returns          None
 **
 *******************************************************************************/
@@ -423,7 +426,7 @@ void nfa_hci_set_next_hci_netwk_config (UINT8 block)
 **
 ** Function         nfa_hci_vsc_cback
 **
-** Description      process VS callback event from stack  
+** Description      process VS callback event from stack
 **
 ** Returns          none
 **
@@ -432,7 +435,7 @@ void nfa_hci_vsc_cback (tNFC_VS_EVT event, UINT16 data_len, UINT8 *p_data)
 {
     UINT8 *p_ret = NULL;
     UINT8 status;
-    
+
     p_ret  = p_data + NCI_MSG_HDR_SIZE;
     status = *p_ret;
 
@@ -459,7 +462,7 @@ void nfa_hci_vsc_cback (tNFC_VS_EVT event, UINT16 data_len, UINT8 *p_data)
 **
 ** Function         NFA_HciAddStaticPipe
 **
-** Description      This function is called to add a static pipe for sending 
+** Description      This function is called to add a static pipe for sending
 **                  7816 APDUs.
 **
 ** Returns          NFA_STATUS_OK if successfully added
@@ -482,7 +485,7 @@ tNFA_STATUS NFA_HciAddStaticPipe (tNFA_HANDLE hci_handle, UINT8 pipe)
     if ((pg = nfa_hciu_alloc_gate (dest_gate, hci_handle)) != NULL)
     {
         prev_owner = pg->gate_owner;
-        
+
         if (  (hci_handle != prev_owner)
             &&(pipe == NFA_HCI_STATIC_PIPE_UICC0) )
         {
@@ -494,7 +497,7 @@ tNFA_STATUS NFA_HciAddStaticPipe (tNFA_HANDLE hci_handle, UINT8 pipe)
                 nfa_hciu_send_to_app (NFA_HCI_DELETE_PIPE_EVT, &evt_data, prev_owner);
             }
         }
-        
+
         if (  (hci_handle != prev_owner)
             &&(pipe == NFA_HCI_STATIC_PIPE_UICC1) )
         {

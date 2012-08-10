@@ -216,11 +216,11 @@ BOOLEAN nfa_dm_ndef_dereg_hdlr (tNFA_DM_MSG *p_data)
 **
 ** Description      Find next ndef handler for a given record type
 **
-** Returns          void                 
+** Returns          void
 **
 *******************************************************************************/
 tNFA_DM_API_REG_NDEF_HDLR *nfa_dm_ndef_find_next_handler (tNFA_DM_API_REG_NDEF_HDLR *p_init_handler,
-                                                          UINT8                     tnf, 
+                                                          UINT8                     tnf,
                                                           UINT8                     *p_type_name,
                                                           UINT8                     type_name_len,
                                                           UINT8                     *p_payload,
@@ -320,7 +320,7 @@ tNFA_DM_API_REG_NDEF_HDLR *nfa_dm_ndef_find_next_handler (tNFA_DM_API_REG_NDEF_H
 **                  (flag used to indicate that this handler has already
 **                  handled the entire incoming NDEF message)
 **
-** Returns          void                 
+** Returns          void
 **
 *******************************************************************************/
 void nfa_dm_ndef_clear_notified_flag (void)
@@ -345,7 +345,7 @@ void nfa_dm_ndef_clear_notified_flag (void)
 **
 ** Description      Handle incoming ndef message
 **
-** Returns          void                 
+** Returns          void
 **
 *******************************************************************************/
 void nfa_dm_ndef_handle_message (tNFA_STATUS status, UINT8 *p_msg_buf, UINT32 len)

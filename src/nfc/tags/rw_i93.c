@@ -28,7 +28,7 @@
 #define RW_I93_FORMAT_DATA_LEN                  8       /* CC, zero length NDEF, Terminator TLV              */
 
 /* main state */
-enum 
+enum
 {
     RW_I93_STATE_NOT_ACTIVATED,         /* ISO15693 is not activated            */
     RW_I93_STATE_IDLE,                  /* waiting for upper layer API          */
@@ -44,7 +44,7 @@ enum
 };
 
 /* sub state */
-enum 
+enum
 {
     RW_I93_SUBSTATE_WAIT_UID,               /* waiting for response of inventory    */
     RW_I93_SUBSTATE_WAIT_SYS_INFO,          /* waiting for response of get sys info */
@@ -330,7 +330,7 @@ BOOLEAN rw_i93_send_to_lower (BT_HDR *p_msg)
         return FALSE;
     }
 
-    nfc_start_quick_timer (&rw_cb.tcb.i93.timer, NFC_TTYPE_RW_I93_RESPONSE, 
+    nfc_start_quick_timer (&rw_cb.tcb.i93.timer, NFC_TTYPE_RW_I93_RESPONSE,
                            (RW_I93_TOUT_RESP*QUICK_TIMER_TICKS_PER_SEC)/1000);
 
     return TRUE;
@@ -437,7 +437,7 @@ tNFC_STATUS rw_i93_send_cmd_stay_quiet (void)
         rw_cb.tcb.i93.sent_cmd  = I93_CMD_STAY_QUIET;
 
         /* restart timer for stay quiet */
-        nfc_start_quick_timer (&rw_cb.tcb.i93.timer, NFC_TTYPE_RW_I93_RESPONSE, 
+        nfc_start_quick_timer (&rw_cb.tcb.i93.timer, NFC_TTYPE_RW_I93_RESPONSE,
                                (RW_I93_TOUT_STAY_QUIET*QUICK_TIMER_TICKS_PER_SEC)/1000);
         return NFC_STATUS_OK;
     }
@@ -685,7 +685,7 @@ tNFC_STATUS rw_i93_send_cmd_read_multi_blocks (UINT8 first_block_number, UINT16 
 ** Returns          tNFC_STATUS
 **
 *******************************************************************************/
-tNFC_STATUS rw_i93_send_cmd_write_multi_blocks (UINT8  first_block_number, 
+tNFC_STATUS rw_i93_send_cmd_write_multi_blocks (UINT8  first_block_number,
                                                 UINT16 number_blocks,
                                                 UINT8 *p_data)
 {
@@ -1085,7 +1085,7 @@ tNFC_STATUS rw_i93_send_cmd_get_sys_info (UINT8 *p_uid)
 ** Returns          tNFC_STATUS
 **
 *******************************************************************************/
-tNFC_STATUS rw_i93_send_cmd_get_multi_block_sec (UINT8  first_block_number, 
+tNFC_STATUS rw_i93_send_cmd_get_multi_block_sec (UINT8  first_block_number,
                                                  UINT16 number_blocks)
 {
     BT_HDR      *p_cmd;
@@ -1186,7 +1186,7 @@ void rw_i93_sm_detect_ndef (BT_HDR *p_resp)
     tNFC_STATUS status = NFC_STATUS_FAILED;
 
 #if (BT_TRACE_VERBOSE == TRUE)
-    RW_TRACE_DEBUG2 ("rw_i93_sm_detect_ndef() sub_state:%s(0x%x)", 
+    RW_TRACE_DEBUG2 ("rw_i93_sm_detect_ndef() sub_state:%s(0x%x)",
                       rw_i93_get_sub_state_name(p_i93->sub_state), p_i93->sub_state);
 #else
     RW_TRACE_DEBUG1 ("rw_i93_sm_detect_ndef() sub_state:0x%x", p_i93->sub_state);
@@ -1296,7 +1296,7 @@ void rw_i93_sm_detect_ndef (BT_HDR *p_resp)
     case RW_I93_SUBSTATE_WAIT_CC:
 
         /* assume block size is more than 4 */
-        STREAM_TO_ARRAY (cc, p, 4); 
+        STREAM_TO_ARRAY (cc, p, 4);
 
         status = NFC_STATUS_FAILED;
 
@@ -1494,7 +1494,7 @@ void rw_i93_sm_detect_ndef (BT_HDR *p_resp)
         break;
 
     case RW_I93_SUBSTATE_CHECK_LOCK_STATUS:
-        
+
         if ((p_i93->product_version == RW_I93_TAG_IT_HF_I_STD_CHIP_INLAY)
           ||(p_i93->product_version == RW_I93_TAG_IT_HF_I_PRO_CHIP_INLAY))
         {
@@ -1526,15 +1526,15 @@ void rw_i93_sm_detect_ndef (BT_HDR *p_resp)
             p_i93->max_ndef_length = p_i93->ndef_length
                                      /* add available bytes including the last block of NDEF TLV */
                                      + (p_i93->block_size * (u8 - last_block) + 1)
-                                     - (p_i93->ndef_tlv_last_offset % p_i93->block_size) 
+                                     - (p_i93->ndef_tlv_last_offset % p_i93->block_size)
                                      - 1;
         }
         else
         {
             p_i93->max_ndef_length = p_i93->ndef_length
                                      /* add available bytes in the last block of NDEF TLV */
-                                     + p_i93->block_size 
-                                     - (p_i93->ndef_tlv_last_offset % p_i93->block_size) 
+                                     + p_i93->block_size
+                                     - (p_i93->ndef_tlv_last_offset % p_i93->block_size)
                                      - 1;
 
             first_block = (UINT8)(p_i93->ndef_tlv_start_offset / p_i93->block_size);
@@ -1620,7 +1620,7 @@ void rw_i93_sm_detect_ndef (BT_HDR *p_resp)
 void rw_i93_sm_read_ndef (BT_HDR *p_resp)
 {
     UINT8      *p = (UINT8 *)(p_resp + 1) + p_resp->offset;
-    UINT8       flags; 
+    UINT8       flags;
     UINT16      offset, length = p_resp->len;
     tRW_I93_CB *p_i93 = &rw_cb.tcb.i93;
     tRW_DATA    rw_data;
@@ -1651,7 +1651,7 @@ void rw_i93_sm_read_ndef (BT_HDR *p_resp)
         {
             offset += 4;
         }
-        
+
         /* adjust offset if read more blocks because the first block doesn't have NDEF */
         offset -= (p_i93->rw_offset - p_i93->ndef_tlv_start_offset);
     }
@@ -1728,7 +1728,7 @@ void rw_i93_sm_update_ndef (BT_HDR *p_resp)
     tRW_DATA    rw_data;
 
 #if (BT_TRACE_VERBOSE == TRUE)
-    RW_TRACE_DEBUG2 ("rw_i93_sm_update_ndef() sub_state:%s(0x%x)", 
+    RW_TRACE_DEBUG2 ("rw_i93_sm_update_ndef() sub_state:%s(0x%x)",
                       rw_i93_get_sub_state_name(p_i93->sub_state), p_i93->sub_state);
 #else
     RW_TRACE_DEBUG1 ("rw_i93_sm_update_ndef() sub_state:0x%x", p_i93->sub_state);
@@ -1790,7 +1790,7 @@ void rw_i93_sm_update_ndef (BT_HDR *p_resp)
                 }
             }
         }
-        
+
         block_number = (UINT8)((p_i93->ndef_tlv_start_offset + 1) / p_i93->block_size);
 
         if (rw_i93_send_cmd_write_single_block (block_number, p) == NFC_STATUS_OK)
@@ -2025,7 +2025,7 @@ void rw_i93_sm_format (BT_HDR *p_resp)
     tNFC_STATUS status = NFC_STATUS_FAILED;
 
 #if (BT_TRACE_VERBOSE == TRUE)
-    RW_TRACE_DEBUG2 ("rw_i93_sm_format() sub_state:%s(0x%x)", 
+    RW_TRACE_DEBUG2 ("rw_i93_sm_format() sub_state:%s(0x%x)",
                       rw_i93_get_sub_state_name(p_i93->sub_state), p_i93->sub_state);
 #else
     RW_TRACE_DEBUG1 ("rw_i93_sm_format() sub_state:0x%x", p_i93->sub_state);
@@ -2164,7 +2164,7 @@ void rw_i93_sm_format (BT_HDR *p_resp)
             }
         }
         break;
-    
+
     case RW_I93_SUBSTATE_WAIT_RESET_DSFID_AFI:
 
         if (p_i93->sent_cmd == I93_CMD_WRITE_DSFID)
@@ -2213,7 +2213,7 @@ void rw_i93_sm_format (BT_HDR *p_resp)
         break;
 
     case RW_I93_SUBSTATE_CHECK_READ_ONLY:
-        
+
         if ((p_i93->product_version == RW_I93_TAG_IT_HF_I_STD_CHIP_INLAY)
           ||(p_i93->product_version == RW_I93_TAG_IT_HF_I_PRO_CHIP_INLAY))
         {
@@ -2368,13 +2368,13 @@ void rw_i93_sm_format (BT_HDR *p_resp)
 void rw_i93_sm_set_read_only (BT_HDR *p_resp)
 {
     UINT8      *p = (UINT8 *)(p_resp + 1) + p_resp->offset;
-    UINT8       flags, block_number; 
+    UINT8       flags, block_number;
     UINT16      length = p_resp->len;
     tRW_I93_CB *p_i93 = &rw_cb.tcb.i93;
     tRW_DATA    rw_data;
 
 #if (BT_TRACE_VERBOSE == TRUE)
-    RW_TRACE_DEBUG2 ("rw_i93_sm_set_read_only() sub_state:%s(0x%x)", 
+    RW_TRACE_DEBUG2 ("rw_i93_sm_set_read_only() sub_state:%s(0x%x)",
                       rw_i93_get_sub_state_name(p_i93->sub_state), p_i93->sub_state);
 #else
     RW_TRACE_DEBUG1 ("rw_i93_sm_set_read_only() sub_state:0x%x", p_i93->sub_state);
@@ -2616,7 +2616,7 @@ void rw_i93_process_timeout (TIMER_LIST_ENT *p_tle)
 **
 ** Function         rw_i93_data_cback
 **
-** Description      This callback function receives the data from NFCC.  
+** Description      This callback function receives the data from NFCC.
 **
 ** Returns          none
 **
@@ -2662,7 +2662,7 @@ static void rw_i93_data_cback (UINT8 conn_id, tNFC_CONN_EVT event, tNFC_CONN *p_
 #endif
 
 #if (BT_TRACE_VERBOSE == TRUE)
-    RW_TRACE_DEBUG2 ("RW I93 state: <%s(%d)>", 
+    RW_TRACE_DEBUG2 ("RW I93 state: <%s(%d)>",
                         rw_i93_get_state_name (p_i93->state), p_i93->state);
 #else
     RW_TRACE_DEBUG1 ("RW I93 state: %d", p_i93->state);
@@ -2699,7 +2699,7 @@ static void rw_i93_data_cback (UINT8 conn_id, tNFC_CONN_EVT event, tNFC_CONN *p_
 
     case RW_I93_STATE_READ_NDEF:
         rw_i93_sm_read_ndef (p_resp);
-        /* p_resp may send upper lyaer */ 
+        /* p_resp may send upper lyaer */
         break;
 
     case RW_I93_STATE_UPDATE_NDEF:
@@ -2736,8 +2736,8 @@ static void rw_i93_data_cback (UINT8 conn_id, tNFC_CONN_EVT event, tNFC_CONN *p_
 #if (BT_TRACE_VERBOSE == TRUE)
     if (begin_state != p_i93->state)
     {
-        RW_TRACE_DEBUG2 ("RW I93 state changed:<%s> -> <%s>", 
-                          rw_i93_get_state_name (begin_state), 
+        RW_TRACE_DEBUG2 ("RW I93 state changed:<%s> -> <%s>",
+                          rw_i93_get_state_name (begin_state),
                           rw_i93_get_state_name (p_i93->state));
     }
 #endif
@@ -2788,7 +2788,7 @@ tNFC_STATUS RW_I93Inventory (UINT8 afi, UINT8 *p_uid)
 
     if (rw_cb.tcb.i93.state != RW_I93_STATE_IDLE)
     {
-        RW_TRACE_ERROR1 ("RW_I93Inventory():Unable to start command at state(0x%X)", 
+        RW_TRACE_ERROR1 ("RW_I93Inventory():Unable to start command at state(0x%X)",
                           rw_cb.tcb.i93.state);
         return NFC_STATUS_BUSY;
     }
@@ -2832,7 +2832,7 @@ tNFC_STATUS RW_I93StayQuiet (void)
 
     if (rw_cb.tcb.i93.state != RW_I93_STATE_IDLE)
     {
-        RW_TRACE_ERROR1 ("RW_I93StayQuiet():Unable to start command at state(0x%X)", 
+        RW_TRACE_ERROR1 ("RW_I93StayQuiet():Unable to start command at state(0x%X)",
                           rw_cb.tcb.i93.state);
         return NFC_STATUS_BUSY;
     }
@@ -2868,9 +2868,9 @@ tNFC_STATUS RW_I93ReadSingleBlock (UINT8 block_number)
 
     if (rw_cb.tcb.i93.state != RW_I93_STATE_IDLE)
     {
-        RW_TRACE_ERROR1 ("RW_I93ReadSingleBlock():Unable to start command at state(0x%X)", 
+        RW_TRACE_ERROR1 ("RW_I93ReadSingleBlock():Unable to start command at state(0x%X)",
                           rw_cb.tcb.i93.state);
-        return NFC_STATUS_BUSY; 
+        return NFC_STATUS_BUSY;
     }
 
     status = rw_i93_send_cmd_read_single_block (block_number, FALSE);
@@ -2906,15 +2906,15 @@ tNFC_STATUS RW_I93WriteSingleBlock (UINT8 block_number,
 
     if (rw_cb.tcb.i93.state != RW_I93_STATE_IDLE)
     {
-        RW_TRACE_ERROR1 ("RW_I93WriteSingleBlock():Unable to start command at state(0x%X)", 
+        RW_TRACE_ERROR1 ("RW_I93WriteSingleBlock():Unable to start command at state(0x%X)",
                           rw_cb.tcb.i93.state);
-        return NFC_STATUS_BUSY; 
+        return NFC_STATUS_BUSY;
     }
 
     if (rw_cb.tcb.i93.block_size == 0)
     {
         RW_TRACE_ERROR0 ("RW_I93WriteSingleBlock():Block size is unknown");
-        return NFC_STATUS_FAILED; 
+        return NFC_STATUS_FAILED;
     }
 
     status = rw_i93_send_cmd_write_single_block (block_number, p_data);
@@ -2948,9 +2948,9 @@ tNFC_STATUS RW_I93LockBlock (UINT8 block_number)
 
     if (rw_cb.tcb.i93.state != RW_I93_STATE_IDLE)
     {
-        RW_TRACE_ERROR1 ("RW_I93LockBlock():Unable to start command at state(0x%X)", 
+        RW_TRACE_ERROR1 ("RW_I93LockBlock():Unable to start command at state(0x%X)",
                           rw_cb.tcb.i93.state);
-        return NFC_STATUS_BUSY; 
+        return NFC_STATUS_BUSY;
     }
 
     status = rw_i93_send_cmd_lock_block (block_number);
@@ -2985,9 +2985,9 @@ tNFC_STATUS RW_I93ReadMultipleBlocks (UINT8  first_block_number,
 
     if (rw_cb.tcb.i93.state != RW_I93_STATE_IDLE)
     {
-        RW_TRACE_ERROR1 ("RW_I93ReadMultipleBlocks():Unable to start command at state(0x%X)", 
+        RW_TRACE_ERROR1 ("RW_I93ReadMultipleBlocks():Unable to start command at state(0x%X)",
                           rw_cb.tcb.i93.state);
-        return NFC_STATUS_BUSY; 
+        return NFC_STATUS_BUSY;
     }
 
     status = rw_i93_send_cmd_read_multi_blocks (first_block_number, number_blocks);
@@ -3023,15 +3023,15 @@ tNFC_STATUS RW_I93WriteMultipleBlocks (UINT8  first_block_number,
 
     if (rw_cb.tcb.i93.state != RW_I93_STATE_IDLE)
     {
-        RW_TRACE_ERROR1 ("RW_I93WriteMultipleBlocks():Unable to start command at state(0x%X)", 
+        RW_TRACE_ERROR1 ("RW_I93WriteMultipleBlocks():Unable to start command at state(0x%X)",
                           rw_cb.tcb.i93.state);
-        return NFC_STATUS_BUSY; 
+        return NFC_STATUS_BUSY;
     }
 
     if (rw_cb.tcb.i93.block_size == 0)
     {
         RW_TRACE_ERROR0 ("RW_I93WriteSingleBlock():Block size is unknown");
-        return NFC_STATUS_FAILED; 
+        return NFC_STATUS_FAILED;
     }
 
     status = rw_i93_send_cmd_write_multi_blocks (first_block_number, number_blocks, p_data);
@@ -3070,9 +3070,9 @@ tNFC_STATUS RW_I93Select (UINT8 *p_uid)
 
     if (rw_cb.tcb.i93.state != RW_I93_STATE_IDLE)
     {
-        RW_TRACE_ERROR1 ("RW_I93Select():Unable to start command at state(0x%X)", 
+        RW_TRACE_ERROR1 ("RW_I93Select():Unable to start command at state(0x%X)",
                           rw_cb.tcb.i93.state);
-        return NFC_STATUS_BUSY; 
+        return NFC_STATUS_BUSY;
     }
 
     if (p_uid)
@@ -3114,9 +3114,9 @@ tNFC_STATUS RW_I93ResetToReady (void)
 
     if (rw_cb.tcb.i93.state != RW_I93_STATE_IDLE)
     {
-        RW_TRACE_ERROR1 ("RW_I93ResetToReady():Unable to start command at state(0x%X)", 
+        RW_TRACE_ERROR1 ("RW_I93ResetToReady():Unable to start command at state(0x%X)",
                           rw_cb.tcb.i93.state);
-        return NFC_STATUS_BUSY; 
+        return NFC_STATUS_BUSY;
     }
 
     status = rw_i93_send_cmd_reset_to_ready ();
@@ -3150,9 +3150,9 @@ tNFC_STATUS RW_I93WriteAFI (UINT8 afi)
 
     if (rw_cb.tcb.i93.state != RW_I93_STATE_IDLE)
     {
-        RW_TRACE_ERROR1 ("RW_I93WriteAFI():Unable to start command at state(0x%X)", 
+        RW_TRACE_ERROR1 ("RW_I93WriteAFI():Unable to start command at state(0x%X)",
                           rw_cb.tcb.i93.state);
-        return NFC_STATUS_BUSY; 
+        return NFC_STATUS_BUSY;
     }
 
     status = rw_i93_send_cmd_write_afi (afi);
@@ -3186,9 +3186,9 @@ tNFC_STATUS RW_I93LockAFI (void)
 
     if (rw_cb.tcb.i93.state != RW_I93_STATE_IDLE)
     {
-        RW_TRACE_ERROR1 ("RW_I93LockAFI():Unable to start command at state(0x%X)", 
+        RW_TRACE_ERROR1 ("RW_I93LockAFI():Unable to start command at state(0x%X)",
                           rw_cb.tcb.i93.state);
-        return NFC_STATUS_BUSY; 
+        return NFC_STATUS_BUSY;
     }
 
     status = rw_i93_send_cmd_lock_afi ();
@@ -3222,9 +3222,9 @@ tNFC_STATUS RW_I93WriteDSFID (UINT8 dsfid)
 
     if (rw_cb.tcb.i93.state != RW_I93_STATE_IDLE)
     {
-        RW_TRACE_ERROR1 ("RW_I93WriteDSFID():Unable to start command at state(0x%X)", 
+        RW_TRACE_ERROR1 ("RW_I93WriteDSFID():Unable to start command at state(0x%X)",
                           rw_cb.tcb.i93.state);
-        return NFC_STATUS_BUSY; 
+        return NFC_STATUS_BUSY;
     }
 
     status = rw_i93_send_cmd_write_dsfid (dsfid);
@@ -3258,9 +3258,9 @@ tNFC_STATUS RW_I93LockDSFID (void)
 
     if (rw_cb.tcb.i93.state != RW_I93_STATE_IDLE)
     {
-        RW_TRACE_ERROR1 ("RW_I93LockDSFID():Unable to start command at state(0x%X)", 
+        RW_TRACE_ERROR1 ("RW_I93LockDSFID():Unable to start command at state(0x%X)",
                           rw_cb.tcb.i93.state);
-        return NFC_STATUS_BUSY; 
+        return NFC_STATUS_BUSY;
     }
 
     status = rw_i93_send_cmd_lock_dsfid ();
@@ -3294,9 +3294,9 @@ tNFC_STATUS RW_I93GetSysInfo (UINT8 *p_uid)
 
     if (rw_cb.tcb.i93.state != RW_I93_STATE_IDLE)
     {
-        RW_TRACE_ERROR1 ("RW_I93GetSysInfo():Unable to start command at state(0x%X)", 
+        RW_TRACE_ERROR1 ("RW_I93GetSysInfo():Unable to start command at state(0x%X)",
                           rw_cb.tcb.i93.state);
-        return NFC_STATUS_BUSY; 
+        return NFC_STATUS_BUSY;
     }
 
     if (p_uid)
@@ -3330,7 +3330,7 @@ tNFC_STATUS RW_I93GetSysInfo (UINT8 *p_uid)
 **                  NFC_STATUS_FAILED if other error
 **
 *******************************************************************************/
-tNFC_STATUS RW_I93GetMultiBlockSecurityStatus (UINT8  first_block_number, 
+tNFC_STATUS RW_I93GetMultiBlockSecurityStatus (UINT8  first_block_number,
                                                UINT16 number_blocks)
 {
     tNFC_STATUS status;
@@ -3339,9 +3339,9 @@ tNFC_STATUS RW_I93GetMultiBlockSecurityStatus (UINT8  first_block_number,
 
     if (rw_cb.tcb.i93.state != RW_I93_STATE_IDLE)
     {
-        RW_TRACE_ERROR1 ("RW_I93GetMultiBlockSecurityStatus():Unable to start command at state(0x%X)", 
+        RW_TRACE_ERROR1 ("RW_I93GetMultiBlockSecurityStatus():Unable to start command at state(0x%X)",
                           rw_cb.tcb.i93.state);
-        return NFC_STATUS_BUSY; 
+        return NFC_STATUS_BUSY;
     }
 
     status = rw_i93_send_cmd_get_multi_block_sec (first_block_number, number_blocks);
@@ -3374,7 +3374,7 @@ tNFC_STATUS RW_I93DetectNDef (void)
 
     if (rw_cb.tcb.i93.state != RW_I93_STATE_IDLE)
     {
-        RW_TRACE_ERROR1 ("RW_I93DetectNDef():Unable to start command at state(0x%X)", 
+        RW_TRACE_ERROR1 ("RW_I93DetectNDef():Unable to start command at state(0x%X)",
                           rw_cb.tcb.i93.state);
         return NFC_STATUS_FAILED;
     }
@@ -3429,7 +3429,7 @@ tNFC_STATUS RW_I93ReadNDef (void)
 
     if (rw_cb.tcb.i93.state != RW_I93_STATE_IDLE)
     {
-        RW_TRACE_ERROR1 ("RW_I93ReadNDef():Unable to start command at state(0x%X)", 
+        RW_TRACE_ERROR1 ("RW_I93ReadNDef():Unable to start command at state(0x%X)",
                           rw_cb.tcb.i93.state);
         return NFC_STATUS_FAILED;
     }
@@ -3482,7 +3482,7 @@ tNFC_STATUS RW_I93UpdateNDef (UINT16 length, UINT8 *p_data)
 
     if (rw_cb.tcb.i93.state != RW_I93_STATE_IDLE)
     {
-        RW_TRACE_ERROR1 ("RW_I93UpdateNDef():Unable to start command at state(0x%X)", 
+        RW_TRACE_ERROR1 ("RW_I93UpdateNDef():Unable to start command at state(0x%X)",
                           rw_cb.tcb.i93.state);
         return NFC_STATUS_FAILED;
     }
@@ -3550,7 +3550,7 @@ tNFC_STATUS RW_I93FormatNDef (void)
 
     if (rw_cb.tcb.i93.state != RW_I93_STATE_IDLE)
     {
-        RW_TRACE_ERROR1 ("RW_I93FormatNDef():Unable to start command at state(0x%X)", 
+        RW_TRACE_ERROR1 ("RW_I93FormatNDef():Unable to start command at state(0x%X)",
                           rw_cb.tcb.i93.state);
         return NFC_STATUS_FAILED;
     }
@@ -3601,7 +3601,7 @@ tNFC_STATUS RW_I93SetTagReadOnly (void)
 
     if (rw_cb.tcb.i93.state != RW_I93_STATE_IDLE)
     {
-        RW_TRACE_ERROR1 ("RW_I93SetTagReadOnly():Unable to start command at state(0x%X)", 
+        RW_TRACE_ERROR1 ("RW_I93SetTagReadOnly():Unable to start command at state(0x%X)",
                           rw_cb.tcb.i93.state);
         return NFC_STATUS_FAILED;
     }
@@ -3639,8 +3639,8 @@ tNFC_STATUS RW_I93SetTagReadOnly (void)
 ** Function         RW_I93PresenceCheck
 **
 ** Description      Check if the tag is still in the field.
-**      
-**                  The RW_I93_PRESENCE_CHECK_EVT w/ status is used to indicate 
+**
+**                  The RW_I93_PRESENCE_CHECK_EVT w/ status is used to indicate
 **                  presence or non-presence.
 **
 ** Returns          NFC_STATUS_OK, if raw data frame sent

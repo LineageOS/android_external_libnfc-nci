@@ -3,7 +3,7 @@
 **
 **  Description:
 **
-**  This file contains serial definitions from WIDCOMM's Universal Embedded 
+**  This file contains serial definitions from WIDCOMM's Universal Embedded
 **  Drivers API.
 **
 **  Copyright (c) 2001-2004, WIDCOMM Inc., All Rights Reserved.
@@ -94,10 +94,10 @@ typedef UINT8 tUSERIAL_PORT;
 #define USERIAL_SIG_DTE_DEVICE    (1<<4)
 
 /**** Errors *****/
-#define USERIAL_ERR_OVERRUN       1    
-#define USERIAL_ERR_PARITY        (1<<1)  
-#define USERIAL_ERR_FRAMING       (1<<2)  
-#define USERIAL_ERR_BREAK         (1<<3)  
+#define USERIAL_ERR_OVERRUN       1
+#define USERIAL_ERR_PARITY        (1<<1)
+#define USERIAL_ERR_FRAMING       (1<<2)
+#define USERIAL_ERR_BREAK         (1<<3)
 
 /**** Serial Operations ****/
 #define USERIAL_OP_FLUSH          0
@@ -189,7 +189,7 @@ typedef UINT8 tUSERIAL_EVT;
 
 
 /* Structure used to configure serial port during open        */
-typedef struct 
+typedef struct
 {
     UINT16 fmt;          /* Data format                       */
     UINT8  baud;         /* Baud rate                         */
@@ -201,7 +201,7 @@ typedef struct
 } tUSERIAL_OPEN_CFG;
 
 /* Union used to pass ioctl arguments */
-typedef union 
+typedef union
 {
     UINT16 fmt;
     UINT8  baud;
@@ -214,7 +214,7 @@ typedef union
 
 
 /* Union to pass event data */
-typedef union 
+typedef union
 {
     UINT8 sigs;
     UINT8 error;

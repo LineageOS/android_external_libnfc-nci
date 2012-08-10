@@ -32,7 +32,7 @@ UINT8   ce_test_tag_app_id[T4T_V20_NDEF_TAG_AID_LEN] = {0xD2, 0x76, 0x00, 0x00, 
 **
 ** Function         ce_t4t_send_to_lower
 **
-** Description      Send packet to lower layer  
+** Description      Send packet to lower layer
 **
 ** Returns          TRUE if success
 **
@@ -117,8 +117,8 @@ static BOOLEAN ce_t4t_select_file (UINT16 file_id)
     if (file_id == CE_T4T_MANDATORY_NDEF_FILE_ID)
     {
         CE_TRACE_DEBUG3 ("ce_t4t_select_file(): NLEN:0x%04X, MaxFileSize:0x%04X, WriteAccess:%s",
-                          p_t4t->nlen, 
-                          p_t4t->max_file_size, 
+                          p_t4t->nlen,
+                          p_t4t->max_file_size,
                           (p_t4t->status & CE_T4T_STATUS_NDEF_FILE_READ_ONLY ? "RW" : "RO"));
 
         p_t4t->status |= CE_T4T_STATUS_NDEF_SELECTED;
@@ -303,7 +303,7 @@ static BOOLEAN ce_t4t_update_binary(UINT16 offset, UINT8 length, UINT8 *p_data)
         /* starting of updating */
         p_t4t->status |= CE_T4T_STATUS_NDEF_FILE_UPDATING;
 
-        nfc_start_quick_timer (&p_t4t->timer, NFC_TTYPE_CE_T4T_UPDATE, 
+        nfc_start_quick_timer (&p_t4t->timer, NFC_TTYPE_CE_T4T_UPDATE,
                                (CE_T4T_TOUT_UPDATE*QUICK_TIMER_TICKS_PER_SEC)/1000);
 
         if (ce_cb.p_cback)
@@ -351,7 +351,7 @@ static void ce_t4t_set_version_in_cc (UINT8 version)
 **
 ** Function         ce_t4t_process_select_file_cmd
 **
-** Description      This function processes Select Command by file ID.  
+** Description      This function processes Select Command by file ID.
 **
 ** Returns          TRUE if success
 **
@@ -403,7 +403,7 @@ static BOOLEAN ce_t4t_process_select_file_cmd (UINT8 *p_cmd)
 **
 ** Function         ce_t4t_process_select_app_cmd
 **
-** Description      This function processes Select Command by AID.  
+** Description      This function processes Select Command by AID.
 **
 ** Returns          none
 **
@@ -436,7 +436,7 @@ static void ce_t4t_process_select_app_cmd (UINT8 *p_cmd, BT_HDR *p_c_apdu)
     }
 #endif
 
-    /* 
+    /*
     ** Compare AIDs registered by applications
     ** if found, use callback of the application
     ** otherwise, return error and maintain the same status
@@ -581,7 +581,7 @@ void ce_t4t_process_timeout (TIMER_LIST_ENT *p_tle)
 **
 ** Function         ce_t4t_data_cback
 **
-** Description      This callback function receives the data from NFCC.  
+** Description      This callback function receives the data from NFCC.
 **
 ** Returns          none
 **
@@ -804,12 +804,12 @@ static void ce_t4t_data_cback (UINT8 conn_id, tNFC_CONN_EVT event, tNFC_CONN *p_
 **
 ** Function         ce_select_t4t
 **
-** Description      Select Type 4 Tag  
-**                  
+** Description      Select Type 4 Tag
+**
 ** Returns          NFC_STATUS_OK if success
 **
 *******************************************************************************/
-tNFC_STATUS ce_select_t4t (void) 
+tNFC_STATUS ce_select_t4t (void)
 {
     tCE_T4T_MEM *p_t4t = &ce_cb.mem.t4t;
 
@@ -836,13 +836,13 @@ tNFC_STATUS ce_select_t4t (void)
 **                      CE_T4T_UPDATE_CPLT_EVT for complete update
 **                      CE_T4T_UPDATE_ABORT_EVT for failure of update
 **                      CE_T4T_RAW_FRAME_EVT for raw frame
-**                  
+**
 **                  read_only:      TRUE if read only
 **                  ndef_msg_max:   Max NDEF message size
 **                  ndef_msg_len:   NDEF message size
 **                  p_ndef_msg:     NDEF message (excluding NLEN)
 **                  p_scratch_buf:  temp storage for update
-**                  
+**
 ** Returns          NFC_STATUS_OK if success
 **
 *******************************************************************************/
@@ -901,7 +901,7 @@ tNFC_STATUS CE_T4tSetLocalNDEFMsg (BOOLEAN    read_only,
         UINT8_TO_BE_STREAM  (p, T4T_FC_WRITE_ACCESS);       /* write access */
         p_t4t->status &= ~(CE_T4T_STATUS_NDEF_FILE_READ_ONLY);
     }
-    
+
     /* set mandatory NDEF file */
     p_t4t->p_ndef_msg    = p_ndef_msg;
     p_t4t->nlen          = ndef_msg_len;
@@ -927,7 +927,7 @@ tNFC_STATUS CE_T4tSetLocalNDEFMsg (BOOLEAN    read_only,
 **                  aid_len: length of AID (up to NFC_MAX_AID_LEN)
 **                  p_aid:   AID
 **                  p_cback: Raw frame will be forwarded with CE_RAW_FRAME_EVT
-**                  
+**
 ** Returns          tCE_T4T_AID_HANDLE if successful,
 **                  CE_T4T_AID_HANDLE_INVALID otherwisse
 **
@@ -1009,7 +1009,7 @@ tCE_T4T_AID_HANDLE CE_T4tRegisterAID (UINT8 aid_len, UINT8 *p_aid, tCE_CBACK *p_
 ** Function         CE_T4tDeregisterAID
 **
 ** Description      Deregister AID in CE T4T
-**                  
+**
 ** Returns          NFC_STATUS_OK if success
 **
 *******************************************************************************/
@@ -1049,8 +1049,8 @@ NFC_API extern void CE_T4tDeregisterAID (tCE_T4T_AID_HANDLE aid_handle)
 **
 ** Function         CE_T4TTestSetCC
 **
-** Description      Set fields in Capability Container File for testing  
-**                  
+** Description      Set fields in Capability Container File for testing
+**
 ** Returns          NFC_STATUS_OK if success
 **
 *******************************************************************************/
@@ -1118,8 +1118,8 @@ tNFC_STATUS CE_T4TTestSetCC (UINT16 cc_len,
 **
 ** Function         CE_T4TTestSetNDEFCtrlTLV
 **
-** Description      Set fields in NDEF File Control TLV for testing  
-**                  
+** Description      Set fields in NDEF File Control TLV for testing
+**
 ** Returns          NFC_STATUS_OK if success
 **
 *******************************************************************************/

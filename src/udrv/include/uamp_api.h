@@ -3,7 +3,7 @@
 **
 **  Description:
 **
-**  This file contains serial definitions from WIDCOMM's Universal Embedded 
+**  This file contains serial definitions from WIDCOMM's Universal Embedded
 **  Drivers API.
 **
 **  Copyright (c) 2009, Broadcom Corporation., All Rights Reserved.

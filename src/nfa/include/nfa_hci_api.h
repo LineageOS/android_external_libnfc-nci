@@ -2,7 +2,7 @@
 **
 **  Name:           nfa_hci_api.h
 **
-**  Description:    This is the public interface file for NFA HCI, Broadcom's 
+**  Description:    This is the public interface file for NFA HCI, Broadcom's
 **                  NFC application layer for mobile phones.
 **
 **  Copyright (c) 2010, Broadcom Corp., All Rights Reserved.
@@ -262,14 +262,14 @@ extern "C"
 **
 ** Function         NFA_HciRegister
 **
-** Description      This function will register an application with hci and 
-**                  returns an application handle and provides a mechanism to 
+** Description      This function will register an application with hci and
+**                  returns an application handle and provides a mechanism to
 **                  register a callback with HCI to receive NFA HCI event notification.
-**                  When the application is registered (or if an error occurs), 
-**                  the app will be notified with NFA_HCI_REGISTER_EVT. Previous 
-**                  session information including allocated gates, created pipes 
-**                  and pipes states will be returned as part of tNFA_HCI_REGISTER data. 
-**                  
+**                  When the application is registered (or if an error occurs),
+**                  the app will be notified with NFA_HCI_REGISTER_EVT. Previous
+**                  session information including allocated gates, created pipes
+**                  and pipes states will be returned as part of tNFA_HCI_REGISTER data.
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_FAILED otherwise
 **
@@ -280,14 +280,14 @@ NFC_API extern tNFA_STATUS NFA_HciRegister (char *p_app_name, tNFA_HCI_CBACK *p_
 **
 ** Function         NFA_HciGetGateAndPipeList
 **
-** Description      This function will retrieve the list of gates allocated to 
-**                  the application and list of dynamic pipes created for the 
-**                  application. The app will be notified with 
-**                  NFA_HCI_GET_GATE_PIPE_LIST_EVT. List of allocated dynamic 
-**                  gates to the application and list of pipes created by the 
-**                  application will be returned as part of 
-**                  tNFA_HCI_GET_GATE_PIPE_LIST data.  
-**                  
+** Description      This function will retrieve the list of gates allocated to
+**                  the application and list of dynamic pipes created for the
+**                  application. The app will be notified with
+**                  NFA_HCI_GET_GATE_PIPE_LIST_EVT. List of allocated dynamic
+**                  gates to the application and list of pipes created by the
+**                  application will be returned as part of
+**                  tNFA_HCI_GET_GATE_PIPE_LIST data.
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_FAILED otherwise
 **
@@ -298,16 +298,16 @@ NFC_API extern tNFA_STATUS NFA_HciGetGateAndPipeList (tNFA_HANDLE hci_handle);
 **
 ** Function         NFA_HciDeregister
 **
-** Description      This function is called to deregister an application 
-**                  from HCI. The app will be notified by NFA_HCI_DEREGISTER_EVT 
-**                  after deleting all the pipes owned by the app and deallocating 
+** Description      This function is called to deregister an application
+**                  from HCI. The app will be notified by NFA_HCI_DEREGISTER_EVT
+**                  after deleting all the pipes owned by the app and deallocating
 **                  all the gates allocated to the app or if an error occurs.
-**                  The app can release the buffer provided for collecting long 
+**                  The app can release the buffer provided for collecting long
 **                  APDUs after receiving NFA_HCI_DEREGISTER_EVT.
 **                  Even if deregistration fails, the app has to register again
 **                  to provide a new cback function and event buffer for receiving
 **                  long APDUs.
-**                  
+**
 ** Returns          NFA_STATUS_OK if the application is deregistered successfully
 **                  NFA_STATUS_FAILED otherwise
 **
@@ -318,14 +318,14 @@ NFC_API extern tNFA_STATUS NFA_HciDeregister (char *p_app_name);
 **
 ** Function         NFA_HciAllocGate
 **
-** Description      This function will allocate an available generic gate for 
-**                  the app to provide an entry point for a particular service 
-**                  to other host or to establish communication with other host. 
-**                  When the generic gate is allocated (or if an error occurs), 
-**                  the app will be notified with NFA_HCI_ALLOCATE_GATE_EVT with 
-**                  the gate id. The allocated Gate information will be stored in 
+** Description      This function will allocate an available generic gate for
+**                  the app to provide an entry point for a particular service
+**                  to other host or to establish communication with other host.
+**                  When the generic gate is allocated (or if an error occurs),
+**                  the app will be notified with NFA_HCI_ALLOCATE_GATE_EVT with
+**                  the gate id. The allocated Gate information will be stored in
 **                  non volatile memory.
-**                  
+**
 ** Returns          NFA_STATUS_OK if this API started
 **                  NFA_STATUS_BAD_HANDLE if handle is not valid
 **                  NFA_STATUS_FAILED if no generic gate is available
@@ -337,14 +337,14 @@ NFC_API extern tNFA_STATUS NFA_HciAllocGate (tNFA_HANDLE hci_handle);
 **
 ** Function         NFA_HciDeallocGate
 **
-** Description      This function will release the specified gate that was 
-**                  previously allocated to the application. When the generic 
-**                  gate is released (or if an error occurs), the app will be 
-**                  notified with NFA_HCI_DEALLOCATE_GATE_EVT with the gate id. 
-**                  The allocated Gate information will be deleted from non 
-**                  volatile memory and all the associated pipes are deleted 
+** Description      This function will release the specified gate that was
+**                  previously allocated to the application. When the generic
+**                  gate is released (or if an error occurs), the app will be
+**                  notified with NFA_HCI_DEALLOCATE_GATE_EVT with the gate id.
+**                  The allocated Gate information will be deleted from non
+**                  volatile memory and all the associated pipes are deleted
 **                  by informing host controller.
-**                  
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_BAD_HANDLE if handle is not valid
 **                  NFA_STATUS_FAILED otherwise
@@ -356,11 +356,11 @@ NFC_API extern tNFA_STATUS NFA_HciDeallocGate (tNFA_HANDLE conn_handle, UINT8 ga
 **
 ** Function         NFA_HciGetHostList
 **
-** Description      This function will request the host controller to return the 
-**                  list of hosts that are present in the host network. When 
-**                  host controller responds with the host list (or if an error 
+** Description      This function will request the host controller to return the
+**                  list of hosts that are present in the host network. When
+**                  host controller responds with the host list (or if an error
 **                  occurs), the app will be notified with NFA_HCI_HOST_LIST_EVT
-**                  
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_BAD_HANDLE if handle is not valid
 **                  NFA_STATUS_FAILED otherwise
@@ -372,16 +372,16 @@ NFC_API extern tNFA_STATUS NFA_HciGetHostList (tNFA_HANDLE hci_handle);
 **
 ** Function         NFA_HciCreatePipe
 **
-** Description      This function is called to create a dynamic pipe with the 
-**                  specified host. When the dynamic pipe is created (or 
-**                  if an error occurs), the app will be notified with 
-**                  NFA_HCI_CREATE_PIPE_EVT with the pipe id. If a pipe exists 
-**                  between the two gates passed as argument and if it was 
-**                  created earlier by the calling application then the pipe 
-**                  id of the existing pipe will be returned and a new pipe 
-**                  will not be created. After successful creation of pipe, 
-**                  registry entry will be created for the dynamic pipe and 
-**                  all information related to the pipe will be stored in non 
+** Description      This function is called to create a dynamic pipe with the
+**                  specified host. When the dynamic pipe is created (or
+**                  if an error occurs), the app will be notified with
+**                  NFA_HCI_CREATE_PIPE_EVT with the pipe id. If a pipe exists
+**                  between the two gates passed as argument and if it was
+**                  created earlier by the calling application then the pipe
+**                  id of the existing pipe will be returned and a new pipe
+**                  will not be created. After successful creation of pipe,
+**                  registry entry will be created for the dynamic pipe and
+**                  all information related to the pipe will be stored in non
 **                  volatile memory.
 **
 ** Returns          NFA_STATUS_OK if successfully initiated
@@ -389,19 +389,19 @@ NFC_API extern tNFA_STATUS NFA_HciGetHostList (tNFA_HANDLE hci_handle);
 **
 *******************************************************************************/
 NFC_API extern tNFA_STATUS NFA_HciCreatePipe (tNFA_HANDLE  hci_handle,
-                                              UINT8        source_gate_id, 
-                                              UINT8        dest_host, 
+                                              UINT8        source_gate_id,
+                                              UINT8        dest_host,
                                               UINT8        dest_gate);
 
 /*******************************************************************************
 **
 ** Function         NFA_HciOpenPipe
 **
-** Description      This function is called to open a dynamic pipe. 
-**                  When the dynamic pipe is opened (or 
-**                  if an error occurs), the app will be notified with 
+** Description      This function is called to open a dynamic pipe.
+**                  When the dynamic pipe is opened (or
+**                  if an error occurs), the app will be notified with
 **                  NFA_HCI_OPEN_PIPE_EVT with the pipe id.
-**                  
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_FAILED otherwise
 **
@@ -415,9 +415,9 @@ NFC_API extern tNFA_STATUS NFA_HciOpenPipe (tNFA_HANDLE  hci_handle, UINT8 pipe)
 ** Description      This function requests a peer host to return the desired
 **                  registry field value for the gate that the pipe is on.
 **
-**                  When the peer host responds,the app is notified with 
+**                  When the peer host responds,the app is notified with
 **                  NFA_HCI_GET_REG_RSP_EVT or
-**                  if an error occurs in sending the command the app will be 
+**                  if an error occurs in sending the command the app will be
 **                  notified by NFA_HCI_CMD_SENT_EVT
 **
 ** Returns          NFA_STATUS_OK if successfully initiated
@@ -433,9 +433,9 @@ NFC_API extern tNFA_STATUS NFA_HciGetRegistry (tNFA_HANDLE hci_handle, UINT8 pip
 ** Description      This function requests a peer host to set the desired
 **                  registry field value for the gate that the pipe is on.
 **
-**                  When the peer host responds,the app is notified with 
+**                  When the peer host responds,the app is notified with
 **                  NFA_HCI_SET_REG_RSP_EVT or
-**                  if an error occurs in sending the command the app will be 
+**                  if an error occurs in sending the command the app will be
 **                  notified by NFA_HCI_CMD_SENT_EVT
 **
 ** Returns          NFA_STATUS_OK if successfully initiated
@@ -445,26 +445,26 @@ NFC_API extern tNFA_STATUS NFA_HciGetRegistry (tNFA_HANDLE hci_handle, UINT8 pip
 NFC_API extern tNFA_STATUS NFA_HciSetRegistry (tNFA_HANDLE   hci_handle,
                                                UINT8         pipe,
                                                UINT8         reg_inx,
-                                               UINT8         data_size, 
+                                               UINT8         data_size,
                                                UINT8         *p_data);
 
 /*******************************************************************************
 **
 ** Function         NFA_HciSendCommand
 **
-** Description      This function is called to send a command on a pipe created 
-**                  by the application. 
-**                  The app will be notified by NFA_HCI_CMD_SENT_EVT if an error 
+** Description      This function is called to send a command on a pipe created
+**                  by the application.
+**                  The app will be notified by NFA_HCI_CMD_SENT_EVT if an error
 **                  occurs.
-**                  When the peer host responds,the app is notified with 
+**                  When the peer host responds,the app is notified with
 **                  NFA_HCI_RSP_RCVD_EVT
 **
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_FAILED otherwise
 **
 *******************************************************************************/
-NFC_API extern tNFA_STATUS NFA_HciSendCommand (tNFA_HANDLE hci_handle, 
-                                               UINT8       pipe, 
+NFC_API extern tNFA_STATUS NFA_HciSendCommand (tNFA_HANDLE hci_handle,
+                                               UINT8       pipe,
                                                UINT8       cmd_code,
                                                UINT16      cmd_size,
                                                UINT8       *p_data);
@@ -473,9 +473,9 @@ NFC_API extern tNFA_STATUS NFA_HciSendCommand (tNFA_HANDLE hci_handle,
 **
 ** Function         NFA_HciSendResponse
 **
-** Description      This function is called to send a response on a pipe created 
-**                  by the application. 
-**                  The app will be notified by NFA_HCI_RSP_SENT_EVT if an error 
+** Description      This function is called to send a response on a pipe created
+**                  by the application.
+**                  The app will be notified by NFA_HCI_RSP_SENT_EVT if an error
 **                  occurs.
 **
 ** Returns          NFA_STATUS_OK if successfully initiated
@@ -485,50 +485,50 @@ NFC_API extern tNFA_STATUS NFA_HciSendCommand (tNFA_HANDLE hci_handle,
 NFC_API extern tNFA_STATUS NFA_HciSendResponse (tNFA_HANDLE   hci_handle,
                                                 UINT8         pipe,
                                                 UINT8         response,
-                                                UINT8         data_size, 
+                                                UINT8         data_size,
                                                 UINT8         *p_data);
 
 /*******************************************************************************
 **
 ** Function         NFA_HciSendEvent
 **
-** Description      This function is called to send any event on a pipe created 
-**                  by the application. 
-**                  The app will be notified by NFA_HCI_EVENT_SENT_EVT 
+** Description      This function is called to send any event on a pipe created
+**                  by the application.
+**                  The app will be notified by NFA_HCI_EVENT_SENT_EVT
 **                  after successfully sending the event on the specified pipe
 **                  or if an error occurs. The application should wait for this
 **                  event before releasing event buffer passed as argument.
-**                  If the app is expecting a response to the event then it can 
-**                  provide response buffer for collecting the response. 
-**                  Maximum of NFA_MAX_HCI_EVENT_LEN bytes APDU can be received 
-**                  using internal buffer if no response buffer is provided by 
-**                  the application. The app will be notified by 
-**                  NFA_HCI_EVENT_RCVD_EVT after receiving the response event 
-**                  or if an error occurs. If response buffer if provided by the 
-**                  application, it should wait for this event before releasing
-**                  the buffer.
+**                  If the app is expecting a response to the event then it can
+**                  provide response buffer for collecting the response.
+**                  Maximum of NFA_MAX_HCI_EVENT_LEN bytes APDU can be received
+**                  using internal buffer if no response buffer is provided by
+**                  the application. The app will be notified by
+**                  NFA_HCI_EVENT_RCVD_EVT after receiving the response event
+**                  or on timeout if app provided response buffer.
+**                  If response buffer is provided by the application, it should
+**                  wait for this event before releasing the response buffer.
 **
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_FAILED otherwise
 **
 *******************************************************************************/
-NFC_API extern tNFA_STATUS NFA_HciSendEvent (tNFA_HANDLE hci_handle, 
-                                            UINT8        pipe, 
+NFC_API extern tNFA_STATUS NFA_HciSendEvent (tNFA_HANDLE hci_handle,
+                                            UINT8        pipe,
                                             UINT8        evt_code,
                                             UINT16       evt_size,
                                             UINT8        *p_data,
-                                            UINT16       rsp_size, 
+                                            UINT16       rsp_size,
                                             UINT8        *p_rsp_buf);
 
 /*******************************************************************************
 **
 ** Function         NFA_HciClosePipe
 **
-** Description      This function is called to close a dynamic pipe. 
-**                  When the dynamic pipe is closed (or 
-**                  if an error occurs), the app will be notified with 
+** Description      This function is called to close a dynamic pipe.
+**                  When the dynamic pipe is closed (or
+**                  if an error occurs), the app will be notified with
 **                  NFA_HCI_CLOSE_PIPE_EVT with the pipe id.
-**                  
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_FAILED otherwise
 **
@@ -540,13 +540,13 @@ NFC_API extern tNFA_STATUS NFA_HciClosePipe (tNFA_HANDLE  hci_handle, UINT8 pipe
 ** Function         NFA_HciDeletePipe
 **
 ** Description      This function is called to delete a particular dynamic pipe.
-**                  When the dynamic pipe is deleted (or if an error occurs), 
-**                  the app will be notified with NFA_HCI_DELETE_PIPE_EVT with 
-**                  the pipe id. After successful deletion of pipe, registry 
-**                  entry will be deleted for the dynamic pipe and all 
-**                  information related to the pipe will be deleted from non 
+**                  When the dynamic pipe is deleted (or if an error occurs),
+**                  the app will be notified with NFA_HCI_DELETE_PIPE_EVT with
+**                  the pipe id. After successful deletion of pipe, registry
+**                  entry will be deleted for the dynamic pipe and all
+**                  information related to the pipe will be deleted from non
 **                  volatile memory.
-**                  
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_BAD_HANDLE if handle is not valid
 **                  NFA_STATUS_FAILED otherwise
@@ -559,7 +559,7 @@ NFC_API extern tNFA_STATUS NFA_HciDeletePipe (tNFA_HANDLE  hci_handle, UINT8 pip
 ** Function         NFA_HciDebug
 **
 ** Description      Debug function.
-**                  
+**
 *******************************************************************************/
 NFC_API extern void NFA_HciDebug (UINT8 action, UINT8 size, UINT8 *p_data);
 

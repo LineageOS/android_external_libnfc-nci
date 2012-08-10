@@ -47,6 +47,7 @@ BOOLEAN llcp_util_parse_link_params (UINT16 length, UINT8 *p_bytes)
         case LLCP_MIUX_TYPE:
             BE_STREAM_TO_UINT8 (param_len, p);
             BE_STREAM_TO_UINT16(llcp_cb.lcb.peer_miu, p);
+            llcp_cb.lcb.peer_miu &= LLCP_MIUX_MASK;
             llcp_cb.lcb.peer_miu += LLCP_DEFAULT_MIU;
             LLCP_TRACE_DEBUG1 ("Peer MIU - %d bytes", llcp_cb.lcb.peer_miu);
             break;
@@ -130,8 +131,8 @@ void llcp_util_adjust_ll_congestion (void)
         llcp_cb.ll_tx_congest_end = 0;
     }
 
-    LLCP_TRACE_DEBUG4 ("num_logical_data_link=%d, ll_tx_congest_start=%d, ll_tx_congest_end=%d, ll_rx_congest_start=%d", 
-                       llcp_cb.num_logical_data_link, 
+    LLCP_TRACE_DEBUG4 ("num_logical_data_link=%d, ll_tx_congest_start=%d, ll_tx_congest_end=%d, ll_rx_congest_start=%d",
+                       llcp_cb.num_logical_data_link,
                        llcp_cb.ll_tx_congest_start,
                        llcp_cb.ll_tx_congest_end,
                        llcp_cb.ll_rx_congest_start);
@@ -160,8 +161,8 @@ void llcp_util_adjust_dl_rx_congestion (void)
             {
                 if (rx_congest_start > llcp_cb.dlcb[idx].local_rw)
                 {
-                    /* 
-                    ** set rx congestion threshold LLCP_DL_MIN_RX_CONGEST at least 
+                    /*
+                    ** set rx congestion threshold LLCP_DL_MIN_RX_CONGEST at least
                     ** so, we don't need to flow off too often.
                     */
                     if (llcp_cb.dlcb[idx].local_rw + 1 > LLCP_DL_MIN_RX_CONGEST)
@@ -174,8 +175,8 @@ void llcp_util_adjust_dl_rx_congestion (void)
                     llcp_cb.dlcb[idx].rx_congest_threshold = LLCP_DL_MIN_RX_CONGEST;
                 }
 
-                LLCP_TRACE_DEBUG3 ("DLC[%d], local_rw=%d, rx_congest_threshold=%d", 
-                                   idx, 
+                LLCP_TRACE_DEBUG3 ("DLC[%d], local_rw=%d, rx_congest_threshold=%d",
+                                   idx,
                                    llcp_cb.dlcb[idx].local_rw,
                                    llcp_cb.dlcb[idx].rx_congest_threshold);
             }
@@ -492,6 +493,7 @@ tLLCP_STATUS llcp_util_parse_connect (UINT8  *p_bytes, UINT16 length, tLLCP_CONN
         case LLCP_MIUX_TYPE:
             BE_STREAM_TO_UINT8 (param_len, p);
             BE_STREAM_TO_UINT16(p_params->miu, p);
+            p_params->miu &= LLCP_MIUX_MASK;
             p_params->miu += LLCP_DEFAULT_MIU;
 
             LLCP_TRACE_DEBUG1 ("llcp_util_parse_connect(): LLCP_MIUX_TYPE:%d", p_params->miu);
@@ -629,6 +631,7 @@ tLLCP_STATUS llcp_util_parse_cc (UINT8 *p_bytes, UINT16 length, UINT16 *p_miu, U
         case LLCP_MIUX_TYPE:
             BE_STREAM_TO_UINT8(param_len, p);
             BE_STREAM_TO_UINT16((*p_miu), p);
+            (*p_miu) &= LLCP_MIUX_MASK;
             (*p_miu) += LLCP_DEFAULT_MIU;
 
             LLCP_TRACE_DEBUG1 ("llcp_util_parse_cc(): LLCP_MIUX_TYPE:%d", *p_miu);
@@ -810,7 +813,7 @@ void llcp_util_send_rr_rnr (tLLCP_DLCB *p_dlcb)
       ||(p_dlcb->is_rx_congested)
       ||(llcp_cb.overall_rx_congested))
     {
-        LLCP_TRACE_DEBUG3 ("llcp_util_send_rr_rnr(): local_busy=%d,is_rx_congested=%d,overall_rx_congested=%d", 
+        LLCP_TRACE_DEBUG3 ("llcp_util_send_rr_rnr(): local_busy=%d,is_rx_congested=%d,overall_rx_congested=%d",
                             p_dlcb->local_busy, p_dlcb->is_rx_congested, llcp_cb.overall_rx_congested);
 
         /* if local_busy or rx congested then do not update receive sequence number to flow off */
@@ -843,8 +846,8 @@ void llcp_util_send_rr_rnr (tLLCP_DLCB *p_dlcb)
         UINT8_TO_BE_STREAM  (p, rcv_seq);
 
 #if (BT_TRACE_VERBOSE == TRUE)
-        LLCP_TRACE_DEBUG5 ("LLCP TX - N(S,R):(NA,%d) V(S,SA,R,RA):(%d,%d,%d,%d)", 
-                            p_dlcb->next_rx_seq, 
+        LLCP_TRACE_DEBUG5 ("LLCP TX - N(S,R):(NA,%d) V(S,SA,R,RA):(%d,%d,%d,%d)",
+                            p_dlcb->next_rx_seq,
                             p_dlcb->next_tx_seq, p_dlcb->rcvd_ack_seq,
                             p_dlcb->next_rx_seq, p_dlcb->sent_ack_seq);
 #endif

@@ -2,7 +2,7 @@
 **
 ** File:         tags_int.h
 **
-**  Description:   This file contains the common data types shared by 
+**  Description:   This file contains the common data types shared by
 **                 Reader/Writer mode and Card Emulation.
 **
 ** Copyright (c) 2009-2010  Broadcom Corp.  All Rights Reserved.

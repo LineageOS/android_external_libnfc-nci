@@ -81,7 +81,7 @@ static BOOLEAN rw_t4t_send_to_lower (BT_HDR *p_c_apdu)
         return FALSE;
     }
 
-    nfc_start_quick_timer (&rw_cb.tcb.t4t.timer, NFC_TTYPE_RW_T4T_RESPONSE, 
+    nfc_start_quick_timer (&rw_cb.tcb.t4t.timer, NFC_TTYPE_RW_T4T_RESPONSE,
                            (RW_T4T_TOUT_RESP*QUICK_TIMER_TICKS_PER_SEC)/1000);
 
     return TRUE;
@@ -156,7 +156,7 @@ static BOOLEAN rw_t4t_read_file (UINT16 offset, UINT16 length, BOOLEAN is_contin
     BT_HDR          *p_c_apdu;
     UINT8           *p;
 
-    RW_TRACE_DEBUG3 ("rw_t4t_read_file() offset:%d, length:%d, is_continue:%d, ", 
+    RW_TRACE_DEBUG3 ("rw_t4t_read_file() offset:%d, length:%d, is_continue:%d, ",
                       offset, length, is_continue);
 
     p_c_apdu = (BT_HDR *)GKI_getpoolbuf(NFC_RW_POOL_ID);
@@ -204,7 +204,7 @@ static BOOLEAN rw_t4t_read_file (UINT16 offset, UINT16 length, BOOLEAN is_contin
 **
 ** Function         rw_t4t_update_nlen
 **
-** Description      Send UpdateBinary Command to update NLEN to peer  
+** Description      Send UpdateBinary Command to update NLEN to peer
 **
 ** Returns          TRUE if success
 **
@@ -231,7 +231,7 @@ static BOOLEAN rw_t4t_update_nlen (UINT16 ndef_len)
     UINT8_TO_BE_STREAM (p, T4T_CMD_INS_UPDATE_BINARY);
     UINT16_TO_BE_STREAM(p, 0x0000);                    /* offset for NLEN */
     UINT8_TO_BE_STREAM (p, T4T_FILE_LENGTH_SIZE);
-    UINT16_TO_BE_STREAM(p, ndef_len); 
+    UINT16_TO_BE_STREAM(p, ndef_len);
 
     p_c_apdu->len = T4T_CMD_MAX_HDR_SIZE + T4T_FILE_LENGTH_SIZE;
 
@@ -247,7 +247,7 @@ static BOOLEAN rw_t4t_update_nlen (UINT16 ndef_len)
 **
 ** Function         rw_t4t_update_file
 **
-** Description      Send UpdateBinary Command to peer  
+** Description      Send UpdateBinary Command to peer
 **
 ** Returns          TRUE if success
 **
@@ -259,7 +259,7 @@ static BOOLEAN rw_t4t_update_file (void)
     UINT8           *p;
     UINT16          length;
 
-    RW_TRACE_DEBUG2 ("rw_t4t_update_file() rw_offset:%d, rw_length:%d", 
+    RW_TRACE_DEBUG2 ("rw_t4t_update_file() rw_offset:%d, rw_length:%d",
                       p_t4t->rw_offset, p_t4t->rw_length);
 
     p_c_apdu = (BT_HDR *)GKI_getpoolbuf(NFC_RW_POOL_ID);
@@ -378,7 +378,7 @@ static BOOLEAN rw_t4t_select_application (UINT8 version)
 **
 ** Function         rw_t4t_validate_cc_file
 **
-** Description      Validate CC file and mandatory NDEF TLV  
+** Description      Validate CC file and mandatory NDEF TLV
 **
 ** Returns          TRUE if success
 **
@@ -398,7 +398,7 @@ static BOOLEAN rw_t4t_validate_cc_file(void)
 
     if (T4T_GET_MAJOR_VERSION(p_t4t->cc_file.version) != T4T_GET_MAJOR_VERSION(p_t4t->version))
     {
-        RW_TRACE_ERROR2 ("rw_t4t_validate_cc_file(): Peer version(0x%02X) is matched to ours(0x%02X)", 
+        RW_TRACE_ERROR2 ("rw_t4t_validate_cc_file(): Peer version(0x%02X) is matched to ours(0x%02X)",
                          p_t4t->cc_file.version, p_t4t->version);
         return FALSE;
     }
@@ -525,7 +525,7 @@ static void rw_t4t_handle_error (tNFC_STATUS status, UINT8 sw1, UINT8 sw2)
 **
 ** Function         rw_t4t_sm_detect_ndef
 **
-** Description      State machine for NDEF detection procedure  
+** Description      State machine for NDEF detection procedure
 **
 ** Returns          none
 **
@@ -538,7 +538,7 @@ static void rw_t4t_sm_detect_ndef (BT_HDR *p_r_apdu)
     tRW_DATA    rw_data;
 
 #if (BT_TRACE_VERBOSE == TRUE)
-    RW_TRACE_DEBUG2 ("rw_t4t_sm_detect_ndef(): sub_state:%s(%d)", 
+    RW_TRACE_DEBUG2 ("rw_t4t_sm_detect_ndef(): sub_state:%s(%d)",
                       rw_t4t_get_sub_state_name (p_t4t->sub_state), p_t4t->sub_state);
 #else
     RW_TRACE_DEBUG1 ("rw_t4t_sm_detect_ndef(): sub_state=%d", p_t4t->sub_state);
@@ -698,7 +698,7 @@ static void rw_t4t_sm_detect_ndef (BT_HDR *p_r_apdu)
                 }
 
                 /* Le: valid range is 0x01 to 0xFF */
-                if (p_t4t->max_read_size >= T4T_MAX_LENGTH_LE) 
+                if (p_t4t->max_read_size >= T4T_MAX_LENGTH_LE)
                 {
                     p_t4t->max_read_size = T4T_MAX_LENGTH_LE;
                 }
@@ -714,7 +714,7 @@ static void rw_t4t_sm_detect_ndef (BT_HDR *p_r_apdu)
                 }
 
                 /* Lc: valid range is 0x01 to 0xFF */
-                if (p_t4t->max_update_size >= T4T_MAX_LENGTH_LC) 
+                if (p_t4t->max_update_size >= T4T_MAX_LENGTH_LC)
                 {
                     p_t4t->max_update_size = T4T_MAX_LENGTH_LC;
                 }
@@ -784,7 +784,7 @@ static void rw_t4t_sm_read_ndef(BT_HDR *p_r_apdu)
     tRW_DATA    rw_data;
 
 #if (BT_TRACE_VERBOSE == TRUE)
-    RW_TRACE_DEBUG2 ("rw_t4t_sm_read_ndef(): sub_state:%s(%d)", 
+    RW_TRACE_DEBUG2 ("rw_t4t_sm_read_ndef(): sub_state:%s(%d)",
                       rw_t4t_get_sub_state_name (p_t4t->sub_state), p_t4t->sub_state);
 #else
     RW_TRACE_DEBUG1 ("rw_t4t_sm_read_ndef(): sub_state=%d", p_t4t->sub_state);
@@ -882,7 +882,7 @@ static void rw_t4t_sm_update_ndef(BT_HDR  *p_r_apdu)
     tRW_DATA    rw_data;
 
 #if (BT_TRACE_VERBOSE == TRUE)
-    RW_TRACE_DEBUG2 ("rw_t4t_sm_update_ndef(): sub_state:%s(%d)", 
+    RW_TRACE_DEBUG2 ("rw_t4t_sm_update_ndef(): sub_state:%s(%d)",
                       rw_t4t_get_sub_state_name (p_t4t->sub_state), p_t4t->sub_state);
 #else
     RW_TRACE_DEBUG1 ("rw_t4t_sm_update_ndef(): sub_state=%d", p_t4t->sub_state);
@@ -991,7 +991,7 @@ void rw_t4t_process_timeout (TIMER_LIST_ENT *p_tle)
 **
 ** Function         rw_t4t_data_cback
 **
-** Description      This callback function receives the data from NFCC.  
+** Description      This callback function receives the data from NFCC.
 **
 ** Returns          none
 **
@@ -1043,7 +1043,7 @@ static void rw_t4t_data_cback (UINT8 conn_id, tNFC_CONN_EVT event, tNFC_CONN *p_
 #endif
 
 #if (BT_TRACE_VERBOSE == TRUE)
-    RW_TRACE_DEBUG2 ("RW T4T state: <%s(%d)>", 
+    RW_TRACE_DEBUG2 ("RW T4T state: <%s(%d)>",
                         rw_t4t_get_state_name (p_t4t->state), p_t4t->state);
 #else
     RW_TRACE_DEBUG1 ("RW T4T state: %d", p_t4t->state);
@@ -1072,7 +1072,7 @@ static void rw_t4t_data_cback (UINT8 conn_id, tNFC_CONN_EVT event, tNFC_CONN *p_
         break;
     case RW_T4T_STATE_READ_NDEF:
         rw_t4t_sm_read_ndef (p_r_apdu);
-        /* p_r_apdu may send upper lyaer */ 
+        /* p_r_apdu may send upper lyaer */
         break;
     case RW_T4T_STATE_UPDATE_NDEF:
         rw_t4t_sm_update_ndef (p_r_apdu);
@@ -1094,8 +1094,8 @@ static void rw_t4t_data_cback (UINT8 conn_id, tNFC_CONN_EVT event, tNFC_CONN *p_
 #if (BT_TRACE_VERBOSE == TRUE)
     if (begin_state != p_t4t->state)
     {
-        RW_TRACE_DEBUG2 ("RW T4T state changed:<%s> -> <%s>", 
-                          rw_t4t_get_state_name (begin_state), 
+        RW_TRACE_DEBUG2 ("RW T4T state changed:<%s> -> <%s>",
+                          rw_t4t_get_state_name (begin_state),
                           rw_t4t_get_state_name (p_t4t->state));
     }
 #endif
@@ -1150,7 +1150,7 @@ tNFC_STATUS RW_T4tDetectNDef (void)
 
     if (rw_cb.tcb.t4t.state != RW_T4T_STATE_IDLE)
     {
-        RW_TRACE_ERROR1 ("RW_T4tDetectNDef():Unable to start command at state(0x%X)", 
+        RW_TRACE_ERROR1 ("RW_T4tDetectNDef():Unable to start command at state(0x%X)",
                           rw_cb.tcb.t4t.state);
         return NFC_STATUS_FAILED;
     }
@@ -1201,7 +1201,7 @@ tNFC_STATUS RW_T4tReadNDef (void)
 
     if (rw_cb.tcb.t4t.state != RW_T4T_STATE_IDLE)
     {
-        RW_TRACE_ERROR1 ("RW_T4tReadNDef():Unable to start command at state(0x%X)", 
+        RW_TRACE_ERROR1 ("RW_T4tReadNDef():Unable to start command at state(0x%X)",
                           rw_cb.tcb.t4t.state);
         return NFC_STATUS_FAILED;
     }
@@ -1249,7 +1249,7 @@ tNFC_STATUS RW_T4tUpdateNDef (UINT16 length, UINT8 *p_data)
 
     if (rw_cb.tcb.t4t.state != RW_T4T_STATE_IDLE)
     {
-        RW_TRACE_ERROR1 ("RW_T4tUpdateNDef():Unable to start command at state(0x%X)", 
+        RW_TRACE_ERROR1 ("RW_T4tUpdateNDef():Unable to start command at state(0x%X)",
                           rw_cb.tcb.t4t.state);
         return NFC_STATUS_FAILED;
     }
@@ -1302,7 +1302,7 @@ tNFC_STATUS RW_T4tUpdateNDef (UINT16 length, UINT8 *p_data)
 **
 ** Description
 **      Check if the tag is still in the field.
-**      
+**
 **      The RW_T4T_PRESENCE_CHECK_EVT w/ status is used to indicate presence
 **      or non-presence.
 **

@@ -20,10 +20,10 @@
 /*****************************************************************************
 ** Constants and types
 *****************************************************************************/
-static const tNFA_SYS_REG nfa_dm_sys_reg = 
+static const tNFA_SYS_REG nfa_dm_sys_reg =
 {
     nfa_dm_sys_enable,
-    nfa_dm_evt_hdlr, 
+    nfa_dm_evt_hdlr,
     nfa_dm_sys_disable,
     nfa_dm_proc_nfcc_power_mode
 };
@@ -76,7 +76,7 @@ static char *nfa_dm_evt_2_str (UINT16 event);
 **
 ** Function         nfa_dm_init
 **
-** Description      Initialises the NFC device manager 
+** Description      Initialises the NFC device manager
 **
 ** Returns          void
 **
@@ -98,7 +98,7 @@ void nfa_dm_init (void)
 ** Function         nfa_dm_evt_hdlr
 **
 ** Description      Event handling function for DM
-**                  
+**
 **
 ** Returns          void
 **
@@ -134,7 +134,7 @@ BOOLEAN nfa_dm_evt_hdlr (BT_HDR *p_msg)
 **
 ** Description      Wait for discovery suspended
 **
-** Returns          void                 
+** Returns          void
 **
 *******************************************************************************/
 void nfa_dm_disc_state_cback (UINT8 state)
@@ -149,7 +149,7 @@ void nfa_dm_disc_state_cback (UINT8 state)
 **
 ** Description      This function is called after all subsystems have been disabled.
 **
-** Returns          void                 
+** Returns          void
 **
 *******************************************************************************/
 void nfa_dm_sys_disable (void)
@@ -221,7 +221,7 @@ BOOLEAN nfa_dm_is_active (void)
 ** Function         nfa_dm_check_set_config
 **
 ** Description      Update config parameters only if it's different from NFCC
-**                  
+**
 **
 ** Returns          tNFA_STATUS
 **
@@ -396,7 +396,7 @@ tNFA_STATUS nfa_dm_check_set_config (UINT8 tlv_list_len, UINT8 *p_tlv_list, BOOL
             }
         }
 
-        if (update) 
+        if (update)
         {
             /* we don't store this type */
             if (p_stored)
@@ -439,7 +439,7 @@ tNFA_STATUS nfa_dm_check_set_config (UINT8 tlv_list_len, UINT8 *p_tlv_list, BOOL
             nfa_dm_cb.setcfg_pending_num++;
         }
         return (nfc_status);
-        
+
     }
     else
     {

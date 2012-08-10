@@ -3,7 +3,7 @@
 **
 **  Description:
 **
-**  This file contains codec definitions from Widcomm's Universal Embedded 
+**  This file contains codec definitions from Widcomm's Universal Embedded
 **  Drivers API.
 **
 **  Copyright (c) 2001, Widcomm Inc., All Rights Reserved.
@@ -43,11 +43,11 @@ typedef UINT8 tUCODEC_ID;
 #define UCODEC_WRONG_PARAM          0x07
 #define UCODEC_NOT_CONFIGURED       0x08
 #define UCODEC_OUT_OF_MEMORY        0x09
-#define UCODEC_GENERIC_ERROR        0x0a       
-#define UCODEC_RECOVERABLE_ERROR    0x0b 
-#define UCODEC_UNRECOVERABLE_ERROR  0x0c 
-#define UCODEC_LOW_LEVEL_DRIVER_ERROR   (0x0d) 
- 
+#define UCODEC_GENERIC_ERROR        0x0a
+#define UCODEC_RECOVERABLE_ERROR    0x0b
+#define UCODEC_UNRECOVERABLE_ERROR  0x0c
+#define UCODEC_LOW_LEVEL_DRIVER_ERROR   (0x0d)
+
 typedef UINT8 tUCODEC_STATUS;
 
 /**** Media type ****/
@@ -85,8 +85,8 @@ typedef UINT8 tUCODEC_VIDEO_FEAT_TYPE;
 typedef UINT8 tUCODEC_SBC_SMP_FREQ;
 
 /**** SBC sample frequency ****/
-#define UCODEC_SBC_SUBBAND_4    4  
-#define UCODEC_SBC_SUBBAND_8    8  
+#define UCODEC_SBC_SUBBAND_4    4
+#define UCODEC_SBC_SUBBAND_8    8
 
 typedef UINT8 tUCODEC_SBC_SUBBAND;
 /**** Allocation method ****/
@@ -106,10 +106,10 @@ typedef UINT8 tUCODEC_SBC_ALLOC_MD;
 typedef UINT8 tUCODEC_M12_SMP_FREQ;
 
 /**** Channel mode ****/
-#define UCODEC_CHN_MONO            0   
-#define UCODEC_CHN_DUAL            1   
-#define UCODEC_CHN_STEREO          2  
-#define UCODEC_CHN_JOINT_STEREO    3  
+#define UCODEC_CHN_MONO            0
+#define UCODEC_CHN_DUAL            1
+#define UCODEC_CHN_STEREO          2
+#define UCODEC_CHN_JOINT_STEREO    3
 
 typedef UINT8 tUCODEC_CH_MODE;
 /**** Audio Codec type ****/
@@ -132,7 +132,7 @@ typedef UINT8 tUCODEC_M24_SMP_FREQ;
 typedef struct tUCODEC_CNF_SBC_TAG
 {
     tUCODEC_SBC_SMP_FREQ    SampleFreq;
-    tUCODEC_CH_MODE         ChannelMode; 
+    tUCODEC_CH_MODE         ChannelMode;
     UINT16                  Offset;     /* GKI buffer based offset for UCODEC_ReadBuf */
     UINT16                  MtuSize;    /* Max buffer len for UCODEC_ReadBuf*/
     UINT8                   PoolId;     /* GKI pool ID for UCODEC_ReadBuf */
@@ -180,7 +180,7 @@ typedef union tUCODEC_FEATURE_TAG
     tUCODEC_CNF_M12 M12Config;
     tUCODEC_CNF_M24 M24Config;
     UINT8           Volume;     /* 0 to mute. 0xFF for the max volume */
-    UINT8           Balance;    /* 0->100% right, 255->100% left */ 
+    UINT8           Balance;    /* 0->100% right, 255->100% left */
     /* Add here the video feature structure */
     /* TBD */
 } tUCODEC_FEATURE;
@@ -203,22 +203,22 @@ typedef struct tUCODEC_BUF_INFO_TAG
 **
 ** Function         tUCODEC_CBACK_PTR
 **
-** Description      This call back report CODEC indication.  
-**                  It report codec error as well as flow onfrol indication. 
+** Description      This call back report CODEC indication.
+**                  It report codec error as well as flow onfrol indication.
 **
 **                  Input : CodecId: Id of the codec that calls this call back.
-**                          Status: ->UCODEC_FLOW_CTRL_OFF if the Tx Q just  
+**                          Status: ->UCODEC_FLOW_CTRL_OFF if the Tx Q just
 **                                  went below the low watermark
-**                                  ->UCODEC_RX_READY if data are ready to be 
-**                                  read. This olny hapens when the Rx Q was 
+**                                  ->UCODEC_RX_READY if data are ready to be
+**                                  read. This olny hapens when the Rx Q was
 **                                  empty before receiving data.
-**                                  ->UCODEC_INTERNAL_ERROR if something went 
+**                                  ->UCODEC_INTERNAL_ERROR if something went
 **                                  wrong with the driver
 **
 **                  Output Parameters : None
 **
 ** Returns          None.
-**                  
+**
 ******************************************************************************/
 typedef void (* tUCODEC_CBACK_PTR)(tUCODEC_ID, tUCODEC_STATUS);
 
@@ -230,17 +230,17 @@ typedef void (* tUCODEC_CBACK_PTR)(tUCODEC_ID, tUCODEC_STATUS);
 **
 ** Function         UCODEC_Init
 **
-** Description      Startup initialisation function. This function is called 
-**                  before any orther function of UCODEC it initialize UCODEC 
+** Description      Startup initialisation function. This function is called
+**                  before any orther function of UCODEC it initialize UCODEC
 **                  internal structure an the external codec.
 **
 **                  Input : CodecId: Id of the codec to perform the operation on.
 **
 **                  Output Parameters : None
 **
-** Returns          UCODEC_SUCCESS if The action was performed with sucess. 
+** Returns          UCODEC_SUCCESS if The action was performed with sucess.
 **                  Error code else.
-**                  
+**
 ******************************************************************************/
 BT_API extern tUCODEC_STATUS    UCODEC_Init       (void *);
 
@@ -248,8 +248,8 @@ BT_API extern tUCODEC_STATUS    UCODEC_Init       (void *);
 **
 ** Function         UCODEC_Configure
 **
-** Description      Initialise the CODEC for a particular stream. 
-**                 
+** Description      Initialise the CODEC for a particular stream.
+**
 **
 **                  Input : CodecId: Id of the codec to perform the operation on.
 **                          CbackPrt: Call back pointer for codec feedback.
@@ -257,8 +257,8 @@ BT_API extern tUCODEC_STATUS    UCODEC_Init       (void *);
 **
 **                  Output Parameters : None
 **
-** Returns          UCODEC_SUCCESS if The action was performed with sucess. 
-**                  
+** Returns          UCODEC_SUCCESS if The action was performed with sucess.
+**
 ******************************************************************************/
 BT_API extern tUCODEC_STATUS    UCODEC_Configure  (tUCODEC_ID, tUCODEC_CBACK_PTR, tUCODEC_CNF *);
 
@@ -266,15 +266,15 @@ BT_API extern tUCODEC_STATUS    UCODEC_Configure  (tUCODEC_ID, tUCODEC_CBACK_PTR
 **
 ** Function         UCODEC_FlushTx
 **
-** Description      Fluch Tx buffer Q. 
+** Description      Fluch Tx buffer Q.
 **
 **                  Input : CodecId: Id of the codec to perform the operation on.
 **
 **                  Output Parameters : None
 **
-** Returns          UCODEC_SUCCESS if The action was performed with sucess. 
+** Returns          UCODEC_SUCCESS if The action was performed with sucess.
 **                  Error code else.
-**                  
+**
 ******************************************************************************/
 BT_API extern tUCODEC_STATUS    UCODEC_FlushTx      (tUCODEC_ID);
 
@@ -282,15 +282,15 @@ BT_API extern tUCODEC_STATUS    UCODEC_FlushTx      (tUCODEC_ID);
 **
 ** Function         UCODEC_FlushRx
 **
-** Description      Fluch Rx buffer Q. 
+** Description      Fluch Rx buffer Q.
 **
 **                  Input : CodecId: Id of the codec to perform the operation on.
 **
 **                  Output Parameters : None
 **
-** Returns          UCODEC_SUCCESS if The action was performed with sucess. 
+** Returns          UCODEC_SUCCESS if The action was performed with sucess.
 **                  Error code else.
-**                  
+**
 ******************************************************************************/
 BT_API extern tUCODEC_STATUS    UCODEC_FlushRx      (tUCODEC_ID);
 
@@ -298,19 +298,19 @@ BT_API extern tUCODEC_STATUS    UCODEC_FlushRx      (tUCODEC_ID);
 **
 ** Function         UCODEC_WriteBuf
 **
-** Description      Send a buffer to the codec. 
+** Description      Send a buffer to the codec.
 **
 **                  Input : CodecId: Id of the codec to perform the operation on.
 **                          pBuf: Pointer onto the GKI buffer to be send to the CODEC.
 **
 **                  Output Parameters : None
 **
-** Returns          UCODEC_SUCCESS if The action was performed with sucess. 
+** Returns          UCODEC_SUCCESS if The action was performed with sucess.
 **                  UCODEC_FLOW_CTRL_ON if The codec buffer Q had reach a UCODEC_HIGH_WM
-**                                      watermark. The buffer is queued 
-**                  UCODEC_OVERFLOW if The codec buffer Q had reach a critical 
+**                                      watermark. The buffer is queued
+**                  UCODEC_OVERFLOW if The codec buffer Q had reach a critical
 **                                     watermark. The buffer is dropped.
-**                  
+**
 ******************************************************************************/
 BT_API extern tUCODEC_STATUS    UCODEC_WriteBuf   (tUCODEC_ID, BT_HDR *);
 
@@ -318,14 +318,14 @@ BT_API extern tUCODEC_STATUS    UCODEC_WriteBuf   (tUCODEC_ID, BT_HDR *);
 **
 ** Function         UCODEC_ReadBuf
 **
-** Description      Get a buffer from the codec. 
+** Description      Get a buffer from the codec.
 **
 **                  Input : CodecId: Id of the codec to perform the operation on.
 **
 **                  Output Parameters : None
 **
 ** Returns          Pointer on the GKI buffer. NULL if the Rx Q is empty
-**                  
+**
 ******************************************************************************/
 BT_API extern tUCODEC_STATUS  UCODEC_ReadBuf    (tUCODEC_ID, BT_HDR **, tUCODEC_BUF_INFO *);
 
@@ -334,15 +334,15 @@ BT_API extern tUCODEC_STATUS  UCODEC_ReadBuf    (tUCODEC_ID, BT_HDR **, tUCODEC_
 ** Function         UCODEC_Close
 **
 ** Description      This function is called to put the codec in low power mode
-**                  
+**
 **
 **                  Input : CodecId: Id of the codec to perform the operation on.
 **
 **                  Output Parameters : None
 **
-** Returns          UCODEC_SUCCESS : The action was performed with sucess. 
+** Returns          UCODEC_SUCCESS : The action was performed with sucess.
 **                  Error code else.
-**                  
+**
 ******************************************************************************/
 BT_API extern tUCODEC_STATUS   UCODEC_Close   (tUCODEC_ID);
 
@@ -350,17 +350,17 @@ BT_API extern tUCODEC_STATUS   UCODEC_Close   (tUCODEC_ID);
 **
 ** Function         UCODEC_Open
 **
-** Description      This function is called to resume the codec from low power 
-**                  mode after UCODEC_Close had been called. It will put the 
+** Description      This function is called to resume the codec from low power
+**                  mode after UCODEC_Close had been called. It will put the
 **                  codec in the state it was before UCODEC_Close being called.
 **
 **                  Input : CodecId: Id of the codec to perform the operation on.
 **
 **                  Output Parameters : None
 **
-** Returns          UCODEC_SUCCESS : The action was performed with sucess. 
+** Returns          UCODEC_SUCCESS : The action was performed with sucess.
 **                  Error code else.
-**                  
+**
 ******************************************************************************/
 BT_API extern tUCODEC_STATUS   UCODEC_Open     (tUCODEC_ID);
 

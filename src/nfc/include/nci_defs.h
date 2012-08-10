@@ -36,7 +36,7 @@ extern "C" {
 #define NCI_NFC_DEP_MAX_DATA      251   /* Max payload (254) - Protocol Header (3) in NFC-DEP, DID and NAD are not used */
 
 /* NCI Command and Notification Format:
- * 3 byte message header: 
+ * 3 byte message header:
  * byte 0: MT PBF GID
  * byte 1: OID
  * byte 2: Message Length */
@@ -126,7 +126,7 @@ extern "C" {
 
 /* builds 3-byte message header of NCI Data packet */
 #define NCI_DATA_BLD_HDR(p, cid, len) \
-    *(p)++ = (UINT8) (cid); *(p)++ = 0; *(p)++ = (UINT8)(len); 
+    *(p)++ = (UINT8) (cid); *(p)++ = 0; *(p)++ = (UINT8)(len);
 
 #define NCI_DATA_PBLD_HDR(p, pbf, cid, len) \
     *(p)++ = (UINT8) (((pbf) << NCI_PBF_SHIFT)|(cid)); *(p)++=0; *(p)++ = (len);
@@ -179,10 +179,10 @@ typedef UINT8 tNCI_STATUS;
 #define NCI_BIT_RATE_106                0x00/* 106 kbit/s */
 #define NCI_BIT_RATE_212                0x01/* 212 kbit/s */
 #define NCI_BIT_RATE_424                0x02/* 424 kbit/s */
-#define NCI_BIT_RATE_848                0x03/* 848 Kbit/s */ 
-#define NCI_BIT_RATE_1696               0x04/* 1696 Kbit/s*/ 
-#define NCI_BIT_RATE_3392               0x05/* 3392 Kbit/s*/ 
-#define NCI_BIT_RATE_6784               0x06/* 6784 Kbit/s*/ 
+#define NCI_BIT_RATE_848                0x03/* 848 Kbit/s */
+#define NCI_BIT_RATE_1696               0x04/* 1696 Kbit/s*/
+#define NCI_BIT_RATE_3392               0x05/* 3392 Kbit/s*/
+#define NCI_BIT_RATE_6784               0x06/* 6784 Kbit/s*/
 
 /**********************************************
  * NCI Core Group Opcode        - 0
@@ -436,7 +436,7 @@ typedef UINT8 tNCI_DISCOVERY_TYPE;
 
 
 /* NCI RF Management Group Params */
-#define NCI_RF_PARAM_SIZE_T3T_POLLING   0x04        /* System Code, RC, TSN */    
+#define NCI_RF_PARAM_SIZE_T3T_POLLING   0x04        /* System Code, RC, TSN */
 
 /**********************************************
  * NCI Parameter IDs
@@ -739,8 +739,8 @@ typedef struct
     } intf_param;       /* Activation Parameters   0 - n Bytes */
 } tNCI_INTF_PARAMS;
 
-/* 
-** HCI Network CMD/NTF structure 
+/*
+** HCI Network CMD/NTF structure
 */
 typedef struct
 {

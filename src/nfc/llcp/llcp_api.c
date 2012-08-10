@@ -20,7 +20,7 @@
 
 #if (LLCP_TEST_INCLUDED == TRUE) /* this is for LLCP testing */
 
-tLLCP_TEST_PARAMS llcp_test_params = 
+tLLCP_TEST_PARAMS llcp_test_params =
 {
     LLCP_VERSION_VALUE,
     0,                             /* not override */
@@ -51,6 +51,23 @@ void LLCP_SetTestParams (UINT8 version, UINT16 wks)
 
 /*******************************************************************************
 **
+** Function         LLCP_RegisterDtaCback
+**
+** Description      Register callback function for LLCP DTA testing
+**
+**
+** Returns          void
+**
+*******************************************************************************/
+void LLCP_RegisterDtaCback (tLLCP_DTA_CBACK *p_dta_cback)
+{
+    LLCP_TRACE_API0 ("LLCP_RegisterDtaCback()");
+
+    llcp_cb.p_dta_cback = p_dta_cback;
+}
+
+/*******************************************************************************
+**
 ** Function         LLCP_SetConfig
 **
 ** Description      Set configuration parameters for LLCP
@@ -67,10 +84,10 @@ void LLCP_SetTestParams (UINT8 version, UINT16 wks)
 ** Returns          void
 **
 *******************************************************************************/
-void LLCP_SetConfig (UINT16 link_miu, 
+void LLCP_SetConfig (UINT16 link_miu,
                      UINT8  opt,
-                     UINT8  wt,      
-                     UINT16 link_timeout, 
+                     UINT8  wt,
+                     UINT16 link_timeout,
                      UINT16 inact_timeout_init,
                      UINT16 inact_timeout_target,
                      UINT16 symm_delay,
@@ -85,13 +102,13 @@ void LLCP_SetConfig (UINT16 link_miu,
 
     if (link_miu < LLCP_DEFAULT_MIU)
     {
-        LLCP_TRACE_ERROR1 ("LLCP_SetConfig(): link_miu shall not be smaller than LLCP_DEFAULT_MIU(%d)", 
+        LLCP_TRACE_ERROR1 ("LLCP_SetConfig(): link_miu shall not be smaller than LLCP_DEFAULT_MIU(%d)",
                             LLCP_DEFAULT_MIU);
         link_miu = LLCP_DEFAULT_MIU;
     }
     else if (link_miu > LLCP_MAX_MIU)
     {
-        LLCP_TRACE_ERROR1 ("LLCP_SetConfig(): link_miu shall not be bigger than LLCP_MAX_MIU(%d)", 
+        LLCP_TRACE_ERROR1 ("LLCP_SetConfig(): link_miu shall not be bigger than LLCP_MAX_MIU(%d)",
                             LLCP_MAX_MIU);
         link_miu = LLCP_MAX_MIU;
     }
@@ -99,7 +116,7 @@ void LLCP_SetConfig (UINT16 link_miu,
     /* if Link MIU is bigger than GKI buffer */
     if (link_miu > LLCP_MIU)
     {
-        LLCP_TRACE_ERROR1 ("LLCP_SetConfig(): link_miu shall not be bigger than LLCP_MIU(%d)", 
+        LLCP_TRACE_ERROR1 ("LLCP_SetConfig(): link_miu shall not be bigger than LLCP_MIU(%d)",
                             LLCP_MIU);
         llcp_cb.lcb.local_link_miu = LLCP_MIU;
     }
@@ -117,7 +134,7 @@ void LLCP_SetConfig (UINT16 link_miu,
     }
     else if (link_timeout > LLCP_MAX_LTO_IN_MS)
     {
-        LLCP_TRACE_ERROR1 ("LLCP_SetConfig(): link_timeout shall not be bigger than LLCP_MAX_LTO_IN_MS(%d ms)", 
+        LLCP_TRACE_ERROR1 ("LLCP_SetConfig(): link_timeout shall not be bigger than LLCP_MAX_LTO_IN_MS(%d ms)",
                             LLCP_MAX_LTO_IN_MS);
         llcp_cb.lcb.local_lto = LLCP_MAX_LTO_IN_MS;
     }
@@ -149,10 +166,10 @@ void LLCP_SetConfig (UINT16 link_miu,
 ** Returns          void
 **
 *******************************************************************************/
-void LLCP_GetConfig (UINT16 *p_link_miu, 
+void LLCP_GetConfig (UINT16 *p_link_miu,
                      UINT8  *p_opt,
-                     UINT8  *p_wt,      
-                     UINT16 *p_link_timeout, 
+                     UINT8  *p_wt,
+                     UINT16 *p_link_timeout,
                      UINT16 *p_inact_timeout_init,
                      UINT16 *p_inact_timeout_target,
                      UINT16 *p_symm_delay,
@@ -183,10 +200,10 @@ void LLCP_GetConfig (UINT16 *p_link_miu,
 ** Description      Returns discovery config for ISO 18092 MAC link activation
 **                  This function is called to get general bytes for NFC_PMID_ATR_REQ_GEN_BYTES
 **                  or NFC_PMID_ATR_RES_GEN_BYTES before starting discovery.
-**                  
+**
 **                  wt:Waiting time 0 - 8, only for listen
 **                  p_gen_bytes: pointer to store LLCP magic number and paramters
-**                  p_gen_bytes_len: length of buffer for gen bytes as input 
+**                  p_gen_bytes_len: length of buffer for gen bytes as input
 **                                   (NOTE:it must be bigger than LLCP_MIN_GEN_BYTES)
 **                                   actual gen bytes size as output
 **
@@ -199,7 +216,7 @@ void LLCP_GetConfig (UINT16 *p_link_miu,
 **
 *******************************************************************************/
 void LLCP_GetDiscoveryConfig (UINT8 *p_wt,
-                              UINT8 *p_gen_bytes, 
+                              UINT8 *p_gen_bytes,
                               UINT8 *p_gen_bytes_len)
 {
     UINT8      *p = p_gen_bytes;
@@ -208,7 +225,7 @@ void LLCP_GetDiscoveryConfig (UINT8 *p_wt,
 
     if (*p_gen_bytes_len < LLCP_MIN_GEN_BYTES)
     {
-        LLCP_TRACE_ERROR1 ("LLCP_GetDiscoveryConfig(): GenBytes length shall not be smaller than LLCP_MIN_GEN_BYTES(%d)", 
+        LLCP_TRACE_ERROR1 ("LLCP_GetDiscoveryConfig(): GenBytes length shall not be smaller than LLCP_MIN_GEN_BYTES(%d)",
                             LLCP_MIN_GEN_BYTES);
         *p_gen_bytes_len = 0;
         return;
@@ -270,7 +287,7 @@ void LLCP_GetDiscoveryConfig (UINT8 *p_wt,
 **
 ** Description      This function will activate LLCP link with LR, WT and Gen Bytes
 **                  in activation NTF from NFCC.
-**                  
+**
 **                  LLCP_LINK_ACTIVATION_COMPLETE_EVT will be returned through
 **                  callback function if successful.
 **                  Otherwise, LLCP_LINK_ACTIVATION_FAILED_EVT will be returned.
@@ -278,7 +295,7 @@ void LLCP_GetDiscoveryConfig (UINT8 *p_wt,
 ** Returns          LLCP_STATUS_SUCCESS if success
 **
 *******************************************************************************/
-tLLCP_STATUS LLCP_ActivateLink (tLLCP_ACTIVATE_CONFIG config, 
+tLLCP_STATUS LLCP_ActivateLink (tLLCP_ACTIVATE_CONFIG config,
                                 tLLCP_LINK_CBACK     *p_link_cback)
 {
     LLCP_TRACE_API1 ("LLCP_ActivateLink() link_state = %d", llcp_cb.lcb.link_state);
@@ -327,7 +344,7 @@ tLLCP_STATUS LLCP_DeactivateLink (void)
 **                  reg_sap : Well-Known SAP except LM and SDP (0x02 - 0x0F)
 **                            Advertized by SDP (0x10 - 0x1F)
 **                            LLCP_INVALID_SAP, LLCP will allocate between 0x10 and 0x1F
-**                  link_type : LLCP_LINK_TYPE_LOGICAL_DATA_LINK 
+**                  link_type : LLCP_LINK_TYPE_LOGICAL_DATA_LINK
 **                              and/or LLCP_LINK_TYPE_DATA_LINK_CONNECTION
 **                  p_service_name : Null-terminated string up to LLCP_MAX_SN_LEN
 **
@@ -337,14 +354,14 @@ tLLCP_STATUS LLCP_DeactivateLink (void)
 *******************************************************************************/
 UINT8 LLCP_RegisterServer (UINT8           reg_sap,
                            UINT8           link_type,
-                           char            *p_service_name, 
+                           char            *p_service_name,
                            tLLCP_APP_CBACK *p_app_cback)
 {
     UINT8  sap;
     UINT16 length;
     tLLCP_APP_CB *p_app_cb;
 
-    LLCP_TRACE_API3 ("LLCP_RegisterServer(): SAP:0x%x, link_type:0x%x, ServiceName:<%s>", 
+    LLCP_TRACE_API3 ("LLCP_RegisterServer(): SAP:0x%x, link_type:0x%x, ServiceName:<%s>",
                      reg_sap, link_type, (p_service_name == NULL? "" : p_service_name));
 
     if (!p_app_cback)
@@ -419,7 +436,7 @@ UINT8 LLCP_RegisterServer (UINT8           reg_sap,
     }
     else if (reg_sap >= LLCP_LOWER_BOUND_LOCAL_SAP)
     {
-        LLCP_TRACE_ERROR2 ("LLCP_RegisterServer(): SAP(0x%x) must be less than 0x%x", 
+        LLCP_TRACE_ERROR2 ("LLCP_RegisterServer(): SAP(0x%x) must be less than 0x%x",
                             reg_sap, LLCP_LOWER_BOUND_LOCAL_SAP);
         return LLCP_INVALID_SAP;
     }
@@ -473,7 +490,7 @@ UINT8 LLCP_RegisterServer (UINT8           reg_sap,
 **
 ** Description      Register client and callback function
 **
-**                  link_type : LLCP_LINK_TYPE_LOGICAL_DATA_LINK 
+**                  link_type : LLCP_LINK_TYPE_LOGICAL_DATA_LINK
 **                              and/or LLCP_LINK_TYPE_DATA_LINK_CONNECTION
 **
 ** Returns          SAP between 0x20 and 0x3F, if success
@@ -613,14 +630,14 @@ tLLCP_STATUS LLCP_Deregister (UINT8 local_sap)
 ** Returns          TRUE if congested
 **
 *******************************************************************************/
-BOOLEAN LLCP_IsLogicalLinkCongested (UINT8 local_sap, 
+BOOLEAN LLCP_IsLogicalLinkCongested (UINT8 local_sap,
                                      UINT8 num_pending_ui_pdu,
                                      UINT8 total_pending_ui_pdu,
-                                     UINT8 total_pending_i_pdu) 
+                                     UINT8 total_pending_i_pdu)
 {
     tLLCP_APP_CB *p_app_cb;
 
-    LLCP_TRACE_API4 ("LLCP_IsLogicalLinkCongested() Local SAP:0x%x, pending = (%d, %d, %d)", 
+    LLCP_TRACE_API4 ("LLCP_IsLogicalLinkCongested() Local SAP:0x%x, pending = (%d, %d, %d)",
                      local_sap, num_pending_ui_pdu, total_pending_ui_pdu, total_pending_i_pdu);
 
     p_app_cb = llcp_util_get_app_cb (local_sap);
@@ -657,8 +674,8 @@ BOOLEAN LLCP_IsLogicalLinkCongested (UINT8 local_sap,
 **                  LLCP_STATUS_FAIL, otherwise
 **
 *******************************************************************************/
-tLLCP_STATUS LLCP_SendUI (UINT8   ssap, 
-                          UINT8   dsap, 
+tLLCP_STATUS LLCP_SendUI (UINT8   ssap,
+                          UINT8   dsap,
                           BT_HDR *p_buf)
 {
     tLLCP_STATUS status = LLCP_STATUS_FAIL;
@@ -728,7 +745,7 @@ tLLCP_STATUS LLCP_SendUI (UINT8   ssap,
 ** Returns          TRUE if more information of UI PDU or more UI PDU in queue
 **
 *******************************************************************************/
-BOOLEAN LLCP_ReadLogicalLinkData (UINT8  local_sap, 
+BOOLEAN LLCP_ReadLogicalLinkData (UINT8  local_sap,
                                   UINT32 max_data_len,
                                   UINT8  *p_remote_sap,
                                   UINT32 *p_data_len,
@@ -772,8 +789,8 @@ BOOLEAN LLCP_ReadLogicalLinkData (UINT8  local_sap,
 
                 /* move to next UI PDU if any */
                 p_buf->layer_specific = 0;  /* reset offset to read from the first byte of next UI PDU */
-                p_buf->offset += LLCP_PDU_AGF_LEN_SIZE + ui_pdu_length; 
-                p_buf->len    -= LLCP_PDU_AGF_LEN_SIZE + ui_pdu_length; 
+                p_buf->offset += LLCP_PDU_AGF_LEN_SIZE + ui_pdu_length;
+                p_buf->len    -= LLCP_PDU_AGF_LEN_SIZE + ui_pdu_length;
             }
             else
             {
@@ -853,8 +870,8 @@ UINT32 LLCP_FlushLogicalLinkRxData (UINT8 local_sap)
 
             /* move to next UI PDU if any */
             p_buf->layer_specific = 0;  /* offset */
-            p_buf->offset += LLCP_PDU_AGF_LEN_SIZE + ui_pdu_length; 
-            p_buf->len    -= LLCP_PDU_AGF_LEN_SIZE + ui_pdu_length; 
+            p_buf->offset += LLCP_PDU_AGF_LEN_SIZE + ui_pdu_length;
+            p_buf->len    -= LLCP_PDU_AGF_LEN_SIZE + ui_pdu_length;
 
             /* if read all of UI PDU */
             if (p_buf->len == 0)
@@ -880,7 +897,7 @@ UINT32 LLCP_FlushLogicalLinkRxData (UINT8 local_sap)
 **
 ** Function         LLCP_ConnectReq
 **
-** Description      Create data link connection between registered SAP and DSAP 
+** Description      Create data link connection between registered SAP and DSAP
 **                  in peer LLCP,
 **
 **
@@ -888,8 +905,8 @@ UINT32 LLCP_FlushLogicalLinkRxData (UINT8 local_sap)
 **                  LLCP_STATUS_FAIL, otherwise
 **
 *******************************************************************************/
-tLLCP_STATUS LLCP_ConnectReq (UINT8                    reg_sap, 
-                              UINT8                    dsap, 
+tLLCP_STATUS LLCP_ConnectReq (UINT8                    reg_sap,
+                              UINT8                    dsap,
                               tLLCP_CONNECTION_PARAMS *p_params)
 {
     tLLCP_DLCB   *p_dlcb;
@@ -942,7 +959,7 @@ tLLCP_STATUS LLCP_ConnectReq (UINT8                    reg_sap,
     if (p_dlcb)
     {
         /*
-        ** Accepting LLCP may change SAP in CC, so we cannot find right data link connection 
+        ** Accepting LLCP may change SAP in CC, so we cannot find right data link connection
         ** if there is multiple pending connection request on the same local SAP.
         */
         LLCP_TRACE_ERROR0 ("LLCP_ConnectReq(): There is pending connect request on this reg_sap");
@@ -980,14 +997,14 @@ tLLCP_STATUS LLCP_ConnectReq (UINT8                    reg_sap,
 **                  LLCP_STATUS_FAIL, otherwise
 **
 *******************************************************************************/
-tLLCP_STATUS LLCP_ConnectCfm (UINT8                    local_sap, 
-                              UINT8                    remote_sap, 
+tLLCP_STATUS LLCP_ConnectCfm (UINT8                    local_sap,
+                              UINT8                    remote_sap,
                               tLLCP_CONNECTION_PARAMS *p_params)
 {
     tLLCP_STATUS  status;
     tLLCP_DLCB   *p_dlcb;
 
-    LLCP_TRACE_API2 ("LLCP_ConnectCfm() Local SAP:0x%x, Remote SAP:0x%x)", 
+    LLCP_TRACE_API2 ("LLCP_ConnectCfm() Local SAP:0x%x, Remote SAP:0x%x)",
                      local_sap, remote_sap);
 
     if ((p_params)&&(p_params->miu > llcp_cb.lcb.local_link_miu))
@@ -1027,8 +1044,8 @@ tLLCP_STATUS LLCP_ConnectCfm (UINT8                    local_sap,
 **                  LLCP_STATUS_FAIL, otherwise
 **
 *******************************************************************************/
-tLLCP_STATUS LLCP_ConnectReject (UINT8 local_sap, 
-                                 UINT8 remote_sap, 
+tLLCP_STATUS LLCP_ConnectReject (UINT8 local_sap,
+                                 UINT8 remote_sap,
                                  UINT8 reason)
 {
     tLLCP_STATUS  status;
@@ -1063,15 +1080,15 @@ tLLCP_STATUS LLCP_ConnectReject (UINT8 local_sap,
 ** Returns          TRUE if congested
 **
 *******************************************************************************/
-BOOLEAN LLCP_IsDataLinkCongested (UINT8 local_sap, 
+BOOLEAN LLCP_IsDataLinkCongested (UINT8 local_sap,
                                   UINT8 remote_sap,
                                   UINT8 num_pending_i_pdu,
                                   UINT8 total_pending_ui_pdu,
-                                  UINT8 total_pending_i_pdu) 
+                                  UINT8 total_pending_i_pdu)
 {
     tLLCP_DLCB   *p_dlcb;
 
-    LLCP_TRACE_API5 ("LLCP_IsDataLinkCongested() Local SAP:0x%x, Remote SAP:0x%x, pending = (%d, %d, %d)", 
+    LLCP_TRACE_API5 ("LLCP_IsDataLinkCongested() Local SAP:0x%x, Remote SAP:0x%x, pending = (%d, %d, %d)",
                      local_sap, remote_sap, num_pending_i_pdu, total_pending_ui_pdu, total_pending_i_pdu);
 
     p_dlcb = llcp_dlc_find_dlcb_by_sap (local_sap, remote_sap);
@@ -1106,14 +1123,14 @@ BOOLEAN LLCP_IsDataLinkCongested (UINT8 local_sap,
 **                  LLCP_STATUS_CONGESTED if data link is congested
 **
 *******************************************************************************/
-tLLCP_STATUS LLCP_SendData (UINT8   local_sap, 
-                            UINT8   remote_sap, 
+tLLCP_STATUS LLCP_SendData (UINT8   local_sap,
+                            UINT8   remote_sap,
                             BT_HDR *p_buf)
 {
     tLLCP_STATUS  status = LLCP_STATUS_FAIL;
     tLLCP_DLCB   *p_dlcb;
 
-    LLCP_TRACE_API2 ("LLCP_SendData() Local SAP:0x%x, Remote SAP:0x%x", 
+    LLCP_TRACE_API2 ("LLCP_SendData() Local SAP:0x%x, Remote SAP:0x%x",
                      local_sap, remote_sap);
 
     p_dlcb = llcp_dlc_find_dlcb_by_sap (local_sap, remote_sap);
@@ -1136,7 +1153,7 @@ tLLCP_STATUS LLCP_SendData (UINT8   local_sap,
         {
             LLCP_TRACE_ERROR2 ("LLCP_SendData(): Information(%d bytes) cannot be more than peer MIU(%d bytes)",
                                 p_buf->len, p_dlcb->remote_miu);
-        } 
+        }
     }
     else
     {
@@ -1165,8 +1182,8 @@ tLLCP_STATUS LLCP_SendData (UINT8   local_sap,
 ** Returns          TRUE if more data in queue
 **
 *******************************************************************************/
-BOOLEAN LLCP_ReadDataLinkData (UINT8  local_sap, 
-                               UINT8  remote_sap, 
+BOOLEAN LLCP_ReadDataLinkData (UINT8  local_sap,
+                               UINT8  remote_sap,
                                UINT32 max_data_len,
                                UINT32 *p_data_len,
                                UINT8  *p_data)
@@ -1176,7 +1193,7 @@ BOOLEAN LLCP_ReadDataLinkData (UINT8  local_sap,
     UINT8      *p_i_pdu;
     UINT16     i_pdu_length;
 
-    LLCP_TRACE_API2 ("LLCP_ReadDataLinkData() Local SAP:0x%x, Remote SAP:0x%x", 
+    LLCP_TRACE_API2 ("LLCP_ReadDataLinkData() Local SAP:0x%x, Remote SAP:0x%x",
                       local_sap, remote_sap);
 
     p_dlcb = llcp_dlc_find_dlcb_by_sap (local_sap, remote_sap);
@@ -1204,8 +1221,8 @@ BOOLEAN LLCP_ReadDataLinkData (UINT8  local_sap,
 
                 /* move to next I PDU if any */
                 p_buf->layer_specific = 0;  /* reset offset to read from the first byte of next I PDU */
-                p_buf->offset += LLCP_PDU_AGF_LEN_SIZE + i_pdu_length; 
-                p_buf->len    -= LLCP_PDU_AGF_LEN_SIZE + i_pdu_length; 
+                p_buf->offset += LLCP_PDU_AGF_LEN_SIZE + i_pdu_length;
+                p_buf->len    -= LLCP_PDU_AGF_LEN_SIZE + i_pdu_length;
             }
             else
             {
@@ -1272,7 +1289,7 @@ BOOLEAN LLCP_ReadDataLinkData (UINT8  local_sap,
 ** Returns          length of rx data flushed
 **
 *******************************************************************************/
-UINT32 LLCP_FlushDataLinkRxData (UINT8  local_sap, 
+UINT32 LLCP_FlushDataLinkRxData (UINT8  local_sap,
                                  UINT8  remote_sap)
 {
     tLLCP_DLCB *p_dlcb;
@@ -1281,7 +1298,7 @@ UINT32 LLCP_FlushDataLinkRxData (UINT8  local_sap,
     UINT8      *p_i_pdu;
     UINT16     i_pdu_length;
 
-    LLCP_TRACE_API2 ("LLCP_FlushDataLinkRxData() Local SAP:0x%x, Remote SAP:0x%x", 
+    LLCP_TRACE_API2 ("LLCP_FlushDataLinkRxData() Local SAP:0x%x, Remote SAP:0x%x",
                       local_sap, remote_sap);
 
     p_dlcb = llcp_dlc_find_dlcb_by_sap (local_sap, remote_sap);
@@ -1301,8 +1318,8 @@ UINT32 LLCP_FlushDataLinkRxData (UINT8  local_sap,
 
             /* move to next I PDU if any */
             p_buf->layer_specific = 0;  /* offset */
-            p_buf->offset += LLCP_PDU_AGF_LEN_SIZE + i_pdu_length; 
-            p_buf->len    -= LLCP_PDU_AGF_LEN_SIZE + i_pdu_length; 
+            p_buf->offset += LLCP_PDU_AGF_LEN_SIZE + i_pdu_length;
+            p_buf->len    -= LLCP_PDU_AGF_LEN_SIZE + i_pdu_length;
 
             /* if read all of I PDU */
             if (p_buf->len == 0)
@@ -1345,8 +1362,8 @@ UINT32 LLCP_FlushDataLinkRxData (UINT8  local_sap,
 ** Returns          LLCP_STATUS_SUCCESS if success
 **
 *******************************************************************************/
-tLLCP_STATUS LLCP_DisconnectReq (UINT8 local_sap, 
-                                 UINT8 remote_sap, 
+tLLCP_STATUS LLCP_DisconnectReq (UINT8 local_sap,
+                                 UINT8 remote_sap,
                                  BOOLEAN flush)
 {
     tLLCP_STATUS  status;
@@ -1388,7 +1405,7 @@ tLLCP_STATUS LLCP_SetTxCompleteNtf (UINT8   local_sap,
     tLLCP_STATUS  status;
     tLLCP_DLCB   *p_dlcb;
 
-    LLCP_TRACE_API2 ("LLCP_SetTxCompleteNtf() Local SAP:0x%x, Remote SAP:0x%x", 
+    LLCP_TRACE_API2 ("LLCP_SetTxCompleteNtf() Local SAP:0x%x, Remote SAP:0x%x",
                       local_sap, remote_sap);
 
     p_dlcb = llcp_dlc_find_dlcb_by_sap (local_sap, remote_sap);
@@ -1425,7 +1442,7 @@ tLLCP_STATUS LLCP_SetLocalBusyStatus (UINT8   local_sap,
     tLLCP_STATUS  status;
     tLLCP_DLCB   *p_dlcb;
 
-    LLCP_TRACE_API2 ("LLCP_SetLocalBusyStatus() Local SAP:0x%x, is_busy=%d", 
+    LLCP_TRACE_API2 ("LLCP_SetLocalBusyStatus() Local SAP:0x%x, is_busy=%d",
                       local_sap, is_busy);
 
     p_dlcb = llcp_dlc_find_dlcb_by_sap (local_sap, remote_sap);
@@ -1470,7 +1487,7 @@ tLLCP_STATUS LLCP_SetLocalBusyStatus (UINT8   local_sap,
 *******************************************************************************/
 UINT16 LLCP_GetRemoteWKS (void)
 {
-    LLCP_TRACE_API1 ("LLCP_GetRemoteWKS() WKS:0x%04x", 
+    LLCP_TRACE_API1 ("LLCP_GetRemoteWKS() WKS:0x%04x",
                      (llcp_cb.lcb.link_state == LLCP_LINK_STATE_ACTIVATED) ? llcp_cb.lcb.peer_wks :0);
 
     if (llcp_cb.lcb.link_state == LLCP_LINK_STATE_ACTIVATED)
@@ -1491,8 +1508,8 @@ UINT16 LLCP_GetRemoteWKS (void)
 *******************************************************************************/
 UINT8 LLCP_GetRemoteLSC (void)
 {
-    LLCP_TRACE_API1 ("LLCP_GetRemoteLSC() LSC:0x%x", 
-                     (llcp_cb.lcb.link_state == LLCP_LINK_STATE_ACTIVATED) 
+    LLCP_TRACE_API1 ("LLCP_GetRemoteLSC() LSC:0x%x",
+                     (llcp_cb.lcb.link_state == LLCP_LINK_STATE_ACTIVATED)
                      ? llcp_cb.lcb.peer_opt & (LLCP_LSC_1 | LLCP_LSC_2) :0);
 
     if (llcp_cb.lcb.link_state == LLCP_LINK_STATE_ACTIVATED)
@@ -1511,7 +1528,7 @@ UINT8 LLCP_GetRemoteLSC (void)
 ** Returns          None
 **
 *******************************************************************************/
-LLCP_API void LLCP_GetLinkMIU (UINT16 *p_local_link_miu, 
+LLCP_API void LLCP_GetLinkMIU (UINT16 *p_local_link_miu,
                                UINT16 *p_remote_link_miu)
 {
     LLCP_TRACE_API0 ("LLCP_GetLinkMIU()");
@@ -1541,14 +1558,14 @@ LLCP_API void LLCP_GetLinkMIU (UINT16 *p_local_link_miu,
 ** Returns          LLCP_STATUS_SUCCESS if success
 **
 *******************************************************************************/
-tLLCP_STATUS LLCP_DiscoverService (char            *p_name, 
-                                   tLLCP_SDP_CBACK *p_cback, 
+tLLCP_STATUS LLCP_DiscoverService (char            *p_name,
+                                   tLLCP_SDP_CBACK *p_cback,
                                    UINT8           *p_tid)
 {
     tLLCP_STATUS  status;
     UINT8         i;
 
-    LLCP_TRACE_API1 ("LLCP_DiscoverService() Service Name:%s", 
+    LLCP_TRACE_API1 ("LLCP_DiscoverService() Service Name:%s",
                       p_name);
 
     if (llcp_cb.lcb.link_state != LLCP_LINK_STATE_ACTIVATED)

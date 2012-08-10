@@ -43,7 +43,7 @@ typedef struct {
     BOOLEAN reactivation;                   /* NFA_DTA_CFG_REACTIVATION   */
     UINT16  total_duration;                 /* NFA_DTA_CFG_TOTAL_DURATION */
     BOOLEAN enable_dta_llcp;                /* NFA_DTA_CFG_LLCP */
-    BOOLEAN enable_dta_snep;                /* NFA_DTA_CFG_SNEP */
+    tNFA_DTA_SNEP_MODE dta_snep_mode;       /* NFA_DTA_CFG_SNEP */
 } tNFA_DTA_CONFIG;
 
 /*****************************************************************************
@@ -58,7 +58,6 @@ enum
     NFA_DTA_API_CONFIG_EVT,
     NFA_DTA_API_START_EVT,
     NFA_DTA_API_STOP_EVT,
-    NFA_DTA_API_SNEP_CLIENT_TEST_MODE_EVT,
     NFA_DTA_ACTIVATE_EVT,
     NFA_DTA_DEACTIVATE_EVT,
     NFA_DTA_DATA_CBACK_EVT,
@@ -70,7 +69,7 @@ enum
 /* data type for NFA_DTA_API_ENABLE_EVT */
 typedef struct
 {
-    BT_HDR          hdr;      
+    BT_HDR          hdr;
     BOOLEAN         auto_start;
     tNFA_DTA_CBACK  *p_cback;
 } tNFA_DTA_API_ENABLE;
@@ -111,11 +110,20 @@ typedef struct
     tNFC_CONN               data;
 } tNFA_DTA_NFCDEP_DATA;
 
-enum 
+
+enum
+{
+    NFA_DTA_LLCP_CONNECT_CO_ECHO_OUT,
+    NFA_DTA_LLCP_DISCONNECT_CO_ECHO_OUT
+};
+typedef UINT8 tNFA_DTA_LLCP_EVT;
+
+enum
 {
     NFA_DTA_RW_DATA,
     NFA_DTA_CE_DATA,
-    NFA_DTA_NFCDEP_DATA
+    NFA_DTA_NFCDEP_DATA,
+    NFA_DTA_LLCP_DATA
 };
 
 typedef UINT8 tNFA_DTA_DATA_TYPE;
@@ -129,13 +137,14 @@ typedef struct
         tNFA_DTA_RW_DATA        rw;
         tNFA_DTA_CE_DATA        ce;
         tNFA_DTA_NFCDEP_DATA    nfcdep;
+        tNFA_DTA_LLCP_EVT       llcp_evt;
     } data;
 } tNFA_DTA_DATA_CBACK;
 
 /* All API message type */
-typedef union 
+typedef union
 {
-    BT_HDR              hdr;      
+    BT_HDR              hdr;
     tNFA_DTA_API_ENABLE enable;
     tNFA_DTA_API_CONFIG cfg;
     tNFA_DTA_API_START  start;
@@ -291,7 +300,7 @@ typedef struct {
 
     /* Scratch buffer for miscelaneous use */
     UINT8               scratch_buf[NFA_DTA_SCRATCH_BUF_SIZE];
-    
+
     /* DTA Test command table */
     tNFA_DTA_CMD_FCN    *p_cur_cmd_tbl; /* Current table of commands for current test */
     UINT8               cur_cmd_idx;
@@ -326,7 +335,6 @@ BOOLEAN nfa_dta_handle_deact (tNFA_DTA_MSG *p_data);
 BOOLEAN nfa_dta_stop (tNFA_DTA_MSG *p_data);
 BOOLEAN nfa_dta_run_test (tNFA_DTA_MSG *p_data);
 BOOLEAN nfa_dta_proc_data (tNFA_DTA_MSG *p_msg_data);
-BOOLEAN nfa_dta_snep_client_mode (tNFA_DTA_MSG *p_msg_data);
 
 /* Utility functions */
 void nfa_dta_test_set_state (tNFA_DTA_STATE state);
@@ -363,9 +371,12 @@ void nfa_dta_t4t_deregister_apps (void);
 void nfa_dta_llcp_register_echo (void);
 void nfa_dta_llcp_deregister_echo (void);
 void nfa_dta_llcp_activate_link (void);
+void nfa_dta_llcp_connect_co_echo_out (void);
+void nfa_dta_llcp_disconnect_co_echo_out (void);
 
 void nfa_dta_snep_register (void);
 void nfa_dta_snep_deregister (void);
+void nfa_dta_snep_mode (tNFA_DTA_SNEP_MODE mode);
 
 #endif /* NFA_DTA_INT_H */
 

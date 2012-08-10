@@ -74,7 +74,7 @@ void nfa_sys_cback_reg_nfcc_power_mode_proc_complete (tNFA_SYS_PROC_NFCC_PWR_MOD
 **
 ** Function         nfa_sys_cback_notify_nfcc_power_mode_proc_complete
 **
-** Description      Called by other NFA subsystems to notify processing NFCC power 
+** Description      Called by other NFA subsystems to notify processing NFCC power
 **                  mode is complete
 **
 ** Returns          void

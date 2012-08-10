@@ -26,7 +26,7 @@
 ****************************************************************************/
 
 /* Default NCI port configuration  */
-NCI_CFG_QUALIFIER tNCI_CFG nci_cfg = 
+NCI_CFG_QUALIFIER tNCI_CFG nci_cfg =
 {
     NFC_SHARED_TRANSPORT_ENABLED,   /* bSharedTransport */
     USERIAL_BAUD_115200,            /* Baud rate */
@@ -471,7 +471,7 @@ static void nci_send_error (UINT16 error_code)
 
 /*******************************************************************************
 **
-** Function         nci_update_window 
+** Function         nci_update_window
 **
 ** Description      Update tx cmd window to indicate that NFCC can received
 **                  is_rsp=TRUE if receiving valid NCI rsp from NFCC
@@ -506,7 +506,7 @@ void nci_update_window(BOOLEAN is_rsp)
 
 /*******************************************************************************
 **
-** Function         nci_cmd_timeout 
+** Function         nci_cmd_timeout
 **
 ** Description      Handle a command timeout
 **
@@ -516,7 +516,7 @@ void nci_update_window(BOOLEAN is_rsp)
 void nci_cmd_timeout (void)
 {
     NFC_TRACE_ERROR0("nci_cmd_timeout");
-    /* report an error */    
+    /* report an error */
     nci_send_error (NFC_ERR_CMD_TIMEOUT);
     /* Send next command in the xmit_q */
     nci_update_window(FALSE);
@@ -524,10 +524,10 @@ void nci_cmd_timeout (void)
 
 /*******************************************************************************
 **
-** Function         nci_store_n_to_lower 
+** Function         nci_store_n_to_lower
 **
 ** Description      Copy part of the command and
-**                  send the command to transport 
+**                  send the command to transport
 **
 ** Returns          TRUE if the buffer can be sent to transport
 **
@@ -542,7 +542,7 @@ static BOOLEAN nci_store_n_to_lower (BT_HDR *p_buf)
     tNCI_INT_EVT    int_event;
     UINT8           hdr[NCI_VSC_MSG_HDR_SIZE];
     UINT8   nci_ctrl_size = nfc_cb.nci_ctrl_size;
-    UINT8   delta;
+    UINT8   delta = 0;
 
     if (nci_cb.p_vs_evt_hdlr)
     {
@@ -600,8 +600,11 @@ static BOOLEAN nci_store_n_to_lower (BT_HDR *p_buf)
         /* send this fragment to transport */
         p = (UINT8 *)(p_buf + 1) + p_buf->offset;
 #ifdef DISP_NCI
-        delta = p_buf->len - max_len;
-        DISP_NCI (p + delta, (UINT16)(p_buf->len - delta), FALSE);
+        if (int_event == NCI_INT_SEND_NCI_MSG_EVT)
+        {
+            delta = p_buf->len - max_len;
+            DISP_NCI (p + delta, (UINT16)(p_buf->len - delta), FALSE);
+        }
 #endif
         USERIAL_Write (USERIAL_NFC_PORT, p, p_buf->len);
 
@@ -626,8 +629,11 @@ static BOOLEAN nci_store_n_to_lower (BT_HDR *p_buf)
     /* send this fragment to transport */
     p = (UINT8 *)(p_buf + 1) + p_buf->offset;
 #ifdef DISP_NCI
-    delta = p_buf->len - buf_len;
-    DISP_NCI (p + delta, (UINT16)(p_buf->len - delta), FALSE);
+    if (int_event == NCI_INT_SEND_NCI_MSG_EVT)
+    {
+        delta = p_buf->len - buf_len;
+        DISP_NCI (p + delta, (UINT16)(p_buf->len - delta), FALSE);
+    }
 #endif
     USERIAL_Write (USERIAL_NFC_PORT, p, p_buf->len);
 
@@ -862,7 +868,7 @@ static BOOLEAN nci_receive_msg (tNCI_CB *p_cb, UINT8 byte)
         }
         else
         {
-            NCI_TRACE_ERROR0 ("Unable to allocate buffer for incoming NCI message."); 
+            NCI_TRACE_ERROR0 ("Unable to allocate buffer for incoming NCI message.");
         }
         p_cb->rcv_len--;
         break;
@@ -1095,7 +1101,7 @@ void nci_start_quick_timer (TIMER_LIST_ENT *p_tle, UINT16 type, UINT32 timeout)
             GKI_start_timer (NCI_QUICK_TIMER_ID, ((GKI_SECS_TO_TICKS (1)/QUICK_TIMER_TICKS_PER_SEC)), TRUE);
         }
     }
-    
+
     GKI_remove_from_timer_list (&nci_cb.quick_timer_queue, p_tle);
 
     p_tle->event = type;
@@ -1161,7 +1167,7 @@ static void nci_process_quick_timer_evt(void)
 **
 ** Function         nci_send_message
 **
-** Description      This function is calledto send an NCI message. 
+** Description      This function is calledto send an NCI message.
 **
 ** Returns          void
 **
@@ -1368,7 +1374,7 @@ static void nci_proc_nfc_msgs (BT_HDR *p_msg)
         /* deactivate API is called. Check there are outstanding data credits */
         nci_release_conn_cb_buffers (p_cb);
         nci_cb.nci_flags    |= NCI_FLAGS_DEACTIVATING;
-        if (p_cb->init_credits == p_cb->num_buff)
+        if ((p_cb->init_credits == p_cb->num_buff) || (p_msg->offset != NCI_PROTOCOL_NFC_DEP))
         {
             nci_confirm_deactivate();
         }
@@ -1438,7 +1444,7 @@ UINT32 nci_task (UINT32 param)
             USERIAL_Close (USERIAL_NFC_PORT);
 
             nci_cb.nci_cmd_cmpl_timer.p_cback = nci_task_timeout_cback;
-            nci_start_quick_timer (&nci_cb.nci_cmd_cmpl_timer, NCI_TTYPE_POWER_CYCLE, 
+            nci_start_quick_timer (&nci_cb.nci_cmd_cmpl_timer, NCI_TTYPE_POWER_CYCLE,
                                    (NCI_POWER_CYCLE_DELAY*QUICK_TIMER_TICKS_PER_SEC)/1000);
 
             continue;
@@ -1466,7 +1472,8 @@ UINT32 nci_task (UINT32 param)
                     {
                         (*nci_cb.p_vs_evt_hdlr) (NCI_INT_VS_MSG_EVT, p_msg);
                     }
-                    break;
+                    /* do not free buffer. it is already freed or will be freed after processing */
+                    continue;
 
                 case BT_EVT_TO_NFC_MSGS:
                     nci_proc_nfc_msgs (p_msg);
@@ -1522,7 +1529,7 @@ UINT32 nci_task (UINT32 param)
                             if (continue_to_process)
                             {
                                 /* Send message to NFC_TASK for processing by the stack */
-                                GKI_send_msg (NFC_TASK, NFC_MBOX_ID, nci_cb.p_rcv_msg); 
+                                GKI_send_msg (NFC_TASK, NFC_MBOX_ID, nci_cb.p_rcv_msg);
                             }
                             else
                             {

@@ -27,7 +27,7 @@ enum
 {
     /* Note: the order of these events can not be changed */
     /* Type 1 tag events for tRW_CBACK */
-    RW_T1T_RID_EVT = RW_T1T_FIRST_EVT,          /* Read ID command completd              */ 
+    RW_T1T_RID_EVT = RW_T1T_FIRST_EVT,          /* Read ID command completd              */
     RW_T1T_RALL_CPLT_EVT,                       /* Read All command completed            */
     RW_T1T_READ_CPLT_EVT,                       /* Read byte completed                   */
     RW_T1T_WRITE_E_CPLT_EVT,                    /* Write byte after erase completed      */
@@ -43,7 +43,7 @@ enum
     RW_T1T_SET_TAG_RO_EVT,                      /* Tag is set as read only               */
     RW_T1T_RAW_FRAME_EVT,                       /* Response of raw frame sent            */
     RW_T1T_PRESENCE_CHECK_EVT,                  /* Response to RW_T1tPresenceCheck       */
-    RW_T1T_FORMAT_CPLT_EVT,                     /* Tag Formated                          */ 
+    RW_T1T_FORMAT_CPLT_EVT,                     /* Tag Formated                          */
     RW_T1T_INTF_ERROR_EVT,                      /* RF Interface error event              */
     RW_T1T_MAX_EVT,
 
@@ -58,7 +58,7 @@ enum
     RW_T2T_SET_TAG_RO_EVT,                      /* Tag is set as read only               */
     RW_T2T_RAW_FRAME_EVT,                       /* Response of raw frame sent            */
     RW_T2T_PRESENCE_CHECK_EVT,                  /* Response to RW_T2tPresenceCheck       */
-    RW_T2T_FORMAT_CPLT_EVT,                     /* Tag Formated                          */ 
+    RW_T2T_FORMAT_CPLT_EVT,                     /* Tag Formated                          */
     RW_T2T_INTF_ERROR_EVT,                      /* RF Interface error event              */
     RW_T2T_MAX_EVT,
 
@@ -95,7 +95,7 @@ enum
     RW_I93_NDEF_READ_FAIL_EVT,                  /* Read operation failed              */
     RW_I93_NDEF_UPDATE_CPLT_EVT,                /* Update operation completed         */
     RW_I93_NDEF_UPDATE_FAIL_EVT,                /* Update operation failed            */
-    RW_I93_FORMAT_CPLT_EVT,                     /* Format procedure complete          */ 
+    RW_I93_FORMAT_CPLT_EVT,                     /* Format procedure complete          */
     RW_I93_SET_TAG_RO_EVT,                      /* Set read-only procedure complete   */
     RW_I93_INVENTORY_EVT,                       /* Response of Inventory              */
     RW_I93_DATA_EVT,                            /* Response of Read, Get Multi Security */
@@ -240,7 +240,7 @@ typedef void (tRW_CBACK) (tRW_EVENT event, tRW_DATA *p_data);
 **
 ** Function         RW_T1tRid
 **
-** Description      This function send a RID command for Reader/Writer mode.  
+** Description      This function send a RID command for Reader/Writer mode.
 **
 ** Returns          tNFC_STATUS
 **
@@ -251,7 +251,7 @@ NFC_API extern tNFC_STATUS RW_T1tRid (void);
 **
 ** Function         RW_T1tReadAll
 **
-** Description      This function send a RALL command for Reader/Writer mode.  
+** Description      This function send a RALL command for Reader/Writer mode.
 **
 ** Returns          tNFC_STATUS
 **
@@ -262,7 +262,7 @@ NFC_API extern tNFC_STATUS RW_T1tReadAll (void);
 **
 ** Function         RW_T1tRead
 **
-** Description      This function send a READ command for Reader/Writer mode.  
+** Description      This function send a READ command for Reader/Writer mode.
 **
 ** Returns          tNFC_STATUS
 **
@@ -273,7 +273,7 @@ NFC_API extern tNFC_STATUS RW_T1tRead (UINT8 block, UINT8 byte);
 **
 ** Function         RW_T1tWriteErase
 **
-** Description      This function send a WRITE-E command for Reader/Writer mode.  
+** Description      This function send a WRITE-E command for Reader/Writer mode.
 **
 ** Returns          tNFC_STATUS
 **
@@ -284,7 +284,7 @@ NFC_API extern tNFC_STATUS RW_T1tWriteErase (UINT8 block, UINT8 byte, UINT8 new_
 **
 ** Function         RW_T1tWriteNoErase
 **
-** Description      This function send a WRITE-NE command for Reader/Writer mode.  
+** Description      This function send a WRITE-NE command for Reader/Writer mode.
 **
 ** Returns          tNFC_STATUS
 **
@@ -295,7 +295,7 @@ NFC_API extern tNFC_STATUS RW_T1tWriteNoErase (UINT8 block, UINT8 byte, UINT8 ne
 **
 ** Function         RW_T1tReadSeg
 **
-** Description      This function send a RSEG command for Reader/Writer mode.  
+** Description      This function send a RSEG command for Reader/Writer mode.
 **
 ** Returns          tNFC_STATUS
 **
@@ -306,7 +306,7 @@ NFC_API extern tNFC_STATUS RW_T1tReadSeg (UINT8 segment);
 **
 ** Function         RW_T1tRead8
 **
-** Description      This function send a READ8 command for Reader/Writer mode.  
+** Description      This function send a READ8 command for Reader/Writer mode.
 **
 ** Returns          tNFC_STATUS
 **
@@ -317,7 +317,7 @@ NFC_API extern tNFC_STATUS RW_T1tRead8 (UINT8 block);
 **
 ** Function         RW_T1tWriteErase8
 **
-** Description      This function send a WRITE-E8 command for Reader/Writer mode.  
+** Description      This function send a WRITE-E8 command for Reader/Writer mode.
 **
 ** Returns          tNFC_STATUS
 **
@@ -328,7 +328,7 @@ NFC_API extern tNFC_STATUS RW_T1tWriteErase8 (UINT8 block, UINT8 *p_new_dat);
 **
 ** Function         RW_T1tWriteNoErase8
 **
-** Description      This function send a WRITE-NE8 command for Reader/Writer mode.  
+** Description      This function send a WRITE-NE8 command for Reader/Writer mode.
 **
 ** Returns          tNFC_STATUS
 **
@@ -339,7 +339,7 @@ NFC_API extern tNFC_STATUS RW_T1tWriteNoErase8 (UINT8 block, UINT8 *p_new_dat);
 **
 ** Function         RW_T1tLocateTlv
 **
-** Description      This function is called to find the start of the given TLV 
+** Description      This function is called to find the start of the given TLV
 **
 ** Parameters:      void
 **
@@ -352,7 +352,7 @@ NFC_API extern tNFC_STATUS RW_T1tLocateTlv (UINT8 tlv_type);
 **
 ** Function         RW_T2tDetectNDef
 **
-** Description      This function can be called to detect if there is an NDEF 
+** Description      This function can be called to detect if there is an NDEF
 **                  message on the tag.
 **
 ** Parameters:      void
@@ -399,7 +399,7 @@ NFC_API extern tNFC_STATUS RW_T1tWriteNDef (UINT16 msg_len, UINT8 *p_msg);
 **
 ** Parameters:      b_hard_lock: To hard lock or just soft lock the tag
 **
-** Returns          NCI_STATUS_OK, if set readonly operation started. 
+** Returns          NCI_STATUS_OK, if set readonly operation started.
 **                                 Otherwise, error status.
 **
 *******************************************************************************/
@@ -411,7 +411,7 @@ NFC_API extern tNFC_STATUS RW_T1tSetTagReadOnly (BOOLEAN b_hard_lock);
 **
 ** Description
 **      Check if the tag is still in the field.
-**      
+**
 **      The RW_T1T_PRESENCE_CHECK_EVT w/ status is used to indicate presence
 **      or non-presence.
 **
@@ -453,7 +453,7 @@ NFC_API extern tNFC_STATUS RW_T2tLocateTlv(UINT8 tlv_type);
 **
 ** Function         RW_T2tRead
 **
-** Description      This function issues the Type 2 Tag READ command. When the 
+** Description      This function issues the Type 2 Tag READ command. When the
 **                  operation is complete the callback function will be called
 **                  with a RW_T2T_READ_EVT.
 **
@@ -468,7 +468,7 @@ NFC_API extern tNFC_STATUS RW_T2tRead (UINT16 block);
 **
 ** Description      This function issues the Type 2 Tag WRITE command. When the
 **                  operation is complete the callback function will be called
-**                  with a RW_T2T_WRITE_EVT.  
+**                  with a RW_T2T_WRITE_EVT.
 **
 **                  p_write_data points to the array of 4 bytes to be written
 **
@@ -500,7 +500,7 @@ NFC_API extern tNFC_STATUS RW_T2tSectorSelect (UINT8 sector);
 **
 ** Function         RW_T2tDetectNDef
 **
-** Description      This function will find NDEF message if any in the Tag 
+** Description      This function will find NDEF message if any in the Tag
 **
 ** Returns          tNFC_STATUS
 **
@@ -544,7 +544,7 @@ NFC_API extern tNFC_STATUS RW_T2tWriteNDef (UINT16 msg_len, UINT8 *p_msg );
 **
 ** Parameters:      b_hard_lock:   To indicate hard lock the tag or not
 **
-** Returns          NCI_STATUS_OK, if set readonly operation started. 
+** Returns          NCI_STATUS_OK, if set readonly operation started.
 **                                 Otherwise, error status.
 **
 *******************************************************************************/
@@ -556,7 +556,7 @@ NFC_API extern tNFC_STATUS RW_T2tSetTagReadOnly (BOOLEAN b_hard_lock);
 **
 ** Description
 **      Check if the tag is still in the field.
-**      
+**
 **      The RW_T2T_PRESENCE_CHECK_EVT w/ status is used to indicate presence
 **      or non-presence.
 **
@@ -586,7 +586,7 @@ tNFC_STATUS RW_T2tFormatNDef (void);
 **
 ** Function         RW_T3tDetectNDef
 **
-** Description 
+** Description
 **      This function is used to perform NDEF detection on a Type 3 tag, and
 **      retrieve the tag's NDEF attribute information (block 0).
 **
@@ -597,7 +597,7 @@ tNFC_STATUS RW_T2tFormatNDef (void);
 ** Returns
 **      NFC_STATUS_OK: ndef detection procedure started
 **      NFC_STATUS_NO_BUFFERS: unable to allocate a buffer for this operation
-**      NFC_STATUS_FAILED: other error   
+**      NFC_STATUS_FAILED: other error
 **
 *****************************************************************************/
 NFC_API extern tNFC_STATUS RW_T3tDetectNDef (void);
@@ -606,16 +606,16 @@ NFC_API extern tNFC_STATUS RW_T3tDetectNDef (void);
 **
 ** Function         RW_T3tFormatNDef
 **
-** Description 
+** Description
 **      Format a type-3 tag for NDEF.
 **
-**      Only Felica-Lite tags are supported by this API. The 
+**      Only Felica-Lite tags are supported by this API. The
 **      RW_T3T_FORMAT_CPLT_EVT is used to notify the status of the operation.
 **
 ** Returns
 **      NFC_STATUS_OK: ndef detection procedure started
 **      NFC_STATUS_NO_BUFFERS: unable to allocate a buffer for this operation
-**      NFC_STATUS_FAILED: other error   
+**      NFC_STATUS_FAILED: other error
 **
 *****************************************************************************/
 NFC_API extern tNFC_STATUS RW_T3tFormatNDef (void);
@@ -748,7 +748,7 @@ NFC_API extern tNFC_STATUS RW_T3tSendRawFrame (UINT16 len, UINT8 *p_data);
 **
 ** Description
 **      Send POLL command
-**      
+**
 ** Returns
 **      NFC_STATUS_OK, if raw data frame sent
 **      NFC_STATUS_NO_BUFFERS: unable to allocate a buffer for this operation
@@ -763,7 +763,7 @@ NFC_API extern tNFC_STATUS RW_T3tPoll (UINT16 system_code, tT3T_POLL_RC rc, UINT
 **
 ** Description
 **      Check if the tag is still in the field.
-**      
+**
 **      The RW_T3T_PRESENCE_CHECK_EVT w/ status is used to indicate presence
 **      or non-presence.
 **
@@ -853,7 +853,7 @@ NFC_API extern tNFC_STATUS RW_T4tUpdateNDef (UINT16 length, UINT8 *p_data);
 **
 ** Description
 **      Check if the tag is still in the field.
-**      
+**
 **      The RW_T4T_PRESENCE_CHECK_EVT w/ status is used to indicate presence
 **      or non-presence.
 **
@@ -1115,7 +1115,7 @@ NFC_API extern tNFC_STATUS RW_I93GetSysInfo (UINT8 *p_uid);
 **                  NFC_STATUS_FAILED if other error
 **
 *******************************************************************************/
-NFC_API extern tNFC_STATUS RW_I93GetMultiBlockSecurityStatus (UINT8  first_block_number, 
+NFC_API extern tNFC_STATUS RW_I93GetMultiBlockSecurityStatus (UINT8  first_block_number,
                                                               UINT16 number_blocks);
 
 /*******************************************************************************
@@ -1203,8 +1203,8 @@ NFC_API extern tNFC_STATUS RW_I93SetTagReadOnly (void);
 ** Function         RW_I93PresenceCheck
 **
 ** Description      Check if the tag is still in the field.
-**      
-**                  The RW_I93_PRESENCE_CHECK_EVT w/ status is used to indicate 
+**
+**                  The RW_I93_PRESENCE_CHECK_EVT w/ status is used to indicate
 **                  presence or non-presence.
 **
 ** Returns          NFC_STATUS_OK, if raw data frame sent
@@ -1218,7 +1218,7 @@ NFC_API extern tNFC_STATUS RW_I93PresenceCheck (void);
 **
 ** Function         RW_SendRawFrame
 **
-** Description      This function sends a raw frame to the peer device.  
+** Description      This function sends a raw frame to the peer device.
 **
 ** Returns          tNFC_STATUS
 **
@@ -1229,7 +1229,7 @@ NFC_API extern tNFC_STATUS RW_SendRawFrame (UINT8 *p_raw_data, UINT16 data_len);
 **
 ** Function         RW_SetActivatedTagType
 **
-** Description      This function sets tag type for Reader/Writer mode.  
+** Description      This function sets tag type for Reader/Writer mode.
 **
 ** Returns          tNFC_STATUS
 **
@@ -1240,7 +1240,7 @@ NFC_API extern tNFC_STATUS RW_SetActivatedTagType (tNFC_ACTIVATE_DEVT *p_activat
 **
 ** Function         RW_SetTraceLevel
 **
-** Description      This function sets the trace level for Reader/Writer mode.  
+** Description      This function sets the trace level for Reader/Writer mode.
 **                  If called with a value of 0xFF,
 **                  it simply returns the current trace level.
 **

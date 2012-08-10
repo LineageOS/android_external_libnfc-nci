@@ -76,7 +76,7 @@ static void nfa_ee_report_discover_req_evt(void);
 **
 ** Description      process connection callback event from stack
 **
-** Returns          void                 
+** Returns          void
 **
 *******************************************************************************/
 static void nfa_ee_conn_cback (UINT8 conn_id, tNFC_CONN_EVT event, tNFC_CONN *p_data)
@@ -107,7 +107,7 @@ static void nfa_ee_conn_cback (UINT8 conn_id, tNFC_CONN_EVT event, tNFC_CONN *p_
 **
 ** Description      Find the total len in aid_cfg from start_entry to the last
 **
-** Returns          void                 
+** Returns          void
 **
 *******************************************************************************/
 int nfa_ee_find_total_aid_len(tNFA_EE_ECB *p_cb, int start_entry)
@@ -134,7 +134,7 @@ int nfa_ee_find_total_aid_len(tNFA_EE_ECB *p_cb, int start_entry)
 ** Description      Given the AID, find the associated tNFA_EE_ECB and the
 **                  offset in aid_cfg[]. *p_entry is the index.
 **
-** Returns          void                 
+** Returns          void
 **
 *******************************************************************************/
 tNFA_EE_ECB * nfa_ee_find_aid_offset(UINT8 aid_len, UINT8 *p_aid, int *p_offset, int *p_entry)
@@ -182,7 +182,7 @@ tNFA_EE_ECB * nfa_ee_find_aid_offset(UINT8 aid_len, UINT8 *p_aid, int *p_offset,
 **
 ** Description      report the given event to the callback
 **
-** Returns          void                 
+** Returns          void
 **
 *******************************************************************************/
 void nfa_ee_report_event(tNFA_EE_CBACK *p_cback, tNFA_EE_EVT event, tNFA_EE_CBACK_DATA *p_data)
@@ -210,7 +210,7 @@ void nfa_ee_report_event(tNFA_EE_CBACK *p_cback, tNFA_EE_EVT event, tNFA_EE_CBAC
 **
 ** Description      start the de-bounce timer
 **
-** Returns          void                 
+** Returns          void
 **
 *******************************************************************************/
 void nfa_ee_start_timer(void)
@@ -224,7 +224,7 @@ void nfa_ee_start_timer(void)
 **
 ** Description      process discover command from user
 **
-** Returns          void                 
+** Returns          void
 **
 *******************************************************************************/
 void nfa_ee_api_discover(tNFA_EE_MSG *p_data)
@@ -255,7 +255,7 @@ void nfa_ee_api_discover(tNFA_EE_MSG *p_data)
 **
 ** Description      process register command from user
 **
-** Returns          void                 
+** Returns          void
 **
 *******************************************************************************/
 void nfa_ee_api_register(tNFA_EE_MSG *p_data)
@@ -300,7 +300,7 @@ void nfa_ee_api_register(tNFA_EE_MSG *p_data)
 **
 ** Description      process de-register command from user
 **
-** Returns          void                 
+** Returns          void
 **
 *******************************************************************************/
 void nfa_ee_api_deregister(tNFA_EE_MSG *p_data)
@@ -323,7 +323,7 @@ void nfa_ee_api_deregister(tNFA_EE_MSG *p_data)
 **
 ** Description      process mode set command from user
 **
-** Returns          void                 
+** Returns          void
 **
 *******************************************************************************/
 void nfa_ee_api_mode_set(tNFA_EE_MSG *p_data)
@@ -358,7 +358,7 @@ void nfa_ee_api_mode_set(tNFA_EE_MSG *p_data)
 **                  start a 1 second timer. When the timer expires,
 **                  the configuration collected in control block is sent to NFCC
 **
-** Returns          void                 
+** Returns          void
 **
 *******************************************************************************/
 void nfa_ee_api_set_tech_cfg(tNFA_EE_MSG *p_data)
@@ -387,7 +387,7 @@ void nfa_ee_api_set_tech_cfg(tNFA_EE_MSG *p_data)
 **                  start a 1 second timer. When the timer expires,
 **                  the configuration collected in control block is sent to NFCC
 **
-** Returns          void                 
+** Returns          void
 **
 *******************************************************************************/
 void nfa_ee_api_set_proto_cfg(tNFA_EE_MSG *p_data)
@@ -416,7 +416,7 @@ void nfa_ee_api_set_proto_cfg(tNFA_EE_MSG *p_data)
 **                  start a 1 second timer. When the timer expires,
 **                  the configuration collected in control block is sent to NFCC
 **
-** Returns          void                 
+** Returns          void
 **
 *******************************************************************************/
 void nfa_ee_api_add_aid(tNFA_EE_MSG *p_data)
@@ -494,7 +494,7 @@ void nfa_ee_api_add_aid(tNFA_EE_MSG *p_data)
 **                  start a 1 second timer. When the timer expires,
 **                  the configuration collected in control block is sent to NFCC
 **
-** Returns          void                 
+** Returns          void
 **
 *******************************************************************************/
 void nfa_ee_api_remove_aid(tNFA_EE_MSG *p_data)
@@ -553,7 +553,7 @@ void nfa_ee_api_remove_aid(tNFA_EE_MSG *p_data)
 **
 ** Description      Initiates connection creation process to the given NFCEE
 **
-** Returns          void                 
+** Returns          void
 **
 *******************************************************************************/
 void nfa_ee_api_update_now(tNFA_EE_MSG *p_data)
@@ -569,7 +569,7 @@ void nfa_ee_api_update_now(tNFA_EE_MSG *p_data)
 **
 ** Description      Initiates connection creation process to the given NFCEE
 **
-** Returns          void                 
+** Returns          void
 **
 *******************************************************************************/
 void nfa_ee_api_connect(tNFA_EE_MSG *p_data)
@@ -611,7 +611,7 @@ void nfa_ee_api_connect(tNFA_EE_MSG *p_data)
 **
 ** Description      Send the given data packet to the given NFCEE
 **
-** Returns          void                 
+** Returns          void
 **
 *******************************************************************************/
 void nfa_ee_api_send_data(tNFA_EE_MSG *p_data)
@@ -650,7 +650,7 @@ void nfa_ee_api_send_data(tNFA_EE_MSG *p_data)
 **
 ** Description      Initiates closing of the connection to the given NFCEE
 **
-** Returns          void                 
+** Returns          void
 **
 *******************************************************************************/
 void nfa_ee_api_disconnect(tNFA_EE_MSG *p_data)
@@ -673,7 +673,7 @@ void nfa_ee_api_disconnect(tNFA_EE_MSG *p_data)
 **
 ** Description      Process the callback for NFCEE discovery response
 **
-** Returns          void                 
+** Returns          void
 **
 *******************************************************************************/
 void nfa_ee_report_disc_done(BOOLEAN notify_enable_done)
@@ -801,7 +801,7 @@ static void nfa_ee_remove_pending(void)
 **
 ** Description      Process the callback for NFCEE discovery response
 **
-** Returns          void                 
+** Returns          void
 **
 *******************************************************************************/
 void nfa_ee_nci_disc_rsp(tNFA_EE_MSG *p_data)
@@ -881,7 +881,7 @@ void nfa_ee_nci_disc_rsp(tNFA_EE_MSG *p_data)
 **
 ** Description      Process the callback for NFCEE discovery notification
 **
-** Returns          void                 
+** Returns          void
 **
 *******************************************************************************/
 void nfa_ee_nci_disc_ntf(tNFA_EE_MSG *p_data)
@@ -1025,7 +1025,7 @@ void nfa_ee_nci_disc_ntf(tNFA_EE_MSG *p_data)
 **                  state prior to low power mode is complete.
 **                  If complete, notify sys.
 **
-** Returns          void                 
+** Returns          void
 **
 *******************************************************************************/
 static void nfa_ee_check_restore_complete(void)
@@ -1067,7 +1067,7 @@ static void nfa_ee_check_restore_complete(void)
 **
 ** Description      Report NFA_EE_DISCOVER_REQ_EVT for all active NFCEE
 **
-** Returns          void                 
+** Returns          void
 **
 *******************************************************************************/
 static void nfa_ee_report_discover_req_evt(void)
@@ -1115,7 +1115,7 @@ static void nfa_ee_report_discover_req_evt(void)
 **
 ** Description      Process the result for NFCEE ModeSet response
 **
-** Returns          void                 
+** Returns          void
 **
 *******************************************************************************/
 void nfa_ee_nci_mode_set_rsp(tNFA_EE_MSG *p_data)
@@ -1198,7 +1198,7 @@ void nfa_ee_nci_mode_set_rsp(tNFA_EE_MSG *p_data)
 **
 ** Description      process the connection callback events
 **
-** Returns          void                 
+** Returns          void
 **
 *******************************************************************************/
 void nfa_ee_nci_conn(tNFA_EE_MSG *p_data)
@@ -1290,7 +1290,7 @@ void nfa_ee_nci_conn(tNFA_EE_MSG *p_data)
 **
 ** Description      process the NFCEE action callback event
 **
-** Returns          void                 
+** Returns          void
 **
 *******************************************************************************/
 void nfa_ee_nci_action_ntf(tNFA_EE_MSG *p_data)
@@ -1310,7 +1310,7 @@ void nfa_ee_nci_action_ntf(tNFA_EE_MSG *p_data)
 **
 ** Description      process the NFCEE discover request callback event
 **
-** Returns          void                 
+** Returns          void
 **
 *******************************************************************************/
 void nfa_ee_nci_disc_req_ntf(tNFA_EE_MSG *p_data)
@@ -1483,7 +1483,7 @@ void nfa_ee_get_tech_route (UINT8 power_state, UINT8 *p_handles)
 **
 ** Function         nfa_ee_route_add_one_ecb
 **
-** Description      Add the routing entries for one NFCEE/DH 
+** Description      Add the routing entries for one NFCEE/DH
 **
 ** Returns          NFA_STATUS_OK, if ok to continue
 **
@@ -1657,7 +1657,7 @@ tNFA_STATUS nfa_ee_route_add_one_ecb(tNFA_EE_ECB *p_cb, int max_len, BOOLEAN mor
 **                  nfa_ee_update_rout() to clear the NFA_EE_STS_CHANGED bits
 **                  (except NFA_EE_STS_CHANGED_CANNED_VS is cleared in nfa_ee_vs_cback)
 **
-** Returns          TRUE if any configuration is changed                 
+** Returns          TRUE if any configuration is changed
 **
 *******************************************************************************/
 static BOOLEAN nfa_ee_need_recfg(void)
@@ -1705,10 +1705,10 @@ static BOOLEAN nfa_ee_need_recfg(void)
 ** Function         nfa_ee_rout_timeout
 **
 ** Description      Anytime VS or routing entries are changed,
-**                  a 1 second timer is started. This function is called when 
+**                  a 1 second timer is started. This function is called when
 **                  the timer expires or NFA_EeUpdateNow() is called.
 **
-** Returns          void                 
+** Returns          void
 **
 *******************************************************************************/
 void nfa_ee_rout_timeout(tNFA_EE_MSG *p_data)
@@ -1725,11 +1725,11 @@ void nfa_ee_rout_timeout(tNFA_EE_MSG *p_data)
 **
 ** Function         nfa_ee_discv_timeout
 **
-** Description      
-**                  
-**                  
+** Description
 **
-** Returns          void                 
+**
+**
+** Returns          void
 **
 *******************************************************************************/
 void nfa_ee_discv_timeout(tNFA_EE_MSG *p_data)
@@ -1746,7 +1746,7 @@ void nfa_ee_discv_timeout(tNFA_EE_MSG *p_data)
 ** Description      This function would set the listen mode routing table
 **                  to NFCC.
 **
-** Returns          void                 
+** Returns          void
 **
 *******************************************************************************/
 void nfa_ee_lmrt_to_nfcc(tNFA_EE_MSG *p_data)
@@ -1830,7 +1830,7 @@ void nfa_ee_lmrt_to_nfcc(tNFA_EE_MSG *p_data)
 ** Description      This function would set the VS and listen mode routing table
 **                  to NFCC.
 **
-** Returns          void                 
+** Returns          void
 **
 *******************************************************************************/
 void nfa_ee_update_rout(void)

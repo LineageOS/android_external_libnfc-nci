@@ -2,7 +2,7 @@
 **
 **  Name:           nfa_p2p_api.h
 **
-**  Description:    This is the public interface file for NFA P2P, Broadcom's 
+**  Description:    This is the public interface file for NFA P2P, Broadcom's
 **                  NFC application layer for mobile phones.
 **
 **  Copyright (c) 2010-2011, Broadcom Corp., All Rights Reserved.
@@ -180,11 +180,11 @@ extern "C"
 **
 **                  NFA_P2P_REG_SERVER_EVT will be returned with status and handle.
 **
-**                  If server_sap is set to NFA_P2P_ANY_SAP, then NFA will allocate 
+**                  If server_sap is set to NFA_P2P_ANY_SAP, then NFA will allocate
 **                  a SAP between LLCP_LOWER_BOUND_SDP_SAP and LLCP_UPPER_BOUND_SDP_SAP
-**                  Otherwise, server_sap must be between (LLCP_SDP_SAP + 1) and 
+**                  Otherwise, server_sap must be between (LLCP_SDP_SAP + 1) and
 **                  LLCP_UPPER_BOUND_SDP_SAP
-**                  
+**
 **                  link_type : NFA_P2P_LLINK_TYPE and/or NFA_P2P_DLINK_TYPE
 **
 ** Note:            If RF discovery is started, NFA_StopRfDiscovery()/NFA_RF_DISCOVERY_STOPPED_EVT
@@ -220,9 +220,9 @@ NFC_API extern tNFA_STATUS NFA_P2pRegisterClient (tNFA_P2P_LINK_TYPE link_type,
 **
 ** Function         NFA_P2pDeregister
 **
-** Description      This function is called to stop listening to a SAP as server 
-**                  or stop client service on LLCP. 
-**                  
+** Description      This function is called to stop listening to a SAP as server
+**                  or stop client service on LLCP.
+**
 ** Note:            If this function is called to de-register a server and RF discovery
 **                  is started, NFA_StopRfDiscovery()/NFA_RF_DISCOVERY_STOPPED_EVT
 **                  should happen before calling this function
@@ -238,10 +238,10 @@ NFC_API extern tNFA_STATUS NFA_P2pDeregister (tNFA_HANDLE handle);
 **
 ** Function         NFA_P2pAcceptConn
 **
-** Description      This function is called to accept a request of data link 
+** Description      This function is called to accept a request of data link
 **                  connection to a listening SAP on LLCP after receiving
-**                  NFA_P2P_CONN_REQ_EVT. 
-**                  
+**                  NFA_P2P_CONN_REQ_EVT.
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_BAD_HANDLE if handle is not valid
 **                  NFA_STATUS_FAILED otherwise
@@ -255,10 +255,10 @@ NFC_API extern tNFA_STATUS NFA_P2pAcceptConn (tNFA_HANDLE conn_handle,
 **
 ** Function         NFA_P2pRejectConn
 **
-** Description      This function is called to reject a request of data link 
+** Description      This function is called to reject a request of data link
 **                  connection to a listening SAP on LLCP after receiving
-**                  NFA_P2P_CONN_REQ_EVT. 
-**                  
+**                  NFA_P2P_CONN_REQ_EVT.
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_BAD_HANDLE if handle is not valid
 **                  NFA_STATUS_FAILED otherwise
@@ -270,9 +270,9 @@ NFC_API extern tNFA_STATUS NFA_P2pRejectConn (tNFA_HANDLE conn_handle);
 **
 ** Function         NFA_P2pDisconnect
 **
-** Description      This function is called to disconnect an existing or 
+** Description      This function is called to disconnect an existing or
 **                  connecting data link connection.
-**                  
+**
 **                  discard any pending data on data link connection if flush is set to TRUE
 **
 **                  NFA_P2P_DISC_EVT will be returned after data link connection is disconnected
@@ -293,7 +293,7 @@ NFC_API extern tNFA_STATUS NFA_P2pDisconnect (tNFA_HANDLE conn_handle,
 **                  by a service name.
 **                  NFA_P2P_CONNECTED_EVT if success
 **                  NFA_P2P_DISC_EVT if failed
-**                  
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_BAD_HANDLE if client is not registered
 **                  NFA_STATUS_FAILED otherwise
@@ -312,7 +312,7 @@ NFC_API extern tNFA_STATUS NFA_P2pConnectByName (tNFA_HANDLE client_handle,
 **                  by a SAP.
 **                  NFA_P2P_CONNECTED_EVT if success
 **                  NFA_P2P_DISC_EVT if failed
-**                  
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_BAD_HANDLE if client is not registered
 **                  NFA_STATUS_FAILED otherwise
@@ -329,7 +329,7 @@ NFC_API extern tNFA_STATUS NFA_P2pConnectBySap (tNFA_HANDLE client_handle,
 **
 ** Description      This function is called to send data on connectionless
 **                  transport.
-**                  
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_BAD_HANDLE if handle is not valid
 **                  NFA_STATUS_BAD_LENGTH if data length is more than remote link MIU
@@ -354,7 +354,7 @@ NFC_API extern tNFA_STATUS NFA_P2pSendUI (tNFA_HANDLE handle,
 **                  - If more information of UI PDU or more UI PDU in queue then more
 **                    is returned to TRUE.
 **                  - Information of next UI PDU is not concatenated.
-**                  
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_BAD_HANDLE if handle is not valid
 **
@@ -372,7 +372,7 @@ NFC_API extern tNFA_STATUS NFA_P2pReadUI (tNFA_HANDLE handle,
 **
 ** Description      This function is called to flush data on connectionless
 **                  transport.
-**                  
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_BAD_HANDLE if handle is not valid
 **
@@ -386,7 +386,7 @@ NFC_API extern tNFA_STATUS NFA_P2pFlushUI (tNFA_HANDLE handle,
 **
 ** Description      This function is called to send data on connection-oriented
 **                  transport.
-**                  
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_BAD_HANDLE if handle is not valid
 **                  NFA_STATUS_BAD_LENGTH if data length is more than remote MIU
@@ -404,12 +404,12 @@ NFC_API extern tNFA_STATUS NFA_P2pSendData (tNFA_HANDLE conn_handle,
 **
 ** Description      This function is called to read data on connection-oriented
 **                  transport when receiving NFA_P2P_DATA_EVT with NFA_P2P_DLINK_TYPE.
-**                  
+**
 **                  - Information of I PDU is copied into p_data up to max_data_len.
 **                  - If more information of I PDU or more I PDU in queue, then more
 **                    is returned to TRUE.
 **                  - Information of next I PDU is not concatenated.
-**                  
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_BAD_HANDLE if handle is not valid
 **
@@ -426,7 +426,7 @@ NFC_API extern tNFA_STATUS NFA_P2pReadData (tNFA_HANDLE handle,
 **
 ** Description      This function is called to flush data on connection-oriented
 **                  transport.
-**                  
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_BAD_HANDLE if handle is not valid
 **
@@ -440,7 +440,7 @@ NFC_API extern tNFA_STATUS NFA_P2pFlushData (tNFA_HANDLE handle,
 **
 ** Description      This function is called to stop or resume incoming data on
 **                  connection-oriented transport.
-**                  
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_BAD_HANDLE if handle is not valid
 **                  NFA_STATUS_FAILED otherwise
@@ -453,10 +453,10 @@ NFC_API extern tNFA_STATUS NFA_P2pSetLocalBusy (tNFA_HANDLE conn_handle,
 **
 ** Function         NFA_P2pGetLinkInfo
 **
-** Description      This function is called to get local/remote link MIU and 
+** Description      This function is called to get local/remote link MIU and
 **                  Well-Known Service list encoded as a 16-bit field of connected LLCP.
 **                  NFA_P2P_LINK_INFO_EVT will be returned.
-**                  
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_BAD_HANDLE if server or client is not registered
 **                  NFA_STATUS_FAILED otherwise
@@ -471,7 +471,7 @@ NFC_API extern tNFA_STATUS NFA_P2pGetLinkInfo (tNFA_HANDLE handle);
 ** Description      This function is called to get SAP associated by service name
 **                  on connected remote LLCP.
 **                  NFA_P2P_SDP_EVT will be returned.
-**                  
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_BAD_HANDLE if server or client is not registered
 **                  NFA_STATUS_FAILED otherwise
@@ -486,7 +486,7 @@ NFC_API extern tNFA_STATUS NFA_P2pGetRemoteSap (tNFA_HANDLE handle,
 **
 ** Description      This function is called to change LLCP config parameters.
 **                  Application must call while LLCP is not activated.
-**                  
+**
 **                  Parameters descriptions (default value)
 **                  - Local Link MIU (LLCP_MIU)
 **                  - Option parameter (LLCP_OPT_VALUE)
@@ -502,10 +502,10 @@ NFC_API extern tNFA_STATUS NFA_P2pGetRemoteSap (tNFA_HANDLE handle,
 **                  NFA_STATUS_FAILED otherwise
 **
 *******************************************************************************/
-NFC_API extern tNFA_STATUS NFA_P2pSetLLCPConfig (UINT16 link_miu, 
+NFC_API extern tNFA_STATUS NFA_P2pSetLLCPConfig (UINT16 link_miu,
                                                  UINT8  opt,
-                                                 UINT8  wt,      
-                                                 UINT16 link_timeout, 
+                                                 UINT8  wt,
+                                                 UINT16 link_timeout,
                                                  UINT16 inact_timeout_init,
                                                  UINT16 inact_timeout_target,
                                                  UINT16 symm_delay,
@@ -517,7 +517,7 @@ NFC_API extern tNFA_STATUS NFA_P2pSetLLCPConfig (UINT16 link_miu,
 ** Function         NFA_P2pGetLLCPConfig
 **
 ** Description      This function is called to read LLCP config parameters.
-**                  
+**
 **                  Parameters descriptions
 **                  - Local Link MIU
 **                  - Option parameter
@@ -532,10 +532,10 @@ NFC_API extern tNFA_STATUS NFA_P2pSetLLCPConfig (UINT16 link_miu,
 ** Returns          None
 **
 *******************************************************************************/
-NFC_API extern void NFA_P2pGetLLCPConfig (UINT16 *p_link_miu, 
+NFC_API extern void NFA_P2pGetLLCPConfig (UINT16 *p_link_miu,
                                           UINT8  *p_opt,
-                                          UINT8  *p_wt,      
-                                          UINT16 *p_link_timeout, 
+                                          UINT8  *p_wt,
+                                          UINT16 *p_link_timeout,
                                           UINT16 *p_inact_timeout_init,
                                           UINT16 *p_inact_timeout_target,
                                           UINT16 *p_symm_delay,

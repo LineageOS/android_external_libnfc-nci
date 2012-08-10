@@ -104,7 +104,7 @@ ScrLog(UINT32 maskTraceSet, const char *strFormat, ...)
 **
 **    Function Name:   LogMsg_0
 **
-**    Purpose:  Encodes a trace message that has no parameter arguments                                                 
+**    Purpose:  Encodes a trace message that has no parameter arguments
 **
 **    Input Parameters:  maskTraceSet: tester trace type.
 **                       strFormat: displayable string.
@@ -148,7 +148,7 @@ void LogMsg_0 (UINT32 maskTraceSet, const char *strFormat)
 **
 **    Function Name:   LogMsg_1
 **
-**    Purpose:  Encodes a trace message that has one parameter argument                                                 
+**    Purpose:  Encodes a trace message that has one parameter argument
 **
 **    Input Parameters:  maskTraceSet: tester trace type.
 **                       strFormat: displayable string.
@@ -190,7 +190,7 @@ void LogMsg_1 (UINT32 maskTraceSet, const char *strFormat, UINT32 p1)
 **
 **    Function Name:   LogMsg_2
 **
-**    Purpose:  Encodes a trace message that has two parameter arguments                                                 
+**    Purpose:  Encodes a trace message that has two parameter arguments
 **
 **    Input Parameters:  maskTraceSet: tester trace type.
 **                       strFormat: displayable string.
@@ -232,7 +232,7 @@ void LogMsg_2 (UINT32 maskTraceSet, const char *strFormat, UINT32 p1, UINT32 p2)
 **
 **    Function Name:   LogMsg_3
 **
-**    Purpose:  Encodes a trace message that has three parameter arguments                                                 
+**    Purpose:  Encodes a trace message that has three parameter arguments
 **
 **    Input Parameters:  maskTraceSet: tester trace type.
 **                       strFormat: displayable string.
@@ -274,7 +274,7 @@ void LogMsg_3 (UINT32 maskTraceSet, const char *strFormat, UINT32 p1, UINT32 p2,
 **
 **    Function Name:   LogMsg_4
 **
-**    Purpose:  Encodes a trace message that has four parameter arguments                                                 
+**    Purpose:  Encodes a trace message that has four parameter arguments
 **
 **    Input Parameters:  maskTraceSet: tester trace type.
 **                       strFormat: displayable string.
@@ -317,7 +317,7 @@ void LogMsg_4 (UINT32 maskTraceSet, const char *strFormat, UINT32 p1, UINT32 p2,
 **
 **    Function Name:   LogMsg_5
 **
-**    Purpose:  Encodes a trace message that has five parameter arguments                                                 
+**    Purpose:  Encodes a trace message that has five parameter arguments
 **
 **    Input Parameters:  maskTraceSet: tester trace type.
 **                       strFormat: displayable string.
@@ -360,7 +360,7 @@ void LogMsg_5 (UINT32 maskTraceSet, const char *strFormat, UINT32 p1, UINT32 p2,
 **
 **    Function Name:   LogMsg_6
 **
-**    Purpose:  Encodes a trace message that has six parameter arguments                         
+**    Purpose:  Encodes a trace message that has six parameter arguments
 **
 **    Input Parameters:  maskTraceSet: tester trace type.
 **                       strFormat: displayable string.

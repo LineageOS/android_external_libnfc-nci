@@ -28,7 +28,7 @@
 ** Function         NFA_Init
 **
 ** Description      This function initializes control blocks for NFA
-**                  
+**
 ** Returns          none
 **
 *******************************************************************************/
@@ -53,7 +53,7 @@ void NFA_Init(void)
 **
 ** Function         NFA_Enable
 **
-** Description      This function enables NFC. Prior to calling NFA_Enable, 
+** Description      This function enables NFC. Prior to calling NFA_Enable,
 **                  the NFCC must be powered up, and ready to receive commands.
 **                  This function enables the tasks needed by NFC, opens the NCI
 **                  transport, resets the NFC controller, downloads patches to
@@ -64,8 +64,8 @@ void NFA_Init(void)
 **                  settings UI. Subsequent calls to NFA_Enable while NFA is
 **                  enabling or enabled will be ignored. When the NFC startup
 **                  procedure is completed, an NFA_ENABLE_EVT is returned to the
-**                  application using the tNFA_DM_CBACK. 
-**                  
+**                  application using the tNFA_DM_CBACK.
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_FAILED otherwise
 **
@@ -113,7 +113,7 @@ tNFA_STATUS NFA_Enable (tNFA_DM_CBACK        *p_dm_cback,
 **                  received before powering down the NFC chip and NCI transport.
 **                  This is required to so that NFA can gracefully shut down any
 **                  open connections.
-**                  
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_FAILED otherwise
 **
@@ -144,7 +144,7 @@ tNFA_STATUS NFA_Disable (BOOLEAN graceful)
 ** Description      Set the configuration parameters to NFCC. The result is
 **                  reported with an NFA_DM_SET_CONFIG_EVT in the tNFA_DM_CBACK
 **                  callback.
-**                  
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_BUSY if previous setting is on-going
 **                  NFA_STATUS_FAILED otherwise
@@ -161,7 +161,7 @@ tNFA_STATUS NFA_SetConfig (tNFA_PMID param_id,
     if ((p_msg = (tNFA_DM_API_SET_CONFIG *) GKI_getbuf ((UINT16) (sizeof (tNFA_DM_API_SET_CONFIG) + length))) != NULL)
     {
         p_msg->hdr.event = NFA_DM_API_SET_CONFIG_EVT;
-        
+
         p_msg->param_id = param_id;
         p_msg->length   = length;
         p_msg->p_data   = (UINT8 *) (p_msg + 1);
@@ -184,12 +184,12 @@ tNFA_STATUS NFA_SetConfig (tNFA_PMID param_id,
 ** Description      Get the configuration parameters from NFCC. The result is
 **                  reported with an NFA_DM_GET_CONFIG_EVT in the tNFA_DM_CBACK
 **                  callback.
-**                  
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_FAILED otherwise
 **
 *******************************************************************************/
-tNFA_STATUS NFA_GetConfig (UINT8 num_ids, 
+tNFA_STATUS NFA_GetConfig (UINT8 num_ids,
                            tNFA_PMID *p_param_ids)
 {
     tNFA_DM_API_GET_CONFIG *p_msg;
@@ -200,7 +200,7 @@ tNFA_STATUS NFA_GetConfig (UINT8 num_ids,
     if ((p_msg = (tNFA_DM_API_GET_CONFIG *) GKI_getbuf ((UINT16) (sizeof (tNFA_DM_API_GET_CONFIG) + num_ids))) != NULL)
     {
         p_msg->hdr.event = NFA_DM_API_GET_CONFIG_EVT;
-        
+
         p_msg->num_ids = num_ids;
         p_msg->p_pmids = (tNFA_PMID *) (p_msg+1);
 
@@ -217,7 +217,7 @@ tNFA_STATUS NFA_GetConfig (UINT8 num_ids,
 
 /*******************************************************************************
 **
-** Function         NFA_RequestExclusiveRfControl 
+** Function         NFA_RequestExclusiveRfControl
 **
 ** Description      Request exclusive control of NFC.
 **                  - Previous behavior (polling/tag reading, DH card emulation)
@@ -241,10 +241,10 @@ tNFA_STATUS NFA_GetConfig (UINT8 num_ids,
 **                  Once exclusive RF control has started, NFA will not activate
 **                  LLCP internally. The application has exclusive control of
 **                  the link.
-**                  
+**
 ** Note:            If RF discovery is started, NFA_StopRfDiscovery()/NFA_RF_DISCOVERY_STOPPED_EVT
 **                  should happen before calling this function
-**                  
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_FAILED otherwise
 **
@@ -290,7 +290,7 @@ tNFA_STATUS NFA_RequestExclusiveRfControl  (tNFA_TECHNOLOGY_MASK poll_mask,
 **
 ** Description      Release exclusive control of NFC. Once released, behavior
 **                  prior to obtaining exclusive RF control will resume.
-**                  
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_FAILED otherwise
 **
@@ -330,20 +330,20 @@ tNFA_STATUS NFA_ReleaseExclusiveRfControl (void)
 **
 **                  - NFA_POLL_ENABLED_EVT indicates whether or not polling
 **                    successfully enabled.
-**                  - NFA_DISC_RESULT_EVT indicates there are more than one devices, 
+**                  - NFA_DISC_RESULT_EVT indicates there are more than one devices,
 **                    so application must select one of tags by calling NFA_Select().
-**                  - NFA_SELECT_RESULT indicates whether previous selection was 
-**                    successful or not. If it was failed then application must select 
+**                  - NFA_SELECT_RESULT indicates whether previous selection was
+**                    successful or not. If it was failed then application must select
 **                    again or deactivate by calling NFA_Stop().
 **                  - NFA_ACTIVATED_EVT is generated when an NFC link is activated.
 **                  - NFA_NDEF_DETECT_EVT is generated if tag is activated
-**                  - NFA_LLCP_ACTIVATED_EVT/NFA_LLCP_DEACTIVATED_EVT is generated 
+**                  - NFA_LLCP_ACTIVATED_EVT/NFA_LLCP_DEACTIVATED_EVT is generated
 **                    if NFC-DEP is activated
 **                  - NFA_DEACTIVATED_EVT will be returned after deactivating NFC link.
-**                  
+**
 ** Note:            If RF discovery is started, NFA_StopRfDiscovery()/NFA_RF_DISCOVERY_STOPPED_EVT
 **                  should happen before calling this function
-**                  
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_FAILED otherwise
 **
@@ -373,7 +373,7 @@ tNFA_STATUS NFA_EnablePolling (tNFA_TECHNOLOGY_MASK poll_mask)
 **
 ** Description      Disable polling
 **                  NFA_POLL_DISABLED_EVT will be returned after stopping polling.
-**                  
+**
 ** Note:            If RF discovery is started, NFA_StopRfDiscovery()/NFA_RF_DISCOVERY_STOPPED_EVT
 **                  should happen before calling this function
 **
@@ -410,10 +410,10 @@ tNFA_STATUS NFA_DisablePolling (void)
 **                  stopped.
 **
 **                  NFA_SET_P2P_LISTEN_TECH_EVT without data will be returned.
-**                  
+**
 ** Note:            If RF discovery is started, NFA_StopRfDiscovery()/NFA_RF_DISCOVERY_STOPPED_EVT
 **                  should happen before calling this function
-**                  
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_FAILED otherwise
 **
@@ -443,9 +443,9 @@ tNFA_STATUS NFA_SetP2pListenTech (tNFA_TECHNOLOGY_MASK tech_mask)
 **
 ** Description      Start RF discovery
 **                  RF discovery parameters shall be set by other APIs.
-**                  
+**
 **                  An NFA_RF_DISCOVERY_STARTED_EVT indicates whether starting was successful or not.
-**                  
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_FAILED otherwise
 **
@@ -473,9 +473,9 @@ tNFA_STATUS NFA_StartRfDiscovery (void)
 ** Function         NFA_StopRfDiscovery
 **
 ** Description      Stop RF discovery
-**                  
+**
 **                  An NFA_RF_DISCOVERY_STOPPED_EVT indicates whether stopping was successful or not.
-**                  
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_FAILED otherwise
 **
@@ -505,9 +505,9 @@ tNFA_STATUS NFA_StopRfDiscovery (void)
 ** Description      Set the duration of the single discovery period in [ms].
 **                  Allowable range: 0 ms to 0xFFFF ms.
 **
-**                  If discovery is already started, the application should 
+**                  If discovery is already started, the application should
 **                  call NFA_StopRfDiscovery prior to calling
-**                  NFA_SetRfDiscoveryDuration, and then call 
+**                  NFA_SetRfDiscoveryDuration, and then call
 **                  NFA_StartRfDiscovery afterwards to restart discovery using
 **                  the new duration.
 **
@@ -548,10 +548,10 @@ tNFA_STATUS NFA_SetRfDiscoveryDuration (UINT16 discovery_period_ms)
 ** Description      Select one from detected devices during discovery
 **                  (from NFA_DISC_RESULT_EVTs). The application should wait for
 **                  the final NFA_DISC_RESULT_EVT before selecting.
-**                  
+**
 **                  An NFA_SELECT_RESULT_EVT indicates whether selection was successful or not.
 **                  If failed then application must select again or deactivate by NFA_Deactivate().
-**                  
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_INVALID_PARAM if RF interface is not matched protocol
 **                  NFA_STATUS_FAILED otherwise
@@ -563,7 +563,7 @@ tNFA_STATUS NFA_Select (UINT8             rf_disc_id,
 {
     tNFA_DM_API_SELECT *p_msg;
 
-    NFA_TRACE_API3 ("NFA_Select (): rf_disc_id:0x%X, protocol:0x%X, rf_interface:0x%X", 
+    NFA_TRACE_API3 ("NFA_Select (): rf_disc_id:0x%X, protocol:0x%X, rf_interface:0x%X",
                     rf_disc_id, protocol, rf_interface);
 
     if (  ((rf_interface == NFA_INTERFACE_ISO_DEP) && (protocol != NFA_PROTOCOL_ISO_DEP))
@@ -593,11 +593,11 @@ tNFA_STATUS NFA_Select (UINT8             rf_disc_id,
 ** Function         NFA_UpdateRFCommParams
 **
 ** Description      This function is called to update RF Communication parameters
-**                  once the Frame RF Interface has been activated. 
+**                  once the Frame RF Interface has been activated.
 **
-**                  An NFA_UPDATE_RF_PARAM_RESULT_EVT indicates whether updating 
+**                  An NFA_UPDATE_RF_PARAM_RESULT_EVT indicates whether updating
 **                  was successful or not.
-**                  
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_FAILED otherwise
 **
@@ -625,9 +625,9 @@ tNFA_STATUS NFA_UpdateRFCommParams (tNFA_RF_COMM_PARAMS *p_params)
 **
 ** Function         NFA_Deactivate
 **
-** Description      
+** Description
 **                  If sleep_mode=TRUE:
-**                      Deselect the activated device by deactivating into sleep mode. 
+**                      Deselect the activated device by deactivating into sleep mode.
 **
 **                      An NFA_DEACTIVATE_FAIL_EVT indicates that selection was not successful.
 **                      Application can select another discovered device or deactivate by NFA_Deactivate ()
@@ -638,7 +638,7 @@ tNFA_STATUS NFA_UpdateRFCommParams (tNFA_RF_COMM_PARAMS *p_params)
 **                      NFA_DEACTIVATED_EVT will indicate that link is deactivated.
 **                      Polling/listening will resume.
 **
-**                  
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_FAILED otherwise
 **
@@ -666,14 +666,14 @@ NFC_API extern tNFA_STATUS NFA_Deactivate (BOOLEAN sleep_mode)
 **
 ** Function         NFA_SendRawFrame
 **
-** Description      Send a raw frame over the activated interface with the NFCC. 
+** Description      Send a raw frame over the activated interface with the NFCC.
 **                  This function can only be called after NFC link is activated.
-**                  
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_FAILED otherwise
 **
 *******************************************************************************/
-tNFA_STATUS NFA_SendRawFrame (UINT8  *p_raw_data, 
+tNFA_STATUS NFA_SendRawFrame (UINT8  *p_raw_data,
                               UINT16  data_len)
 {
     BT_HDR *p_msg;
@@ -727,7 +727,7 @@ tNFA_STATUS NFA_SendRawFrame (UINT8  *p_raw_data,
 **                  An NFA_NDEF_REGISTER_EVT will be sent to the NFA_NDEF_CBACK
 **                  to indicate that registration was successful, and provide a
 **                  handle for this record type.
-**                  
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_FAILED otherwise
 **
@@ -753,7 +753,7 @@ tNFA_STATUS NFA_RegisterNDefTypeHandler (BOOLEAN         handle_whole_message,
     if ((p_msg = (tNFA_DM_API_REG_NDEF_HDLR *) GKI_getbuf ((UINT16) (sizeof (tNFA_DM_API_REG_NDEF_HDLR) + type_name_len))) != NULL)
     {
         p_msg->hdr.event = NFA_DM_API_REG_NDEF_HDLR_EVT;
-        
+
         p_msg->flags = (handle_whole_message ? NFA_NDEF_FLAGS_HANDLE_WHOLE_MESSAGE : 0);
         p_msg->tnf = tnf;
         p_msg->name_len = type_name_len;
@@ -784,7 +784,7 @@ tNFA_STATUS NFA_RegisterNDefTypeHandler (BOOLEAN         handle_whole_message,
 **                  unabridged URI. For all other uri_id values, the p_abs_uri
 **                  parameter is ignored (i.e the URI prefix is implied by uri_id).
 **                  See [NFC RTD URI] for more information.
-**                  
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_FAILED otherwise
 **
@@ -810,7 +810,7 @@ NFC_API extern tNFA_STATUS NFA_RegisterNDefUriHandler (BOOLEAN          handle_w
     if ((p_msg = (tNFA_DM_API_REG_NDEF_HDLR *) GKI_getbuf ((UINT16) (sizeof (tNFA_DM_API_REG_NDEF_HDLR) + uri_id_len))) != NULL)
     {
         p_msg->hdr.event = NFA_DM_API_REG_NDEF_HDLR_EVT;
-        
+
         p_msg->flags = NFA_NDEF_FLAGS_WKT_URI;
 
         if (handle_whole_message)
@@ -843,7 +843,7 @@ NFC_API extern tNFA_STATUS NFA_RegisterNDefUriHandler (BOOLEAN          handle_w
 ** Function         NFA_DeregisterNDefTypeHandler
 **
 ** Description      Deregister NDEF record type handler.
-**                  
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_FAILED otherwise
 **
@@ -959,7 +959,7 @@ tNFC_STATUS NFA_RegVSCback (BOOLEAN          is_register,
 **
 **                  oid             - The opcode of the VS command.
 **                  cmd_params_len  - The command parameter len
-**                  p_cmd_params    - The command parameter 
+**                  p_cmd_params    - The command parameter
 **                  p_cback         - The callback function to receive the command
 **                                    status
 **

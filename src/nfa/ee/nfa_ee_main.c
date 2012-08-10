@@ -33,10 +33,10 @@ tNFA_EE_CB nfa_ee_cb;
 /*****************************************************************************
 **  Constants
 *****************************************************************************/
-static const tNFA_SYS_REG nfa_ee_sys_reg = 
+static const tNFA_SYS_REG nfa_ee_sys_reg =
 {
     nfa_ee_sys_enable,
-    nfa_ee_evt_hdlr, 
+    nfa_ee_evt_hdlr,
     nfa_ee_sys_disable,
     nfa_ee_proc_nfcc_power_mode
 };
@@ -124,7 +124,7 @@ void nfa_ee_sys_enable (void)
 **
 ** Function         nfa_ee_restore_one_ecb
 **
-** Description      activate the NFCEE and restore the routing when 
+** Description      activate the NFCEE and restore the routing when
 **                  changing power state from low power mode to full power mode
 **
 ** Returns          None
@@ -187,7 +187,7 @@ void nfa_ee_restore_one_ecb (tNFA_EE_ECB *p_cb)
 ** Function         nfa_ee_proc_nfcc_power_mode
 **
 ** Description      Restore NFA EE sub-module
-**                  
+**
 ** Returns          None
 **
 *******************************************************************************/
@@ -242,7 +242,7 @@ void nfa_ee_proc_nfcc_power_mode (UINT8 nfcc_power_mode)
 ** Function         nfa_ee_proc_hci_info_cback
 **
 ** Description      HCI initialization complete from power off sleep mode
-**                  
+**
 ** Returns          None
 **
 *******************************************************************************/
@@ -274,7 +274,7 @@ void nfa_ee_proc_hci_info_cback (void)
 ** Function         nfa_ee_proc_evt
 **
 ** Description      Process NFCEE related events from NFC stack
-**                  
+**
 **
 ** Returns          None
 **
@@ -409,7 +409,7 @@ tNFA_EE_ECB * nfa_ee_find_ecb_by_conn_id (UINT8 conn_id)
 ** Function         nfa_ee_sys_disable
 **
 ** Description      Deregister NFA EE from NFA SYS/DM
-**                  
+**
 **
 ** Returns          None
 **
@@ -559,7 +559,7 @@ static char *nfa_ee_sm_evt_2_str (UINT16 event)
         return "NCI_DATA";
     case NFA_EE_NCI_ACTION_NTF_EVT:
         return "NCI_ACTION";
-    case NFA_EE_NCI_DISC_REQ_NTF_EVT: 
+    case NFA_EE_NCI_DISC_REQ_NTF_EVT:
         return "NCI_DISC_REQ";
     case NFA_EE_ROUT_TIMEOUT_EVT:
         return "ROUT_TIMEOUT";
@@ -583,7 +583,7 @@ static char *nfa_ee_sm_evt_2_str (UINT16 event)
 ** Function         nfa_ee_evt_hdlr
 **
 ** Description      Processing event for NFA EE
-**                  
+**
 **
 ** Returns          TRUE if p_msg needs to be deallocated
 **

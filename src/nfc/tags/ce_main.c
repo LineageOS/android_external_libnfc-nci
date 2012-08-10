@@ -40,7 +40,7 @@ void ce_init(void)
 **
 ** Function         CE_SendRawFrame
 **
-** Description      This function sends a raw frame to the peer device.  
+** Description      This function sends a raw frame to the peer device.
 **
 ** Returns          tNFC_STATUS
 **
@@ -73,7 +73,7 @@ tNFC_STATUS CE_SendRawFrame (UINT8 *p_raw_data, UINT16 data_len)
 **
 ** Function         CE_SetActivatedTagType
 **
-** Description      This function selects the tag type for CE mode.  
+** Description      This function selects the tag type for CE mode.
 **
 ** Returns          tNFC_STATUS
 **
@@ -120,7 +120,7 @@ tNFC_STATUS CE_SetActivatedTagType (tNFC_ACTIVATE_DEVT *p_activate_params, UINT1
 **
 ** Function         CE_SetTraceLevel
 **
-** Description      This function sets the trace level for Card Emulation mode.  
+** Description      This function sets the trace level for Card Emulation mode.
 **                  If called with a value of 0xFF,
 **                  it simply returns the current trace level.
 **

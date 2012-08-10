@@ -31,7 +31,7 @@
 **
 ** Description      This function is called to send the given data packet
 **                  to NFCC for loopback test.
-**                  When loopback data is received from NFCC, tNFC_TEST_CBACK . 
+**                  When loopback data is received from NFCC, tNFC_TEST_CBACK .
 **                  reports a NFC_LOOPBACK_TEVT.
 **
 ** Parameters       p_data - the data packet

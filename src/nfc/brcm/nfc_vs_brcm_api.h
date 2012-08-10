@@ -1,7 +1,7 @@
 /****************************************************************************
-** 
+**
 ** Name:         nfc_vs_brcm_api.h
-** 
+**
 ** Description:  Broadcom specific NFC API function external definitions.
 **
 ** Copyright (c) 2009-2012, BROADCOM Inc., All Rights Reserved.

@@ -135,10 +135,6 @@
 #define NCI_MSG_OFFSET_SIZE             1
 #endif
 
-/* Sends an NCI command received from the upper stack to the NFC NCI transport. */
-#ifndef NCI_CMD_TO_NFCC
-#define NCI_CMD_TO_NFCC(p)         bte_hcisu_send((BT_HDR *)(p), BT_EVT_TO_NFC_NCI);
-#endif
 
 /* Restore NFCC baud rate to default on shutdown if NFC_UpdateBaudRate was called */
 #ifndef NFC_RESTORE_BAUD_ON_SHUTDOWN
@@ -356,6 +352,18 @@
 #define NFC_LP_POWER_CYCLE_TO_FULL  TRUE
 #endif
 
+/* Parameter for low power mode command    */
+#ifndef NFC_LP_COMMAND_PARAMS
+#define NFC_LP_COMMAND_PARAMS       5
+#endif
+/* Primary Threshold for battery monitor   */
+#ifndef NFC_LP_PRIMARY_THRESHOLD
+#define NFC_LP_PRIMARY_THRESHOLD    0
+#endif
+/* Secondary Threshold for battery monitor */
+#ifndef NFC_LP_SECONDARY_THRESHOLD
+#define NFC_LP_SECONDARY_THRESHOLD  8
+#endif
 /* time (in ms) between power off and on NFCC */
 #ifndef NCI_POWER_CYCLE_DELAY
 #define NCI_POWER_CYCLE_DELAY       100
@@ -381,30 +389,29 @@
 #define QUICK_TIMER_TICKS_PER_SEC   100       /* 10ms timer */
 #endif
 
-/* Send to lower layer */
-#ifndef NCI_TO_LOWER
-
-#ifdef TESTER
-/* For BTE Insight, NCI_TO_LOWER is runtime configurable (depends on whether */
-/*                     user selected 'shared' or 'dedicated' nci transport). */
-/*                     Call Insight's btstk_nfc_send to forward NCI messages.*/
-extern void btstk_nfc_send(BT_HDR *p_msg);
-#define NCI_TO_LOWER(p)         btstk_nfc_send ((BT_HDR *)(p));
-
-#elif defined (NFC_SHARED_TRANSPORT)
-/* For embedded platforms, configured for Shared Transport:                 */
-/*                      NCI_TO_LOWER calls bte_hcisu_send to send NCI       */
-/*                      messages to the HCI_TASK                            */
-#define NCI_TO_LOWER(p)         bte_hcisu_send((BT_HDR *)(p), ((BT_HDR *)(p))->event);
-
-#else
-/* For embedded platforms, configured for Dedicated Transport:              */
-/*                      NCI_TO_LOWER calls nci_send to send NCI messages    */
-/*                      to the NCI_TASK                                     */
-#define NCI_TO_LOWER(p)         nci_send((BT_HDR *)(p));
+/******************************************************************************
+**
+** NDEF
+**
+******************************************************************************/
+/* The default is to use the GKI_shiftdown/GKI_shiftup function defined in GKI.
+ * If the NDEF functions are used as utility functions by a standalon application
+ * without GKI, NDEF_SHIFT_DOWN should be mapped to shiftdown and
+ * NDEF_SHIFT_UP should be mapped to shiftup and
+ * NDEF_SHIFT_INCLUDED should be mapped to TRUE in buildcfg.h
+ */
+#ifndef NDEF_SHIFT_DOWN
+#define NDEF_SHIFT_DOWN         (GKI_shiftdown)
 #endif
 
-#endif /* NCI_TO_LOWER */
+#ifndef NDEF_SHIFT_UP
+#define NDEF_SHIFT_UP           (GKI_shiftup)
+#endif
+
+#ifndef NDEF_SHIFT_INCLUDED
+#define NDEF_SHIFT_INCLUDED     FALSE
+#endif
+
 
 /******************************************************************************
 **
@@ -434,11 +441,11 @@ extern void btstk_nfc_send(BT_HDR *p_msg);
 #define LLCP_LTO_VALUE              1000    /* Default is 100ms. It should be sufficiently larger than RWT */
 #endif
 
-/* 
+/*
 ** LTO is max time interval between the last bit received and the first bit sent over the air.
 ** Link timeout must be delayed as much as time between the packet sent from LLCP and the last bit transmitted at NFCC.
-**  - 200ms, max OTA transmitting time between the first bit and the last bit at NFCC 
-**    Largest MIU(2175bytes) of LLCP must be fragmented and sent on NFC-DEP over the air. 
+**  - 200ms, max OTA transmitting time between the first bit and the last bit at NFCC
+**    Largest MIU(2175bytes) of LLCP must be fragmented and sent on NFC-DEP over the air.
 **    8 * (DEP_REQ/RES+ACK) + DEP_REQ/RES for 2175 MIU at 106kbps bit rate.
 **  - 10ms, processing time
 */
@@ -446,11 +453,11 @@ extern void btstk_nfc_send(BT_HDR *p_msg);
 #define LLCP_INTERNAL_TX_DELAY      210
 #endif
 
-/* 
+/*
 ** LTO is max time interval between the last bit received and the first bit sent over the air.
 ** Link timeout must be delayed as much as time between the first bit received at NFCC and the packet received at LLCP.
-**  - 200ms, max OTA transmitting time between the first bit and the last bit at NFCC 
-**    LLCP cannot receive data packet until all bit are received and reassembled in NCI. 
+**  - 200ms, max OTA transmitting time between the first bit and the last bit at NFCC
+**    LLCP cannot receive data packet until all bit are received and reassembled in NCI.
 **    8 * (DEP_REQ/RES+ACK) + DEP_REQ/RES for 2175 MIU at 106kbps bit rate.
 **  - 10ms, processing time
 */
@@ -664,7 +671,7 @@ extern void btstk_nfc_send(BT_HDR *p_msg);
 
 /* Max reference character length, it is up to 255 but it's RECOMMENDED short */
 #ifndef NFA_CHO_MAX_REF_NAME_LEN
-#define NFA_CHO_MAX_REF_NAME_LEN            8  
+#define NFA_CHO_MAX_REF_NAME_LEN            8
 #endif
 
 /* Max auxiliary data count */
@@ -680,6 +687,10 @@ extern void btstk_nfc_send(BT_HDR *p_msg);
 #define NFA_SNEP_INCLUDED               TRUE
 #endif
 
+/* Max acceptable length */
+#ifndef NFA_SNEP_DEFAULT_SERVER_MAX_NDEF_SIZE
+#define NFA_SNEP_DEFAULT_SERVER_MAX_NDEF_SIZE          500000
+#endif
 /* Max number of SNEP server/client and data link connection */
 #ifndef NFA_SNEP_MAX_CONN
 #define NFA_SNEP_MAX_CONN               6

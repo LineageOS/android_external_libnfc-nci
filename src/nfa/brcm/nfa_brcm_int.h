@@ -47,11 +47,11 @@
 #define NFA_EE_AE_PPSE                  NFA_EE_AE_VS    /* for the SELECT PPSE response */
 #define NFA_EE_AE_PPSE_PRIORITY         0x0F            /* the PPSE priority            */
 #define NFA_EE_ECB_FLAGS_PPSE           NFA_EE_ECB_FLAGS_VS /* PPSE RSP changed                   */
-#define NFA_EE_STS_CHANGED_PPSE         NFA_EE_STS_CHANGED_VS        
-#define NFA_EE_STS_CHANGED_LP_PPSE      0x04 
-#define NFA_EE_STS_CHANGED_CANNED_PPSE  0x08 
-#define NFA_EE_STS_PREV_API_PPSE        0x80       
-#define NFA_EE_STS_PREV_PPSE            0x40       
+#define NFA_EE_STS_CHANGED_PPSE         NFA_EE_STS_CHANGED_VS
+#define NFA_EE_STS_CHANGED_LP_PPSE      0x04
+#define NFA_EE_STS_CHANGED_CANNED_PPSE  0x08
+#define NFA_EE_STS_PREV_API_PPSE        0x80
+#define NFA_EE_STS_PREV_PPSE            0x40
 #define NFA_EE_FLAG_FIRST_PPSE          0x02    /* to clear PPSE in NV */
 #endif
 
@@ -124,6 +124,7 @@ typedef struct
     tNFA_DM_BRCM_FLAGS  dm_flags;               /* flags for BRCM DM                */
     BOOLEAN             dm_enable_multi_resp;   /* TRUE if enable multiple response */
     UINT8               new_nfcc_pwr_mode;      /* configuring NFCC power mode      */
+    UINT8               xtal_index;             /* index of crystal frequency       */
 
     /* data members for NFA-CE */
     UINT8               ce_flags;               /* flags for various status         */
@@ -184,6 +185,7 @@ extern void nfa_hci_handle_hci_netwk_info (UINT8 *p_data);
 extern UINT8 *p_nfa_dta_brcm_start_up_cfg;
 extern UINT8 nfa_dta_brcm_start_up_cfg_len;
 extern UINT8 *p_nfa_dm_lptd_cfg;
+extern UINT8 *p_nfa_dm_pll_325_cfg;
 extern UINT8 *p_nfa_dm_start_up_cfg;
 extern UINT8 *p_nfa_dm_start_up_vsc_cfg;
 extern UINT8 *p_nfa_lp_ce_power_cfg;

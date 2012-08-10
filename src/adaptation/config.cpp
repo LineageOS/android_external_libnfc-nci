@@ -9,9 +9,9 @@
 **  Broadcom Bluetooth Core. Proprietary and confidential.
 **
 *****************************************************************************/
+#include "OverrideLog.h"
 #include "config.h"
 #include <stdio.h>
-#include <cutils/log.h>
 #include <string>
 #include <vector>
 #include <list>

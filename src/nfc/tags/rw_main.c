@@ -40,7 +40,7 @@ void rw_init(void)
 **
 ** Function         rw_main_reset_stats
 **
-** Description      Reset counters for statistics 
+** Description      Reset counters for statistics
 **
 ** Returns          void
 **
@@ -67,7 +67,7 @@ void rw_main_update_tx_stats(UINT32 num_bytes, BOOLEAN is_retry)
     rw_cb.stats.bytes_sent+=num_bytes;
     rw_cb.stats.num_ops++;
 
-    if (is_retry) 
+    if (is_retry)
         rw_cb.stats.num_retries++;
 }
 
@@ -154,7 +154,7 @@ void rw_main_log_stats(void)
 **
 ** Function         RW_SendRawFrame
 **
-** Description      This function sends a raw frame to the peer device.  
+** Description      This function sends a raw frame to the peer device.
 **
 ** Returns          tNFC_STATUS
 **
@@ -188,7 +188,7 @@ tNFC_STATUS RW_SendRawFrame (UINT8 *p_raw_data, UINT16 data_len)
 **
 ** Function         RW_SetActivatedTagType
 **
-** Description      This function selects the tag type for Reader/Writer mode.  
+** Description      This function selects the tag type for Reader/Writer mode.
 **
 ** Returns          tNFC_STATUS
 **
@@ -221,7 +221,7 @@ tNFC_STATUS RW_SetActivatedTagType (tNFC_ACTIVATE_DEVT *p_activate_params, tRW_C
     case NFC_PROTOCOL_T1T:    /* Type1Tag    - NFC-A */
         if (p_activate_params->rf_tech_param.mode == NFC_DISCOVERY_TYPE_POLL_A)
         {
-            status = rw_t1t_select (p_activate_params->intf_param.intf_param.frame.param, 
+            status = rw_t1t_select (p_activate_params->intf_param.intf_param.frame.param,
                                     p_activate_params->rf_tech_param.param.pa.nfcid1);
         }
         break;
@@ -238,7 +238,7 @@ tNFC_STATUS RW_SetActivatedTagType (tNFC_ACTIVATE_DEVT *p_activate_params, tRW_C
         if (p_activate_params->rf_tech_param.mode == NFC_DISCOVERY_TYPE_POLL_F)
         {
             status = rw_t3t_select(p_activate_params->rf_tech_param.param.pf.nfcid2,
-                                    p_activate_params->rf_tech_param.param.pf.mrti_check, 
+                                    p_activate_params->rf_tech_param.param.pf.mrti_check,
                                     p_activate_params->rf_tech_param.param.pf.mrti_update);
         }
         break;
@@ -272,7 +272,7 @@ tNFC_STATUS RW_SetActivatedTagType (tNFC_ACTIVATE_DEVT *p_activate_params, tRW_C
 **
 ** Function         RW_SetTraceLevel
 **
-** Description      This function sets the trace level for Reader/Writer mode.  
+** Description      This function sets the trace level for Reader/Writer mode.
 **                  If called with a value of 0xFF,
 **                  it simply returns the current trace level.
 **

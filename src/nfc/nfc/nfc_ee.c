@@ -75,11 +75,11 @@ tNFC_STATUS NFC_NfceeModeSet (UINT8              nfcee_id,
 **
 ** Function         NFC_SetRouting
 **
-** Description      This function is called to configure the CE routing table. 
+** Description      This function is called to configure the CE routing table.
 **                  The response from NFCC is reported by tNFC_RESPONSE_CBACK
-**                  as NFC_SET_ROUTING_REVT. 
+**                  as NFC_SET_ROUTING_REVT.
 **
-** Parameters       
+** Parameters
 **
 ** Returns          tNFC_STATUS
 **
@@ -97,9 +97,9 @@ tNFC_STATUS NFC_SetRouting(BOOLEAN     more,
 **
 ** Function         NFC_GetRouting
 **
-** Description      This function is called to retrieve the CE routing table from 
+** Description      This function is called to retrieve the CE routing table from
 **                  NFCC. The response from NFCC is reported by tNFC_RESPONSE_CBACK
-**                  as NFC_GET_ROUTING_REVT. 
+**                  as NFC_GET_ROUTING_REVT.
 **
 ** Returns          tNFC_STATUS
 **

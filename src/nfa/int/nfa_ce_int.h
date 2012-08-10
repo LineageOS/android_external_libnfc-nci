@@ -51,7 +51,7 @@ typedef UINT8 tNFA_CE_REG_TYPE;
 /* data type for NFA_CE_API_CFG_LOCAL_TAG_EVT */
 typedef struct
 {
-    BT_HDR              hdr;      
+    BT_HDR              hdr;
     tNFA_PROTOCOL_MASK  protocol_mask;
     UINT8               *p_ndef_data;
     UINT16              ndef_cur_size;
@@ -71,7 +71,7 @@ typedef struct
 /* data type for NFA_CE_API_REG_LISTEN_EVT */
 typedef struct
 {
-    BT_HDR              hdr;      
+    BT_HDR              hdr;
     tNFA_CONN_CBACK     *p_conn_cback;
 
     tNFA_CE_REG_TYPE   listen_type;
@@ -101,7 +101,7 @@ typedef struct
 typedef union
 {
     /* GKI event buffer header */
-    BT_HDR                      hdr;      
+    BT_HDR                      hdr;
     tNFA_CE_API_CFG_LOCAL_TAG   local_tag;
     tNFA_CE_API_REG_LISTEN      reg_listen;
     tNFA_CE_API_DEREG_LISTEN    dereg_listen;

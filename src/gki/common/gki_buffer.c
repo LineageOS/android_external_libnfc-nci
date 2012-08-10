@@ -409,7 +409,7 @@ void *GKI_getbuf (UINT16 size)
             p_hdr->Type    = 0;
 #if GKI_BUFFER_DEBUG
             LOGD("GKI_getbuf() allocated, %x, %x (%d of %d used) %d\n", (UINT8*)p_hdr + BUFFER_HDR_SIZE, p_hdr, Q->cur_cnt, Q->total, p_cb->freeq[i].total);
-            
+
             strncpy(p_hdr->_function, _function_, _GKI_MAX_FUNCTION_NAME_LEN);
             p_hdr->_function[_GKI_MAX_FUNCTION_NAME_LEN] = '\0';
             p_hdr->_line = _line_;
@@ -425,20 +425,20 @@ void *GKI_getbuf (UINT16 size)
     p_cb = &gki_cb.com;
 
     LOGD("Dumping total of %d buffer pools\n", p_cb->curr_total_no_of_pools);
-    
+
     for (i=0 ; i < p_cb->curr_total_no_of_pools; i++)
     {
         p_hdr = (BUFFER_HDR_T *)p_cb->pool_start[i];
-        
+
         LOGD("pool %d has a total of %d buffers (start=%p)\n", i, p_cb->freeq[i].total, p_hdr);
-        
+
         for (x=0; p_hdr && x < p_cb->freeq[i].total; x++)
         {
             if (p_hdr->status != BUF_STATUS_FREE)
             {
                 LOGD("pool:%d, buf[%d]:%x, hdr:%x status=%d func:%s(line=%d)\n", i, x, (UINT8*)p_hdr + BUFFER_HDR_SIZE, p_hdr, p_hdr->status, p_hdr->_function, p_hdr->_line);
             }
-            
+
             p_hdr = (BUFFER_HDR_T *)((UINT8 *)p_hdr + p_cb->pool_size[i]);
         }
     }
@@ -505,14 +505,14 @@ void *GKI_getpoolbuf (UINT8 pool_id)
 
 
         p_hdr->task_id = GKI_get_taskid();
-        
+
         p_hdr->status  = BUF_STATUS_UNLINKED;
         p_hdr->p_next  = NULL;
         p_hdr->Type    = 0;
 
 #if GKI_BUFFER_DEBUG
         LOGD("GKI_getpoolbuf() allocated, %x, %x (%d of %d used) %d\n", (UINT8*)p_hdr + BUFFER_HDR_SIZE, p_hdr, Q->cur_cnt, Q->total, p_cb->freeq[pool_id].total);
-        
+
         strncpy(p_hdr->_function, _function_, _GKI_MAX_FUNCTION_NAME_LEN);
         p_hdr->_function[_GKI_MAX_FUNCTION_NAME_LEN] = '\0';
         p_hdr->_line = _line_;

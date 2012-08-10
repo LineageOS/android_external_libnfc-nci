@@ -73,8 +73,8 @@ tNFA_STATUS nfa_ce_api_deregister_listen (tNFA_HANDLE handle, UINT32 listen_info
 **                  The NFA_CE_LOCAL_TAG_CONFIGURED reports the status of the
 **                  operation.
 **
-**                  Activation and deactivation are reported using the 
-**                  NFA_ACTIVATED_EVT and NFA_DEACTIVATED_EVT events 
+**                  Activation and deactivation are reported using the
+**                  NFA_ACTIVATED_EVT and NFA_DEACTIVATED_EVT events
 **
 **                  If a write-request is received to update the tag memory,
 **                  an NFA_CE_NDEF_WRITE_EVT will notify the application, along
@@ -84,7 +84,7 @@ tNFA_STATUS nfa_ce_api_deregister_listen (tNFA_HANDLE handle, UINT32 listen_info
 **
 **                  The NDEF data provided by p_ndef_data must be persistent
 **                  as long as the local NDEF tag is enabled.
-**                  
+**
 **                  UID of the tag can be set only for Type 1 and Type 2 tag.
 **                  UID Length should be 4/7 bytes in case of Type 1 tag and
 **                  UID Length should be 4/10 bytes in case of Type 2 tag.
@@ -94,10 +94,10 @@ tNFA_STATUS nfa_ce_api_deregister_listen (tNFA_HANDLE handle, UINT32 listen_info
 **
 ** Returns:
 **                  NFA_STATUS_OK,            if command accepted
-**                  NFA_STATUS_INVALID_PARAM, 
-**                      if protocol_maks is not 0 and p_ndef_data is NULL 
+**                  NFA_STATUS_INVALID_PARAM,
+**                      if protocol_maks is not 0 and p_ndef_data is NULL
 **                  (or)if p_uid is NULL and uid_len is not 0
-**                  (or)if protocol mask is set for both Type 1 and Type 2 
+**                  (or)if protocol mask is set for both Type 1 and Type 2
 **                  (or)if uid_len is not 0 and protocol mask is not set for Type 1/2
 **                  (or)if protocol mask is set for Type 1 and uid_len is not 4/7
 **                  (or)if protocol mask is set for Type 2 and uid_len is not 4/10
@@ -194,8 +194,8 @@ tNFA_STATUS NFA_CeConfigureLocalTag (tNFA_PROTOCOL_MASK protocol_mask,
 **                  The NFA_CE_UICC_LISTEN_CONFIGURED_EVT reports the status of the
 **                  operation.
 **
-**                  Activation and deactivation are reported using the 
-**                  NFA_ACTIVATED_EVT and NFA_DEACTIVATED_EVT events 
+**                  Activation and deactivation are reported using the
+**                  NFA_ACTIVATED_EVT and NFA_DEACTIVATED_EVT events
 **
 ** Note:            If RF discovery is started, NFA_StopRfDiscovery()/NFA_RF_DISCOVERY_STOPPED_EVT
 **                  should happen before calling this function
@@ -255,8 +255,8 @@ tNFA_STATUS NFA_CeConfigureUiccListenTech (tNFA_HANDLE ee_handle,
 **                  NFA_STATUS_FAILED: otherwise
 **
 *******************************************************************************/
-tNFA_STATUS NFA_CeRegisterFelicaSystemCodeOnDH (UINT16 system_code, 
-                                                UINT8 nfcid2[NCI_RF_F_UID_LEN], 
+tNFA_STATUS NFA_CeRegisterFelicaSystemCodeOnDH (UINT16 system_code,
+                                                UINT8 nfcid2[NCI_RF_F_UID_LEN],
                                                 tNFA_CONN_CBACK *p_conn_cback)
 {
     tNFA_CE_MSG *p_msg;
@@ -294,7 +294,7 @@ tNFA_STATUS NFA_CeRegisterFelicaSystemCodeOnDH (UINT16 system_code,
 **
 **                  The NFA_CE_DEREGISTERED_EVT reports the status of the
 **                  operation.
-**                  
+**
 ** Note:            If RF discovery is started, NFA_StopRfDiscovery()/NFA_RF_DISCOVERY_STOPPED_EVT
 **                  should happen before calling this function
 **
@@ -330,8 +330,8 @@ tNFA_STATUS NFA_CeDeregisterFelicaSystemCodeOnDH (tNFA_HANDLE handle)
 **                  NFA_STATUS_FAILED: otherwise
 **
 *******************************************************************************/
-tNFA_STATUS NFA_CeRegisterAidOnDH (UINT8 aid[NFC_MAX_AID_LEN], 
-                                         UINT8           aid_len, 
+tNFA_STATUS NFA_CeRegisterAidOnDH (UINT8 aid[NFC_MAX_AID_LEN],
+                                         UINT8           aid_len,
                                          tNFA_CONN_CBACK *p_conn_cback)
 {
     tNFA_CE_MSG *p_msg;
@@ -369,7 +369,7 @@ tNFA_STATUS NFA_CeRegisterAidOnDH (UINT8 aid[NFC_MAX_AID_LEN],
 **
 **                  The NFA_CE_DEREGISTERED_EVT reports the status of the
 **                  operation.
-**                  
+**
 ** Note:            If RF discovery is started, NFA_StopRfDiscovery()/NFA_RF_DISCOVERY_STOPPED_EVT
 **                  should happen before calling this function
 **
@@ -388,7 +388,7 @@ tNFA_STATUS NFA_CeDeregisterAidOnDH (tNFA_HANDLE handle)
 **
 ** Function         NFA_CeSetIsoDepListenTech
 **
-** Description      Set the technologies (NFC-A and/or NFC-B) to listen for when 
+** Description      Set the technologies (NFC-A and/or NFC-B) to listen for when
 **                  NFA_CeConfigureLocalTag or NFA_CeDeregisterAidOnDH are called.
 **
 **                  By default (if this API is not called), NFA will listen

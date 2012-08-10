@@ -1,9 +1,9 @@
 /****************************************************************************
-** 
+**
 **  File:        nci_int.h
 **
 **  Description:   this file contains the NCI transport
-**                 internal definitions and functions.                   
+**                 internal definitions and functions.
 **
 **  Copyright (c) 2009-2012, Broadcom Corp., All Rights Reserved.
 **  Broadcom Bluetooth Core. Proprietary and confidential.
@@ -61,7 +61,7 @@ extern "C" {
 
 
 /* NCI configuration */
-typedef struct 
+typedef struct
 {
     BOOLEAN         shared_transport;   /* TRUE if using shared HCI/NCI transport */
     UINT8           userial_baud;
@@ -76,7 +76,7 @@ typedef struct
 extern NCI_CFG_QUALIFIER tNCI_CFG nci_cfg;
 
 /* NCI rcv states */
-enum 
+enum
 {
     NCI_RCV_IDLE_ST,            /* waiting for new NCI message          */
     NCI_RCV_NFC_HDR_ST,         /* reading NCI header                   */
@@ -95,8 +95,8 @@ enum
     NCI_INT_SEND_NCI_MSG_EVT,   /* NFC task sends NCI message to NCI task     */
     NCI_INT_SEND_VS_CMD_EVT,    /* a credit is available to send VS command   */
     NCI_INT_DATA_RDY_EVT,       /* Rx data is ready in serial port            */
-    NCI_INT_RX_NCI_MSG_EVT,     /* Complete NCI message is received from NFCC */    
-    NCI_INT_RX_VS_MSG_EVT,      /* Complete VS message is received from NFCC  */    
+    NCI_INT_RX_NCI_MSG_EVT,     /* Complete NCI message is received from NFCC */
+    NCI_INT_RX_VS_MSG_EVT,      /* Complete VS message is received from NFCC  */
     NCI_INT_VS_MSG_EVT,         /* Vendor specific message for NFCC           */
     NCI_INT_VS_INIT_EVT,        /* serial port is openned, start VS init      */
     NCI_INT_TERMINATE_EVT       /* serial port is closing                     */
@@ -130,7 +130,7 @@ typedef UINT8 tNCI_FLAGS;
 typedef struct {
     UINT8               rcv_state;          /* current rx state                 */
     UINT8               init_rcv_state;     /* initial rx state NCI_RCV_IDLE_ST or NCI_RCV_VS_PREAMBLE_ST */
-    UINT16              rcv_len;            /* bytes remaining to be received in current rx state */      
+    UINT16              rcv_len;            /* bytes remaining to be received in current rx state */
     BT_HDR              *p_rcv_msg;         /* buffer to receive NCI message    */
     tNCI_CONN_CB        conn_cb[NCI_MAX_CONN_CBS];
     UINT8               conn_id[NFC_MAX_CONN_ID+1]; /* index: conn_id; conn_id[]: index(1 based) to conn_cb[] */

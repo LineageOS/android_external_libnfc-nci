@@ -8,6 +8,7 @@
 **  Broadcom Bluetooth Core. Proprietary and confidential.
 **
 *****************************************************************************/
+#include "OverrideLog.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -16,12 +17,13 @@
 #include "nfa_mem_co.h"
 #include "nfa_nv_co.h"
 #include "nfa_nv_ci.h"
-#include <cutils/log.h>
 #include "config.h"
 
 #define LOG_TAG "BrcmNfcNfa"
 #define PRINT(s) __android_log_write(ANDROID_LOG_DEBUG, "BrcmNci", s)
-#define MAX_NCI_PACKET_SIZE  259 
+#define MAX_NCI_PACKET_SIZE  259
+#define MAX_LOGCAT_LINE     4096
+static char log_line[MAX_LOGCAT_LINE];
 
 extern UINT32 ScrProtocolTraceFlag;         // = SCR_PROTO_TRACE_ALL; // 0x017F;
 static const char* sTable = "0123456789abcdef";
@@ -88,7 +90,7 @@ NFC_API extern void nfa_nv_co_init(void)
 **                  nbytes  - number of bytes to read into the buffer.
 **
 ** Returns          void
-**                  
+**
 **                  Note: Upon completion of the request, nfa_nv_ci_read() is
 **                        called with the buffer of data, along with the number
 **                        of bytes read into the buffer, and a status.  The
@@ -144,7 +146,7 @@ NFC_API extern void nfa_nv_co_read(UINT8 *pBuffer, UINT16 nbytes, UINT8 block)
 **                  nbytes  - number of bytes to write out to the file.
 **
 ** Returns          void
-**                  
+**
 **                  Note: Upon completion of the request, nfa_nv_ci_write() is
 **                        called with the file descriptor and the status.  The
 **                        call-in function should only be called when ALL requested
@@ -163,9 +165,9 @@ NFC_API extern void nfa_nv_co_write(const UINT8 *pBuffer, UINT16 nbytes, UINT8 b
     }
     sprintf (filename, "%s%u", filename2, block);
     ALOGD ("%s: bytes=%u; file=%s", __FUNCTION__, nbytes, filename);
-    
+
     int fileStream = 0;
-    
+
     fileStream = open (filename, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
     if (fileStream > 0)
     {
@@ -354,12 +356,28 @@ UINT8 *scru_dump_hex (UINT8 *p, char *pTitle, UINT32 len, UINT32 layer, UINT32 t
 **                  Nothing
 **
 *******************************************************************************/
-void DispHciCmd (BT_HDR *pBuffer)
+void DispHciCmd (BT_HDR *p_buf)
 {
-    UINT8   *p = (UINT8 *)(pBuffer + 1) + pBuffer->offset;
+    int i,j;
+    int nBytes = ((BT_HDR_SIZE + p_buf->offset + p_buf->len)*2)+1;
+    UINT8 * data = (UINT8*) p_buf;
+    int data_len = BT_HDR_SIZE + p_buf->offset + p_buf->len;
 
     if (!(ScrProtocolTraceFlag & SCR_PROTO_TRACE_HCI_SUMMARY))
         return;
+
+    if (nBytes > sizeof(log_line))
+        return;
+
+    for(i = 0, j = 0; i < data_len && j < sizeof(log_line)-3; i++)
+    {
+        log_line[j++] = sTable[(*data >> 4) & 0xf];
+        log_line[j++] = sTable[*data & 0xf];
+        data++;
+    }
+    log_line[j] = '\0';
+
+    __android_log_write(ANDROID_LOG_DEBUG, "BrcmHciX", log_line);
 }
 
 
@@ -373,10 +391,28 @@ void DispHciCmd (BT_HDR *pBuffer)
 **                  Nothing
 **
 *******************************************************************************/
-void DispHciEvt (BT_HDR *pBuffer)
+void DispHciEvt (BT_HDR *p_buf)
 {
+    int i,j;
+    int nBytes = ((BT_HDR_SIZE + p_buf->offset + p_buf->len)*2)+1;
+    UINT8 * data = (UINT8*) p_buf;
+    int data_len = BT_HDR_SIZE + p_buf->offset + p_buf->len;
+
     if (!(ScrProtocolTraceFlag & SCR_PROTO_TRACE_HCI_SUMMARY))
         return;
+
+    if (nBytes > sizeof(log_line))
+        return;
+
+    for(i = 0, j = 0; i < data_len && j < sizeof(log_line)-3; i++)
+    {
+        log_line[j++] = sTable[(*data >> 4) & 0xf];
+        log_line[j++] = sTable[*data & 0xf];
+        data++;
+    }
+    log_line[j] = '\0';
+
+    __android_log_write(ANDROID_LOG_DEBUG, "BrcmHciR", log_line);
 }
 
 /*******************************************************************************
@@ -390,6 +426,9 @@ void DispHciEvt (BT_HDR *pBuffer)
 *******************************************************************************/
 void DispNciDump (UINT8 *data, UINT16 len, BOOLEAN is_recv)
 {
+    if (appl_trace_level < BT_TRACE_LEVEL_DEBUG)
+        return;
+
     char line_buf[(MAX_NCI_PACKET_SIZE*2)+1];
     int i,j;
 
@@ -400,6 +439,74 @@ void DispNciDump (UINT8 *data, UINT16 len, BOOLEAN is_recv)
         data++;
     }
     line_buf[j] = '\0';
-    
+
     __android_log_write(ANDROID_LOG_DEBUG, (is_recv) ? "BrcmNciR": "BrcmNciX", line_buf);
 }
+
+
+/*******************************************************************************
+**
+** Function         DispLLCP
+**
+** Description      Log raw LLCP packet as hex-ascii bytes
+**
+** Returns          None.
+**
+*******************************************************************************/
+void DispLLCP (BT_HDR *p_buf, BOOLEAN is_recv)
+{
+    int i,j;
+    int nBytes = ((BT_HDR_SIZE + p_buf->offset + p_buf->len)*2)+1;
+    UINT8 * data = (UINT8*) p_buf;
+    int data_len = BT_HDR_SIZE + p_buf->offset + p_buf->len;
+
+    for (i = 0; i < data_len; )
+    {
+        for(j = 0; i < data_len && j < sizeof(log_line)-3; i++)
+        {
+            log_line[j++] = sTable[(*data >> 4) & 0xf];
+            log_line[j++] = sTable[*data & 0xf];
+            data++;
+        }
+        log_line[j] = '\0';
+        __android_log_write(ANDROID_LOG_DEBUG, (is_recv) ? "BrcmLlcpR": "BrcmLlcpX", log_line);
+    }
+}
+
+
+/*******************************************************************************
+**
+** Function         DispHcp
+**
+** Description      Log raw HCP packet as hex-ascii bytes
+**
+** Returns          None.
+**
+*******************************************************************************/
+void DispHcp (UINT8 *data, UINT16 len, BOOLEAN is_recv)
+{
+    int i,j;
+    int nBytes = (len*2)+1;
+    char line_buf[400];
+
+    if (nBytes > sizeof(line_buf))
+        return;
+
+    for(i = 0, j = 0; i < len && j < sizeof(line_buf)-3; i++)
+    {
+        line_buf[j++] = sTable[(*data >> 4) & 0xf];
+        line_buf[j++] = sTable[*data & 0xf];
+        data++;
+    }
+    line_buf[j] = '\0';
+
+    __android_log_write(ANDROID_LOG_DEBUG, (is_recv) ? "BrcmHcpR": "BrcmHcpX", line_buf);
+}
+
+void DispSNEP (UINT8 local_sap, UINT8 remote_sap, BT_HDR *p_buf, BOOLEAN is_first, BOOLEAN is_rx) {}
+void DispCHO (UINT8 *pMsg, UINT32 MsgLen, BOOLEAN is_rx) {}
+void DispT3TagMessage(BT_HDR *p_msg, BOOLEAN is_rx) {}
+void DispRWT4Tags (BT_HDR *p_buf, BOOLEAN is_rx) {}
+void DispCET4Tags (BT_HDR *p_buf, BOOLEAN is_rx) {}
+void DispRWI93Tag (BT_HDR *p_buf, BOOLEAN is_rx, UINT8 command_to_respond) {}
+void DispNDEFMsg (UINT8 *pMsg, UINT32 MsgLen, BOOLEAN is_recv) {}

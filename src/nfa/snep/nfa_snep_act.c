@@ -40,7 +40,7 @@ static char *nfa_snep_opcode (UINT8 opcode);
 ** Function         nfa_snep_sap_to_index
 **
 ** Description      find a connection control block with SAP
-**                  
+**
 **
 ** Returns          index of connection control block if success
 **                  NFA_SNEP_MAX_CONN, otherwise
@@ -68,7 +68,7 @@ UINT8 nfa_snep_sap_to_index (UINT8 local_sap, UINT8 remote_sap, UINT8 flags)
 ** Function         nfa_snep_allocate_cb
 **
 ** Description      Allocate a connection control block
-**                  
+**
 **
 ** Returns          index of connection control block if success
 **                  NFA_SNEP_MAX_CONN, otherwise
@@ -94,7 +94,7 @@ UINT8 nfa_snep_allocate_cb (void)
 ** Function         nfa_snep_deallocate_cb
 **
 ** Description      Deallocate a connection control block
-**                  
+**
 **
 ** Returns          void
 **
@@ -109,7 +109,7 @@ void nfa_snep_deallocate_cb (UINT8 xx)
 ** Function         nfa_snep_timer_cback
 **
 ** Description      Process timeout event when timer expires
-**                  
+**
 **
 ** Returns          None
 **
@@ -123,7 +123,7 @@ static void nfa_snep_timer_cback (void *p_tle)
     /* application will free buffer when receiving NFA_SNEP_DISC_EVT */
     nfa_snep_cb.conn[dlink].p_ndef_buff = NULL;
 
-    LLCP_DisconnectReq (nfa_snep_cb.conn[dlink].local_sap, 
+    LLCP_DisconnectReq (nfa_snep_cb.conn[dlink].local_sap,
                         nfa_snep_cb.conn[dlink].remote_sap, TRUE);
 }
 
@@ -132,7 +132,7 @@ static void nfa_snep_timer_cback (void *p_tle)
 ** Function         nfa_snep_get_efficent_miu
 **
 ** Description      Calculate best MIU to send data for throughput
-**                  
+**
 **
 ** Returns          most efficent MIU for throughput
 **
@@ -154,7 +154,7 @@ static UINT16 nfa_snep_get_efficent_miu (UINT16 remote_miu, UINT8 remote_rw)
         remote_link_miu = local_link_miu;
     }
 
-    /* 
+    /*
     ** 9 bytes overhead if AGF is used
     **  - 2 byts AGF header
     **  - at least two of 2 bytes length field for I-PDU
@@ -162,10 +162,10 @@ static UINT16 nfa_snep_get_efficent_miu (UINT16 remote_miu, UINT8 remote_rw)
     */
     if (remote_link_miu - remote_miu > 9)
     {
-        /* 
+        /*
         ** 5 bytes overhead for each I-PDU in AGF
         **  - 2 bytes length field
-        **  - 3 bytes header for I-PDU 
+        **  - 3 bytes header for I-PDU
         */
         max_num_pdu_in_agf = remote_link_miu / (remote_miu + 5);
 
@@ -173,7 +173,7 @@ static UINT16 nfa_snep_get_efficent_miu (UINT16 remote_miu, UINT8 remote_rw)
         {
             max_num_pdu_in_agf += 1;
         }
-        
+
         /* if local devie can put all I-PDU in one AGF */
         if (max_num_pdu_in_agf <= remote_rw)
         {
@@ -200,7 +200,7 @@ static UINT16 nfa_snep_get_efficent_miu (UINT16 remote_miu, UINT8 remote_rw)
 ** Function         nfa_snep_check_version
 **
 ** Description      Check version of SNEP
-**                  
+**
 **
 ** Returns          TRUE if supported
 **
@@ -218,7 +218,7 @@ BOOLEAN nfa_snep_check_version (UINT8 version)
 **
 ** Function         nfa_snep_send_msg
 **
-** Description      Send complete or the first fragment of SNEP message with or 
+** Description      Send complete or the first fragment of SNEP message with or
 **                  without information.
 **
 ** Returns          void
@@ -232,12 +232,12 @@ void nfa_snep_send_msg (UINT8 opcode, UINT8 dlink)
     tLLCP_STATUS status = LLCP_STATUS_FAIL;
 
 #if (BT_TRACE_VERBOSE == TRUE)
-    SNEP_TRACE_DEBUG4 ("nfa_snep_send_msg () [0x%x, 0x%x]: %s (0x%02x)", 
+    SNEP_TRACE_DEBUG4 ("nfa_snep_send_msg () [0x%x, 0x%x]: %s (0x%02x)",
                        nfa_snep_cb.conn[dlink].local_sap,
                        nfa_snep_cb.conn[dlink].remote_sap,
                        nfa_snep_opcode (opcode), opcode);
 #else
-    SNEP_TRACE_DEBUG3 ("nfa_snep_send_msg () [0x%x, 0x%x]: opcode 0x%02x", 
+    SNEP_TRACE_DEBUG3 ("nfa_snep_send_msg () [0x%x, 0x%x]: opcode 0x%02x",
                        nfa_snep_cb.conn[dlink].local_sap,
                        nfa_snep_cb.conn[dlink].remote_sap,
                        opcode);
@@ -321,6 +321,15 @@ void nfa_snep_send_msg (UINT8 opcode, UINT8 dlink)
                 {
                     /* update sent length */
                     nfa_snep_cb.conn[dlink].cur_length = length;
+
+                    if ((opcode == NFA_SNEP_REQ_CODE_GET) || (opcode == NFA_SNEP_REQ_CODE_PUT))
+                    {
+                        nfa_snep_cb.conn[dlink].flags |= NFA_SNEP_FLAG_W4_RESP_CONTINUE;
+                    }
+                    else /* (opcode == NFA_SNEP_RESP_CODE_SUCCESS) */
+                    {
+                        nfa_snep_cb.conn[dlink].flags |= NFA_SNEP_FLAG_W4_REQ_CONTINUE;
+                    }
                 }
             }
         }
@@ -346,7 +355,7 @@ void nfa_snep_send_msg (UINT8 opcode, UINT8 dlink)
                      NFA_SNEP_HEADER_SIZE,
                      FALSE);
 #endif
-            status = LLCP_SendData (nfa_snep_cb.conn[dlink].local_sap, 
+            status = LLCP_SendData (nfa_snep_cb.conn[dlink].local_sap,
                                     nfa_snep_cb.conn[dlink].remote_sap, p_msg);
         }
     }
@@ -372,7 +381,7 @@ void nfa_snep_send_msg (UINT8 opcode, UINT8 dlink)
 ** Function         nfa_snep_send_remaining
 **
 ** Description      Send remaining fragments of SNEP message
-**                  
+**
 **
 ** Returns          void
 **
@@ -413,7 +422,7 @@ void nfa_snep_send_remaining (UINT8 dlink)
 
             memcpy (p_dst, p_src, length);
 
-            status = LLCP_SendData (nfa_snep_cb.conn[dlink].local_sap, 
+            status = LLCP_SendData (nfa_snep_cb.conn[dlink].local_sap,
                                     nfa_snep_cb.conn[dlink].remote_sap, p_msg);
 
             if (status != LLCP_STATUS_FAIL)
@@ -467,7 +476,7 @@ void nfa_snep_send_remaining (UINT8 dlink)
 ** Function         nfa_snep_llcp_cback
 **
 ** Description      Processing event from LLCP
-**                  
+**
 **
 ** Returns          None
 **
@@ -500,7 +509,7 @@ void nfa_snep_llcp_cback (tLLCP_SAP_CBACK_DATA *p_data)
 
     case LLCP_SAP_EVT_CONGEST:
         /* congestion start/end */
-        nfa_snep_proc_llcp_congest (p_data); 
+        nfa_snep_proc_llcp_congest (p_data);
         break;
 
     case LLCP_SAP_EVT_LINK_STATUS:
@@ -522,7 +531,7 @@ void nfa_snep_llcp_cback (tLLCP_SAP_CBACK_DATA *p_data)
 ** Function         nfa_snep_validate_rx_msg
 **
 ** Description      Validate version, opcode, length in received message
-**                  
+**
 **
 ** Returns          TRUE if message is valid
 **
@@ -538,7 +547,7 @@ BOOLEAN nfa_snep_validate_rx_msg (UINT8 dlink)
     SNEP_TRACE_DEBUG0 ("nfa_snep_validate_rx_msg ()");
 
     more = LLCP_ReadDataLinkData (nfa_snep_cb.conn[dlink].local_sap,
-                                  nfa_snep_cb.conn[dlink].remote_sap, 
+                                  nfa_snep_cb.conn[dlink].remote_sap,
                                   NFA_SNEP_HEADER_SIZE,
                                   &length, buffer);
 
@@ -550,13 +559,18 @@ BOOLEAN nfa_snep_validate_rx_msg (UINT8 dlink)
              TRUE);
 #endif
 
-    /* check if it has minimum header, 
-    ** the first fragment shall include at least the entier SNEP header 
+    /* check if it has minimum header,
+    ** the first fragment shall include at least the entier SNEP header
     */
     if (length < NFA_SNEP_HEADER_SIZE)
     {
-        SNEP_TRACE_ERROR0 ("The first fragment shall include at least the entier SNEP header");
-        nfa_snep_send_msg (NFA_SNEP_RESP_CODE_BAD_REQ, dlink);
+        SNEP_TRACE_ERROR0 ("The first fragment shall include at least the entire SNEP header");
+
+        /* application will free buffer when receiving NFA_SNEP_DISC_EVT */
+        nfa_snep_cb.conn[dlink].p_ndef_buff = NULL;
+
+        LLCP_DisconnectReq (nfa_snep_cb.conn[dlink].local_sap,
+                            nfa_snep_cb.conn[dlink].remote_sap, TRUE);
         return FALSE;
     }
 
@@ -577,12 +591,24 @@ BOOLEAN nfa_snep_validate_rx_msg (UINT8 dlink)
     /* check valid opcode for server */
     if (nfa_snep_cb.conn[dlink].flags & NFA_SNEP_FLAG_SERVER)
     {
-        if (  (opcode != NFA_SNEP_REQ_CODE_CONTINUE)
-            &&(opcode != NFA_SNEP_REQ_CODE_GET)
-            &&(opcode != NFA_SNEP_REQ_CODE_PUT)
-            &&(opcode != NFA_SNEP_REQ_CODE_REJECT)  )
+        /* if this is response message */
+        if (opcode & NFA_SNEP_RESP_CODE_CONTINUE)
         {
             SNEP_TRACE_ERROR0 ("Invalid opcode for server");
+
+            /* application will free buffer when receiving NFA_SNEP_DISC_EVT */
+            nfa_snep_cb.conn[dlink].p_ndef_buff = NULL;
+
+            LLCP_DisconnectReq (nfa_snep_cb.conn[dlink].local_sap,
+                                nfa_snep_cb.conn[dlink].remote_sap, TRUE);
+            return FALSE;
+        }
+        else if (  (opcode != NFA_SNEP_REQ_CODE_CONTINUE)
+                 &&(opcode != NFA_SNEP_REQ_CODE_GET)
+                 &&(opcode != NFA_SNEP_REQ_CODE_PUT)
+                 &&(opcode != NFA_SNEP_REQ_CODE_REJECT)  )
+        {
+            SNEP_TRACE_ERROR0 ("Not supported opcode for server");
             nfa_snep_send_msg (NFA_SNEP_RESP_CODE_NOT_IMPLM, dlink);
             return FALSE;
         }
@@ -600,7 +626,12 @@ BOOLEAN nfa_snep_validate_rx_msg (UINT8 dlink)
             &&(opcode != NFA_SNEP_RESP_CODE_REJECT)  )
         {
             SNEP_TRACE_ERROR0 ("Invalid opcode for client");
-            /* client cannot send error code so let it time out */
+            /* client cannot send error code so disconnect */
+            /* application will free buffer when receiving NFA_SNEP_DISC_EVT */
+            nfa_snep_cb.conn[dlink].p_ndef_buff = NULL;
+
+            LLCP_DisconnectReq (nfa_snep_cb.conn[dlink].local_sap,
+                                nfa_snep_cb.conn[dlink].remote_sap, TRUE);
             return FALSE;
         }
     }
@@ -608,14 +639,14 @@ BOOLEAN nfa_snep_validate_rx_msg (UINT8 dlink)
     if (opcode == NFA_SNEP_REQ_CODE_GET)
     {
         more = LLCP_ReadDataLinkData (nfa_snep_cb.conn[dlink].local_sap,
-                                      nfa_snep_cb.conn[dlink].remote_sap, 
+                                      nfa_snep_cb.conn[dlink].remote_sap,
                                       NFA_SNEP_ACCEPT_LEN_SIZE,
                                       &length, buffer);
 
-        if (length < NFA_SNEP_ACCEPT_LEN_SIZE) 
+        if (length < NFA_SNEP_ACCEPT_LEN_SIZE)
         {
-            /* 
-            ** Including acceptable length in the first segment is not mandated in spec 
+            /*
+            ** Including acceptable length in the first segment is not mandated in spec
             ** but MIU is always big enough to include acceptable length field.
             */
             nfa_snep_send_msg (NFA_SNEP_RESP_CODE_BAD_REQ, dlink);
@@ -644,7 +675,12 @@ BOOLEAN nfa_snep_validate_rx_msg (UINT8 dlink)
             {
                 nfa_snep_send_msg (NFA_SNEP_RESP_CODE_BAD_REQ, dlink);
             }
-            /* client cannot send error code so let it time out */
+            /* client cannot send error code so disconnect */
+            /* application will free buffer when receiving NFA_SNEP_DISC_EVT */
+            nfa_snep_cb.conn[dlink].p_ndef_buff = NULL;
+
+            LLCP_DisconnectReq (nfa_snep_cb.conn[dlink].local_sap,
+                                nfa_snep_cb.conn[dlink].remote_sap, TRUE);
             return FALSE;
         }
     }
@@ -660,7 +696,7 @@ BOOLEAN nfa_snep_validate_rx_msg (UINT8 dlink)
 ** Function         nfa_snep_store_first_rx_msg
 **
 ** Description      Allocate buffer and store the first fragment
-**                  
+**
 **
 ** Returns          TRUE if the received fragment is successfully stored
 **
@@ -687,7 +723,7 @@ BOOLEAN nfa_snep_store_first_rx_msg (UINT8 dlink)
         nfa_snep_cb.conn[dlink].buff_length = evt_data.alloc.ndef_length;
 
         more = LLCP_ReadDataLinkData (nfa_snep_cb.conn[dlink].local_sap,
-                                      nfa_snep_cb.conn[dlink].remote_sap, 
+                                      nfa_snep_cb.conn[dlink].remote_sap,
                                       nfa_snep_cb.conn[dlink].buff_length,
                                       &length,
                                       nfa_snep_cb.conn[dlink].p_ndef_buff);
@@ -695,7 +731,7 @@ BOOLEAN nfa_snep_store_first_rx_msg (UINT8 dlink)
         /* store received message length */
         nfa_snep_cb.conn[dlink].cur_length  = (UINT32) length;
 
-        SNEP_TRACE_DEBUG2 ("Received NDEF on SNEP, %d ouf of %d", 
+        SNEP_TRACE_DEBUG2 ("Received NDEF on SNEP, %d ouf of %d",
                            nfa_snep_cb.conn[dlink].cur_length,
                            nfa_snep_cb.conn[dlink].ndef_length);
 
@@ -717,7 +753,7 @@ BOOLEAN nfa_snep_store_first_rx_msg (UINT8 dlink)
     }
     else
     {
-        SNEP_TRACE_ERROR1 ("Upper layer cannot allocate buffer for %d bytes", 
+        SNEP_TRACE_ERROR1 ("Upper layer cannot allocate buffer for %d bytes",
                            nfa_snep_cb.conn[dlink].ndef_length);
 
         /* clear data in data link connection */
@@ -754,7 +790,7 @@ BOOLEAN nfa_snep_store_first_rx_msg (UINT8 dlink)
 ** Function         nfa_snep_proc_first_rx_msg
 **
 ** Description      Process the first part of received message
-**                  
+**
 **
 ** Returns          TRUE if it is not fragmented message
 **                  FALSE if it is fragmented or found error
@@ -830,7 +866,7 @@ BOOLEAN nfa_snep_proc_first_rx_msg (UINT8 dlink)
                 nfa_snep_send_msg (NFA_SNEP_REQ_CODE_REJECT, dlink);
                 nfa_snep_cb.conn[dlink].rx_fragments = FALSE;
             }
-            
+
             /* return error to client so buffer can be freed */
             evt_data.get_resp.conn_handle = (NFA_HANDLE_GROUP_SNEP | dlink);
             evt_data.get_resp.resp_code   = NFA_SNEP_RESP_CODE_EXCESS_DATA;
@@ -844,7 +880,7 @@ BOOLEAN nfa_snep_proc_first_rx_msg (UINT8 dlink)
         }
 
         more = LLCP_ReadDataLinkData (nfa_snep_cb.conn[dlink].local_sap,
-                                      nfa_snep_cb.conn[dlink].remote_sap, 
+                                      nfa_snep_cb.conn[dlink].remote_sap,
                                       nfa_snep_cb.conn[dlink].buff_length,
                                       &length,
                                       nfa_snep_cb.conn[dlink].p_ndef_buff);
@@ -852,7 +888,7 @@ BOOLEAN nfa_snep_proc_first_rx_msg (UINT8 dlink)
         /* store received message length */
         nfa_snep_cb.conn[dlink].cur_length = length;
 
-        SNEP_TRACE_DEBUG2 ("Received NDEF on SNEP, %d ouf of %d", 
+        SNEP_TRACE_DEBUG2 ("Received NDEF on SNEP, %d ouf of %d",
                            nfa_snep_cb.conn[dlink].cur_length,
                            nfa_snep_cb.conn[dlink].ndef_length);
 
@@ -891,7 +927,7 @@ BOOLEAN nfa_snep_proc_first_rx_msg (UINT8 dlink)
 ** Function         nfa_snep_assemble_fragments
 **
 ** Description      Assemble fragments of SNEP message
-**                  
+**
 **
 ** Returns          TRUE if it is not fragmented message
 **                  FALSE if it is fragmented or found error
@@ -903,14 +939,14 @@ BOOLEAN nfa_snep_assemble_fragments (UINT8 dlink)
     UINT32  length;
 
     more = LLCP_ReadDataLinkData (nfa_snep_cb.conn[dlink].local_sap,
-                                  nfa_snep_cb.conn[dlink].remote_sap, 
+                                  nfa_snep_cb.conn[dlink].remote_sap,
                                   nfa_snep_cb.conn[dlink].buff_length - nfa_snep_cb.conn[dlink].cur_length,
                                   &length,
                                   nfa_snep_cb.conn[dlink].p_ndef_buff + nfa_snep_cb.conn[dlink].cur_length);
 
     nfa_snep_cb.conn[dlink].cur_length += length;
 
-    SNEP_TRACE_DEBUG2 ("Received NDEF on SNEP, %d ouf of %d", 
+    SNEP_TRACE_DEBUG2 ("Received NDEF on SNEP, %d ouf of %d",
                        nfa_snep_cb.conn[dlink].cur_length,
                        nfa_snep_cb.conn[dlink].ndef_length);
 
@@ -931,7 +967,7 @@ BOOLEAN nfa_snep_assemble_fragments (UINT8 dlink)
             /* application will free buffer when receiving NFA_SNEP_DISC_EVT */
             nfa_snep_cb.conn[dlink].p_ndef_buff = NULL;
 
-            LLCP_DisconnectReq (nfa_snep_cb.conn[dlink].local_sap, 
+            LLCP_DisconnectReq (nfa_snep_cb.conn[dlink].local_sap,
                                 nfa_snep_cb.conn[dlink].remote_sap, TRUE);
 
             return FALSE;
@@ -956,7 +992,7 @@ BOOLEAN nfa_snep_assemble_fragments (UINT8 dlink)
 ** Function         nfa_snep_proc_llcp_data_ind
 **
 ** Description      Processing incoming data from LLCP
-**                  
+**
 **
 ** Returns          None
 **
@@ -969,10 +1005,10 @@ void nfa_snep_proc_llcp_data_ind (tLLCP_SAP_CBACK_DATA  *p_data)
     SNEP_TRACE_DEBUG0 ("nfa_snep_proc_llcp_data_ind ()");
 
     /* find connection control block with SAP */
-    dlink = nfa_snep_sap_to_index (p_data->data_ind.local_sap, 
-                                   p_data->data_ind.remote_sap, 
+    dlink = nfa_snep_sap_to_index (p_data->data_ind.local_sap,
+                                   p_data->data_ind.remote_sap,
                                    NFA_SNEP_FLAG_ANY);
-    
+
     /* if found */
     if (  (dlink < NFA_SNEP_MAX_CONN)
         &&(nfa_snep_cb.conn[dlink].flags & NFA_SNEP_FLAG_CONNECTED)  )
@@ -1001,13 +1037,28 @@ void nfa_snep_proc_llcp_data_ind (tLLCP_SAP_CBACK_DATA  *p_data)
                 return;
             }
         }
-            
+
         /* processing complete SNEP message */
         switch (nfa_snep_cb.conn[dlink].rx_code)
         {
         case NFA_SNEP_REQ_CODE_CONTINUE:
-            /* send remaining fragments of GET response */
-            nfa_snep_send_remaining (dlink);
+            if (nfa_snep_cb.conn[dlink].flags & NFA_SNEP_FLAG_W4_REQ_CONTINUE)
+            {
+                nfa_snep_cb.conn[dlink].flags &= ~NFA_SNEP_FLAG_W4_REQ_CONTINUE;
+
+                /* send remaining fragments of GET response */
+                nfa_snep_send_remaining (dlink);
+            }
+            else
+            {
+                SNEP_TRACE_ERROR0 ("Received invalid NFA_SNEP_REQ_CODE_CONTINUE");
+
+                /* application will free buffer when receiving NFA_SNEP_DISC_EVT */
+                nfa_snep_cb.conn[dlink].p_ndef_buff = NULL;
+
+                LLCP_DisconnectReq (nfa_snep_cb.conn[dlink].local_sap,
+                                    nfa_snep_cb.conn[dlink].remote_sap, TRUE);
+            }
             break;
 
         case NFA_SNEP_REQ_CODE_GET:
@@ -1038,8 +1089,22 @@ void nfa_snep_proc_llcp_data_ind (tLLCP_SAP_CBACK_DATA  *p_data)
             break;
 
         case NFA_SNEP_RESP_CODE_CONTINUE:
-            /* send remaining fragments GET/PUT request */
-            nfa_snep_send_remaining (dlink);
+            if (nfa_snep_cb.conn[dlink].flags & NFA_SNEP_FLAG_W4_RESP_CONTINUE)
+            {
+                nfa_snep_cb.conn[dlink].flags &= ~NFA_SNEP_FLAG_W4_RESP_CONTINUE;
+                /* send remaining fragments GET/PUT request */
+                nfa_snep_send_remaining (dlink);
+            }
+            else
+            {
+                SNEP_TRACE_ERROR0 ("Received invalid NFA_SNEP_RESP_CODE_CONTINUE");
+
+                /* application will free buffer when receiving NFA_SNEP_DISC_EVT */
+                nfa_snep_cb.conn[dlink].p_ndef_buff = NULL;
+
+                LLCP_DisconnectReq (nfa_snep_cb.conn[dlink].local_sap,
+                                    nfa_snep_cb.conn[dlink].remote_sap, TRUE);
+            }
             break;
 
         case NFA_SNEP_RESP_CODE_SUCCESS:
@@ -1107,7 +1172,7 @@ void nfa_snep_proc_llcp_data_ind (tLLCP_SAP_CBACK_DATA  *p_data)
 ** Function         nfa_snep_proc_llcp_connect_ind
 **
 ** Description      Processing connection request from peer
-**                  
+**
 **
 ** Returns          None
 **
@@ -1138,8 +1203,8 @@ void nfa_snep_proc_llcp_connect_ind (tLLCP_SAP_CBACK_DATA  *p_data)
             nfa_snep_cb.conn[dlink].remote_sap = p_data->connect_ind.remote_sap;
             nfa_snep_cb.conn[dlink].p_cback    = nfa_snep_cb.conn[server].p_cback;
             nfa_snep_cb.conn[dlink].flags      = NFA_SNEP_FLAG_SERVER|NFA_SNEP_FLAG_CONNECTED;
-    
-            nfa_snep_cb.conn[dlink].tx_miu = nfa_snep_get_efficent_miu (p_data->connect_ind.miu, 
+
+            nfa_snep_cb.conn[dlink].tx_miu = nfa_snep_get_efficent_miu (p_data->connect_ind.miu,
                                                                         p_data->connect_ind.rw);
 
             /* accept connection request */
@@ -1147,7 +1212,7 @@ void nfa_snep_proc_llcp_connect_ind (tLLCP_SAP_CBACK_DATA  *p_data)
             params.rw  = NFA_SNEP_RW;
             params.sn[0] = 0;
 
-            LLCP_ConnectCfm (p_data->connect_ind.local_sap, 
+            LLCP_ConnectCfm (p_data->connect_ind.local_sap,
                              p_data->connect_ind.remote_sap, &params);
 
             evt_data.connect.reg_handle  = (NFA_HANDLE_GROUP_SNEP | server);
@@ -1157,16 +1222,16 @@ void nfa_snep_proc_llcp_connect_ind (tLLCP_SAP_CBACK_DATA  *p_data)
         else
         {
             SNEP_TRACE_ERROR0 ("Cannot allocate connection control block");
-            LLCP_ConnectReject (p_data->connect_ind.local_sap, 
-                                p_data->connect_ind.remote_sap, 
+            LLCP_ConnectReject (p_data->connect_ind.local_sap,
+                                p_data->connect_ind.remote_sap,
                                 LLCP_SAP_DM_REASON_TEMP_REJECT_THIS);
         }
     }
     else
     {
         SNEP_TRACE_ERROR0 ("Cannot find SNEP server");
-        LLCP_ConnectReject (p_data->connect_ind.local_sap, 
-                            p_data->connect_ind.remote_sap, 
+        LLCP_ConnectReject (p_data->connect_ind.local_sap,
+                            p_data->connect_ind.remote_sap,
                             LLCP_SAP_DM_REASON_NO_SERVICE);
     }
 }
@@ -1176,7 +1241,7 @@ void nfa_snep_proc_llcp_connect_ind (tLLCP_SAP_CBACK_DATA  *p_data)
 ** Function         nfa_snep_proc_llcp_connect_resp
 **
 ** Description      Processing connection response from peer
-**                  
+**
 **
 ** Returns          None
 **
@@ -1189,8 +1254,8 @@ void nfa_snep_proc_llcp_connect_resp (tLLCP_SAP_CBACK_DATA  *p_data)
     SNEP_TRACE_DEBUG0 ("nfa_snep_proc_llcp_connect_resp ()");
 
     /* find client by SAP */
-    dlink = nfa_snep_sap_to_index (p_data->connect_resp.local_sap, 
-                                   NFA_SNEP_ANY_SAP, 
+    dlink = nfa_snep_sap_to_index (p_data->connect_resp.local_sap,
+                                   NFA_SNEP_ANY_SAP,
                                    NFA_SNEP_FLAG_CLIENT|NFA_SNEP_FLAG_CONNECTING);
 
     /* if found client */
@@ -1199,7 +1264,7 @@ void nfa_snep_proc_llcp_connect_resp (tLLCP_SAP_CBACK_DATA  *p_data)
         nfa_snep_cb.conn[dlink].remote_sap = p_data->connect_resp.remote_sap;
         nfa_snep_cb.conn[dlink].flags      = NFA_SNEP_FLAG_CLIENT|NFA_SNEP_FLAG_CONNECTED;
 
-        nfa_snep_cb.conn[dlink].tx_miu = nfa_snep_get_efficent_miu (p_data->connect_resp.miu, 
+        nfa_snep_cb.conn[dlink].tx_miu = nfa_snep_get_efficent_miu (p_data->connect_resp.miu,
                                                                     p_data->connect_resp.rw);
 
         evt_data.connect.reg_handle  = (NFA_HANDLE_GROUP_SNEP | dlink);
@@ -1209,7 +1274,7 @@ void nfa_snep_proc_llcp_connect_resp (tLLCP_SAP_CBACK_DATA  *p_data)
     else
     {
         SNEP_TRACE_ERROR0 ("Cannot find SNEP client");
-        LLCP_DisconnectReq (p_data->connect_resp.local_sap, 
+        LLCP_DisconnectReq (p_data->connect_resp.local_sap,
                             p_data->connect_resp.remote_sap, TRUE);
     }
 }
@@ -1219,7 +1284,7 @@ void nfa_snep_proc_llcp_connect_resp (tLLCP_SAP_CBACK_DATA  *p_data)
 ** Function         nfa_snep_proc_llcp_disconnect_ind
 **
 ** Description      Processing disconnection request from peer
-**                  
+**
 **
 ** Returns          None
 **
@@ -1232,8 +1297,8 @@ void nfa_snep_proc_llcp_disconnect_ind (tLLCP_SAP_CBACK_DATA  *p_data)
     SNEP_TRACE_DEBUG0 ("nfa_snep_proc_llcp_disconnect_ind ()");
 
     /* find connection control block by SAP */
-    dlink = nfa_snep_sap_to_index (p_data->disconnect_ind.local_sap, 
-                                   p_data->disconnect_ind.remote_sap, 
+    dlink = nfa_snep_sap_to_index (p_data->disconnect_ind.local_sap,
+                                   p_data->disconnect_ind.remote_sap,
                                    NFA_SNEP_FLAG_ANY);
 
     /* if found */
@@ -1265,7 +1330,7 @@ void nfa_snep_proc_llcp_disconnect_ind (tLLCP_SAP_CBACK_DATA  *p_data)
 ** Function         nfa_snep_proc_llcp_disconnect_resp
 **
 ** Description      Processing rejected connection from peer
-**                  
+**
 **
 ** Returns          None
 **
@@ -1291,8 +1356,8 @@ void nfa_snep_proc_llcp_disconnect_resp (tLLCP_SAP_CBACK_DATA  *p_data)
     }
 
     /* find connection control block by SAP */
-    dlink = nfa_snep_sap_to_index (p_data->disconnect_resp.local_sap, 
-                                   remote_sap, 
+    dlink = nfa_snep_sap_to_index (p_data->disconnect_resp.local_sap,
+                                   remote_sap,
                                    flags);
 
     /* if found client */
@@ -1308,7 +1373,24 @@ void nfa_snep_proc_llcp_disconnect_resp (tLLCP_SAP_CBACK_DATA  *p_data)
     }
     else
     {
-        SNEP_TRACE_ERROR0 ("Cannot find SNEP connection");
+        /* find server connection control block by SAP */
+        dlink = nfa_snep_sap_to_index (p_data->disconnect_resp.local_sap,
+                                       remote_sap,
+                                       NFA_SNEP_FLAG_SERVER|NFA_SNEP_FLAG_CONNECTED);
+
+        /* if found server connection */
+        if (dlink < NFA_SNEP_MAX_CONN)
+        {
+            evt_data.disc.conn_handle = (NFA_HANDLE_GROUP_SNEP | dlink);
+
+            nfa_snep_cb.conn[dlink].p_cback (NFA_SNEP_DISC_EVT, &evt_data);
+
+            nfa_snep_deallocate_cb (dlink);
+        }
+        else
+        {
+            SNEP_TRACE_ERROR0 ("Cannot find SNEP connection");
+        }
     }
 }
 
@@ -1317,7 +1399,7 @@ void nfa_snep_proc_llcp_disconnect_resp (tLLCP_SAP_CBACK_DATA  *p_data)
 ** Function         nfa_snep_proc_llcp_congest
 **
 ** Description      Processing LLCP congestion event
-**                  
+**
 **
 ** Returns          None
 **
@@ -1334,8 +1416,8 @@ void nfa_snep_proc_llcp_congest (tLLCP_SAP_CBACK_DATA  *p_data)
     /* if data link connection is congested */
     if (p_data->congest.link_type == LLCP_LINK_TYPE_DATA_LINK_CONNECTION)
     {
-        dlink = nfa_snep_sap_to_index (p_data->congest.local_sap, 
-                                       p_data->congest.remote_sap, 
+        dlink = nfa_snep_sap_to_index (p_data->congest.local_sap,
+                                       p_data->congest.remote_sap,
                                        NFA_SNEP_FLAG_ANY);
 
         if (  (dlink < NFA_SNEP_MAX_CONN)
@@ -1361,7 +1443,7 @@ void nfa_snep_proc_llcp_congest (tLLCP_SAP_CBACK_DATA  *p_data)
 ** Function         nfa_snep_proc_llcp_link_status
 **
 ** Description      Processing LLCP link status
-**                  
+**
 **
 ** Returns          none
 **
@@ -1371,7 +1453,7 @@ void nfa_snep_proc_llcp_link_status (tLLCP_SAP_CBACK_DATA  *p_data)
     UINT8              xx;
     tNFA_SNEP_EVT_DATA evt_data;
 
-    SNEP_TRACE_DEBUG1 ("nfa_snep_proc_llcp_link_status () is_activated:%d", 
+    SNEP_TRACE_DEBUG1 ("nfa_snep_proc_llcp_link_status () is_activated:%d",
                        p_data->link_status.is_activated);
 
     xx = nfa_snep_sap_to_index (p_data->link_status.local_sap,
@@ -1401,7 +1483,7 @@ void nfa_snep_proc_llcp_link_status (tLLCP_SAP_CBACK_DATA  *p_data)
 ** Function         nfa_snep_proc_llcp_tx_complete
 **
 ** Description      Processing LLCP tx complete event
-**                  
+**
 **
 ** Returns          none
 **
@@ -1411,7 +1493,7 @@ void nfa_snep_proc_llcp_tx_complete (tLLCP_SAP_CBACK_DATA  *p_data)
     UINT8              dlink;
     tNFA_SNEP_EVT_DATA evt_data;
 
-    SNEP_TRACE_DEBUG0 ("nfa_snep_proc_llcp_tx_complete ()"); 
+    SNEP_TRACE_DEBUG0 ("nfa_snep_proc_llcp_tx_complete ()");
 
     dlink = nfa_snep_sap_to_index (p_data->tx_complete.local_sap,
                                    p_data->tx_complete.remote_sap,
@@ -1433,7 +1515,7 @@ void nfa_snep_proc_llcp_tx_complete (tLLCP_SAP_CBACK_DATA  *p_data)
 ** Function         nfa_snep_reg_server
 **
 ** Description      Allocate a connection control block as server and register to LLCP
-**                  
+**
 **
 ** Returns          TRUE to deallocate message
 **
@@ -1455,7 +1537,7 @@ BOOLEAN nfa_snep_reg_server (tNFA_SNEP_MSG *p_msg)
                                          nfa_snep_llcp_cback);
     }
 
-    BCM_STRNCPY_S (evt_data.reg.service_name, sizeof (evt_data.reg.service_name), 
+    BCM_STRNCPY_S (evt_data.reg.service_name, sizeof (evt_data.reg.service_name),
                    p_msg->api_reg_server.service_name, LLCP_MAX_SN_LEN);
     evt_data.reg.service_name[LLCP_MAX_SN_LEN] = 0x00;
 
@@ -1502,7 +1584,7 @@ BOOLEAN nfa_snep_reg_server (tNFA_SNEP_MSG *p_msg)
 ** Function         nfa_snep_reg_client
 **
 ** Description      Allocate a connection control block as client and register to LLCP
-**                  
+**
 **
 ** Returns          TRUE to deallocate message
 **
@@ -1647,7 +1729,7 @@ BOOLEAN nfa_snep_connect (tNFA_SNEP_MSG *p_msg)
         /* create data link connection with server name */
         conn_params.miu = NFA_SNEP_MIU;
         conn_params.rw  = NFA_SNEP_RW;
-        BCM_STRNCPY_S (conn_params.sn, sizeof (conn_params.sn), 
+        BCM_STRNCPY_S (conn_params.sn, sizeof (conn_params.sn),
                        p_msg->api_connect.service_name, LLCP_MAX_SN_LEN);
         conn_params.sn[LLCP_MAX_SN_LEN] = 0;
 
@@ -1736,7 +1818,7 @@ BOOLEAN nfa_snep_put_req (tNFA_SNEP_MSG *p_msg)
 ** Function         nfa_snep_get_resp
 **
 ** Description      Server responds to GET request
-**                  
+**
 **
 ** Returns          TRUE to deallocate message
 **
@@ -1772,7 +1854,7 @@ BOOLEAN nfa_snep_get_resp (tNFA_SNEP_MSG *p_msg)
 ** Function         nfa_snep_put_resp
 **
 ** Description      Server responds to PUT request
-**                  
+**
 **
 ** Returns          TRUE to deallocate message
 **
@@ -1804,7 +1886,7 @@ BOOLEAN nfa_snep_put_resp (tNFA_SNEP_MSG *p_msg)
 ** Function         nfa_snep_disconnect
 **
 ** Description      Disconnect data link connection
-**                  
+**
 **
 ** Returns          TRUE to deallocate message
 **
@@ -1820,8 +1902,8 @@ BOOLEAN nfa_snep_disconnect (tNFA_SNEP_MSG *p_msg)
     if (  (dlink < NFA_SNEP_MAX_CONN)
         &&(nfa_snep_cb.conn[dlink].flags & NFA_SNEP_FLAG_CONNECTED)  )
     {
-        LLCP_DisconnectReq (nfa_snep_cb.conn[dlink].local_sap, 
-                            nfa_snep_cb.conn[dlink].remote_sap, 
+        LLCP_DisconnectReq (nfa_snep_cb.conn[dlink].local_sap,
+                            nfa_snep_cb.conn[dlink].remote_sap,
                             p_msg->api_disc.flush);
     }
     else
@@ -1836,7 +1918,7 @@ BOOLEAN nfa_snep_disconnect (tNFA_SNEP_MSG *p_msg)
 **
 ** Function         nfa_snep_opcode
 **
-** Description      
+** Description
 **
 ** Returns          string of event
 **

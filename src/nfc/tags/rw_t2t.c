@@ -39,7 +39,7 @@ static char *rw_t2t_get_substate_name (UINT8 substate);
 **
 ** Function         rw_t2t_proc_data
 **
-** Description      This function handles data evt received from NFC Controller.  
+** Description      This function handles data evt received from NFC Controller.
 **
 ** Returns          none
 **
@@ -76,7 +76,7 @@ static void rw_t2t_proc_data (UINT8 conn_id, tNFC_CONN_EVT event, BT_HDR *p_pkt)
     RW_TRACE_EVENT2 ("RW RECV [%s]:0x%x RSP", t2t_info_to_str (p_cmd_rsp_info), p_cmd_rsp_info->opcode);
 
     if (  (p_pkt->len != p_cmd_rsp_info->rsp_len)
-        &&(p_pkt->len != p_cmd_rsp_info->nack_rsp_len) 
+        &&(p_pkt->len != p_cmd_rsp_info->nack_rsp_len)
         &&(p_t2t->substate != RW_T2T_SUBSTATE_WAIT_SELECT_SECTOR)  )
     {
 #if (BT_TRACE_VERBOSE == TRUE)
@@ -147,7 +147,7 @@ static void rw_t2t_proc_data (UINT8 conn_id, tNFC_CONN_EVT event, BT_HDR *p_pkt)
             /* NDEF/other Tlv Operation/Format Tag/Config Tag as Read only
              * Check if Positive response to previous write command */
             if (  (p_cmd_rsp_info->opcode == T2T_CMD_WRITE)
-                &&((*p & 0x0f) != T2T_RSP_ACK)  ) 
+                &&((*p & 0x0f) != T2T_RSP_ACK)  )
                 evt_data.status = NFC_STATUS_FAILED;
             else
             {
@@ -184,7 +184,7 @@ static void rw_t2t_proc_data (UINT8 conn_id, tNFC_CONN_EVT event, BT_HDR *p_pkt)
         else
             (*rw_cb.p_cback) (rw_event, (tRW_DATA *) &evt_data);
     }
-    
+
     if (b_release)
         GKI_freebuf (p_pkt);
 }
@@ -290,11 +290,11 @@ void rw_t2t_conn_cback (UINT8 conn_id, tNFC_CONN_EVT event, tNFC_CONN *p_data)
 **
 ** Function         rw_t2t_send_cmd
 **
-** Description      This function composes a Type 2 Tag command and send it via 
-**                  NCI to NFCC.  
+** Description      This function composes a Type 2 Tag command and send it via
+**                  NCI to NFCC.
 **
 ** Returns          NFC_STATUS_OK if the command is successfuly sent to NCI
-**                  otherwise, error status 
+**                  otherwise, error status
 **
 *******************************************************************************/
 tNFC_STATUS rw_t2t_send_cmd (UINT8 opcode, UINT8 *p_dat)
@@ -336,7 +336,7 @@ tNFC_STATUS rw_t2t_send_cmd (UINT8 opcode, UINT8 *p_dat)
 
             if ((status = NFC_SendData (NFC_RF_CONN_ID, p_data)) == NFC_STATUS_OK)
             {
-                nfc_start_quick_timer (&p_t2t->t2_timer, NFC_TTYPE_RW_T2T_RESPONSE, 
+                nfc_start_quick_timer (&p_t2t->t2_timer, NFC_TTYPE_RW_T2T_RESPONSE,
                        (RW_T2T_TOUT_RESP*QUICK_TIMER_TICKS_PER_SEC) / 1000);
             }
             else
@@ -384,7 +384,7 @@ void rw_t2t_process_timeout (TIMER_LIST_ENT *p_tle)
         if (p_t2t->state == RW_T2T_STATE_SELECT_SECTOR)
         {
             /* Notify that select sector op is successfull */
-            rw_t2t_handle_op_complete ();  
+            rw_t2t_handle_op_complete ();
             evt_data.status = NFC_STATUS_OK;
             evt_data.p_data = NULL;
             (*rw_cb.p_cback) (RW_T2T_SELECT_CPLT_EVT, (tRW_DATA *) &evt_data);
@@ -431,7 +431,7 @@ static void rw_t2t_process_frame_error (void)
 ** Function         rw_t2t_process_error
 **
 ** Description      Process error including Timeout, Frame error. This function
-**                  will retry atleast till RW_MAX_RETRIES before give up and 
+**                  will retry atleast till RW_MAX_RETRIES before give up and
 **                  sending negative notification to upper layer
 **
 ** Returns          none
@@ -445,7 +445,7 @@ static void rw_t2t_process_error (void)
     tRW_T2T_CB              *p_t2t          = &rw_cb.tcb.t2t;
     tT2T_CMD_RSP_INFO       *p_cmd_rsp_info = (tT2T_CMD_RSP_INFO *) rw_cb.tcb.t2t.p_cmd_rsp_info;
     tRW_DETECT_NDEF_DATA    ndef_data;
-    
+
     RW_TRACE_DEBUG1 ("rw_t2t_process_error () State: %u", p_t2t->state);
 
     /* Retry sending command if retry-count < max */
@@ -529,7 +529,7 @@ void rw_t2t_handle_presence_check_rsp (tNFC_STATUS status)
 **
 ** Function         rw_t2t_resume_op
 **
-** Description      This function will continue operation after moving to new 
+** Description      This function will continue operation after moving to new
 **                  sector
 **
 ** Returns          tNFC_STATUS
@@ -564,7 +564,7 @@ static void rw_t2t_resume_op (void)
         if (NFC_SendData (NFC_RF_CONN_ID, p_cmd_buf) == NFC_STATUS_OK)
         {
             /* Start timer for waiting for response */
-            nfc_start_quick_timer (&p_t2t->t2_timer, NFC_TTYPE_RW_T2T_RESPONSE, 
+            nfc_start_quick_timer (&p_t2t->t2_timer, NFC_TTYPE_RW_T2T_RESPONSE,
                                    (RW_T2T_TOUT_RESP*QUICK_TIMER_TICKS_PER_SEC) / 1000);
         }
         else
@@ -595,7 +595,7 @@ tNFC_STATUS rw_t2t_sector_change (UINT8 sector)
     BT_HDR      *p_data;
     UINT8       *p;
     tRW_T2T_CB  *p_t2t = &rw_cb.tcb.t2t;
-    
+
     if ((p_data = (BT_HDR *) GKI_getpoolbuf (NFC_RW_POOL_ID)) == NULL)
     {
         RW_TRACE_ERROR0 ("rw_t2t_sector_change - No buffer");
@@ -634,7 +634,7 @@ tNFC_STATUS rw_t2t_sector_change (UINT8 sector)
 **
 ** Function         rw_t2t_read
 **
-** Description      This function issues Type 2 Tag READ command for the 
+** Description      This function issues Type 2 Tag READ command for the
 **                  specified block. If the specified block is in different
 **                  sector then it first sends command to move to new sector
 **                  and after the tag moves to new sector it issues the read
@@ -691,7 +691,7 @@ tNFC_STATUS rw_t2t_read (UINT16 block)
 **
 ** Function         rw_t2t_write
 **
-** Description      This function issues Type 2 Tag WRITE command for the 
+** Description      This function issues Type 2 Tag WRITE command for the
 **                  specified block.  If the specified block is in different
 **                  sector then it first sends command to move to new sector
 **                  and after the tag moves to new sector it issues the write
@@ -748,7 +748,7 @@ tNFC_STATUS rw_t2t_write (UINT16 block, UINT8 *p_write_data)
 **
 ** Function         rw_t2t_select
 **
-** Description      This function selects type 2 tag.  
+** Description      This function selects type 2 tag.
 **
 ** Returns          Tag selection status
 **
@@ -810,7 +810,7 @@ void rw_t2t_handle_op_complete (void)
 **
 ** Description
 **      Check if the tag is still in the field.
-**      
+**
 **      The RW_T2T_PRESENCE_CHECK_EVT w/ status is used to indicate presence
 **      or non-presence.
 **
@@ -852,7 +852,7 @@ tNFC_STATUS RW_T2tPresenceCheck (void)
         if((retval = rw_t2t_send_cmd (T2T_CMD_READ,&sector_blk))== NFC_STATUS_OK)
         {
             p_rw_cb->tcb.t2t.state = RW_T2T_STATE_CHECK_PRESENCE;
-        }    
+        }
     }
 
     return (retval);
@@ -862,7 +862,7 @@ tNFC_STATUS RW_T2tPresenceCheck (void)
 **
 ** Function         RW_T2tRead
 **
-** Description      This function issues the Type 2 Tag READ command. When the 
+** Description      This function issues the Type 2 Tag READ command. When the
 **                  operation is complete the callback function will be called
 **                  with a RW_T2T_READ_EVT.
 **
@@ -896,7 +896,7 @@ tNFC_STATUS RW_T2tRead (UINT16 block)
 **
 ** Description      This function issues the Type 2 Tag WRITE command. When the
 **                  operation is complete the callback function will be called
-**                  with a RW_T2T_WRITE_EVT.  
+**                  with a RW_T2T_WRITE_EVT.
 **
 **                  p_new_bytes points to the array of 4 bytes to be written
 **
@@ -1036,11 +1036,11 @@ static char *rw_t2t_get_substate_name (UINT8 substate)
         return ("RW_T2T_SUBSTATE_NONE");
     case RW_T2T_SUBSTATE_WAIT_SELECT_SECTOR_SUPPORT:
         return ("RW_T2T_SUBSTATE_WAIT_SELECT_SECTOR_SUPPORT");
-    case RW_T2T_SUBSTATE_WAIT_SELECT_SECTOR: 
+    case RW_T2T_SUBSTATE_WAIT_SELECT_SECTOR:
         return ("RW_T2T_SUBSTATE_WAIT_SELECT_SECTOR");
     case RW_T2T_SUBSTATE_WAIT_READ_CC:
         return ("RW_T2T_SUBSTATE_WAIT_READ_CC");
-    case RW_T2T_SUBSTATE_WAIT_TLV_DETECT:        
+    case RW_T2T_SUBSTATE_WAIT_TLV_DETECT:
         return ("RW_T2T_SUBSTATE_WAIT_TLV_DETECT");
     case RW_T2T_SUBSTATE_WAIT_FIND_LEN_FIELD_LEN:
         return ("RW_T2T_SUBSTATE_WAIT_FIND_LEN_FIELD_LEN");

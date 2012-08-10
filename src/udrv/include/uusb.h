@@ -3,7 +3,7 @@
 **
 **  Description:
 **
-**  This file contains usb definitions from Widcomm's Universal Embedded 
+**  This file contains usb definitions from Widcomm's Universal Embedded
 **  Drivers API.
 **
 **  Copyright (c) 2001, Widcomm Inc., All Rights Reserved.
@@ -29,8 +29,8 @@ extern "C" {
 #define UUSB_DRV_INVALID_PARM                         1   // Invalid parameter(s) passed to Driver
 #define UUSB_DRV_INVALID_STATE                        2   // Driver is not in correct state to accept
 #define UUSB_DRV_UNSUPPORTED_SETUP_REQ                3   // Unsupported SETUP request (use with tUSER_EP0_SETUP_CB)
-#define UUSB_DRV_NO_BUFFER_AVAILABLE                  4   // User cannot provide a Buffer (use with CB functions) 
- 
+#define UUSB_DRV_NO_BUFFER_AVAILABLE                  4   // User cannot provide a Buffer (use with CB functions)
+
 typedef UINT8 tUUSB_STATUS;
 
 
@@ -52,11 +52,11 @@ typedef enum {
 } tUUSB_EP_TYPE;
 
 typedef enum {
-  UUSB_DIR_OUT = 0,                                                     
+  UUSB_DIR_OUT = 0,
   UUSB_DIR_IN
 } tUUSB_EP_DIRECTION;
 
-typedef struct tUUSB_SETUP_PKTTag 
+typedef struct tUUSB_SETUP_PKTTag
 {
 /* Definition of "USBbmRequestType" */
 #define UUSB_DATA_PHASE_DIR      0x80    /* Mask to get data phase transfer direction */
@@ -74,21 +74,21 @@ typedef struct tUUSB_SETUP_PKTTag
   UINT16 wLength;
 } tUUSB_SETUP_PKT;
 
-typedef union 
+typedef union
 {
 #define UUSB_HEAD_SIZE (8)
 	UINT8           HeadBytes[UUSB_HEAD_SIZE];
     tUUSB_SETUP_PKT Setup;
 } tSETUP_OR_HEAD;
 
-typedef struct 
+typedef struct
 {
   UINT8        BufSize;
   UINT8        NumBytesInBuf;
   tSETUP_OR_HEAD Buf;
 } tUUSB_RX_HEAD;
 
-typedef enum 
+typedef enum
 {
   UUSB_EP_DISABLE,
   UUSB_EP_ENABLE,
@@ -107,7 +107,7 @@ typedef UINT8 tEndPoint;
 
 typedef UINT8 tUUSB_BUS_STATE;
 #else
-typedef enum 
+typedef enum
 {
   UUSB_ATTACHED,
   UUSB_POWERED,
@@ -118,7 +118,7 @@ typedef enum
 } tUUSB_BUS_STATE;
 #endif
 
-typedef enum _tUUSB_STANDART_REQ 
+typedef enum _tUUSB_STANDART_REQ
 {
 	UUSB_GET_STATUS = 0,
 	UUSB_CLEAR_FEATURE,
@@ -139,9 +139,9 @@ typedef enum _tUUSB_STANDART_REQ
 
 typedef void (*tUUSB_STATE_CB)          (tUUSB_BUS_STATE State);
 typedef void (*tUUSB_PROT_COMPLETE_CB ) (UINT8 *pBuf,UINT16 NumBytesInBuf);
-                                        
+
 typedef tUUSB_STATUS (*tUUSB_PROT_SETUP_CB ) (UINT8 **ppBuf,UINT16 *pBufSize);
-                                             
+
 typedef void (*tUUSB_RX_START_CB )      (tUUSB_EP_ID EndPoint,
                                         UINT8 **ppBuf,
                                         UINT16 *pBufSize);
@@ -160,17 +160,17 @@ typedef void (*tUUSB_TX_COMPLETE_CB )   (tUUSB_EP_ID EndPoint,
 **
 ** Function         UCODEC_Init
 **
-** Description      Startup initialisation function. This function is called 
-**                  before any orther function of UUSB it initialize UUSB 
+** Description      Startup initialisation function. This function is called
+**                  before any orther function of UUSB it initialize UUSB
 **                  internal structure an the external hw.
 **
-**                  Input : 
+**                  Input :
 **
-**                  Output Parameters : 
+**                  Output Parameters :
 **
-** Returns          UUSB_SUCCESS if The action was performed with sucess. 
+** Returns          UUSB_SUCCESS if The action was performed with sucess.
 **                  Error code else.
-**                  
+**
 ******************************************************************************/
 BT_API extern tUUSB_STATUS    UUSB_Init    (tUUSB_PROT_SETUP_CB       userProtSetupCallBack,
                                             tUUSB_PROT_COMPLETE_CB    userProtCompleteCallBack,
@@ -186,29 +186,29 @@ BT_API extern tUUSB_STATUS    UUSB_Init    (tUUSB_PROT_SETUP_CB       userProtSe
 **
 ** Function         UUSB_Start
 **
-** Description      
-**                 
+** Description
 **
-**                  
-**                  
 **
-** Returns          UUSB_SUCCESS if The action was performed with sucess. 
-**                  
+**
+**
+**
+** Returns          UUSB_SUCCESS if The action was performed with sucess.
+**
 ******************************************************************************/
 BT_API extern tUUSB_STATUS    UUSB_Start  (void);
 
 /******************************************************************************
 **
-** Function         UUSB_Stop          
+** Function         UUSB_Stop
 **
-** Description      
+** Description
 **
-**                  
 **
-**               
-** Returns          UUSB_SUCCESS if The action was performed with sucess. 
+**
+**
+** Returns          UUSB_SUCCESS if The action was performed with sucess.
 **                  Error code else.
-**                  
+**
 ******************************************************************************/
 BT_API extern tUUSB_STATUS    UUSB_Stop      (void);
 
@@ -216,11 +216,11 @@ BT_API extern tUUSB_STATUS    UUSB_Stop      (void);
 **
 ** Function         UUSB_SetEndPointCnf
 **
-** Description      
+** Description
 **
 **
-** Returns          
-**                  
+** Returns
+**
 ******************************************************************************/
 BT_API extern tUUSB_STATUS    UUSB_SetEndPointCnf ( BOOLEAN         IsIN_EndPoint,
                                                     tUUSB_EP_ID     EndPoint,
@@ -234,11 +234,11 @@ BT_API extern tUUSB_STATUS    UUSB_SetEndPointCnf ( BOOLEAN         IsIN_EndPoin
 **
 ** Function         UUSB_SetEndPointState
 **
-** Description      
+** Description
 **
 **
-** Returns          
-**                  
+** Returns
+**
 ******************************************************************************/
 BT_API extern tUUSB_STATUS UUSB_SetEndPointState (tUUSB_EP_ID    EndPoint,
                                                     tUUSB_EP_STATE EndPointState);
@@ -247,11 +247,11 @@ BT_API extern tUUSB_STATUS UUSB_SetEndPointState (tUUSB_EP_ID    EndPoint,
 **
 ** Function         UUSB_WriteEndPoint
 **
-** Description      
+** Description
 **
 **
-** Returns          
-**                  
+** Returns
+**
 ******************************************************************************/
 BT_API extern tUUSB_STATUS UUSB_WriteEndPoint (tUUSB_EP_ID     EndPoint,
                                                 UINT16     Length,
@@ -261,11 +261,11 @@ BT_API extern tUUSB_STATUS UUSB_WriteEndPoint (tUUSB_EP_ID     EndPoint,
 **
 ** Function         UUSB_GenerateRemoteWakeUp
 **
-** Description      
+** Description
 **
 **
-** Returns          
-**                  
+** Returns
+**
 ******************************************************************************/
 BT_API extern tUUSB_STATUS UUSB_GenerateRemoteWakeUp (void);
 

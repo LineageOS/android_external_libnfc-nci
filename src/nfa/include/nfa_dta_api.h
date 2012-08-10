@@ -50,6 +50,15 @@ typedef struct
 #define NFA_DTA_CFG_SNEP                    6   /* default: FALSE */
 typedef UINT8 tNFA_DTA_CFG_ITEM;
 
+#define NFA_DTA_SNEP_MODE_DISABLE                   0
+#define NFA_DTA_SNEP_MODE_SERVER_ONLY               1
+#define NFA_DTA_SNEP_MODE_DEFAULT_PUT_SHORT_NDEF    2
+#define NFA_DTA_SNEP_MODE_DEFAULT_PUT_LONG_NDEF     3
+#define NFA_DTA_SNEP_MODE_EXTENDED_PUT_SHORT_NDEF   4
+#define NFA_DTA_SNEP_MODE_EXTENDED_PUT_LONG_NDEF    5
+#define NFA_DTA_SNEP_MODE_EXTENDED_GET              6
+typedef UINT8 tNFA_DTA_SNEP_MODE;
+
 /* Structures for NFA_DtaConfig configuration parameters */
 typedef union
 {
@@ -59,16 +68,8 @@ typedef union
     BOOLEAN reactivation;                   /* NFA_DTA_CFG_REACTIVATION */
     UINT16  total_duration;                 /* NFA_DTA_CFG_TOTAL_DURATION */
     BOOLEAN enable_dta_llcp;                /* NFA_DTA_CFG_LLCP */
-    BOOLEAN enable_dta_snep;                /* NFA_DTA_CFG_SNEP */
+    tNFA_DTA_SNEP_MODE dta_snep_mode;       /* NFA_DTA_CFG_SNEP */
 } tNFA_DTA_CFG;
-
-#define NFA_DTA_SNEP_CLIENT_TEST_MODE_DISABLE                   0
-#define NFA_DTA_SNEP_CLIENT_TEST_MODE_DEFAULT_PUT_SHORT_NDEF    1
-#define NFA_DTA_SNEP_CLIENT_TEST_MODE_DEFAULT_PUT_LONG_NDEF     2
-#define NFA_DTA_SNEP_CLIENT_TEST_MODE_EXTENDED_PUT_SHORT_NDEF   3
-#define NFA_DTA_SNEP_CLIENT_TEST_MODE_EXTENDED_PUT_LONG_NDEF    4
-#define NFA_DTA_SNEP_CLIENT_TEST_MODE_EXTENDED_GET              5
-typedef UINT8 tNFA_DTA_SNEP_CLIENT_TEST_MODE;
 
 /* tNFA_DTA_CBACK events */
 #define NFA_DTA_ENABLE_EVT              0   /* DTA Mode enabled (status) */
@@ -100,7 +101,7 @@ extern "C"
 ** Function         NFA_DtaInit
 **
 ** Description      This function initializes control blocks for NFA_DTA
-**                  
+**
 ** Returns          none
 **
 *******************************************************************************/
@@ -193,19 +194,6 @@ NFC_API tNFA_STATUS NFA_DtaStart (UINT8 pattern_number, UINT8 tlv_size, UINT8 *p
 **
 *******************************************************************************/
 NFC_API tNFA_STATUS NFA_DtaStop (void);
-
-/*******************************************************************************
-**
-** Function         NFA_DtaSnepSetClientTestMode
-**
-** Description      Set SNEP client test mode.
-**
-** Returns:
-**                  NFA_STATUS_OK if successfully initiated
-**                  NFA_STATUS_FAILED otherwise
-**
-*******************************************************************************/
-NFC_API tNFA_STATUS NFA_DtaSnepSetClientTestMode (tNFA_DTA_SNEP_CLIENT_TEST_MODE mode);
 
 
 #ifdef __cplusplus

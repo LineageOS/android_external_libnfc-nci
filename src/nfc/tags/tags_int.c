@@ -2,7 +2,7 @@
 **
 **  Name:          tags_int.c
 **
-**  Description:   This file contains the common data types shared by 
+**  Description:   This file contains the common data types shared by
 **                 Reader/Writer mode and Card Emulation.
 **
 **
@@ -25,14 +25,14 @@
 
 const tT1T_CMD_RSP_INFO t1t_cmd_rsp_infos[] =
 {
-    /* Note: the order of these commands can not be changed. 
+    /* Note: the order of these commands can not be changed.
      * If new events are added, add them after T1T_CMD_WRITE_NE8 */
 /*   opcode         cmd_len,  uid_offset,  rsp_len */
-    {T1T_CMD_RID,       7,          3,      6},  
+    {T1T_CMD_RID,       7,          3,      6},
     {T1T_CMD_RALL,      7,          3,      122},
-    {T1T_CMD_READ,      7,          3,      2},  
-    {T1T_CMD_WRITE_E,   7,          3,      2},  
-    {T1T_CMD_WRITE_NE,  7,          3,      2},  
+    {T1T_CMD_READ,      7,          3,      2},
+    {T1T_CMD_WRITE_E,   7,          3,      2},
+    {T1T_CMD_WRITE_NE,  7,          3,      2},
     {T1T_CMD_RSEG,      14,         10,     129},
     {T1T_CMD_READ8,     14,         10,     9},
     {T1T_CMD_WRITE_E8,  14,         10,     9},
@@ -42,7 +42,7 @@ const tT1T_CMD_RSP_INFO t1t_cmd_rsp_infos[] =
 const tT1T_INIT_TAG t1t_init_content[] =
 {
 /*  Tag Name            CC3,        is dynamic, ltv[0]  ltv[1]  ltv[2]  mtv[0]  mtv[1]  mtv[2]*/
-    {RW_T1T_IS_TOPAZ96, 0x0E,       FALSE,      {0,      0,      0},      {0,      0,      0}},   
+    {RW_T1T_IS_TOPAZ96, 0x0E,       FALSE,      {0,      0,      0},      {0,      0,      0}},
     {RW_T1T_IS_TOPAZ512,0x3F,       TRUE,       {0xF2,   0x30,   0x33},   {0xF0,   0x02,   0x03}}
 };
 
@@ -51,10 +51,10 @@ const tT1T_INIT_TAG t1t_init_content[] =
 
 const tT2T_CMD_RSP_INFO t2t_cmd_rsp_infos[] =
 {
-    /* Note: the order of these commands can not be changed. 
+    /* Note: the order of these commands can not be changed.
      * If new events are added, add them after T2T_CMD_SEC_SEL */
 /*  opcode            cmd_len,   rsp_len, nack_rsp_len */
-    {T2T_CMD_READ,      2,          16,     1},   
+    {T2T_CMD_READ,      2,          16,     1},
     {T2T_CMD_WRITE,     6,          1,      1},
     {T2T_CMD_SEC_SEL,   2,          1,      1}
 };
@@ -79,20 +79,20 @@ const UINT8 t4t_v20_ndef_tag_aid[T4T_V20_NDEF_TAG_AID_LEN] = {0xD2, 0x76, 0x00, 
 
 #if (BT_TRACE_PROTOCOL == TRUE)
 const char * const t1t_cmd_str[] = {
-    "T1T_RID",      
-    "T1T_RALL",     
-    "T1T_READ",     
-    "T1T_WRITE_E",  
-    "T1T_WRITE_NE", 
-    "T1T_RSEG",     
-    "T1T_READ8",    
-    "T1T_WRITE_E8", 
+    "T1T_RID",
+    "T1T_RALL",
+    "T1T_READ",
+    "T1T_WRITE_E",
+    "T1T_WRITE_NE",
+    "T1T_RSEG",
+    "T1T_READ8",
+    "T1T_WRITE_E8",
     "T1T_WRITE_NE8"
 };
 
 const char * const t2t_cmd_str[] = {
-    "T2T_CMD_READ",      
-    "T2T_CMD_WRITE",     
+    "T2T_CMD_READ",
+    "T2T_CMD_WRITE",
     "T2T_CMD_SEC_SEL"
 };
 #endif
@@ -103,7 +103,7 @@ static unsigned int tags_ones32(register unsigned int x);
 **
 ** Function         t1t_cmd_to_rsp_info
 **
-** Description      This function maps the given opcode to tT1T_CMD_RSP_INFO.  
+** Description      This function maps the given opcode to tT1T_CMD_RSP_INFO.
 **
 ** Returns          tNFC_STATUS
 **
@@ -131,7 +131,7 @@ const tT1T_CMD_RSP_INFO * t1t_cmd_to_rsp_info (UINT8 opcode)
 **
 ** Function         t1t_tag_init_data
 **
-** Description      This function maps the given opcode to tT1T_INIT_TAG.  
+** Description      This function maps the given opcode to tT1T_INIT_TAG.
 **
 ** Returns          tNFC_STATUS
 **
@@ -157,8 +157,8 @@ const tT1T_INIT_TAG * t1t_tag_init_data (UINT8 tag_model)
 **
 ** Function         t2t_tag_init_data
 **
-** Description      This function maps the given manufacturer id and version to 
-**                  tT2T_INIT_TAG.  
+** Description      This function maps the given manufacturer id and version to
+**                  tT2T_INIT_TAG.
 **
 ** Returns          tNFC_STATUS
 **
@@ -189,7 +189,7 @@ const tT2T_INIT_TAG * t2t_tag_init_data (UINT8 manufacturer_id, BOOLEAN b_valid_
 **
 ** Function         t2t_cmd_to_rsp_info
 **
-** Description      This function maps the given opcode to tT2T_CMD_RSP_INFO.  
+** Description      This function maps the given opcode to tT2T_CMD_RSP_INFO.
 **
 ** Returns          tNFC_STATUS
 **
@@ -217,7 +217,7 @@ const tT2T_CMD_RSP_INFO * t2t_cmd_to_rsp_info (UINT8 opcode)
 **
 ** Description      This function maps the given tT1T_CMD_RSP_INFO to RW/CE event code
 **
-** Returns          RW/CE event code 
+** Returns          RW/CE event code
 **
 *******************************************************************************/
 UINT8 t1t_info_to_evt (const tT1T_CMD_RSP_INFO * p_info)
@@ -231,7 +231,7 @@ UINT8 t1t_info_to_evt (const tT1T_CMD_RSP_INFO * p_info)
 **
 ** Description      This function maps the given tT2T_CMD_RSP_INFO to RW/CE event code
 **
-** Returns          RW/CE event code 
+** Returns          RW/CE event code
 **
 *******************************************************************************/
 UINT8 t2t_info_to_evt (const tT2T_CMD_RSP_INFO * p_info)
@@ -281,7 +281,7 @@ const char * t2t_info_to_str (const tT2T_CMD_RSP_INFO * p_info)
 **
 ** Function         tags_pow
 **
-** Description      This function calculates x(base) power of y.  
+** Description      This function calculates x(base) power of y.
 **
 ** Returns          int
 **
@@ -300,8 +300,8 @@ int tags_pow (int x, int y)
 **
 ** Function         ones32
 **
-** Description      This function returns number of bits set in an unsigned 
-**                  integer variable 
+** Description      This function returns number of bits set in an unsigned
+**                  integer variable
 **
 ** Returns          int
 **
@@ -324,7 +324,7 @@ static unsigned int tags_ones32(register unsigned int x)
 **
 ** Function         tags_log2
 **
-** Description      This function calculates log to the base  2.  
+** Description      This function calculates log to the base  2.
 **
 ** Returns          int
 **

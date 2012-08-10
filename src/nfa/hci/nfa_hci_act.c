@@ -146,7 +146,7 @@ void nfa_hci_check_api_requests (void)
 ** Function         nfa_hci_api_register
 **
 ** Description      action function to register the events for the given AID
-**                  
+**
 ** Returns          None
 **
 *******************************************************************************/
@@ -228,7 +228,7 @@ static void nfa_hci_api_register (tNFA_HCI_EVENT_DATA *p_evt_data)
 ** Function         nfa_hci_api_deregister
 **
 ** Description      action function to deregister the given application
-**                  
+**
 ** Returns          None
 **
 *******************************************************************************/
@@ -263,6 +263,7 @@ void nfa_hci_api_deregister (tNFA_HCI_EVENT_DATA *p_evt_data)
     }
     else
     {
+        nfa_sys_stop_timer (&nfa_hci_cb.timer);
         /* We are recursing through deleting all the app's pipes and gates */
         p_cback = nfa_hci_cb.p_app_cback[nfa_hci_cb.app_in_use & NFA_HANDLE_MASK];
     }
@@ -323,7 +324,7 @@ void nfa_hci_api_deregister (tNFA_HCI_EVENT_DATA *p_evt_data)
 **
 ** Description      action function to get application allocated gates and
 **                  application created pipes
-**                  
+**
 ** Returns          None
 **
 *******************************************************************************/
@@ -364,7 +365,7 @@ static void nfa_hci_api_get_gate_pipe_list (tNFA_HCI_EVENT_DATA *p_evt_data)
 ** Function         nfa_hci_api_alloc_gate
 **
 ** Description      action function to allocate a generic gate
-**                  
+**
 ** Returns          None
 **
 *******************************************************************************/
@@ -409,6 +410,7 @@ void nfa_hci_api_dealloc_gate (tNFA_HCI_EVENT_DATA *p_evt_data)
     }
     else
     {
+        nfa_sys_stop_timer (&nfa_hci_cb.timer);
         gate_id    = nfa_hci_cb.local_gate_in_use;
         app_handle = nfa_hci_cb.app_in_use;
     }
@@ -432,6 +434,7 @@ void nfa_hci_api_dealloc_gate (tNFA_HCI_EVENT_DATA *p_evt_data)
         {
             nfa_hciu_release_gate (p_gate->gate_id);
 
+            nfa_hci_cb.nv_write_needed  = TRUE;
             evt_data.deallocated.status = NFA_STATUS_OK;
 
             if (nfa_hci_cb.hci_state == NFA_HCI_STATE_REMOVE_GATE)
@@ -440,6 +443,7 @@ void nfa_hci_api_dealloc_gate (tNFA_HCI_EVENT_DATA *p_evt_data)
         else if ((p_pipe = nfa_hciu_find_active_pipe_on_gate (p_gate->gate_id)) == NULL)
         {
             /* UICC is not active at the moment and cannot delete the pipe */
+            nfa_hci_cb.nv_write_needed  = TRUE;
             evt_data.deallocated.status = NFA_STATUS_FAILED;
 
             if (nfa_hci_cb.hci_state == NFA_HCI_STATE_REMOVE_GATE)
@@ -465,7 +469,7 @@ void nfa_hci_api_dealloc_gate (tNFA_HCI_EVENT_DATA *p_evt_data)
 ** Function         nfa_hci_api_get_host_list
 **
 ** Description      action function to get the host list from HCI network
-**                  
+**
 ** Returns          None
 **
 *******************************************************************************/
@@ -477,7 +481,7 @@ static void nfa_hci_api_get_host_list (tNFA_HCI_EVENT_DATA *p_evt_data)
 
     /* First, check if the application handle is valid */
     if (  ((nfa_hci_cb.app_in_use & NFA_HANDLE_GROUP_MASK) != NFA_HANDLE_GROUP_HCI)
-        ||(app_inx >= NFA_HCI_MAX_APP_CB) 
+        ||(app_inx >= NFA_HCI_MAX_APP_CB)
         ||(nfa_hci_cb.p_app_cback[app_inx] == NULL) )
     {
         return;
@@ -525,7 +529,7 @@ static void nfa_hci_api_create_pipe (tNFA_HCI_EVENT_DATA *p_evt_data)
 ** Function         nfa_hci_api_open_pipe
 **
 ** Description      action function to open a pipe
-**                  
+**
 ** Returns          None
 **
 *******************************************************************************/
@@ -569,7 +573,7 @@ static void nfa_hci_api_open_pipe (tNFA_HCI_EVENT_DATA *p_evt_data)
 ** Function         nfa_hci_api_get_reg_value
 **
 ** Description      action function to get the reg value of the specified index
-**                  
+**
 ** Returns          None
 **
 *******************************************************************************/
@@ -611,7 +615,7 @@ static void nfa_hci_api_get_reg_value (tNFA_HCI_EVENT_DATA *p_evt_data)
 ** Function         nfa_hci_api_set_reg_value
 **
 ** Description      action function to set the reg value at specified index
-**                  
+**
 ** Returns          None
 **
 *******************************************************************************/
@@ -653,7 +657,7 @@ static void nfa_hci_api_set_reg_value (tNFA_HCI_EVENT_DATA *p_evt_data)
 ** Function         nfa_hci_api_close_pipe
 **
 ** Description      action function to close a pipe
-**                  
+**
 ** Returns          None
 **
 *******************************************************************************/
@@ -697,7 +701,7 @@ static void nfa_hci_api_close_pipe (tNFA_HCI_EVENT_DATA *p_evt_data)
 ** Function         nfa_hci_api_delete_pipe
 **
 ** Description      action function to delete a pipe
-**                  
+**
 ** Returns          None
 **
 *******************************************************************************/
@@ -711,7 +715,7 @@ static void nfa_hci_api_delete_pipe (tNFA_HCI_EVENT_DATA *p_evt_data)
     {
         p_gate = nfa_hciu_find_gate_by_gid (p_pipe->local_gate);
         if (  (p_gate != NULL)
-            &&(p_gate->gate_owner == p_evt_data->delete_pipe.hci_handle)  
+            &&(p_gate->gate_owner == p_evt_data->delete_pipe.hci_handle)
             &&(nfa_hciu_is_active_host (p_pipe->dest_host))  )
         {
             nfa_hciu_send_delete_pipe_cmd (p_evt_data->delete_pipe.pipe);
@@ -749,7 +753,7 @@ static void nfa_hci_api_send_cmd (tNFA_HCI_EVENT_DATA *p_evt_data)
         {
             if (p_pipe->pipe_state == NFA_HCI_PIPE_OPENED)
             {
-                nfa_hci_cb.pipe_in_use = p_evt_data->send_cmd.pipe; 
+                nfa_hci_cb.pipe_in_use = p_evt_data->send_cmd.pipe;
                 if ((status = nfa_hciu_send_msg (p_pipe->pipe_id, NFA_HCI_COMMAND_TYPE, p_evt_data->send_cmd.cmd_code,
                                             p_evt_data->send_cmd.cmd_len, p_evt_data->send_cmd.data)) == NFA_STATUS_OK)
                     return;
@@ -859,7 +863,7 @@ static void nfa_hci_api_send_event (tNFA_HCI_EVENT_DATA *p_evt_data)
                 {
                     if (p_evt_data->send_evt.rsp_len)
                     {
-                        nfa_hci_cb.pipe_in_use  = p_evt_data->send_evt.pipe; 
+                        nfa_hci_cb.pipe_in_use  = p_evt_data->send_evt.pipe;
                         nfa_hci_cb.w4_rsp_evt   = TRUE;
                         nfa_hci_cb.rsp_buf_size = p_evt_data->send_evt.rsp_len;
                         nfa_hci_cb.p_rsp_buf    = p_evt_data->send_evt.p_rsp_buf;
@@ -900,7 +904,7 @@ static void nfa_hci_api_send_event (tNFA_HCI_EVENT_DATA *p_evt_data)
 **
 ** Function         nfa_hci_handle_link_mgm_gate_cmd
 **
-** Description      This function handles incoming link management gate hci 
+** Description      This function handles incoming link management gate hci
 **                  commands
 **
 ** Returns          none
@@ -948,7 +952,7 @@ void nfa_hci_handle_link_mgm_gate_cmd (UINT8 *p_data)
     case NFA_HCI_ANY_OPEN_PIPE:
         data[0]  = 0;
         rsp_len  = 1;
-        nfa_hci_cb.cfg.link_mgmt_gate.pipe00_state = NFA_HCI_PIPE_OPENED;       
+        nfa_hci_cb.cfg.link_mgmt_gate.pipe00_state = NFA_HCI_PIPE_OPENED;
         break;
 
     case NFA_HCI_ANY_CLOSE_PIPE:
@@ -969,7 +973,7 @@ void nfa_hci_handle_link_mgm_gate_cmd (UINT8 *p_data)
 **
 ** Function         nfa_hci_handle_pipe_open_close_cmd
 **
-** Description      This function handles all generic gates (excluding 
+** Description      This function handles all generic gates (excluding
 **                  connectivity gate) commands
 **
 ** Returns          none
@@ -1055,7 +1059,7 @@ void nfa_hci_handle_admin_gate_cmd (UINT8 *p_data)
                 if ((response = nfa_hciu_add_pipe_to_gate (pipe, dest_gate, source_host, source_gate)) == NFA_HCI_ANY_OK)
                 {
                     /* Tell the application a pipe was created with its gate */
-                
+
                     evt_data.created.status       = NFA_STATUS_OK;
                     evt_data.created.pipe         = pipe;
                     evt_data.created.source_gate  = dest_gate;
@@ -1373,7 +1377,7 @@ void nfa_hci_handle_admin_gate_evt (UINT8 *p_data)
 ** Function         nfa_hci_handle_dyn_pipe_pkt
 **
 ** Description      This function handles data received via dynamic pipe
-**                  
+**
 ** Returns          none
 **
 *******************************************************************************/
@@ -1436,7 +1440,7 @@ void nfa_hci_handle_dyn_pipe_pkt (UINT8 pipe_id, UINT8 *p_data, UINT16 data_len)
 **
 ** Function         nfa_hci_handle_identity_mgmt_gate_pkt
 **
-** Description      This function handles incoming Identity Management gate hci 
+** Description      This function handles incoming Identity Management gate hci
 **                  commands
 **
 ** Returns          none
@@ -1452,7 +1456,7 @@ static void nfa_hci_handle_identity_mgmt_gate_pkt (UINT8 *p_data, tNFA_HCI_DYN_P
     tNFA_HCI_RESPONSE response = NFA_HCI_ANY_OK;
 
     /* We never send commands on a pipe where the local gate is the identity management
-     * gate, so only commands should be processed. 
+     * gate, so only commands should be processed.
      */
     if (nfa_hci_cb.type != NFA_HCI_COMMAND_TYPE)
         return;
@@ -1536,7 +1540,7 @@ static void nfa_hci_handle_identity_mgmt_gate_pkt (UINT8 *p_data, tNFA_HCI_DYN_P
 **
 ** Function         nfa_hci_handle_generic_gate_cmd
 **
-** Description      This function handles all generic gates (excluding 
+** Description      This function handles all generic gates (excluding
 **                  connectivity gate) commands
 **
 ** Returns          none
@@ -1607,7 +1611,7 @@ static void nfa_hci_handle_generic_gate_cmd (UINT8 *p_data, UINT8 data_len, tNFA
 **
 ** Function         nfa_hci_handle_generic_gate_rsp
 **
-** Description      This function handles all generic gates (excluding 
+** Description      This function handles all generic gates (excluding
 **                  connectivity) response
 **
 ** Returns          none

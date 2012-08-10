@@ -153,17 +153,19 @@ typedef union
 *****************************************************************************/
 
 /* NFA SNEP service control block */
-#define NFA_SNEP_FLAG_ANY        0x00   /* ignore flags while searching   */
-#define NFA_SNEP_FLAG_SERVER     0x01   /* server */
-#define NFA_SNEP_FLAG_CLIENT     0x02   /* client */
-#define NFA_SNEP_FLAG_CONNECTING 0x04   /* waiting for connection confirm */
-#define NFA_SNEP_FLAG_CONNECTED  0x08   /* data link connected            */
+#define NFA_SNEP_FLAG_ANY               0x00   /* ignore flags while searching   */
+#define NFA_SNEP_FLAG_SERVER            0x01   /* server */
+#define NFA_SNEP_FLAG_CLIENT            0x02   /* client */
+#define NFA_SNEP_FLAG_CONNECTING        0x04   /* waiting for connection confirm */
+#define NFA_SNEP_FLAG_CONNECTED         0x08   /* data link connected            */
+#define NFA_SNEP_FLAG_W4_RESP_CONTINUE  0x10   /* Waiting for continue response  */
+#define NFA_SNEP_FLAG_W4_REQ_CONTINUE   0x20   /* Waiting for continue request   */
 
 typedef struct
 {
     UINT8               local_sap;      /* local SAP of service */
     UINT8               remote_sap;     /* local SAP of service */
-    UINT8               flags;          /* server or client     */
+    UINT8               flags;          /* internal flags       */
     tNFA_SNEP_CBACK    *p_cback;        /* callback for event   */
     TIMER_LIST_ENT      timer;          /* timer for client     */
 
@@ -181,8 +183,8 @@ typedef struct
     UINT8               *p_ndef_buff;   /* NDEF message buffer               */
 } tNFA_SNEP_CONN;
 
-/* 
-** NFA SNEP control block 
+/*
+** NFA SNEP control block
 */
 typedef struct
 {
@@ -192,8 +194,8 @@ typedef struct
     UINT8               trace_level;
 } tNFA_SNEP_CB;
 
-/* 
-** NFA SNEP default server control block 
+/*
+** NFA SNEP default server control block
 */
 
 /* multiple data link connections for default server */

@@ -2,18 +2,61 @@
 **
 ** File:         ndef_utils.c
 **
-** Description:   This file contains source code for some utility functions to 
+** Description:   This file contains source code for some utility functions to
 **                help parse and build NFC Data Exchange Format (NDEF) messages
 **
-** Copyright (c) 2010-2010  Broadcom Corp.  All Rights Reserved.
+** Copyright (c) 2010-2012  Broadcom Corp.  All Rights Reserved.
 ** Broadcom Bluetooth Core. Proprietary and confidential.
 **
 ******************************************************************************/
 #include <string.h>
 #include "ndef_utils.h"
+
+
+/*******************************************************************************
+**
+**              Static Local Functions
+**
+*******************************************************************************/
+
+
+#if (NDEF_SHIFT_INCLUDED == FALSE)
 #include "gki.h"
+#else
+/*******************************************************************************
+**
+** Function         shiftdown
+**
+** Description      shift memory down (to make space to insert a record)
+**
+*******************************************************************************/
+static void shiftdown (UINT8 *p_mem, UINT32 len, UINT32 shift_amount)
+{
+    register UINT8 *ps = p_mem + len - 1;
+    register UINT8 *pd = ps + shift_amount;
+    register UINT32 xx;
 
+    for (xx = 0; xx < len; xx++)
+        *pd-- = *ps--;
+}
 
+/*******************************************************************************
+**
+** Function         shiftup
+**
+** Description      shift memory up (to delete a record)
+**
+*******************************************************************************/
+static void shiftup (UINT8 *p_dest, UINT8 *p_src, UINT32 len)
+{
+    register UINT8 *ps = p_src;
+    register UINT8 *pd = p_dest;
+    register UINT32 xx;
+
+    for (xx = 0; xx < len; xx++)
+        *pd++ = *ps++;
+}
+#endif
 
 /*******************************************************************************
 **
@@ -126,13 +169,13 @@ tNDEF_STATUS NDEF_MsgValidate (UINT8 *p_msg, UINT32 msg_len, BOOLEAN b_allow_chu
         if ((rec_hdr & NDEF_TNF_MASK) == NDEF_TNF_EMPTY)
         {
             if ( (type_len != 0) || (id_len != 0) || (payload_len != 0) )
-                return (NDEF_MSG_INVALID_EMPTY_REC);    
+                return (NDEF_MSG_INVALID_EMPTY_REC);
         }
 
         if ((rec_hdr & NDEF_TNF_MASK) == NDEF_TNF_UNKNOWN)
         {
             if (type_len != 0)
-                return (NDEF_MSG_LENGTH_MISMATCH);    
+                return (NDEF_MSG_LENGTH_MISMATCH);
         }
 
         /* Point to next record */
@@ -806,7 +849,7 @@ extern tNDEF_STATUS  NDEF_MsgAddRec (UINT8 *p_msg, UINT32 max_size, UINT32 *p_cu
     /* Construct the record header. For the first record, set both begin and end bits */
     if (*p_cur_size == 0)
         *p_rec = tnf | NDEF_MB_MASK | NDEF_ME_MASK;
-    else 
+    else
     {
         /* Find the previous last and clear his 'Message End' bit */
         UINT8  *pLast = NDEF_MsgGetLastRecInMsg (p_msg);
@@ -870,7 +913,7 @@ extern tNDEF_STATUS  NDEF_MsgAddRec (UINT8 *p_msg, UINT32 max_size, UINT32 *p_cu
 **
 ** Function         NDEF_MsgInsertRec
 **
-** Description      This function inserts a record at a specific index into the 
+** Description      This function inserts a record at a specific index into the
 **                  given NDEF message
 **
 ** Returns          OK, or error if the record did not fit
@@ -906,7 +949,7 @@ extern tNDEF_STATUS NDEF_MsgInsertRec (UINT8 *p_msg, UINT32 max_size, UINT32 *p_
         *p_msg &= ~NDEF_MB_MASK;
 
     /* Make space for the new record */
-    GKI_shiftdown (p_rec, (UINT32)(*p_cur_size - (p_rec - p_msg)), recSize);
+    NDEF_SHIFT_DOWN (p_rec, (UINT32)(*p_cur_size - (p_rec - p_msg)), recSize);
 
     /* If adding at the beginning, set begin bit */
     if (index == 0)
@@ -989,7 +1032,7 @@ extern tNDEF_STATUS  NDEF_MsgAppendRec (UINT8 *p_msg, UINT32 max_size, UINT32 *p
     /* Find where to copy new record */
     if (*p_cur_size == 0)
         p_rec = p_msg;
-    else 
+    else
     {
         /* Find the previous last and clear his 'Message End' bit */
         UINT8  *pLast = NDEF_MsgGetLastRecInMsg (p_msg);
@@ -999,7 +1042,7 @@ extern tNDEF_STATUS  NDEF_MsgAppendRec (UINT8 *p_msg, UINT32 max_size, UINT32 *p
 
         *pLast &= ~NDEF_ME_MASK;
         p_rec   = p_msg + *p_cur_size;
-        
+
         /* clear 'Message Begin' bit of new record */
         *p_new_rec &= ~NDEF_MB_MASK;
     }
@@ -1016,7 +1059,7 @@ extern tNDEF_STATUS  NDEF_MsgAppendRec (UINT8 *p_msg, UINT32 max_size, UINT32 *p
 **
 ** Function         NDEF_MsgAppendPayload
 **
-** Description      This function appends extra payload to a specific record in the 
+** Description      This function appends extra payload to a specific record in the
 **                  given NDEF message
 **
 ** Returns          OK, or error if the extra payload did not fit
@@ -1068,7 +1111,7 @@ tNDEF_STATUS NDEF_MsgAppendPayload (UINT8 *p_msg, UINT32 max_size, UINT32 *p_cur
     /* If we need to increase the length field from 1 to 4 bytes, do it first */
     if (incr_lenfld)
     {
-        GKI_shiftdown (pp + 1, (UINT32)(*p_cur_size - (pp - p_msg) - 1), 3);
+        NDEF_SHIFT_DOWN (pp + 1, (UINT32)(*p_cur_size - (pp - p_msg) - 1), 3);
         p_prev_pl += 3;
     }
 
@@ -1086,7 +1129,7 @@ tNDEF_STATUS NDEF_MsgAppendPayload (UINT8 *p_msg, UINT32 max_size, UINT32 *p_cur
 
     /* If we are not the last record, make space for the extra payload */
     if ((*p_rec & NDEF_ME_MASK) == 0)
-        GKI_shiftdown (pp, (UINT32)(*p_cur_size - (pp - p_msg)), add_pl_len);
+        NDEF_SHIFT_DOWN (pp, (UINT32)(*p_cur_size - (pp - p_msg)), add_pl_len);
 
     /* Now copy in the additional payload data */
     memcpy (pp, p_add_pl, add_pl_len);
@@ -1100,7 +1143,7 @@ tNDEF_STATUS NDEF_MsgAppendPayload (UINT8 *p_msg, UINT32 max_size, UINT32 *p_cur
 **
 ** Function         NDEF_MsgReplacePayload
 **
-** Description      This function replaces the payload of a specific record in the 
+** Description      This function replaces the payload of a specific record in the
 **                  given NDEF message
 **
 ** Returns          OK, or error if the new payload did not fit
@@ -1150,7 +1193,7 @@ tNDEF_STATUS NDEF_MsgReplacePayload (UINT8 *p_msg, UINT32 max_size, UINT32 *p_cu
             if ((*p_cur_size + paylen_delta + 3) > max_size)
                 return (NDEF_MSG_INSUFFICIENT_MEM);
 
-            GKI_shiftdown (pp + 1, (UINT32)(*p_cur_size - (pp - p_msg) - 1), 3);
+            NDEF_SHIFT_DOWN (pp + 1, (UINT32)(*p_cur_size - (pp - p_msg) - 1), 3);
             p_prev_pl   += 3;
             *p_cur_size += 3;
             *p_rec      &= ~NDEF_SR_MASK;
@@ -1171,7 +1214,7 @@ tNDEF_STATUS NDEF_MsgReplacePayload (UINT8 *p_msg, UINT32 max_size, UINT32 *p_cu
 
         /* If we are not the last record, make space for the extra payload */
         if ((*p_rec & NDEF_ME_MASK) == 0)
-            GKI_shiftdown (pp, (UINT32)(*p_cur_size - (pp - p_msg)), paylen_delta);
+            NDEF_SHIFT_DOWN (pp, (UINT32)(*p_cur_size - (pp - p_msg)), paylen_delta);
 
         *p_cur_size += paylen_delta;
     }
@@ -1184,7 +1227,7 @@ tNDEF_STATUS NDEF_MsgReplacePayload (UINT8 *p_msg, UINT32 max_size, UINT32 *p_cu
         /* the payload length field goes from 4 bytes to 1 byte        */
         if ( (prev_paylen > 255) && (new_pl_len < 256) )
         {
-            GKI_shiftup (pp + 1, pp + 4, (UINT32)(*p_cur_size - (pp - p_msg) - 3));
+            NDEF_SHIFT_UP (pp + 1, pp + 4, (UINT32)(*p_cur_size - (pp - p_msg) - 3));
             p_prev_pl   -= 3;
             *p_cur_size -= 3;
             *p_rec      |= NDEF_SR_MASK;
@@ -1203,7 +1246,7 @@ tNDEF_STATUS NDEF_MsgReplacePayload (UINT8 *p_msg, UINT32 max_size, UINT32 *p_cu
 
         /* If we are not the last record, remove the extra space from the previous payload */
         if ((*p_rec & NDEF_ME_MASK) == 0)
-            GKI_shiftup (pp - paylen_delta, pp, (UINT32)(*p_cur_size - (pp - p_msg)));
+            NDEF_SHIFT_UP (pp - paylen_delta, pp, (UINT32)(*p_cur_size - (pp - p_msg)));
 
         *p_cur_size -= paylen_delta;
     }
@@ -1219,7 +1262,7 @@ tNDEF_STATUS NDEF_MsgReplacePayload (UINT8 *p_msg, UINT32 max_size, UINT32 *p_cu
 **
 ** Function         NDEF_MsgReplaceType
 **
-** Description      This function replaces the type field of a specific record in the 
+** Description      This function replaces the type field of a specific record in the
 **                  given NDEF message
 **
 ** Returns          OK, or error if the new type field did not fit
@@ -1261,7 +1304,7 @@ tNDEF_STATUS NDEF_MsgReplaceType (UINT8 *p_msg, UINT32 max_size, UINT32 *p_cur_s
 
         /* Point to the end of the previous type, and make space for the extra data */
         pp = p_prev_type + prev_type_len;
-        GKI_shiftdown (pp, (UINT32)(*p_cur_size - (pp - p_msg)), typelen_delta);
+        NDEF_SHIFT_DOWN (pp, (UINT32)(*p_cur_size - (pp - p_msg)), typelen_delta);
 
         *p_cur_size += typelen_delta;
     }
@@ -1272,7 +1315,7 @@ tNDEF_STATUS NDEF_MsgReplaceType (UINT8 *p_msg, UINT32 max_size, UINT32 *p_cur_s
 
         /* Point to the end of the previous type, and shift up to fill the the unused space */
         pp = p_prev_type + prev_type_len;
-        GKI_shiftup (pp - typelen_delta, pp, (UINT32)(*p_cur_size - (pp - p_msg)));
+        NDEF_SHIFT_UP (pp - typelen_delta, pp, (UINT32)(*p_cur_size - (pp - p_msg)));
 
         *p_cur_size -= typelen_delta;
     }
@@ -1291,7 +1334,7 @@ tNDEF_STATUS NDEF_MsgReplaceType (UINT8 *p_msg, UINT32 max_size, UINT32 *p_cur_s
 **
 ** Function         NDEF_MsgReplaceId
 **
-** Description      This function replaces the ID field of a specific record in the 
+** Description      This function replaces the ID field of a specific record in the
 **                  given NDEF message
 **
 ** Returns          OK, or error if the new ID field did not fit
@@ -1339,7 +1382,7 @@ tNDEF_STATUS NDEF_MsgReplaceId (UINT8 *p_msg, UINT32 max_size, UINT32 *p_cur_siz
             if ((*p_cur_size + idlen_delta + 1) > max_size)
                 return (NDEF_MSG_INSUFFICIENT_MEM);
 
-            GKI_shiftdown (p_idlen_field, (UINT32)(*p_cur_size - (p_idlen_field - p_msg)), 1);
+            NDEF_SHIFT_DOWN (p_idlen_field, (UINT32)(*p_cur_size - (p_idlen_field - p_msg)), 1);
             p_prev_id   += 1;
             *p_cur_size += 1;
             *p_rec      |= NDEF_IL_MASK;
@@ -1349,7 +1392,7 @@ tNDEF_STATUS NDEF_MsgReplaceId (UINT8 *p_msg, UINT32 max_size, UINT32 *p_cur_siz
 
         /* Point to the end of the previous ID field, and make space for the extra data */
         pp = p_prev_id + prev_id_len;
-        GKI_shiftdown (pp, (UINT32)(*p_cur_size - (pp - p_msg)), idlen_delta);
+        NDEF_SHIFT_DOWN (pp, (UINT32)(*p_cur_size - (pp - p_msg)), idlen_delta);
 
         *p_cur_size += idlen_delta;
     }
@@ -1360,14 +1403,14 @@ tNDEF_STATUS NDEF_MsgReplaceId (UINT8 *p_msg, UINT32 max_size, UINT32 *p_cur_siz
 
         /* Point to the end of the previous ID, and shift up to fill the the unused space */
         pp = p_prev_id + prev_id_len;
-        GKI_shiftup (pp - idlen_delta, pp, (UINT32)(*p_cur_size - (pp - p_msg)));
+        NDEF_SHIFT_UP (pp - idlen_delta, pp, (UINT32)(*p_cur_size - (pp - p_msg)));
 
         *p_cur_size -= idlen_delta;
 
         /* If removing the ID, make sure that length field is also removed */
         if (new_id_len == 0)
         {
-            GKI_shiftup (p_idlen_field, p_idlen_field + 1, (UINT32)(*p_cur_size - (p_idlen_field - p_msg - (UINT32)1)));
+            NDEF_SHIFT_UP (p_idlen_field, p_idlen_field + 1, (UINT32)(*p_cur_size - (p_idlen_field - p_msg - (UINT32)1)));
             *p_rec      &= ~NDEF_IL_MASK;
             *p_cur_size -= 1;
         }
@@ -1414,7 +1457,7 @@ tNDEF_STATUS NDEF_MsgRemoveRec (UINT8 *p_msg, UINT32 *p_cur_size, INT32 index)
 
             *p_cur_size -= (UINT32)(pNext - p_msg);
 
-            GKI_shiftup (p_msg, pNext, *p_cur_size);
+            NDEF_SHIFT_UP (p_msg, pNext, *p_cur_size);
         }
         else
             *p_cur_size = 0;              /* No more records, lenght must be zero */
@@ -1443,7 +1486,7 @@ tNDEF_STATUS NDEF_MsgRemoveRec (UINT8 *p_msg, UINT32 *p_cur_size, INT32 index)
         return (FALSE);
 
     /* We are removing p_rec, so shift from pNext to the end */
-    GKI_shiftup (p_rec, pNext, (UINT32)(*p_cur_size - (pNext - p_msg)));
+    NDEF_SHIFT_UP (p_rec, pNext, (UINT32)(*p_cur_size - (pNext - p_msg)));
 
     *p_cur_size -= (UINT32)(pNext - p_rec);
 

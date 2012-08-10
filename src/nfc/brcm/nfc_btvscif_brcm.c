@@ -38,7 +38,7 @@
 
 /*******************************************************************************
 **
-** Function         nfc_brcm_btvscif_process_event 
+** Function         nfc_brcm_btvscif_process_event
 **
 ** Description      Process Bluetooth HCI events
 **                  (currently, only HCI_COMMAND_COMPLETE needs to be handled)
@@ -185,11 +185,11 @@ static void nfc_brcm_baudrate_command_cplt_cback (tNFC_BTVSC_CPLT *p_vsc_cplt_in
 ** Function         NFC_UpdateBaudRate
 **
 ** Description      Reconfigure controller's NCI transport baud rate.
-**                  Only used for dedicated transport; for shared BT/NFC 
+**                  Only used for dedicated transport; for shared BT/NFC
 **                  transport, the baud rate is controlled by BT.
 **
 **                  Upon success notification, the host must reconfigure
-**                  its baud rate to match the controller baud rate.  
+**                  its baud rate to match the controller baud rate.
 **
 ** Returns          tNFC_STATUS
 **
@@ -245,8 +245,8 @@ tNFC_STATUS NFC_UpdateBaudRate (UINT32               baud,
 ** Returns          tNFC_STATUS
 **
 *******************************************************************************/
-tNFC_STATUS NFC_SendBtVsCommand (UINT16 opcode, 
-                                 UINT8  param_len, 
+tNFC_STATUS NFC_SendBtVsCommand (UINT16 opcode,
+                                 UINT8  param_len,
                                  UINT8 *p_param,
                                  tNFC_BTVSC_CPLT_CBACK *p_cback)
 {

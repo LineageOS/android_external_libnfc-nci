@@ -1,5 +1,5 @@
 /****************************************************************************
-** 
+**
 **  File:        ce_int.h
 **
 ** Description:   This file contains the Near Field Communication (NFC)
@@ -35,7 +35,7 @@ typedef struct {
     UINT16          nmaxb;          /* Nmaxb: maximum number of blocks available for NDEF data */
     UINT8           writef;         /* WriteFlag: 00h if writing data finished; 0Fh if writing data in progress */
     UINT8           rwflag;         /* RWFlag: 00h NDEF is read-only; 01h if read/write available */
-    UINT32          ln; 
+    UINT32          ln;
     UINT8           *p_buf;         /* Current contents for READs */
 
     /* Scratch NDEF buffer (for update NDEF commands) */
@@ -123,10 +123,10 @@ typedef struct
 */
 
 /* Max data size using a single ReadBinary. 2 bytes are for status bytes */
-#define CE_T4T_MAX_LE           (NFC_CE_POOL_BUF_SIZE - BT_HDR_SIZE - NCI_MSG_OFFSET_SIZE - NCI_DATA_HDR_SIZE - T4T_RSP_STATUS_WORDS_SIZE)    
+#define CE_T4T_MAX_LE           (NFC_CE_POOL_BUF_SIZE - BT_HDR_SIZE - NCI_MSG_OFFSET_SIZE - NCI_DATA_HDR_SIZE - T4T_RSP_STATUS_WORDS_SIZE)
 
 /* Max data size using a single UpdateBinary. 6 bytes are for CLA, INS, P1, P2, Lc */
-#define CE_T4T_MAX_LC           (NFC_CE_POOL_BUF_SIZE - BT_HDR_SIZE - NCI_DATA_HDR_SIZE - T4T_CMD_MAX_HDR_SIZE)    
+#define CE_T4T_MAX_LC           (NFC_CE_POOL_BUF_SIZE - BT_HDR_SIZE - NCI_DATA_HDR_SIZE - T4T_CMD_MAX_HDR_SIZE)
 
 /*****************************************************************************
 **  EXTERNAL FUNCTION DECLARATIONS

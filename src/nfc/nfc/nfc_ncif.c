@@ -41,7 +41,7 @@ static const UINT8 nfc_mpl_code_to_size[] =
 
 /*******************************************************************************
 **
-** Function         nfc_wait_2_deactivate_timeout 
+** Function         nfc_wait_2_deactivate_timeout
 **
 ** Description      Handle a command timeout
 **
@@ -885,8 +885,8 @@ void nfc_ncif_proc_get_routing(UINT8 *p, UINT8 len)
 **
 ** Function         nfc_ncif_proc_conn_create_rsp
 **
-** Description      This function is called to process connection create 
-**                  response 
+** Description      This function is called to process connection create
+**                  response
 **
 ** Returns          void
 **
@@ -973,7 +973,7 @@ void nfc_ncif_proc_reset_rsp (UINT8 *p, BOOLEAN is_ntf)
          * FW does not report reset ntf right now */
         if (nfc_cb.nfc_state == NFC_STATE_OPEN)
         {
-            /*if any conn_cb is connected, close it. 
+            /*if any conn_cb is connected, close it.
               if any pending outgoing packets are dropped.*/
             nfc_reset_all_conn_cbs();
         }

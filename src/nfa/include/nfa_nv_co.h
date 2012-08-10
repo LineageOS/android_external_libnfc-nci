@@ -63,7 +63,7 @@ typedef UINT8 tNFA_NV_CO_STATUS;
 **                  nbytes  - number of bytes to read into the buffer.
 **
 ** Returns          void
-**                  
+**
 **                  Note: Upon completion of the request, nfa_nv_ci_read () is
 **                        called with the buffer of data, along with the number
 **                        of bytes read into the buffer, and a status.  The
@@ -85,7 +85,7 @@ NFC_API extern void nfa_nv_co_read (UINT8 *p_buf, UINT16 nbytes, UINT8 block);
 **                  nbytes  - number of bytes to write out to the file.
 **
 ** Returns          void
-**                  
+**
 **                  Note: Upon completion of the request, nfa_nv_ci_write () is
 **                        called with the file descriptor and the status.  The
 **                        call-in function should only be called when ALL requested

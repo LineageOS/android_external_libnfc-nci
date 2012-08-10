@@ -1,7 +1,7 @@
 /*****************************************************************************
-** 
+**
 **  Name    upio.h
-** 
+**
 **  Description
 **      Definitions for UPIO driver
 **
@@ -254,7 +254,7 @@ extern "C" {
 **
 ** Description
 **      Initialize the GPIO service.
-**      This function is typically called once upon system startup.  
+**      This function is typically called once upon system startup.
 **
 ** Returns          nothing
 **
@@ -339,7 +339,7 @@ UDRV_API void UPIO_Config(tUPIO_TYPE type, tUPIO pio, tUPIO_CONFIG config, tUPIO
 **
 ** Function         UPIO_Feature
 **
-** Description 
+** Description
 **      Checks whether a feature of the pio API is supported
 **
 ** Input Parameter:

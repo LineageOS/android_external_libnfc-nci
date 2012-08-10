@@ -9,6 +9,7 @@
 **  Broadcom Bluetooth Core. Proprietary and confidential.
 **
 *****************************************************************************/
+#include "OverrideLog.h"
 #include "NfcAdaptation.h"
 extern "C"
 {
@@ -16,7 +17,6 @@ extern "C"
     #include "nfa_api.h"
     #include "nci_int.h"
     #include "nfc_int.h"
-    #include <cutils/log.h>
     #include "userial.h"
 }
 #include "config.h"
@@ -95,10 +95,9 @@ void NfcAdaptation::Initialize ()
 
     if ( !GetStrValue ( NAME_NFA_STORAGE, bcm_nfc_location, sizeof ( bcm_nfc_location ) ) )
         strcpy ( bcm_nfc_location, "/data/bcmnfc" );
-    if ( GetNumValue ( NAME_PROTOCOL_TRACE, &num, sizeof ( num ) ) )
+    if ( GetNumValue ( NAME_PROTOCOL_TRACE_LEVEL, &num, sizeof ( num ) ) )
         ScrProtocolTraceFlag = num;
-    if ( GetNumValue ( NAME_APPL_TRACE, &num, sizeof ( num ) ) )
-        appl_trace_level = num % 256;
+    initializeGlobalAppLogLevel ();
 
     GKI_init ();
     GKI_enable ();

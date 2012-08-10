@@ -101,7 +101,7 @@ tNFA_HCI_DYN_GATE *nfa_hciu_find_gate_by_owner (tNFA_HANDLE app_handle)
 **
 ** Function         nfa_hciu_find_gate_with_nopipes_by_owner
 **
-** Description      Find the the first gate control block with no pipes 
+** Description      Find the the first gate control block with no pipes
 **                  for the given owner
 **
 ** Returns          pointer to the gate control block, or NULL if not found
@@ -239,7 +239,7 @@ tNFA_HCI_DYN_GATE *nfa_hciu_alloc_gate (UINT8 gate_id, tNFA_HANDLE app_handle)
     if ((gate_id != NFA_HCI_CONNECTIVITY_GATE)
                     &&
         (  ((app_handle & NFA_HANDLE_GROUP_MASK) != NFA_HANDLE_GROUP_HCI)
-         ||(app_inx >= NFA_HCI_MAX_APP_CB) 
+         ||(app_inx >= NFA_HCI_MAX_APP_CB)
          ||(nfa_hci_cb.p_app_cback[app_inx] == NULL)  ))
     {
         return (NULL);
@@ -350,7 +350,7 @@ tNFA_STATUS nfa_hciu_send_msg (UINT8 pipe_id, UINT8 type, UINT8 instruction, UIN
 
             p_buf->len = 1;
 
-            /* Message header only goes in the first segment */ 
+            /* Message header only goes in the first segment */
             if (first_pkt)
             {
                 first_pkt = FALSE;
@@ -434,7 +434,7 @@ UINT8 nfa_hciu_get_allocated_gate_list (UINT8 *p_gate_list)
 **
 ** Description      Allocate a pipe control block
 **
-** Returns          pointer to the pipe control block, or NULL if 
+** Returns          pointer to the pipe control block, or NULL if
 **                  cannot allocate
 **
 *******************************************************************************/
@@ -555,7 +555,7 @@ tNFA_HCI_RESPONSE nfa_hciu_add_pipe_to_static_gate (UINT8 local_gate, UINT8 pipe
     UINT8               pipe_index;
 
     NFA_TRACE_EVENT4 ("nfa_hciu_add_pipe_to_static_gate (%u)  Pipe: 0x%02x  Dest Host: 0x%02x  Dest Gate: 0x%02x)",
-                      local_gate, pipe_id, dest_host, dest_gate); 
+                      local_gate, pipe_id, dest_host, dest_gate);
 
     /* Allocate a pipe control block */
     if ((p_pipe = nfa_hciu_alloc_pipe (pipe_id)) != NULL)
@@ -716,7 +716,7 @@ tNFA_HCI_DYN_PIPE *nfa_hciu_find_active_pipe_on_gate (UINT8 gate_id)
     tNFA_HCI_DYN_PIPE   *pp;
     int                 xx;
 
-    NFA_TRACE_DEBUG1 ("nfa_hciu_find_pipe_on_gate () Gate:0x%x", gate_id);
+    NFA_TRACE_DEBUG1 ("nfa_hciu_find_active_pipe_on_gate () Gate:0x%x", gate_id);
 
     /* Loop through all pipes looking for the owner */
     for (xx = 0, pp = nfa_hci_cb.cfg.dyn_pipes; xx < NFA_HCI_MAX_PIPE_CB; xx++, pp++)
@@ -831,7 +831,7 @@ tNFA_STATUS nfa_hciu_send_create_pipe_cmd (UINT8 source_gate, UINT8 dest_host, U
 {
     tNFA_STATUS         status;
     UINT8               data[3];
-    
+
     data[0] = source_gate;
     data[1] = dest_host;
     data[2] = dest_gate;
@@ -881,7 +881,7 @@ tNFA_STATUS nfa_hciu_send_delete_pipe_cmd (UINT8 pipe)
 tNFA_STATUS nfa_hciu_send_clear_all_pipe_cmd (void)
 {
     tNFA_STATUS status;
-    UINT16      id_ref_data = 0x0102;      
+    UINT16      id_ref_data = 0x0102;
 
     NFA_TRACE_DEBUG0 ("nfa_hciu_send_clear_all_pipe_cmd");
 
@@ -1031,7 +1031,7 @@ void nfa_hciu_send_to_all_apps (tNFA_HCI_EVT event, tNFA_HCI_EVT_DATA *p_evt)
 ** Function         nfa_hciu_send_to_apps_handling_connectivity_evts
 **
 ** Description      Send a connectivity event to all the application interested
-**                  in connectivity events 
+**                  in connectivity events
 **
 ** Returns          none
 **

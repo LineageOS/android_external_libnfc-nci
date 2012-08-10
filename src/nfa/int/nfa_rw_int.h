@@ -41,7 +41,7 @@ enum
     NFA_RW_OP_REQUEST_EVT = NFA_SYS_EVT_START (NFA_ID_RW),
     NFA_RW_ACTIVATE_NTF_EVT,
     NFA_RW_DEACTIVATE_NTF_EVT,
-    NFA_RW_PRESENCE_CHECK_TICK_EVT,  
+    NFA_RW_PRESENCE_CHECK_TICK_EVT,
     NFA_RW_MAX_EVT
 };
 
@@ -56,7 +56,7 @@ enum
     NFA_RW_OP_PRESENCE_CHECK,
     NFA_RW_OP_FORMAT_TAG,
     NFA_RW_OP_SEND_RAW_FRAME,
-    
+
     /* Exclusive Type-1,Type-2 tag operations */
     NFA_RW_OP_DETECT_LOCK_TLV,
     NFA_RW_OP_DETECT_MEM_TLV,
@@ -131,7 +131,7 @@ typedef struct
     UINT8           index;
 } tNFA_RW_OP_PARAMS_T1T_READ;
 
-/* NFA_RW_OP_T1T_WRITE_E8,NFA_RW_OP_T1T_WRITE_NE8 
+/* NFA_RW_OP_T1T_WRITE_E8,NFA_RW_OP_T1T_WRITE_NE8
    NFA_RW_OP_T1T_WRITE_E, NFA_RW_OP_T1T_WRITE_NE params  */
 typedef struct
 {
@@ -191,8 +191,8 @@ typedef struct
 typedef union
 {
     /* params for NFA_RW_OP_WRITE_NDEF */
-    tNFA_RW_OP_PARAMS_WRITE_NDEF        write_ndef;     
-    
+    tNFA_RW_OP_PARAMS_WRITE_NDEF        write_ndef;
+
     /* params for NFA_RW_OP_SEND_RAW_FRAME */
     tNFA_RW_OP_PARAMS_SEND_RAW_FRAME    send_raw_frame;
 
@@ -220,7 +220,7 @@ typedef union
 /* data type for NFA_RW_op_req_EVT */
 typedef struct
 {
-    BT_HDR              hdr;      
+    BT_HDR              hdr;
     tNFA_RW_OP          op;     /* NFA RW operation */
     tNFA_RW_OP_PARAMS   params;
 } tNFA_RW_OPERATION;
@@ -237,7 +237,7 @@ typedef struct
 typedef union
 {
     /* GKI event buffer header */
-    BT_HDR                  hdr;      
+    BT_HDR                  hdr;
     tNFA_RW_OPERATION       op_req;
     tNFA_RW_ACTIVATE_NTF    activate_ntf;
 } tNFA_RW_MSG;

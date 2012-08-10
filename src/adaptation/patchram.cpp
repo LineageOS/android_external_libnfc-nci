@@ -9,6 +9,7 @@
 **  Broadcom Bluetooth Core. Proprietary and confidential.
 **
 *****************************************************************************/
+#include "OverrideLog.h"
 #include "NfcAdaptation.h"
 #include "config.h"
 #include <string>
@@ -18,7 +19,6 @@ extern "C" {
     #include "nfa_api.h"
     #include "nci_int.h"
     #include "nfc_int.h"
-    #include <cutils/log.h>
     #include "userial.h"
     #include "nfc_brcm_api.h"
     #include "nfa_brcm_api.h"
@@ -314,13 +314,13 @@ static void ReadConfigFile(UINT32 chipid)
     readOptionalConfig(chipID);     // Read optional chip specific settings
     readOptionalConfig("fime");     // Read optional FIME specific settings
     getNfaValues();                 // Get NFA configuration values into variables
-    
+
 
     findPatchramFile(FW_PATCH, sPatchFn, sizeof(sPatchFn));
     findPatchramFile(FW_PRE_PATCH, sPrePatchFn, sizeof(sPatchFn));
 
     {
-        FILE *fd;        
+        FILE *fd;
         /* If an I2C fix patch file was specified, then tell the stack about it */
         if (sPrePatchFn[0] != '\0')
         {
@@ -348,9 +348,9 @@ static void ReadConfigFile(UINT32 chipid)
             }
         }
     }
-    
+
     {
-        FILE *fd;        
+        FILE *fd;
 
         /* If a patch file was specified, then download it now */
         if (sPatchFn[0] != '\0')

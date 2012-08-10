@@ -77,7 +77,7 @@ void nfc_start_timer (TIMER_LIST_ENT *p_tle, UINT16 type, UINT32 timeout)
             GKI_start_timer (NFC_TIMER_ID, GKI_SECS_TO_TICKS (1), TRUE);
         }
     }
-    
+
     GKI_remove_from_timer_list (&nfc_cb.timer_queue, p_tle);
 
     p_tle->event = type;
@@ -194,7 +194,7 @@ void nfc_start_quick_timer (TIMER_LIST_ENT *p_tle, UINT16 type, UINT32 timeout)
             GKI_start_timer (NFC_QUICK_TIMER_ID, ((GKI_SECS_TO_TICKS (1)/QUICK_TIMER_TICKS_PER_SEC)), TRUE);
         }
     }
-    
+
     GKI_remove_from_timer_list (&nfc_cb.quick_timer_queue, p_tle);
 
     p_tle->event = type;
@@ -498,7 +498,7 @@ UINT32 nfc_task (UINT32 param)
 
                 if (free_buf && ret == FALSE)
                 {
-                    GKI_freebuf (p_msg);                        
+                    GKI_freebuf (p_msg);
                 }
             }
         }

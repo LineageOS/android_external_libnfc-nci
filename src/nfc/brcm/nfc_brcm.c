@@ -205,7 +205,7 @@ void nfc_brcm_get_bld_info_vs_cback(tNFC_VS_EVT event, UINT16 data_len, UINT8 *p
                 /* If chip is B3 or newer, then get the current patch version */
                 if (nfc_brcm_cb.p_build_info->hwt != 0x20791B02)
                 {
-                    /* Send GET_PATCH_VERSION to the NFCC */ 
+                    /* Send GET_PATCH_VERSION to the NFCC */
                     if ((status = NFC_SendVsCommand(NCI_MSG_GET_PATCH_VERSION, NULL, nfc_brcm_get_patch_version_vs_cback)) == NCI_STATUS_OK)
                     {
                         /* GET_PATCH_VERSION sent to the NFCC. Wait for response */
@@ -331,19 +331,25 @@ BOOLEAN nfc_brcm_evt_hdlr (tNFC_INT_EVT event, void *p)
 ** Function         NFC_BrcmInit
 **
 ** Description      This function initializes Broadcom specific control blocks for NFC
-**                  and registers a callback to be called after the NFCC is reset, 
+**                  and registers a callback to be called after the NFCC is reset,
 **                  to perform any platform-specific initialization (e.g. patch download).
+**
+**                  tBRCM_DEV_INIT_CONFIG
+**                      BRCM_DEV_INIT_FLAGS_AUTO_BAUD     : UART auto baud detection
+**                      BRCM_DEV_INIT_FLAGS_SET_XTAL_FREQ : set crystal frequency
+**                      xtal_freq : crystal frequency in KHz
 **
 ** Returns          void
 **
 *******************************************************************************/
-void NFC_BrcmInit (tBRCM_DEV_INIT_CBACK *p_dev_init_cback)
+void NFC_BrcmInit (tBRCM_DEV_INIT_CONFIG *p_dev_init_config,
+                   tBRCM_DEV_INIT_CBACK  *p_dev_init_cback)
 {
     NFC_TRACE_API0("NFC_BrcmInit");
     memset (&nfc_brcm_cb, 0x00, sizeof(tNFC_BRCM_CB));
 
     ce_brcm_init ();
-    nci_brcm_init (p_dev_init_cback);
+    nci_brcm_init (p_dev_init_config, p_dev_init_cback);
 
     nfc_cb.p_disc_maps      = nfc_brcm_interface_mapping;
     nfc_cb.num_disc_maps    = NFC_NUM_BRCM_INTERFACE_MAP;

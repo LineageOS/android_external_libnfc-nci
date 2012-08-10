@@ -45,10 +45,10 @@ static char *nfa_p2p_llcp_state_code (tNFA_P2P_LLCP_STATE state_code);
 /*****************************************************************************
 **  Constants
 *****************************************************************************/
-static const tNFA_SYS_REG nfa_p2p_sys_reg = 
+static const tNFA_SYS_REG nfa_p2p_sys_reg =
 {
     NULL,
-    nfa_p2p_evt_hdlr, 
+    nfa_p2p_evt_hdlr,
     nfa_p2p_sys_disable,
     NULL
 };
@@ -81,7 +81,7 @@ const tNFA_P2P_ACTION nfa_p2p_action[] =
 ** Function         nfa_p2p_discovery_cback
 **
 ** Description      Processing event from discovery callback for listening
-**                  
+**
 **
 ** Returns          None
 **
@@ -105,7 +105,7 @@ void nfa_p2p_discovery_cback (tNFA_DM_RF_DISC_EVT event, tNFC_DISCOVER *p_data)
 
         /* notify NFC link activation */
         memcpy (&(evt_data.activated.activate_ntf),
-                &(p_data->activate), 
+                &(p_data->activate),
                 sizeof (tNFC_ACTIVATE_DEVT));
         nfa_dm_conn_cback_event_notify (NFA_ACTIVATED_EVT, &evt_data);
 
@@ -148,7 +148,7 @@ void nfa_p2p_discovery_cback (tNFA_DM_RF_DISC_EVT event, tNFC_DISCOVER *p_data)
 ** Function         nfa_p2p_llcp_link_cback
 **
 ** Description      Processing event from LLCP link management callback
-**                  
+**
 **
 ** Returns          None
 **
@@ -212,7 +212,7 @@ void nfa_p2p_llcp_link_cback (UINT8 event, UINT8 reason)
 ** Function         nfa_p2p_activate_llcp
 **
 ** Description      Activate LLCP link
-**                  
+**
 **
 ** Returns          None
 **
@@ -220,7 +220,7 @@ void nfa_p2p_llcp_link_cback (UINT8 event, UINT8 reason)
 void nfa_p2p_activate_llcp (tNFC_DISCOVER *p_data)
 {
     tLLCP_ACTIVATE_CONFIG config;
-    
+
     P2P_TRACE_DEBUG0 ("nfa_p2p_activate_llcp ()");
 
     if (  (p_data->activate.rf_tech_param.mode == NFC_DISCOVERY_TYPE_POLL_A)
@@ -250,7 +250,7 @@ void nfa_p2p_activate_llcp (tNFC_DISCOVER *p_data)
 ** Function         nfa_p2p_deactivate_llcp
 **
 ** Description      Deactivate LLCP link
-**                  
+**
 **
 ** Returns          None
 **
@@ -267,7 +267,7 @@ void nfa_p2p_deactivate_llcp (void)
 ** Function         nfa_p2p_init
 **
 ** Description      Initialize NFA P2P
-**                  
+**
 **
 ** Returns          None
 **
@@ -298,7 +298,7 @@ void nfa_p2p_init (void)
 ** Function         nfa_p2p_sys_disable
 **
 ** Description      Deregister NFA P2P from NFA SYS/DM
-**                  
+**
 **
 ** Returns          None
 **
@@ -316,7 +316,7 @@ static void nfa_p2p_sys_disable (void)
 ** Function         nfa_p2p_set_config
 **
 ** Description      Set General bytes and WT parameters for LLCP
-**                  
+**
 **
 ** Returns          void
 **
@@ -383,7 +383,7 @@ void nfa_p2p_enable_listening (tNFA_SYS_ID sys_id, BOOLEAN update_wks)
 {
     tNFA_DM_DISC_TECH_PROTO_MASK p2p_listen_mask = 0;
 
-    P2P_TRACE_DEBUG2 ("nfa_p2p_enable_listening () sys_id = %d, update_wks = %d", 
+    P2P_TRACE_DEBUG2 ("nfa_p2p_enable_listening () sys_id = %d, update_wks = %d",
                        sys_id, update_wks);
 
     if (sys_id == NFA_ID_P2P)
@@ -430,7 +430,7 @@ void nfa_p2p_enable_listening (tNFA_SYS_ID sys_id, BOOLEAN update_wks)
 **
 ** Function         nfa_p2p_disable_listening
 **
-** Description      Remove listen technologies and protocols for LLCP and 
+** Description      Remove listen technologies and protocols for LLCP and
 **                  deregister callback from NFA DM discovery if all of P2P/CHO/SNEP
 **                  doesn't listen LLCP any more.
 **                  If LLCP WKS is changed then ATR_RES will be updated.
@@ -441,7 +441,7 @@ void nfa_p2p_enable_listening (tNFA_SYS_ID sys_id, BOOLEAN update_wks)
 void nfa_p2p_disable_listening (tNFA_SYS_ID sys_id, BOOLEAN update_wks)
 {
 
-    P2P_TRACE_DEBUG2 ("nfa_p2p_disable_listening ()  sys_id = %d, update_wks = %d", 
+    P2P_TRACE_DEBUG2 ("nfa_p2p_disable_listening ()  sys_id = %d, update_wks = %d",
                        sys_id, update_wks);
 
     if (sys_id == NFA_ID_P2P)
@@ -474,7 +474,7 @@ void nfa_p2p_disable_listening (tNFA_SYS_ID sys_id, BOOLEAN update_wks)
 **
 ** Function         nfa_p2p_update_listen_tech
 **
-** Description      Update P2P listen technologies. If there is change then 
+** Description      Update P2P listen technologies. If there is change then
 **                  restart or stop P2P listen.
 **
 ** Returns          void
@@ -509,7 +509,7 @@ void nfa_p2p_update_listen_tech (tNFA_TECHNOLOGY_MASK tech_mask)
 ** Function         nfa_p2p_evt_hdlr
 **
 ** Description      Processing event for NFA P2P
-**                  
+**
 **
 ** Returns          TRUE if p_msg needs to be deallocated
 **
@@ -551,7 +551,7 @@ static BOOLEAN nfa_p2p_evt_hdlr (BT_HDR *p_hdr)
 **
 ** Function         nfa_p2p_llcp_state_code
 **
-** Description      
+** Description
 **
 ** Returns          string of state
 **
@@ -575,7 +575,7 @@ static char *nfa_p2p_llcp_state_code (tNFA_P2P_LLCP_STATE state_code)
 **
 ** Function         nfa_p2p_evt_code
 **
-** Description      
+** Description
 **
 ** Returns          string of event
 **

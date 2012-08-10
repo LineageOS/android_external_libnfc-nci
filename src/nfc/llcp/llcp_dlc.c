@@ -43,9 +43,9 @@ tLLCP_STATUS llcp_dlsm_execute (tLLCP_DLCB *p_dlcb, tLLCP_DLC_EVENT event, void 
     tLLCP_STATUS status;
 
 #if (BT_TRACE_VERBOSE == TRUE)
-    LLCP_TRACE_EVENT3 ("DLC (0x%02X) - state: %s, evt: %s", 
-                        p_dlcb->local_sap, 
-                        llcp_dlsm_get_state_name (p_dlcb->state), 
+    LLCP_TRACE_EVENT3 ("DLC (0x%02X) - state: %s, evt: %s",
+                        p_dlcb->local_sap,
+                        llcp_dlsm_get_state_name (p_dlcb->state),
                         llcp_dlsm_get_event_name (event));
 #else
     LLCP_TRACE_EVENT3 ("DLC (0x%02X) - state: %d, evt: %d", p_dlcb->local_sap, p_dlcb->state, event);
@@ -113,7 +113,7 @@ static tLLCP_STATUS llcp_dlsm_idle (tLLCP_DLCB *p_dlcb, tLLCP_DLC_EVENT event, v
             /* wait for response from peer device */
             p_dlcb->state     = LLCP_DLC_STATE_W4_REMOTE_RESP;
 
-            nfc_start_quick_timer (&p_dlcb->timer, NFC_TTYPE_LLCP_DATA_LINK, 
+            nfc_start_quick_timer (&p_dlcb->timer, NFC_TTYPE_LLCP_DATA_LINK,
                                    (UINT32)(llcp_cb.lcb.data_link_timeout*QUICK_TIMER_TICKS_PER_SEC)/1000);
         }
         break;
@@ -145,7 +145,7 @@ static tLLCP_STATUS llcp_dlsm_idle (tLLCP_DLCB *p_dlcb, tLLCP_DLC_EVENT event, v
         /* wait for response from upper layer */
         p_dlcb->state = LLCP_DLC_STATE_W4_LOCAL_RESP;
 
-        nfc_start_quick_timer (&p_dlcb->timer, NFC_TTYPE_LLCP_DATA_LINK, 
+        nfc_start_quick_timer (&p_dlcb->timer, NFC_TTYPE_LLCP_DATA_LINK,
                                (UINT32)(llcp_cb.lcb.data_link_timeout*QUICK_TIMER_TICKS_PER_SEC)/1000);
 
         (*p_dlcb->p_app_cb->p_app_cback)(&data);
@@ -364,9 +364,9 @@ static tLLCP_STATUS llcp_dlsm_connected (tLLCP_DLCB *p_dlcb, tLLCP_DLC_EVENT eve
         /* upper layer requests to disconnect */
         flush = *(BOOLEAN*)(p_data);
 
-        /* 
-        ** if upper layer asks to discard any pending data 
-        ** or there is no pending data/ack to send and it is not waiting for ack 
+        /*
+        ** if upper layer asks to discard any pending data
+        ** or there is no pending data/ack to send and it is not waiting for ack
         */
         if ((flush)||((p_dlcb->i_xmit_q.count == 0)
                     &&(p_dlcb->next_rx_seq == p_dlcb->sent_ack_seq)
@@ -377,7 +377,7 @@ static tLLCP_STATUS llcp_dlsm_connected (tLLCP_DLCB *p_dlcb, tLLCP_DLC_EVENT eve
 
             llcp_util_send_disc (p_dlcb->remote_sap, p_dlcb->local_sap );
 
-            nfc_start_quick_timer (&p_dlcb->timer, NFC_TTYPE_LLCP_DATA_LINK, 
+            nfc_start_quick_timer (&p_dlcb->timer, NFC_TTYPE_LLCP_DATA_LINK,
                                    (UINT32)(llcp_cb.lcb.data_link_timeout*QUICK_TIMER_TICKS_PER_SEC)/1000);
         }
         else
@@ -488,7 +488,7 @@ static tLLCP_STATUS llcp_dlsm_w4_remote_dm (tLLCP_DLCB *p_dlcb, tLLCP_DLC_EVENT 
     {
     case LLCP_DLC_EVENT_PEER_DISCONNECT_RESP:
     case LLCP_DLC_EVENT_TIMEOUT:
-        
+
         /* peer device sends disconnect response or didn't responde */
         data.disconnect_resp.event       = LLCP_SAP_EVT_DISCONNECT_RESP;
         data.disconnect_resp.local_sap   = p_dlcb->local_sap;
@@ -530,7 +530,7 @@ static tLLCP_STATUS llcp_dlsm_w4_remote_dm (tLLCP_DLCB *p_dlcb, tLLCP_DLC_EVENT 
 ** Function         llcp_dlc_find_dlcb_by_local_sap
 **
 ** Description      Find tLLCP_DLCB by local SAP and remote SAP
-**                  if remote_sap is LLCP_INVALID_SAP, it will return a DLCB which 
+**                  if remote_sap is LLCP_INVALID_SAP, it will return a DLCB which
 **                  is waiting for CC from peer.
 **
 ** Returns          tLLCP_DLCB *
@@ -624,7 +624,7 @@ static void llcp_dlc_proc_connect_pdu (UINT8 dsap, UINT8 ssap, UINT16 length, UI
     if (llcp_util_parse_connect (p_data, length, &params) != LLCP_STATUS_SUCCESS)
     {
         LLCP_TRACE_ERROR0 ("llcp_dlc_proc_connect_pdu(): Bad format CONNECT");
-        llcp_link_deactivate (LLCP_LINK_FRAME_ERROR);
+        llcp_util_send_dm (ssap, dsap, LLCP_SAP_DM_REASON_TEMP_REJECT_THIS );
         return;
     }
 
@@ -842,7 +842,7 @@ void llcp_dlc_proc_i_pdu (UINT8 dsap, UINT8 ssap, UINT16 i_pdu_length, UINT8 *p_
 
         if (info_len > p_dlcb->local_miu)
         {
-            LLCP_TRACE_ERROR2 ("llcp_dlc_proc_i_pdu(): exceeding local MIU(%d bytes): got %d bytes SDU", 
+            LLCP_TRACE_ERROR2 ("llcp_dlc_proc_i_pdu(): exceeding local MIU(%d bytes): got %d bytes SDU",
                                 p_dlcb->local_miu, info_len);
 
             error_flags |= LLCP_FRMR_I_ERROR_FLAG;
@@ -855,8 +855,8 @@ void llcp_dlc_proc_i_pdu (UINT8 dsap, UINT8 ssap, UINT16 i_pdu_length, UINT8 *p_
         rcv_seq  = LLCP_GET_NR(*p);
 
 #if (BT_TRACE_VERBOSE == TRUE)
-        LLCP_TRACE_DEBUG6 ("LLCP RX I PDU - N(S,R):(%d,%d) V(S,SA,R,RA):(%d,%d,%d,%d)", 
-                            send_seq, rcv_seq, 
+        LLCP_TRACE_DEBUG6 ("LLCP RX I PDU - N(S,R):(%d,%d) V(S,SA,R,RA):(%d,%d,%d,%d)",
+                            send_seq, rcv_seq,
                             p_dlcb->next_tx_seq, p_dlcb->rcvd_ack_seq,
                             p_dlcb->next_rx_seq, p_dlcb->sent_ack_seq);
 #endif
@@ -864,7 +864,7 @@ void llcp_dlc_proc_i_pdu (UINT8 dsap, UINT8 ssap, UINT16 i_pdu_length, UINT8 *p_
         /* if send sequence number, N(S) is not expected one, V(R) */
         if (p_dlcb->next_rx_seq != send_seq)
         {
-            LLCP_TRACE_ERROR2 ("llcp_dlc_proc_i_pdu(): Bad N(S) got:%d, expected:%d", 
+            LLCP_TRACE_ERROR2 ("llcp_dlc_proc_i_pdu(): Bad N(S) got:%d, expected:%d",
                                 send_seq, p_dlcb->next_rx_seq);
 
             error_flags |= LLCP_FRMR_S_ERROR_FLAG;
@@ -874,7 +874,7 @@ void llcp_dlc_proc_i_pdu (UINT8 dsap, UINT8 ssap, UINT16 i_pdu_length, UINT8 *p_
             /* if peer device sends more than our receiving window size */
             if ((UINT8)(send_seq - p_dlcb->sent_ack_seq) % LLCP_SEQ_MODULO >= p_dlcb->local_rw)
             {
-                LLCP_TRACE_ERROR3 ("llcp_dlc_proc_i_pdu(): Bad N(S):%d >= V(RA):%d + RW(L):%d", 
+                LLCP_TRACE_ERROR3 ("llcp_dlc_proc_i_pdu(): Bad N(S):%d >= V(RA):%d + RW(L):%d",
                                     send_seq, p_dlcb->sent_ack_seq, p_dlcb->local_rw);
 
                 error_flags |= LLCP_FRMR_S_ERROR_FLAG;
@@ -886,7 +886,7 @@ void llcp_dlc_proc_i_pdu (UINT8 dsap, UINT8 ssap, UINT16 i_pdu_length, UINT8 *p_
             != (UINT8)(p_dlcb->next_tx_seq - p_dlcb->rcvd_ack_seq) % LLCP_SEQ_MODULO )
         {
             error_flags |= LLCP_FRMR_R_ERROR_FLAG;
-            LLCP_TRACE_ERROR3 ("llcp_dlc_proc_i_pdu(): Bad N(R):%d valid range [V(SA):%d, V(S):%d]", 
+            LLCP_TRACE_ERROR3 ("llcp_dlc_proc_i_pdu(): Bad N(R):%d valid range [V(SA):%d, V(S):%d]",
                                 rcv_seq, p_dlcb->rcvd_ack_seq, p_dlcb->next_tx_seq);
         }
 
@@ -998,7 +998,7 @@ void llcp_dlc_proc_i_pdu (UINT8 dsap, UINT8 ssap, UINT16 i_pdu_length, UINT8 *p_
             if ((!p_dlcb->is_rx_congested)
               &&(p_dlcb->num_rx_i_pdu >= p_dlcb->rx_congest_threshold))
             {
-                LLCP_TRACE_DEBUG2 ("llcp_dlc_proc_i_pdu(): congested num_rx_i_pdu=%d, rx_congest_threshold=%d", 
+                LLCP_TRACE_DEBUG2 ("llcp_dlc_proc_i_pdu(): congested num_rx_i_pdu=%d, rx_congest_threshold=%d",
                                     p_dlcb->num_rx_i_pdu, p_dlcb->rx_congest_threshold);
 
                 /* send RNR */
@@ -1054,7 +1054,7 @@ static void llcp_dlc_proc_rr_rnr_pdu (UINT8 dsap, UINT8 ptype, UINT8 ssap, UINT1
             != (UINT8)(p_dlcb->next_tx_seq - p_dlcb->rcvd_ack_seq) % LLCP_SEQ_MODULO )
         {
             error_flags |= LLCP_FRMR_R_ERROR_FLAG;
-            LLCP_TRACE_ERROR3 ("llcp_dlc_proc_rr_rnr_pdu(): Bad N(R):%d valid range [V(SA):%d, V(S):%d]", 
+            LLCP_TRACE_ERROR3 ("llcp_dlc_proc_rr_rnr_pdu(): Bad N(R):%d valid range [V(SA):%d, V(S):%d]",
                                 rcv_seq, p_dlcb->rcvd_ack_seq, p_dlcb->next_tx_seq);
         }
 
@@ -1068,8 +1068,8 @@ static void llcp_dlc_proc_rr_rnr_pdu (UINT8 dsap, UINT8 ptype, UINT8 ssap, UINT1
             p_dlcb->rcvd_ack_seq = rcv_seq;
 
 #if (BT_TRACE_VERBOSE == TRUE)
-            LLCP_TRACE_DEBUG5 ("LLCP RX - N(S,R):(NA,%d) V(S,SA,R,RA):(%d,%d,%d,%d)", 
-                                rcv_seq, 
+            LLCP_TRACE_DEBUG5 ("LLCP RX - N(S,R):(NA,%d) V(S,SA,R,RA):(%d,%d,%d,%d)",
+                                rcv_seq,
                                 p_dlcb->next_tx_seq, p_dlcb->rcvd_ack_seq,
                                 p_dlcb->next_rx_seq, p_dlcb->sent_ack_seq);
 #endif
@@ -1081,7 +1081,7 @@ static void llcp_dlc_proc_rr_rnr_pdu (UINT8 dsap, UINT8 ptype, UINT8 ssap, UINT1
                   &&(!p_dlcb->is_tx_congested))
                 {
                     LLCP_TRACE_WARNING3 ("llcp_dlc_proc_rr_rnr_pdu(): Data link (SSAP:DSAP=0x%X:0x%X) congestion start: i_xmit_q.count=%d",
-                                          p_dlcb->local_sap, p_dlcb->remote_sap, 
+                                          p_dlcb->local_sap, p_dlcb->remote_sap,
                                           p_dlcb->i_xmit_q.count);
 
                     cback_data.congest.event        = LLCP_SAP_EVT_CONGEST;
@@ -1101,7 +1101,7 @@ static void llcp_dlc_proc_rr_rnr_pdu (UINT8 dsap, UINT8 ptype, UINT8 ssap, UINT1
                   &&(!p_dlcb->is_tx_congested))
                 {
                     LLCP_TRACE_WARNING3 ("llcp_dlc_proc_rr_rnr_pdu(): Data link (SSAP:DSAP=0x%X:0x%X) congestion end: i_xmit_q.count=%d",
-                                          p_dlcb->local_sap, p_dlcb->remote_sap, 
+                                          p_dlcb->local_sap, p_dlcb->remote_sap,
                                           p_dlcb->i_xmit_q.count);
 
                     cback_data.congest.event        = LLCP_SAP_EVT_CONGEST;
@@ -1217,9 +1217,9 @@ void llcp_dlc_check_to_send_rr_rnr (void)
 
     LLCP_TRACE_DEBUG0 ("llcp_dlc_check_to_send_rr_rnr()");
 
-    /* 
+    /*
     ** DLC doesn't send RR PDU for each received I PDU because multiple I PDUs can be aggregated
-    ** in a received AGF PDU. In this case, this is post processing of AGF PDU to send single RR 
+    ** in a received AGF PDU. In this case, this is post processing of AGF PDU to send single RR
     ** or RNR after processing all I PDUs in received AGF if there was no I-PDU to carry N(R).
     **
     ** Send RR or RNR if any change of local busy condition or rx congestion status, or V(RA) is not
@@ -1305,8 +1305,8 @@ BT_HDR* llcp_dlc_get_next_pdu (tLLCP_DLCB *p_dlcb)
             p_dlcb->next_tx_seq  = (p_dlcb->next_tx_seq + 1) % LLCP_SEQ_MODULO;
 
 #if (BT_TRACE_VERBOSE == TRUE)
-            LLCP_TRACE_DEBUG6 ("LLCP TX - N(S,R):(%d,%d) V(S,SA,R,RA):(%d,%d,%d,%d)", 
-                                send_seq, p_dlcb->next_rx_seq, 
+            LLCP_TRACE_DEBUG6 ("LLCP TX - N(S,R):(%d,%d) V(S,SA,R,RA):(%d,%d,%d,%d)",
+                                send_seq, p_dlcb->next_rx_seq,
                                 p_dlcb->next_tx_seq, p_dlcb->rcvd_ack_seq,
                                 p_dlcb->next_rx_seq, p_dlcb->sent_ack_seq);
 #endif

@@ -32,7 +32,7 @@
 **                  registered on LLCP if enable_server is TRUE.
 **
 **                  The result of the registration is reported with NFA_CHO_REG_EVT.
-**                  
+**
 ** Note:            If RF discovery is started, NFA_StopRfDiscovery()/NFA_RF_DISCOVERY_STOPPED_EVT
 **                  should happen before calling this function
 **
@@ -57,7 +57,7 @@ tNFA_STATUS NFA_ChoRegister (BOOLEAN        enable_server,
     if ((p_msg = (tNFA_CHO_API_REG *) GKI_getbuf (sizeof (tNFA_CHO_API_REG))) != NULL)
     {
         p_msg->hdr.event = NFA_CHO_API_REG_EVT;
-        
+
         p_msg->enable_server = enable_server;
         p_msg->p_cback       = p_cback;
 
@@ -79,7 +79,7 @@ tNFA_STATUS NFA_ChoRegister (BOOLEAN        enable_server,
 **                  If this is the valid deregistration, NFA Connection Handover
 **                  Application will close the service with "urn:nfc:sn:handover"
 **                  on LLCP and deregister NDEF type handler if any.
-**                  
+**
 ** Note:            If RF discovery is started, NFA_StopRfDiscovery()/NFA_RF_DISCOVERY_STOPPED_EVT
 **                  should happen before calling this function
 **
@@ -115,7 +115,7 @@ tNFA_STATUS NFA_ChoDeregister (void)
 **
 ** Function         NFA_ChoConnect
 **
-** Description      This function is called to create data link connection to 
+** Description      This function is called to create data link connection to
 **                  Connection Handover server on peer device.
 **
 **                  It must be called after receiving NFA_CHO_ACTIVATED_EVT.
@@ -125,9 +125,9 @@ tNFA_STATUS NFA_ChoDeregister (void)
 **                  If NFA_CHO_ROLE_REQUESTER is returned in NFA_CHO_CONNECTED_EVT,
 **                  Handover Request Message can be sent.
 **                  If NFA_CHO_ROLE_SELECTOR is returned in NFA_CHO_CONNECTED_EVT
-**                  because of collision, application must wait for Handover 
+**                  because of collision, application must wait for Handover
 **                  Request Message.
-**                  
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_FAILED otherwise
 **
@@ -165,11 +165,11 @@ tNFA_STATUS NFA_ChoConnect (void)
 **
 ** Function         NFA_ChoDisconnect
 **
-** Description      This function is called to disconnect data link connection with 
+** Description      This function is called to disconnect data link connection with
 **                  Connection Handover server on peer device.
 **
 **                  NFA_CHO_DISCONNECTED_EVT will be returned.
-**                  
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_FAILED otherwise
 **
@@ -263,7 +263,7 @@ tNFA_STATUS NFA_ChoSendHr (UINT8             num_ac_info,
     if ((p_msg = (tNFA_CHO_API_SEND_HR *) GKI_getbuf (msg_size)) != NULL)
     {
         p_msg->hdr.event = NFA_CHO_API_SEND_HR_EVT;
-        
+
         memcpy (p_ndef_buf, p_ndef, ndef_len);
         p_msg->p_ndef        = p_ndef_buf;
         p_msg->max_ndef_size = LLCP_POOL_BUF_SIZE;
@@ -288,15 +288,15 @@ tNFA_STATUS NFA_ChoSendHr (UINT8             num_ac_info,
 ** Function         NFA_ChoSendHs
 **
 ** Description      This function is called to send Handover Select message with
-**                  Alternative Carrier records as response to Handover Request 
+**                  Alternative Carrier records as response to Handover Request
 **                  message.
 **
-**                  NDEF may include one or more Alternative Carrier records with 
+**                  NDEF may include one or more Alternative Carrier records with
 **                  auxiliary data.
 **                  The records in NDEF must be matched with tNFA_CHO_AC_INFO in order.
 **                  Payload ID must be unique and Payload ID length must be less than
 **                  or equal to NFA_CHO_MAX_REF_NAME_LEN.
-**                  
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_FAILED otherwise
 **
@@ -310,7 +310,7 @@ tNFA_STATUS NFA_ChoSendHs (UINT8             num_ac_info,
     UINT16               msg_size;
     UINT8                *p_ndef_buf;
 
-    CHO_TRACE_API2 ("NFA_ChoSendHs(): num_ac_info=%d, ndef_len=%d", 
+    CHO_TRACE_API2 ("NFA_ChoSendHs(): num_ac_info=%d, ndef_len=%d",
                     num_ac_info, ndef_len);
 
     if (nfa_cho_cb.state != NFA_CHO_ST_CONNECTED)
@@ -343,7 +343,7 @@ tNFA_STATUS NFA_ChoSendHs (UINT8             num_ac_info,
     if ((p_msg = (tNFA_CHO_API_SEND_HS *) GKI_getbuf (msg_size)) != NULL)
     {
         p_msg->hdr.event = NFA_CHO_API_SEND_HS_EVT;
-        
+
         memcpy (p_ndef_buf, p_ndef, ndef_len);
         p_msg->p_ndef        = p_ndef_buf;
         p_msg->max_ndef_size = LLCP_POOL_BUF_SIZE;
@@ -373,7 +373,7 @@ tNFA_STATUS NFA_ChoSendHs (UINT8             num_ac_info,
 **                  error_reason : NFA_CHO_ERROR_TEMP_MEM
 **                                 NFA_CHO_ERROR_PERM_MEM
 **                                 NFA_CHO_ERROR_CARRIER
-**                  
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_FAILED otherwise
 **
@@ -383,7 +383,7 @@ tNFA_STATUS NFA_ChoSendSelectError (UINT8  error_reason,
 {
     tNFA_CHO_API_SEL_ERR *p_msg;
 
-    CHO_TRACE_API2 ("NFA_ChoSendSelectError (): error_reason=0x%x, error_data=0x%x", 
+    CHO_TRACE_API2 ("NFA_ChoSendSelectError (): error_reason=0x%x, error_data=0x%x",
                      error_reason, error_data);
 
     if (nfa_cho_cb.state == NFA_CHO_ST_DISABLED)
@@ -395,7 +395,7 @@ tNFA_STATUS NFA_ChoSendSelectError (UINT8  error_reason,
     if ((p_msg = (tNFA_CHO_API_SEL_ERR *) GKI_getbuf (sizeof (tNFA_CHO_API_SEL_ERR))) != NULL)
     {
         p_msg->hdr.event = NFA_CHO_API_SEL_ERR_EVT;
-        
+
         p_msg->error_reason = error_reason;
         p_msg->error_data   = error_data;
 

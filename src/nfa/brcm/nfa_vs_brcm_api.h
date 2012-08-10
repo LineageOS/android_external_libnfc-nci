@@ -2,7 +2,7 @@
 **
 **  Name:           nfa_vs_brcm_api.h
 **
-**  Description:    This is the public interface file for NFA, Broadcom's 
+**  Description:    This is the public interface file for NFA, Broadcom's
 **                  NFC application layer for mobile phones.
 **
 **  Copyright (c) 2010-2011, Broadcom Corp., All Rights Reserved.
