@@ -621,7 +621,7 @@
 
 /* Default poll duration (may be over-ridden using NFA_SetRfDiscoveryDuration) */
 #ifndef NFA_DM_DISC_DURATION_POLL
-#define NFA_DM_DISC_DURATION_POLL               1000
+#define NFA_DM_DISC_DURATION_POLL               500
 #endif
 
 /* Automatic NDEF detection (when not in exclusive RF mode) */
