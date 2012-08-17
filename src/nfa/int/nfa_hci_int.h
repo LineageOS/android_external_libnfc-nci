@@ -85,7 +85,7 @@ enum
 typedef UINT16 tNFA_HCI_INT_EVT;
 
 #ifndef NFA_HCI_EVT_RSP_TIMEOUT_VAL
-#define NFA_HCI_EVT_RSP_TIMEOUT_VAL    1000
+#define NFA_HCI_EVT_RSP_TIMEOUT_VAL    10000
 #endif
 
 /* Internal event structures.
