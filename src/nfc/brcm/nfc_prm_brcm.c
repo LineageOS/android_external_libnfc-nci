@@ -28,9 +28,9 @@
 
 /* Internal flags */
 #define BRCM_PRM_FLAGS_USE_PATCHRAM_BUF  0x01    /* Application provided patchram in a single buffer */
-#define BRCM_PRM_FLAGS_FORMAT_HCD        0x02    /* Patch format is HCD */
+#define BRCM_PRM_FLAGS_RFU               0x02    /* Reserved for future use */
 #define BRCM_PRM_FLAGS_SIGNATURE_SENT    0x04    /* Signature sent to NFCC */
-#define BRCM_PRM_FLAGS_I2C_FIX_REQUIRED  0x08    /* I2C patch required */
+#define BRCM_PRM_FLAGS_I2C_FIX_REQUIRED  0x08    /* PreI2C patch required */
 #define BRCM_PRM_FLAGS_NO_NVM            0x10    /* Not NVM available (patch downloaded to SRAM) */
 #define BRCM_PRM_FLAGS_SUPPORT_RESET_NTF 0x20    /* Support RESET_NTF from NFCC after sending signature */
 #define BRCM_PRM_FLAGS_NVM_FPM_CORRUPTED 0x40    /* FPM patch in NVM failed CRC check */
@@ -76,6 +76,10 @@ void nfc_brcm_prm_nci_command_complete_cback(tNFC_VS_EVT event, UINT16 data_len,
 
 #ifndef BRCM_PRM_RESET_NTF_DELAY
 #define BRCM_PRM_RESET_NTF_DELAY            (10000) /* amount of time to wait for RESET NTF after patch download */
+#endif
+
+#ifndef BRCM_PRM_POST_I2C_FIX_DELAY
+#define BRCM_PRM_POST_I2C_FIX_DELAY         (200)   /* amount of time to wait after downloading preI2C patch before downloading LPM/FPM patch */
 #endif
 
 /* command to get currently downloaded patch version */
@@ -155,14 +159,14 @@ void nfc_brcm_prm_spd_send_next_segment(void)
     nfc_brcm_cb.prm.cur_patch_len_remaining -=  (len + patch_hdr_size);
 
     /* Check if sending signature byte */
-    if (( oid == NCI_MSG_SECURE_PATCH_DOWNLOAD ) &&
-        (type == NCI_SPD_TYPE_SIGNATURE))
+    if (  (oid == NCI_MSG_SECURE_PATCH_DOWNLOAD )
+        &&(type == NCI_SPD_TYPE_SIGNATURE)  )
     {
         nfc_brcm_cb.prm.flags |= BRCM_PRM_FLAGS_SIGNATURE_SENT;
     }
     /* Check for header */
-    else if (( oid == NCI_MSG_SECURE_PATCH_DOWNLOAD ) &&
-        (type == NCI_SPD_TYPE_HEADER))
+    else if (  (oid == NCI_MSG_SECURE_PATCH_DOWNLOAD )
+             &&(type == NCI_SPD_TYPE_HEADER)  )
     {
         /* Check if patch is for BCM20791B3 */
         p_src += NCI_SPD_HEADER_OFFSET_CHIPVERLEN;
@@ -426,8 +430,8 @@ void nfc_brcm_prm_spd_check_version(void)
         }
         /* Skip download if version of patchfile older or equal to version in NVM */
         /* unless NVM is corrupted (then don't skip download if patchfile has the same major ver)*/
-        else if ((nfc_brcm_cb.prm.spd_ver_major > patchfile_ver_major) ||
-                 ((nfc_brcm_cb.prm.spd_ver_major == patchfile_ver_major) && (nfc_brcm_cb.prm.spd_ver_minor == patchfile_ver_minor)
+        else if (  (nfc_brcm_cb.prm.spd_ver_major > patchfile_ver_major)
+                 ||(  (nfc_brcm_cb.prm.spd_ver_major == patchfile_ver_major) && (nfc_brcm_cb.prm.spd_ver_minor == patchfile_ver_minor)
                   && !((patchfile_patch_present_mask & (1<<BRCM_PRM_SPD_POWER_MODE_LPM)) && (nfc_brcm_cb.prm.spd_lpm_patch_size == 0))  /* Do not skip download: patchfile has LPM, but NVM does not */
                   && !((patchfile_patch_present_mask & (1<<BRCM_PRM_SPD_POWER_MODE_FPM)) && (nfc_brcm_cb.prm.spd_fpm_patch_size == 0))  /* Do not skip download: patchfile has FPM, but NVM does not */
                   && !(nfc_brcm_cb.prm.flags & (BRCM_PRM_FLAGS_NVM_FPM_CORRUPTED|BRCM_PRM_FLAGS_NVM_LPM_CORRUPTED))))
@@ -443,16 +447,6 @@ void nfc_brcm_prm_spd_check_version(void)
         else
         {
             nfc_brcm_cb.prm.spd_patch_needed_mask = patchfile_patch_present_mask;
-#if (defined(NFC_I2C_PATCH_INCLUDED) && (NFC_I2C_PATCH_INCLUDED == TRUE))
-            /* Do not need to download PreI2C patch if upgrading existing patch (unless FPM patch is corrupted or not present in NVM) */
-            if ((nfc_brcm_cb.prm.flags & BRCM_PRM_FLAGS_I2C_FIX_REQUIRED) && !(nfc_brcm_cb.prm.flags & BRCM_PRM_FLAGS_NVM_FPM_CORRUPTED)
-                && (nfc_brcm_cb.prm.spd_fpm_patch_size != 0))
-            {
-                /* PreI2C patch should be downloaded only once. (updating PreI2C patch may cause problems)
-                 */
-                nfc_brcm_cb.prm.flags &= ~BRCM_PRM_FLAGS_I2C_FIX_REQUIRED;
-            }
-#endif
 
             NCI_TRACE_DEBUG4 ("Downloading patch version: %i.%i (previous version in NVM: %i.%i)...",
                               patchfile_ver_major, patchfile_ver_minor,
@@ -484,9 +478,20 @@ void nfc_brcm_prm_spd_check_version(void)
     if (nfc_brcm_cb.prm.spd_patch_needed_mask)
     {
 #if (defined(NFC_I2C_PATCH_INCLUDED) && (NFC_I2C_PATCH_INCLUDED == TRUE))
-        /* Check if I2C patch needed */
-        if (nfc_brcm_cb.prm.flags & BRCM_PRM_FLAGS_I2C_FIX_REQUIRED)
+        /* Check if I2C patch is needed: if                                     */
+        /*      - I2C patch file was provided using PRM_SetI2cPatch, and        */
+        /*      -   current patch in NVM has ProjectID=0, or                    */
+        /*          FPM is not present or corrupted, or                         */
+        /*          upgrading from pre-76 to 76 or newer                        */
+        if (  (nfc_brcm_cb.prm_i2c.p_patch)
+            &&(  (nfc_brcm_cb.prm.spd_project_id == 0)
+               ||(nfc_brcm_cb.prm.spd_fpm_patch_size == 0)
+               ||(nfc_brcm_cb.prm.flags & BRCM_PRM_FLAGS_NVM_FPM_CORRUPTED)
+               ||((nfc_brcm_cb.prm.spd_ver_major < 76) && (patchfile_ver_major >= 76))  )  )
         {
+            BT_TRACE_0 (TRACE_LAYER_HCI, TRACE_TYPE_DEBUG, "I2C patch fix required.");
+            nfc_brcm_cb.prm.flags |= BRCM_PRM_FLAGS_I2C_FIX_REQUIRED;
+
             /* Download i2c fix first */
             nfc_brcm_prm_spd_download_i2c_fix();
             return;
@@ -590,7 +595,6 @@ UINT8 *nfc_brcm_prm_spd_status_str(UINT8 spd_status_code)
 *******************************************************************************/
 void nfc_brcm_prm_nci_command_complete_cback(tNFC_VS_EVT event, UINT16 data_len, UINT8 *p_data)
 {
-    UINT8 ver_str[BRCM_PRM_NCD_PATCH_VERSION_LEN] = {0};
     UINT8 status, u8;
     UINT8 *p;
     UINT32 post_signature_delay;
@@ -614,7 +618,7 @@ void nfc_brcm_prm_nci_command_complete_cback(tNFC_VS_EVT event, UINT16 data_len,
 
         /* Get chip version string */
         STREAM_TO_UINT8(u8, p);
-        STREAM_TO_ARRAY(ver_str, p, BRCM_PRM_NCD_PATCH_VERSION_LEN);
+        p += BRCM_PRM_NCD_PATCH_VERSION_LEN;
 
         /* Get major/minor version */
         STREAM_TO_UINT16(nfc_brcm_cb.prm.spd_ver_major, p);
@@ -648,24 +652,6 @@ void nfc_brcm_prm_nci_command_complete_cback(tNFC_VS_EVT event, UINT16 data_len,
             /* FPM patch in NVM fails CRC check */
             nfc_brcm_cb.prm.flags |= BRCM_PRM_FLAGS_NVM_FPM_CORRUPTED;
         }
-
-
-#if (defined(NFC_I2C_PATCH_INCLUDED) && (NFC_I2C_PATCH_INCLUDED == TRUE))
-        /* Check if I2C patch is needed: if                                                 */
-        /*      - I2C patch file was provided using PRM_SetI2cPatch, and                    */
-        /*      - chip is BCM20791B3, and                                                   */
-        /*      - current patch in NVM has ProjectID=0, or FPM is not present or corrupted  */
-        if (   (nfc_brcm_cb.prm_i2c.p_patch)
-            && !memcmp(ver_str, BRCM_PRM_BCM20791B3_STR, BRCM_PRM_BCM20791B3_STR_LEN)
-            && (  (nfc_brcm_cb.prm.spd_project_id == 0)
-                ||(nfc_brcm_cb.prm.spd_fpm_patch_size == 0)
-                ||(nfc_brcm_cb.prm.flags & BRCM_PRM_FLAGS_NVM_FPM_CORRUPTED)))
-        {
-            BT_TRACE_0(TRACE_LAYER_HCI, TRACE_TYPE_DEBUG, "I2C patch fix required.");
-            nfc_brcm_cb.prm.flags |= BRCM_PRM_FLAGS_I2C_FIX_REQUIRED;
-        }
-#endif
-
 
         /* Check if downloading patch to RAM only (no NVM) */
         STREAM_TO_UINT8(u8, p);
@@ -747,10 +733,9 @@ void nfc_brcm_prm_nci_command_complete_cback(tNFC_VS_EVT event, UINT16 data_len,
             }
 
 #if (defined(NFC_I2C_PATCH_INCLUDED) && (NFC_I2C_PATCH_INCLUDED == TRUE))
-            /* If done downloading I2C pre-patch, begin downloading the actual patchfile */
             if (nfc_brcm_cb.prm.flags & BRCM_PRM_FLAGS_I2C_FIX_REQUIRED)
             {
-                NCI_TRACE_DEBUG0 ("I2C fix downloaded...proceeding with patch download.");
+                NCI_TRACE_DEBUG1 ("PreI2C patch downloaded...waiting %i ms for NFCC to reboot.", BRCM_PRM_POST_I2C_FIX_DELAY);
 
                 /* Restore pointers to patchfile */
                 nfc_brcm_cb.prm.flags &= ~BRCM_PRM_FLAGS_I2C_FIX_REQUIRED;
@@ -761,7 +746,10 @@ void nfc_brcm_prm_nci_command_complete_cback(tNFC_VS_EVT event, UINT16 data_len,
                 /* Resume normal patch download */
                 nfc_brcm_cb.prm.state = BRCM_PRM_ST_SPD_GET_PATCH_HEADER;
                 nfc_brcm_cb.prm.flags &= ~BRCM_PRM_FLAGS_SIGNATURE_SENT;
-                nfc_brcm_prm_spd_handle_next_patch_start();
+
+                /* Post PreI2C delay */
+                nci_start_quick_timer (&nci_cb.nci_cmd_cmpl_timer, 0x00, (BRCM_PRM_POST_I2C_FIX_DELAY * QUICK_TIMER_TICKS_PER_SEC) / 1000);
+
                 return;
             }
 #endif  /* NFC_I2C_PATCH_INCLUDED */
@@ -939,6 +927,11 @@ static void nfc_brcm_prm_process_timeout (void *p_tle)
             nfc_brcm_prm_nfcc_ready_to_continue ();
         }
     }
+    else if (nfc_brcm_cb.prm.state == BRCM_PRM_ST_SPD_GET_PATCH_HEADER)
+    {
+        NCI_TRACE_DEBUG0 ("Delay after PreI2C patch download...proceeding to download firmware patch");
+        nfc_brcm_prm_spd_handle_next_patch_start ();
+    }
     else
     {
         NCI_TRACE_ERROR1 ("Patch download: command timeout (state=%i)", nfc_brcm_cb.prm.state);
@@ -1047,9 +1040,9 @@ BOOLEAN PRM_DownloadContinue (UINT8 *p_patch_data,
                      nfc_brcm_cb.prm.state, patch_data_len);
 
     /* Check if we are in a valid state for this API */
-    if ((nfc_brcm_cb.prm.state != BRCM_PRM_ST_SPD_COMPARE_VERSION) &&
-        (nfc_brcm_cb.prm.state != BRCM_PRM_ST_SPD_GET_PATCH_HEADER) &&
-        (nfc_brcm_cb.prm.state != BRCM_PRM_ST_SPD_DOWNLOADING))
+    if (  (nfc_brcm_cb.prm.state != BRCM_PRM_ST_SPD_COMPARE_VERSION)
+        &&(nfc_brcm_cb.prm.state != BRCM_PRM_ST_SPD_GET_PATCH_HEADER)
+        &&(nfc_brcm_cb.prm.state != BRCM_PRM_ST_SPD_DOWNLOADING)  )
         return FALSE;
 
     if (patch_data_len == 0)
