@@ -486,6 +486,9 @@ typedef UINT8 tT3T_POLL_RC;
 #define I93_UID_ICODE_SLI_S                     0x02    /* ICODE SLI-S, SLIX-S */
 #define I93_UID_ICODE_SLI_L                     0x03    /* ICODE SLI-L, SLIX-L */
 
+#define I93_IC_REF_ICODE_SLI_L                  0x03    /* IC Reference for ICODE SLI-L */
+#define I93_ICODE_IC_REF_MBREAD_MASK            0x02    /* read multi block supported check bit */
+
 /* TI, UID Coding of product version (UID Bit 48-42) */
 #define I93_UID_TAG_IT_HF_I_PRODUCT_ID_MASK     0xFE    /* upper 7 bits                     */
 #define I93_UID_TAG_IT_HF_I_PLUS_INLAY          0x00    /* Tag-it HF-I Plus Inlay           */

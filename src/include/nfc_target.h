@@ -135,7 +135,6 @@
 #define NCI_MSG_OFFSET_SIZE             1
 #endif
 
-
 /* Restore NFCC baud rate to default on shutdown if NFC_UpdateBaudRate was called */
 #ifndef NFC_RESTORE_BAUD_ON_SHUTDOWN
 #define NFC_RESTORE_BAUD_ON_SHUTDOWN    TRUE
@@ -215,6 +214,10 @@
 #define NCI_MAX_CONN_CBS        4
 #endif
 
+/* the maximum number of buffers for the static RF connection. 1-5 */
+#ifndef NCI_MAX_RF_DATA_CREDITS
+#define NCI_MAX_RF_DATA_CREDITS     3
+#endif
 /* Define to TRUE to include the NFCEE related functionalities */
 #ifndef NFC_NFCEE_INCLUDED
 #define NFC_NFCEE_INCLUDED          TRUE
@@ -322,6 +325,14 @@
 #define CE_T4T_MAX_REG_AID         4
 #endif
 
+/* Sub carrier */
+#ifndef RW_I93_FLAG_SUB_CARRIER
+#define RW_I93_FLAG_SUB_CARRIER     I93_FLAG_SUB_CARRIER_SINGLE
+#endif
+/* Data rate for 15693 command/response */
+#ifndef RW_I93_FLAG_DATA_RATE
+#define RW_I93_FLAG_DATA_RATE       I93_FLAG_DATA_RATE_HIGH
+#endif
 /* TRUE, to include Card Emulation related test commands */
 #ifndef CE_TEST_INCLUDED
 #define CE_TEST_INCLUDED            FALSE
@@ -356,14 +367,17 @@
 #ifndef NFC_LP_COMMAND_PARAMS
 #define NFC_LP_COMMAND_PARAMS       5
 #endif
+
 /* Primary Threshold for battery monitor   */
 #ifndef NFC_LP_PRIMARY_THRESHOLD
 #define NFC_LP_PRIMARY_THRESHOLD    0
 #endif
+
 /* Secondary Threshold for battery monitor */
 #ifndef NFC_LP_SECONDARY_THRESHOLD
 #define NFC_LP_SECONDARY_THRESHOLD  8
 #endif
+
 /* time (in ms) between power off and on NFCC */
 #ifndef NCI_POWER_CYCLE_DELAY
 #define NCI_POWER_CYCLE_DELAY       100
@@ -388,30 +402,21 @@
 #ifndef QUICK_TIMER_TICKS_PER_SEC
 #define QUICK_TIMER_TICKS_PER_SEC   100       /* 10ms timer */
 #endif
-
-/******************************************************************************
-**
-** NDEF
-**
-******************************************************************************/
-/* The default is to use the GKI_shiftdown/GKI_shiftup function defined in GKI.
- * If the NDEF functions are used as utility functions by a standalon application
- * without GKI, NDEF_SHIFT_DOWN should be mapped to shiftdown and
- * NDEF_SHIFT_UP should be mapped to shiftup and
- * NDEF_SHIFT_INCLUDED should be mapped to TRUE in buildcfg.h
- */
-#ifndef NDEF_SHIFT_DOWN
-#define NDEF_SHIFT_DOWN         (GKI_shiftdown)
+/* Send to lower layer */
+#ifndef NCI_TO_LOWER
+#ifdef TESTER
+/* For BTE Insight, NCI_TO_LOWER is runtime configurable (depends on whether */
+/*                     user selected 'shared' or 'dedicated' nci transport). */
+/*                     Call Insight's btstk_nfc_send to forward NCI messages.*/
+extern void btstk_nfc_send(BT_HDR *p_msg);
+#define NCI_TO_LOWER(p)         btstk_nfc_send ((BT_HDR *)(p));
+#else
+/* For embedded platforms, configured for Dedicated Transport:              */
+/*                      NCI_TO_LOWER calls nci_send to send NCI messages    */
+/*                      to the NCIT_TASK                                     */
+#define NCI_TO_LOWER(p)         ncit_send_msg((BT_HDR *)(p));
 #endif
-
-#ifndef NDEF_SHIFT_UP
-#define NDEF_SHIFT_UP           (GKI_shiftup)
-#endif
-
-#ifndef NDEF_SHIFT_INCLUDED
-#define NDEF_SHIFT_INCLUDED     FALSE
-#endif
-
+#endif /* NCI_TO_LOWER */
 
 /******************************************************************************
 **
@@ -586,13 +591,7 @@
 #define NFA_HCI_MAX_HOST_IN_NETWORK 0x06
 #endif
 
-#ifndef NFA_HCI_MAX_GATE_IN_HOST
-#define NFA_HCI_MAX_GATE_IN_HOST    0x0F
-#endif
 
-#ifndef NFA_HCI_MAX_MESSAGE_LEN
-#define NFA_HCI_MAX_MESSAGE_LEN     0xFF
-#endif
 
 /* Max number of Application that can be registered to NFA-HCI */
 #ifndef NFA_HCI_MAX_APP_CB
@@ -609,9 +608,9 @@
 #define NFA_HCI_MAX_PIPE_CB         0x08
 #endif
 
-/* Max number of HCI pipes that can be created per gate */
-#ifndef NFA_HCI_MAX_PIPES_PER_GATE
-#define NFA_HCI_MAX_PIPES_PER_GATE  0x02
+/* Timeout for waiting for the response to HCP Command packet */
+#ifndef NFA_HCI_CMD_RSP_TIMEOUT
+#define NFA_HCI_CMD_RSP_TIMEOUT    1000
 #endif
 
 /* NFCC will respond to more than one technology during listen discovery  */
@@ -621,7 +620,7 @@
 
 /* Default poll duration (may be over-ridden using NFA_SetRfDiscoveryDuration) */
 #ifndef NFA_DM_DISC_DURATION_POLL
-#define NFA_DM_DISC_DURATION_POLL               500
+#define NFA_DM_DISC_DURATION_POLL               500  /* Android requires 500 */
 #endif
 
 /* Automatic NDEF detection (when not in exclusive RF mode) */
@@ -632,6 +631,11 @@
 /* Automatic NDEF read (when not in exclusive RF mode) */
 #ifndef NFA_DM_AUTO_READ_NDEF
 #define NFA_DM_AUTO_READ_NDEF        FALSE  /* !!!!! NFC-Android needs FALSE */
+#endif
+
+/* Automatic NDEF read (when not in exclusive RF mode) */
+#ifndef NFA_DM_AUTO_PRESENCE_CHECK
+#define NFA_DM_AUTO_PRESENCE_CHECK   FALSE  /* Android requires FALSE */
 #endif
 
 /* Time to restart discovery after deactivated */
@@ -691,6 +695,7 @@
 #ifndef NFA_SNEP_DEFAULT_SERVER_MAX_NDEF_SIZE
 #define NFA_SNEP_DEFAULT_SERVER_MAX_NDEF_SIZE          500000
 #endif
+
 /* Max number of SNEP server/client and data link connection */
 #ifndef NFA_SNEP_MAX_CONN
 #define NFA_SNEP_MAX_CONN               6

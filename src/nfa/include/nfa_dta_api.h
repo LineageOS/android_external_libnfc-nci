@@ -4,7 +4,7 @@
 **
 **  Description:    NFA Device Test Application (DTA) API functions
 **
-**  Copyright (c) 2011, Broadcom Corp., All Rights Reserved.
+**  Copyright (c) 2011-2012, Broadcom Corp., All Rights Reserved.
 **  Broadcom NFC Core. Proprietary and confidential.
 **
 *****************************************************************************/
@@ -48,6 +48,7 @@ typedef struct
 #define NFA_DTA_CFG_TOTAL_DURATION          4   /* default: 1000ms */
 #define NFA_DTA_CFG_LLCP                    5   /* default: FALSE */
 #define NFA_DTA_CFG_SNEP                    6   /* default: FALSE */
+#define NFA_DTA_CFG_EMVCO_PCD               7   /* default: FALSE */
 typedef UINT8 tNFA_DTA_CFG_ITEM;
 
 #define NFA_DTA_SNEP_MODE_DISABLE                   0
@@ -59,6 +60,11 @@ typedef UINT8 tNFA_DTA_CFG_ITEM;
 #define NFA_DTA_SNEP_MODE_EXTENDED_GET              6
 typedef UINT8 tNFA_DTA_SNEP_MODE;
 
+#define NFA_DTA_EMVCO_PCD_DISABLE                   0
+#define NFA_DTA_EMVCO_PCD_PRE_VALID                 1
+#define NFA_DTA_EMVCO_PCD_LOOPBACK                  2
+typedef UINT8 tNFA_DTA_EMVCO_PCD_MODE;
+
 /* Structures for NFA_DtaConfig configuration parameters */
 typedef union
 {
@@ -69,6 +75,7 @@ typedef union
     UINT16  total_duration;                 /* NFA_DTA_CFG_TOTAL_DURATION */
     BOOLEAN enable_dta_llcp;                /* NFA_DTA_CFG_LLCP */
     tNFA_DTA_SNEP_MODE dta_snep_mode;       /* NFA_DTA_CFG_SNEP */
+    tNFA_DTA_EMVCO_PCD_MODE emvco_pcd_mode; /* NFA_DTA_CFG_EMVCO_PCD */
 } tNFA_DTA_CFG;
 
 /* tNFA_DTA_CBACK events */
@@ -78,6 +85,7 @@ typedef union
 #define NFA_DTA_STOP_EVT	            3   /* Main DTA loop stopped */
 #define NFA_DTA_NFCC_TIMEOUT_EVT	    4   /* NFCC is not responding */
 #define NFA_DTA_NFCC_TRANSPORT_ERR_EVT  5   /* NCI Transport error    */
+#define NFA_DTA_EMVCO_PRE_VALID_EVT     6   /* EMVCo Pre-Validation result */
 
 /* tNFA_DTA_CBACK data types */
 typedef union
@@ -136,7 +144,7 @@ NFC_API tNFA_STATUS NFA_DtaEnable (BOOLEAN auto_start, tNFA_DTA_CBACK *p_cback);
 ** Description      Disable DTA mode.
 **
 **                  When the NFC shutdown procedure is completed, an
-**                  NFC_DTA_DISABLE_EVT will be reported.
+**                  NFA_DTA_DISABLE_EVT will be reported.
 **
 ** Returns:
 **                  NFA_STATUS_OK if successfully initiated

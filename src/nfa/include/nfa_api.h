@@ -570,7 +570,7 @@ typedef UINT8 tNFA_TNF;
 typedef UINT8 tNFA_NDEF_URI_ID;
 
 /* Events for tNFA_NDEF_CBACK */
-#define NFA_NDEF_REGISTER_EVT   0   /* NDEF record type registered. (In response to NFA_RegisterNDefHandler)    */
+#define NFA_NDEF_REGISTER_EVT   0   /* NDEF record type registered. (In response to NFA_RegisterNDefTypeHandler)    */
 #define NFA_NDEF_DATA_EVT	    1   /* Received an NDEF message with the registered type. See [tNFA_DATA]       */
 typedef UINT8 tNFA_NDEF_EVT;
 
@@ -635,7 +635,7 @@ NFC_API extern void NFA_Init (void);
 **                  is enabled during boot-up, or when NFC is enabled from a
 **                  settings UI. Subsequent calls to NFA_Enable while NFA is
 **                  enabling or enabled will be ignored. When the NFC startup
-**                  procedure is completed, an NFA_ENABLE_EVT is returned to the
+**                  procedure is completed, an NFA_DM_ENABLE_EVT is returned to the
 **                  application using the tNFA_DM_CBACK.
 **
 **                  The tNFA_CONN_CBACK parameter is used to register a callback
@@ -657,10 +657,10 @@ NFC_API extern tNFA_STATUS NFA_Enable (tNFA_DM_CBACK       *p_dm_cback,
 **                  are terminated, and clean up routines are performed. This
 **                  function is typically called during platform shut-down, or
 **                  when NFC is disabled from a settings UI. When the NFC
-**                  shutdown procedure is completed, an NFA_DISABLE_EVT is
+**                  shutdown procedure is completed, an NFA_DM_DISABLE_EVT is
 **                  returned to the application using the tNFA_DM_CBACK.
 **
-**                  The platform should wait until the NFC_DISABLE_EVT is
+**                  The platform should wait until the NFC_DISABLE_REVT is
 **                  received before powering down the NFC chip and NCI transport.
 **                  This is required to so that NFA can gracefully shut down any
 **                  open connections.
@@ -679,7 +679,10 @@ NFC_API extern tNFA_STATUS NFA_Disable (BOOLEAN graceful);
 **                  reported with an NFA_DM_SET_CONFIG_EVT in the tNFA_DM_CBACK
 **                  callback.
 **
-Note??
+** Note:            If RF discovery is started, NFA_StopRfDiscovery()/NFA_RF_DISCOVERY_STOPPED_EVT
+**                  should happen before calling this function. Most Configuration
+**                  parameters are related to RF discovery.
+**
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_BUSY if previous setting is on-going
 **                  NFA_STATUS_FAILED otherwise
@@ -714,7 +717,7 @@ NFC_API extern tNFA_STATUS NFA_GetConfig (UINT8 num_ids, tNFA_PMID *p_param_ids)
 **                    params
 **
 **                  The NFA_EXCLUSIVE_RF_CONTROL_STARTED_EVT event of
-**                  tCONN_CBACK indicates the status of the operation.
+**                  tNFA_CONN_CBACK indicates the status of the operation.
 **
 **                  NFA_ACTIVATED_EVT and NFA_DEACTIVATED_EVT indicates link
 **                  activation/deactivation.
@@ -770,9 +773,9 @@ NFC_API extern tNFA_STATUS NFA_ReleaseExclusiveRfControl (void);
 **                    successfully enabled.
 **                  - NFA_DISC_RESULT_EVT indicates there are more than one devices,
 **                    so application must select one of tags by calling NFA_Select().
-**                  - NFA_SELECT_RESULT indicates whether previous selection was
+**                  - NFA_SELECT_RESULT_EVT indicates whether previous selection was
 **                    successful or not. If it was failed then application must select
-**                    again or deactivate by calling NFA_Stop().
+**                    again or deactivate by calling NFA_Deactivate().
 **                  - NFA_ACTIVATED_EVT is generated when an NFC link is activated.
 **                  - NFA_NDEF_DETECT_EVT is generated if tag is activated
 **                  - NFA_LLCP_ACTIVATED_EVT/NFA_LLCP_DEACTIVATED_EVT is generated
@@ -861,14 +864,11 @@ NFC_API extern tNFA_STATUS NFA_StopRfDiscovery (void);
 ** Description      Set the duration of the single discovery period in [ms].
 **                  Allowable range: 0 ms to 0xFFFF ms.
 **
-**                  If discovery is already started, the application should
+** Note:            If discovery is already started, the application should
 **                  call NFA_StopRfDiscovery prior to calling
 **                  NFA_SetRfDiscoveryDuration, and then call
 **                  NFA_StartRfDiscovery afterwards to restart discovery using
 **                  the new duration.
-**
-** Note:            If RF discovery is started, NFA_StopRfDiscovery()/NFA_RF_DISCOVERY_STOPPED_EVT
-**                  should happen before calling this function
 **
 ** Returns:
 **                  NFA_STATUS_OK, if command accepted
@@ -923,10 +923,15 @@ NFC_API extern tNFA_STATUS NFA_UpdateRFCommParams (tNFA_RF_COMM_PARAMS *p_params
 **                      Application can select another discovered device or deactivate by NFA_Deactivate ()
 **                      after receiving NFA_DEACTIVATED_EVT.
 **
+**                      Deactivating to sleep mode is not allowed when NFCC is in wait-for-host-select
+**                      mode, or in listen-sleep states; NFA will deactivate to idle or discovery state
+**                      for these cases respectively.
+**
+**
 **                  If sleep_mode=FALSE:
 **                      Deactivate the connection (e.g. as a result of presence check failure)
 **                      NFA_DEACTIVATED_EVT will indicate that link is deactivated.
-**                      Polling/listening will resume.
+**                      Polling/listening will resume (unless the nfcc is in wait_for-all-discoveries state)
 **
 **
 ** Returns          NFA_STATUS_OK if successfully initiated
@@ -960,7 +965,7 @@ NFC_API extern tNFA_STATUS NFA_SendRawFrame (UINT8  *p_raw_data,
 ** Description      This function allows the applications to register for
 **                  specific types of NDEF records. When NDEF records are
 **                  received, NFA will parse the record-type field, and pass
-**                  the record to the registered NFA_NDEF_CBACK.
+**                  the record to the registered tNFA_NDEF_CBACK.
 **
 **                  For records types which were not registered, the record will
 **                  be sent to the default handler. A default type-handler may
@@ -969,7 +974,7 @@ NFC_API extern tNFA_STATUS NFA_SendRawFrame (UINT8  *p_raw_data,
 **                  record types will be sent to the callback. Only one default
 **                  handler may be registered at a time.
 **
-**                  An NFA_NDEF_REGISTER_EVT will be sent to the NFA_NDEF_CBACK
+**                  An NFA_NDEF_REGISTER_EVT will be sent to the tNFA_NDEF_CBACK
 **                  to indicate that registration was successful, and provide a
 **                  handle for this record type.
 **
@@ -992,11 +997,11 @@ NFC_API extern tNFA_STATUS NFA_RegisterNDefTypeHandler (BOOLEAN          handle_
 **                  with TNF=NFA_TNF_WKT, and type_name='U' (URI record); and allows
 **                  registering for specific URI types (e.g. 'tel:' or 'mailto:').
 **
-**                  An NFA_NDEF_REGISTER_EVT will be sent to the NFA_NDEF_CBACK
+**                  An NFA_NDEF_REGISTER_EVT will be sent to the tNFA_NDEF_CBACK
 **                  to indicate that registration was successful, and provide a
 **                  handle for this registration.
 **
-**                  If uri_id=NFA_URI_ID_ABSOLUTE, then p_abs_uri contains the
+**                  If uri_id=NFA_NDEF_URI_ID_ABSOLUTE, then p_abs_uri contains the
 **                  unabridged URI. For all other uri_id values, the p_abs_uri
 **                  parameter is ignored (i.e the URI prefix is implied by uri_id).
 **                  See [NFC RTD URI] for more information.

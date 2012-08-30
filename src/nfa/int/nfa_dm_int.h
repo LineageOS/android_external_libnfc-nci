@@ -475,7 +475,7 @@ typedef struct
     tNFA_DM_PARAMS              params;
 
     /* SetConfig management */
-    UINT32                      setcfg_pending_mask;    /* Mask of to indicate whether pending SET_CONFIGs require NFA_SET_CONFIG_EVT. LSB=oldest pending */
+    UINT32                      setcfg_pending_mask;    /* Mask of to indicate whether pending SET_CONFIGs require NFA_DM_SET_CONFIG_EVT. LSB=oldest pending */
     UINT8                       setcfg_pending_num;     /* Number of setconfigs pending */
 
     /* NFCC power mode */

@@ -25,14 +25,14 @@
 tRW_CB rw_cb;
 /*******************************************************************************
 *******************************************************************************/
-void rw_init(void)
+void rw_init (void)
 {
-    memset (&rw_cb, 0, sizeof(tRW_CB));
+    memset (&rw_cb, 0, sizeof (tRW_CB));
     rw_cb.trace_level = NFC_INITIAL_TRACE_LEVEL;
 
 }
 
-#if (defined(RW_STATS_INCLUDED) && (RW_STATS_INCLUDED == TRUE))
+#if (defined (RW_STATS_INCLUDED) && (RW_STATS_INCLUDED == TRUE))
 /*******************************************************************************
 * Internal functions for statistics
 *******************************************************************************/
@@ -45,12 +45,12 @@ void rw_init(void)
 ** Returns          void
 **
 *******************************************************************************/
-void rw_main_reset_stats(void)
+void rw_main_reset_stats (void)
 {
-    memset(&rw_cb.stats, 0, sizeof(tRW_STATS));
+    memset (&rw_cb.stats, 0, sizeof (tRW_STATS));
 
     /* Get current tick count */
-    rw_cb.stats.start_tick = GKI_get_tick_count();
+    rw_cb.stats.start_tick = GKI_get_tick_count ();
 }
 
 /*******************************************************************************
@@ -62,7 +62,7 @@ void rw_main_reset_stats(void)
 ** Returns          void
 **
 *******************************************************************************/
-void rw_main_update_tx_stats(UINT32 num_bytes, BOOLEAN is_retry)
+void rw_main_update_tx_stats (UINT32 num_bytes, BOOLEAN is_retry)
 {
     rw_cb.stats.bytes_sent+=num_bytes;
     rw_cb.stats.num_ops++;
@@ -80,7 +80,7 @@ void rw_main_update_tx_stats(UINT32 num_bytes, BOOLEAN is_retry)
 ** Returns          void
 **
 *******************************************************************************/
-void rw_main_update_fail_stats(void)
+void rw_main_update_fail_stats (void)
 {
     rw_cb.stats.num_fail++;
 }
@@ -94,7 +94,7 @@ void rw_main_update_fail_stats(void)
 ** Returns          void
 **
 *******************************************************************************/
-void rw_main_update_crc_error_stats(void)
+void rw_main_update_crc_error_stats (void)
 {
     rw_cb.stats.num_crc++;
 }
@@ -108,7 +108,7 @@ void rw_main_update_crc_error_stats(void)
 ** Returns          void
 **
 *******************************************************************************/
-void rw_main_update_trans_error_stats(void)
+void rw_main_update_trans_error_stats (void)
 {
     rw_cb.stats.num_trans_err++;
 }
@@ -122,7 +122,7 @@ void rw_main_update_trans_error_stats(void)
 ** Returns          void
 **
 *******************************************************************************/
-void rw_main_update_rx_stats(UINT32 num_bytes)
+void rw_main_update_rx_stats (UINT32 num_bytes)
 {
     rw_cb.stats.bytes_received+=num_bytes;
 }
@@ -136,16 +136,16 @@ void rw_main_update_rx_stats(UINT32 num_bytes)
 ** Returns          void
 **
 *******************************************************************************/
-void rw_main_log_stats(void)
+void rw_main_log_stats (void)
 {
     UINT32 ticks, elapsed_ms;
 
-    ticks = GKI_get_tick_count() - rw_cb.stats.start_tick;
-    elapsed_ms = GKI_TICKS_TO_MS(ticks);
+    ticks = GKI_get_tick_count () - rw_cb.stats.start_tick;
+    elapsed_ms = GKI_TICKS_TO_MS (ticks);
 
-    RW_TRACE_DEBUG5("NFC tx stats: cmds:%i, retries:%i, aborted: %i, tx_errs: %i, bytes sent:%i", rw_cb.stats.num_ops, rw_cb.stats.num_retries, rw_cb.stats.num_fail, rw_cb.stats.num_trans_err, rw_cb.stats.bytes_sent);
-    RW_TRACE_DEBUG2("    rx stats: rx-crc errors %i, bytes received: %i", rw_cb.stats.num_crc, rw_cb.stats.bytes_received);
-    RW_TRACE_DEBUG1("    time activated %i ms", elapsed_ms);
+    RW_TRACE_DEBUG5 ("NFC tx stats: cmds:%i, retries:%i, aborted: %i, tx_errs: %i, bytes sent:%i", rw_cb.stats.num_ops, rw_cb.stats.num_retries, rw_cb.stats.num_fail, rw_cb.stats.num_trans_err, rw_cb.stats.bytes_sent);
+    RW_TRACE_DEBUG2 ("    rx stats: rx-crc errors %i, bytes received: %i", rw_cb.stats.num_crc, rw_cb.stats.bytes_received);
+    RW_TRACE_DEBUG1 ("    time activated %i ms", elapsed_ms);
 }
 #endif  /* RW_STATS_INCLUDED */
 
@@ -168,15 +168,15 @@ tNFC_STATUS RW_SendRawFrame (UINT8 *p_raw_data, UINT16 data_len)
     if (rw_cb.p_cback)
     {
         /* a valid opcode for RW - remove */
-        p_data = (BT_HDR *)GKI_getpoolbuf(NFC_RW_POOL_ID);
+        p_data = (BT_HDR *) GKI_getpoolbuf (NFC_RW_POOL_ID);
         if (p_data)
         {
             p_data->offset = NCI_MSG_OFFSET_SIZE + NCI_DATA_HDR_SIZE;
-            p = (UINT8 *)(p_data + 1) + p_data->offset;
-            memcpy(p, p_raw_data, data_len);
+            p = (UINT8 *) (p_data + 1) + p_data->offset;
+            memcpy (p, p_raw_data, data_len);
             p_data->len = data_len;
 
-            RW_TRACE_EVENT1 ("RW SENT raw frame(0x%x)", data_len);
+            RW_TRACE_EVENT1 ("RW SENT raw frame (0x%x)", data_len);
             status = NFC_SendData (NFC_RF_CONN_ID, p_data);
         }
 
@@ -202,16 +202,16 @@ tNFC_STATUS RW_SetActivatedTagType (tNFC_ACTIVATE_DEVT *p_activate_params, tRW_C
 
     if (p_cback == NULL)
     {
-        RW_TRACE_ERROR0("RW_SetActivatedTagType called with NULL callback");
+        RW_TRACE_ERROR0 ("RW_SetActivatedTagType called with NULL callback");
         return (NFC_STATUS_FAILED);
     }
 
     /* Reset tag-specific area of control block */
-    memset (&rw_cb.tcb, 0, sizeof(tRW_TCB));
+    memset (&rw_cb.tcb, 0, sizeof (tRW_TCB));
 
-#if (defined(RW_STATS_INCLUDED) && (RW_STATS_INCLUDED == TRUE))
+#if (defined (RW_STATS_INCLUDED) && (RW_STATS_INCLUDED == TRUE))
     /* Reset RW stats */
-    rw_main_reset_stats();
+    rw_main_reset_stats ();
 #endif  /* RW_STATS_INCLUDED */
 
     rw_cb.p_cback = p_cback;
@@ -230,31 +230,31 @@ tNFC_STATUS RW_SetActivatedTagType (tNFC_ACTIVATE_DEVT *p_activate_params, tRW_C
         if (p_activate_params->rf_tech_param.mode == NFC_DISCOVERY_TYPE_POLL_A)
         {
             if (p_activate_params->rf_tech_param.param.pa.sel_rsp == NFC_SEL_RES_NFC_FORUM_T2T)
-                status      = rw_t2t_select();
+                status      = rw_t2t_select ();
         }
         break;
 
     case NFC_PROTOCOL_T3T:   /* Type3Tag    - NFC-F */
         if (p_activate_params->rf_tech_param.mode == NFC_DISCOVERY_TYPE_POLL_F)
         {
-            status = rw_t3t_select(p_activate_params->rf_tech_param.param.pf.nfcid2,
+            status = rw_t3t_select (p_activate_params->rf_tech_param.param.pf.nfcid2,
                                     p_activate_params->rf_tech_param.param.pf.mrti_check,
                                     p_activate_params->rf_tech_param.param.pf.mrti_update);
         }
         break;
 
     case NFC_PROTOCOL_ISO_DEP:     /* ISODEP/4A,4B- NFC-A or NFC-B */
-        if ((p_activate_params->rf_tech_param.mode == NFC_DISCOVERY_TYPE_POLL_B)
-          ||(p_activate_params->rf_tech_param.mode == NFC_DISCOVERY_TYPE_POLL_A))
+        if (  (p_activate_params->rf_tech_param.mode == NFC_DISCOVERY_TYPE_POLL_B)
+            ||(p_activate_params->rf_tech_param.mode == NFC_DISCOVERY_TYPE_POLL_A)  )
         {
-            status          = rw_t4t_select();
+            status          = rw_t4t_select ();
         }
         break;
 
     case NFC_PROTOCOL_15693:     /* ISO 15693 */
         if (p_activate_params->rf_tech_param.mode == NFC_DISCOVERY_TYPE_POLL_ISO15693)
         {
-            status          = rw_i93_select();
+            status          = rw_i93_select ();
         }
         break;
     /* TODO set up callback for proprietary protocol */

@@ -42,17 +42,7 @@ const UINT8 nci_brcm_core_reset_cmd[NCI_MSG_HDR_SIZE + NCI_CORE_PARAM_SIZE_RESET
     NCI_RESET_TYPE_RESET_CFG
 };
 
-#define NCI_AUTO_BAUD_TIMEOUT               100     /* time in ms between auto-baud pattern   */
-#define NCI_MAX_AUTO_BAUD_COUNT             10      /* max trial for auto-baud                */
 #define NCI_PROP_PARAM_SIZE_XTAL_INDEX      3       /* length of parameters in XTAL_INDEX CMD */
-
-/* this is for UART auto-baud detection pattern */
-const UINT8 nci_brcm_hci_reset_cmd[BRCM_BT_HCI_CMD_HDR_SIZE] =
-{
-    (UINT8)(HCI_RESET & 0x00FF),
-    (UINT8)((HCI_RESET >> 8) & 0x00FF),
-    0x00    /* param len */
-};
 
 const UINT8 nci_brcm_prop_build_info_cmd[NCI_MSG_HDR_SIZE] =
 {
@@ -62,25 +52,13 @@ const UINT8 nci_brcm_prop_build_info_cmd[NCI_MSG_HDR_SIZE] =
 };
 #define NCI_BUILD_INFO_OFFSET_HWID  25  /* HW ID offset in build info RSP */
 
-#define NCI_BRCM_OFFSET_BAUDRATE    5
-static UINT8 nci_brcm_set_baudrate_cmd[BRCM_BT_HCI_CMD_HDR_SIZE + HCI_BRCM_UPDATE_BAUD_RATE_UNENCODED_LENGTH] =
+const UINT8 nci_brcm_prop_get_patch_version_cmd [NCI_MSG_HDR_SIZE] =
 {
-    0x18,               /* HCI_BRCM_UPDATE_BAUDRATE_CMD */
-    0xFC,               /* HCI_GRP_VENDOR_SPECIFIC      */
-    HCI_BRCM_UPDATE_BAUD_RATE_UNENCODED_LENGTH,
-
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+    NCI_MTS_CMD|NCI_GID_PROP,
+    NCI_MSG_GET_PATCH_VERSION,
+    0x00
 };
-
-#ifndef BRCM_NCI_DEBUG
-#define BRCM_NCI_DEBUG  TRUE
-#endif
-
-#if (BRCM_NCI_DEBUG == TRUE)
-#define NFC_BRCM_NCI_STATE(sta)  NCI_TRACE_DEBUG2 ("init sta: %d->%d", nci_brcm_cb.initializing_state, sta); nci_brcm_cb.initializing_state = sta;
-#else
-#define NFC_BRCM_NCI_STATE(sta)  nci_brcm_cb.initializing_state = sta;
-#endif
+#define NCI_PATCH_INFO_OFFSET_NVMTYPE  35  /* NVM Type offset in patch info RSP */
 
 /*****************************************************************************
 ** Local function prototypes
@@ -92,79 +70,7 @@ static char *nci_brcm_evt_2_str (UINT16 event);
 
 tNCI_BRCM_CB nci_brcm_cb;
 
-extern void nfc_brcm_prm_nci_command_complete_cback(tNFC_VS_EVT event, UINT16 data_len, UINT8 *p_data);
-/*******************************************************************************
-**
-** Function         nci_brcm_set_local_baud_rate
-**
-** Description      Set baud rate on local device
-**
-** Returns          void
-**
-*******************************************************************************/
-void nci_brcm_set_local_baud_rate (UINT8 baud)
-{
-    tUSERIAL_IOCTL_DATA data;
-
-    NCI_TRACE_DEBUG1 ("nci_brcm_set_local_baud_rate (): baud = %d", baud);
-
-    data.baud = baud;
-    USERIAL_Ioctl (USERIAL_NFC_PORT, USERIAL_OP_BAUD_WR, &data);
-}
-
-/*******************************************************************************
-**
-** Function         nci_brcm_auto_baud_timeout_cback
-**
-** Description      callback function for auto-baud timeout
-**
-** Returns          void
-**
-*******************************************************************************/
-static void nci_brcm_auto_baud_timeout_cback (void *p_tle)
-{
-    NCI_TRACE_DEBUG0 ("nci_brcm_auto_baud_timeout_cback ()");
-
-    if (nci_brcm_cb.auto_baud_count >= NCI_MAX_AUTO_BAUD_COUNT)
-    {
-        NCI_TRACE_ERROR0 ("Auto baud detection failed");
-
-        /* let application detect error */
-        nci_task_vs_init_done ();
-        return;
-    }
-
-    /* send auto-baud pattern */
-    nci_brcm_send_bt_cmd (nci_brcm_hci_reset_cmd, BRCM_BT_HCI_CMD_HDR_SIZE, NULL);
-
-    nci_brcm_cb.auto_baud_count++;
-    nci_start_quick_timer (&nci_brcm_cb.auto_baud_timer, 0x00,
-                           ((UINT32)NCI_AUTO_BAUD_TIMEOUT)*QUICK_TIMER_TICKS_PER_SEC/1000);
-}
-
-/*******************************************************************************
-**
-** Function         nci_brcm_start_auto_baud_detection
-**
-** Description      start auto-baud detection
-**
-** Returns          void
-**
-*******************************************************************************/
-void nci_brcm_start_auto_baud_detection (void)
-{
-    NCI_TRACE_DEBUG0 ("nci_brcm_start_auto_baud_detection ()");
-
-    NFC_BRCM_NCI_STATE (NCI_BRCM_INIT_STATE_W4_AUTOBAUD);
-
-    /* send auto-baud pattern */
-    nci_brcm_send_bt_cmd (nci_brcm_hci_reset_cmd, BRCM_BT_HCI_CMD_HDR_SIZE, NULL);
-
-    /* start timer for repeat */
-    nci_brcm_cb.auto_baud_count = 0;
-    nci_start_quick_timer (&nci_brcm_cb.auto_baud_timer, 0x00,
-                           ((UINT32)NCI_AUTO_BAUD_TIMEOUT)*QUICK_TIMER_TICKS_PER_SEC/1000);
-}
+extern void nfc_brcm_prm_nci_command_complete_cback (tNFC_VS_EVT event, UINT16 data_len, UINT8 *p_data);
 
 /*******************************************************************************
 **
@@ -227,10 +133,29 @@ static BOOLEAN nci_brcm_receive_msg (tNCI_BRCM_CB *p_cb, UINT8 byte)
 
     switch (p_cb->rcv_state)
     {
-    case NCI_BRCM_RCV_IDLE_ST:
+    case NCI_BRCM_RCV_PKT_TYPE_ST:
 
+        /* if this is NCI message */
+        if (byte == HCIT_TYPE_NFC)
+        {
+            /* let NCIT task process NCI message */
+            ncit_cb.rcv_state = NCIT_RCV_IDLE_ST;
+        }
+        /* if this is BT message */
+        else if (byte == HCIT_TYPE_EVENT)
+        {
+            /* continue to use BRCM specific to read BT message */
+            p_cb->rcv_state = NCI_BRCM_RCV_BT_IDLE_ST;
+        }
+        else
+        {
+            NCI_TRACE_ERROR1 ("Unknown packet type drop this byte 0x%x", byte);
+        }
+        break;
+
+    case NCI_BRCM_RCV_BT_IDLE_ST:
         /* Initialize rx parameters */
-        p_cb->rcv_state = NCI_BRCM_RCV_HCI_HDR_ST;
+        p_cb->rcv_state = NCI_BRCM_RCV_BT_HDR_ST;
         p_cb->rcv_len   = HCIE_PREAMBLE_SIZE;
 
         if ((p_cb->p_rcv_msg = (BT_HDR *) GKI_getpoolbuf (NFC_NCI_POOL_ID)) != NULL)
@@ -240,19 +165,19 @@ static BOOLEAN nci_brcm_receive_msg (tNCI_BRCM_CB *p_cb, UINT8 byte)
             p_cb->p_rcv_msg->event  = BT_EVT_TO_NFC_NCI_VS;
             p_cb->p_rcv_msg->offset = NFC_RECEIVE_MSGS_OFFSET;
 
-            *((UINT8 *)(p_cb->p_rcv_msg + 1) + p_cb->p_rcv_msg->offset + p_cb->p_rcv_msg->len++) = byte;
+            *((UINT8 *) (p_cb->p_rcv_msg + 1) + p_cb->p_rcv_msg->offset + p_cb->p_rcv_msg->len++) = byte;
         }
         else
         {
-            NCI_TRACE_ERROR0( "[nfc] Unable to allocate buffer for incoming NCI message.");
+            NCI_TRACE_ERROR0 ("[nfc] Unable to allocate buffer for incoming NCI message.");
         }
         p_cb->rcv_len--;
         break;
 
-    case NCI_BRCM_RCV_HCI_HDR_ST:
+    case NCI_BRCM_RCV_BT_HDR_ST:
         if (p_cb->p_rcv_msg)
         {
-            *((UINT8 *)(p_cb->p_rcv_msg + 1) + p_cb->p_rcv_msg->offset + p_cb->p_rcv_msg->len++) = byte;
+            *((UINT8 *) (p_cb->p_rcv_msg + 1) + p_cb->p_rcv_msg->offset + p_cb->p_rcv_msg->len++) = byte;
         }
         p_cb->rcv_len--;
 
@@ -263,40 +188,40 @@ static BOOLEAN nci_brcm_receive_msg (tNCI_BRCM_CB *p_cb, UINT8 byte)
             p_cb->rcv_len = byte;
 
             /* Verify that buffer is big enough to fit message */
-            if ((sizeof(BT_HDR) + HCIE_PREAMBLE_SIZE + byte) > GKI_get_buf_size(p_cb->p_rcv_msg))
+            if ((sizeof (BT_HDR) + HCIE_PREAMBLE_SIZE + byte) > GKI_get_buf_size (p_cb->p_rcv_msg))
             {
                 /* Message cannot fit into buffer */
-                GKI_freebuf(p_cb->p_rcv_msg);
+                GKI_freebuf (p_cb->p_rcv_msg);
                 p_cb->p_rcv_msg     = NULL;
 
-                NCI_TRACE_ERROR0("HCIS: Invalid length for incoming HCI message.");
+                NCI_TRACE_ERROR0 ("HCIS: Invalid length for incoming HCI message.");
             }
 
             /* Message length is valid */
             if (byte)
             {
                 /* Read rest of message */
-                p_cb->rcv_state = NCI_BRCM_RCV_DATA_ST;
+                p_cb->rcv_state = NCI_BRCM_RCV_BT_PAYLOAD_ST;
             }
             else
             {
                 /* Message has no additional parameters. (Entire message has been received) */
                 msg_received    = TRUE;
-                p_cb->rcv_state = NCI_BRCM_RCV_IDLE_ST;  /* Next, wait for next message */
+                p_cb->rcv_state = NCI_BRCM_RCV_PKT_TYPE_ST;  /* Next, wait for packet type of next message */
             }
         }
         break;
 
-    case NCI_BRCM_RCV_DATA_ST:
+    case NCI_BRCM_RCV_BT_PAYLOAD_ST:
         p_cb->rcv_len--;
         if (p_cb->p_rcv_msg)
         {
-            *((UINT8 *)(p_cb->p_rcv_msg + 1) + p_cb->p_rcv_msg->offset + p_cb->p_rcv_msg->len++) = byte;
+            *((UINT8 *) (p_cb->p_rcv_msg + 1) + p_cb->p_rcv_msg->offset + p_cb->p_rcv_msg->len++) = byte;
 
             if (p_cb->rcv_len > 0)
             {
                 /* Read in the rest of the message */
-                len = USERIAL_Read(USERIAL_NFC_PORT, ((UINT8 *)(p_cb->p_rcv_msg + 1) + p_cb->p_rcv_msg->offset + p_cb->p_rcv_msg->len),  p_cb->rcv_len);
+                len = USERIAL_Read (USERIAL_NFC_PORT, ((UINT8 *) (p_cb->p_rcv_msg + 1) + p_cb->p_rcv_msg->offset + p_cb->p_rcv_msg->len),  p_cb->rcv_len);
                 p_cb->p_rcv_msg->len    += len;
                 p_cb->rcv_len           -= len;
             }
@@ -306,7 +231,7 @@ static BOOLEAN nci_brcm_receive_msg (tNCI_BRCM_CB *p_cb, UINT8 byte)
         if (p_cb->rcv_len == 0)
         {
             msg_received        = TRUE;
-            p_cb->rcv_state     = NCI_BRCM_RCV_IDLE_ST;      /* Next, wait for next message */
+            p_cb->rcv_state     = NCI_BRCM_RCV_PKT_TYPE_ST;      /* Next, wait for packet type of next message */
         }
         break;
     }
@@ -334,16 +259,16 @@ static BOOLEAN nci_brcm_receive_msg (tNCI_BRCM_CB *p_cb, UINT8 byte)
 *******************************************************************************/
 void nci_brcm_set_nfc_wake (UINT8 cmd)
 {
-    NCI_TRACE_DEBUG1 ("nci_brcm_set_nfc_wake() %s",
+    NCI_TRACE_DEBUG1 ("nci_brcm_set_nfc_wake () %s",
                       (cmd == NCI_ASSERT_NFC_WAKE ? "ASSERT" : "DEASSERT"));
 
     /*
     **  nfc_wake_active_mode             cmd              result of voltage on NFC_WAKE
     **
-    **  NFC_LP_ACTIVE_LOW(0)    NCI_ASSERT_NFC_WAKE(0)    pull down NFC_WAKE (GND)
-    **  NFC_LP_ACTIVE_LOW(0)    NCI_DEASSERT_NFC_WAKE(1)  pull up NFC_WAKE (VCC)
-    **  NFC_LP_ACTIVE_HIGH(1)   NCI_ASSERT_NFC_WAKE(0)    pull up NFC_WAKE (VCC)
-    **  NFC_LP_ACTIVE_HIGH(1)   NCI_DEASSERT_NFC_WAKE(1)  pull down NFC_WAKE (GND)
+    **  NFC_LP_ACTIVE_LOW (0)    NCI_ASSERT_NFC_WAKE (0)    pull down NFC_WAKE (GND)
+    **  NFC_LP_ACTIVE_LOW (0)    NCI_DEASSERT_NFC_WAKE (1)  pull up NFC_WAKE (VCC)
+    **  NFC_LP_ACTIVE_HIGH (1)   NCI_ASSERT_NFC_WAKE (0)    pull up NFC_WAKE (VCC)
+    **  NFC_LP_ACTIVE_HIGH (1)   NCI_DEASSERT_NFC_WAKE (1)  pull down NFC_WAKE (GND)
     */
 
     if (cmd == nci_brcm_cb.nfc_wake_active_mode)
@@ -367,11 +292,11 @@ static BOOLEAN nci_brcm_power_mode_execute (UINT8 event)
 {
     BOOLEAN send_to_nfcc = FALSE;
 
-    NCI_TRACE_DEBUG1 ("nci_brcm_power_mode_execute() event = %d", event);
+    NCI_TRACE_DEBUG1 ("nci_brcm_power_mode_execute () event = %d", event);
 
     if (nci_brcm_cb.power_mode == NCI_BRCM_POWER_MODE_FULL)
     {
-        if (nci_brcm_cb.snooze_mode_enabled)
+        if (nci_brcm_cb.snooze_mode != NFC_LP_SNOOZE_MODE_NONE)
         {
             /* if any transport activity */
             if (  (event == NCI_BRCM_LP_TX_DATA_EVT)
@@ -384,8 +309,8 @@ static BOOLEAN nci_brcm_power_mode_execute (UINT8 event)
                 }
 
                 /* start or extend idle timer */
-                nci_start_quick_timer (&nci_brcm_cb.lp_timer, 0x00,
-                                       ((UINT32)NCI_LP_IDLE_TIMEOUT)*QUICK_TIMER_TICKS_PER_SEC/1000);
+                ncit_start_quick_timer (&nci_brcm_cb.lp_timer, 0x00,
+                                       ((UINT32) NCI_LP_IDLE_TIMEOUT) * QUICK_TIMER_TICKS_PER_SEC / 1000);
             }
             else if (event == NCI_BRCM_LP_TIMEOUT_EVT)
             {
@@ -405,48 +330,6 @@ static BOOLEAN nci_brcm_power_mode_execute (UINT8 event)
     }
 
     return (send_to_nfcc);
-}
-
-/*******************************************************************************
-**
-** Function         nci_brcm_enable_snooze_mode
-**
-** Description      NFA enabled snooze mode, start driving NFC_WAKE line
-**
-** Returns          void
-**
-*******************************************************************************/
-static void nci_brcm_enable_snooze_mode (UINT8 nfc_wake_active_mode)
-{
-    NCI_TRACE_DEBUG1 ("nci_brcm_enable_snooze_mode (): nfc_wake_active_mode=%d", nfc_wake_active_mode);
-
-    nci_brcm_cb.snooze_mode_enabled  = TRUE;
-    nci_brcm_cb.nfc_wake_active_mode = nfc_wake_active_mode;
-
-    nci_brcm_set_nfc_wake (NCI_ASSERT_NFC_WAKE);
-
-    /* start idle timer */
-    nci_start_quick_timer (&nci_brcm_cb.lp_timer, 0x00,
-                           ((UINT32)NCI_LP_IDLE_TIMEOUT)*QUICK_TIMER_TICKS_PER_SEC/1000);
-}
-
-/*******************************************************************************
-**
-** Function         nci_brcm_disable_snooze_mode
-**
-** Description      NFA disabled snooze mode, stop driving NFC_WAKE line
-**
-** Returns          void
-**
-*******************************************************************************/
-static void nci_brcm_disable_snooze_mode (void)
-{
-    NCI_TRACE_DEBUG0 ("nci_brcm_disable_snooze_mode ()");
-
-    nci_brcm_cb.snooze_mode_enabled = FALSE;
-
-    nci_brcm_set_nfc_wake (NCI_ASSERT_NFC_WAKE);
-    nci_stop_quick_timer (&nci_brcm_cb.lp_timer);
 }
 
 /*******************************************************************************
@@ -486,7 +369,7 @@ static BOOLEAN nci_brcm_tx_nci_hcit (BT_HDR *p_msg)
         p_msg->offset--;
         p_msg->len++;
 
-        p = (UINT8 *)(p_msg + 1) + p_msg->offset;
+        p  = (UINT8 *) (p_msg + 1) + p_msg->offset;
         *p = HCIT_TYPE_NFC;
     }
     else
@@ -503,9 +386,7 @@ static BOOLEAN nci_brcm_tx_nci_hcit (BT_HDR *p_msg)
 **
 ** Function         nci_brcm_proc_rx_nci_msg
 **
-** Description      NFCC sends NCI message to DH.
-**                  Notify command complete if initializing NFCC
-**                  Processing NTF for CE low power mode
+** Description      NFCC sends NCI message to DH while initializing NFCC
 **
 ** Returns          TRUE, if NFC task need to receive NCI message
 **
@@ -515,15 +396,34 @@ static BOOLEAN nci_brcm_proc_rx_nci_msg (BT_HDR *p_msg)
     UINT8 *p;
     UINT8 mt, pbf, gid, op_code;
     UINT8 reset_reason, reset_type;
-    UINT32 brcm_hw_id;
-    tNFC_NCI_MSG  *p_nci_msg = (tNFC_NCI_MSG *)p_msg;
-    tNFC_VS_CBACK *p_cback = p_nci_msg->p_cback;
+    tNFC_VS_CBACK *p_cback   = NULL;
+    UINT8   *p_old, old_gid, old_oid, old_mt;
 
-    p = (UINT8 *)(p_msg + 1) + p_msg->offset;
+    p = (UINT8 *) (p_msg + 1) + p_msg->offset;
 
     NFC_TRACE_DEBUG3 ("nci_brcm_proc_rx_nci_msg 0x%02x %02x, init sta:%d", *p, *(p + 1), nci_brcm_cb.initializing_state);
     NCI_MSG_PRS_HDR0 (p, mt, pbf, gid);
     NCI_MSG_PRS_HDR1 (p, op_code);
+
+    /* check if waiting for this response */
+    if (  (nci_brcm_cb.nci_wait_rsp == NCI_WAIT_RSP_CMD)
+        ||(nci_brcm_cb.nci_wait_rsp == NCI_WAIT_RSP_VSC)  )
+    {
+        if (mt == NCI_MT_RSP)
+        {
+            p_old   = nci_brcm_cb.last_hdr;
+            NCI_MSG_PRS_HDR0(p_old, old_mt, pbf, old_gid);
+            old_oid = ((*p_old) & NCI_OID_MASK);
+            /* make sure this is the RSP we are waiting for before updating the command window */
+            if ((old_gid == gid) && (old_oid == op_code))
+            {
+                nci_brcm_cb.nci_wait_rsp = NCI_WAIT_RSP_NONE;
+                p_cback                  = nci_brcm_cb.p_vsc_cback;
+                nci_brcm_cb.p_vsc_cback  = NULL;
+                ncit_stop_quick_timer (&nci_brcm_cb.nci_wait_rsp_timer);
+            }
+        }
+    }
 
     /* if initializing BRCM NFCC */
     if (nci_brcm_cb.initializing_state != NCI_BRCM_INIT_STATE_IDLE)
@@ -534,7 +434,7 @@ static BOOLEAN nci_brcm_proc_rx_nci_msg (BT_HDR *p_msg)
             {
                 if (mt == NCI_MT_RSP)
                 {
-                    NFC_BRCM_NCI_STATE(NCI_BRCM_INIT_STATE_W4_BUILD_INFO);
+                    NFC_BRCM_NCI_STATE (NCI_BRCM_INIT_STATE_W4_BUILD_INFO);
 
                     /* get build information to find out HW */
                     nci_brcm_send_nci_cmd (nci_brcm_prop_build_info_cmd, NCI_MSG_HDR_SIZE, NULL);
@@ -543,9 +443,9 @@ static BOOLEAN nci_brcm_proc_rx_nci_msg (BT_HDR *p_msg)
                 {
                     /* Call reset notification callback */
                     p++;                                /* Skip over param len */
-                    STREAM_TO_UINT8(reset_reason, p);
-                    STREAM_TO_UINT8(reset_type, p);
-                    nfc_brcm_prm_spd_reset_ntf(reset_reason, reset_type);
+                    STREAM_TO_UINT8 (reset_reason, p);
+                    STREAM_TO_UINT8 (reset_type, p);
+                    nfc_brcm_prm_spd_reset_ntf (reset_reason, reset_type);
                 }
             }
         }
@@ -574,23 +474,32 @@ static BOOLEAN nci_brcm_proc_rx_nci_msg (BT_HDR *p_msg)
             {
                 p += NCI_BUILD_INFO_OFFSET_HWID;
 
-                STREAM_TO_UINT32 (brcm_hw_id, p);
+                STREAM_TO_UINT32 (nci_brcm_cb.brcm_hw_id, p);
 
-                NFC_BRCM_NCI_STATE(NCI_BRCM_INIT_STATE_W4_APP_COMPLETE);
+                NFC_BRCM_NCI_STATE (NCI_BRCM_INIT_STATE_W4_PATCH_INFO);
+
+                nci_brcm_send_nci_cmd (nci_brcm_prop_get_patch_version_cmd, NCI_MSG_HDR_SIZE, NULL);
+            }
+            else if (  (op_code == NFC_VS_GET_PATCH_VERSION_EVT)
+                     &&(nci_brcm_cb.initializing_state == NCI_BRCM_INIT_STATE_W4_PATCH_INFO)  )
+            {
+                p += NCI_PATCH_INFO_OFFSET_NVMTYPE;
+
+                NFC_BRCM_NCI_STATE (NCI_BRCM_INIT_STATE_W4_APP_COMPLETE);
 
                 /* let application update baudrate or download patch */
-                nci_brcm_cb.p_dev_init_cback (brcm_hw_id);
+                nci_brcm_cb.p_dev_init_cback (nci_brcm_cb.brcm_hw_id, *p);
             }
             else if (p_cback)
             {
-                (*p_cback) ((tNFC_VS_EVT)(op_code),
-                                           p_msg->len, (UINT8 *)(p_msg + 1) + p_msg->offset);
+                (*p_cback) ((tNFC_VS_EVT) (op_code),
+                                           p_msg->len, (UINT8 *) (p_msg + 1) + p_msg->offset);
             }
             else if (op_code == NFC_VS_SEC_PATCH_AUTH_EVT)
             {
                 NFC_TRACE_DEBUG0 ("signature!!");
-                nfc_brcm_prm_nci_command_complete_cback ((tNFC_VS_EVT)(op_code),
-                                           p_msg->len, (UINT8 *)(p_msg + 1) + p_msg->offset);
+                nfc_brcm_prm_nci_command_complete_cback ((tNFC_VS_EVT) (op_code),
+                                           p_msg->len, (UINT8 *) (p_msg + 1) + p_msg->offset);
             }
         }
 
@@ -600,7 +509,7 @@ static BOOLEAN nci_brcm_proc_rx_nci_msg (BT_HDR *p_msg)
 
     if (nci_brcm_cb.power_mode == NCI_BRCM_POWER_MODE_FULL)
     {
-        if (nci_brcm_cb.snooze_mode_enabled)
+        if (nci_brcm_cb.snooze_mode != NFC_LP_SNOOZE_MODE_NONE)
         {
             /* extend idle timer */
             nci_brcm_power_mode_execute (NCI_BRCM_LP_RX_DATA_EVT);
@@ -619,90 +528,46 @@ static BOOLEAN nci_brcm_proc_rx_nci_msg (BT_HDR *p_msg)
 
 /*******************************************************************************
 **
-** Function         nci_brcm_proc_rx_packet_type
+** Function         nci_brcm_proc_bt_msg
 **
-** Description      Processing packet type, NCI message or BT message
+** Description      Received BT message from NFCC
 **
-** Returns          TRUE, if more data to read
-**
-*******************************************************************************/
-static BOOLEAN nci_brcm_proc_rx_packet_type (UINT8 *p_byte)
-{
-    /* if this is NCI message */
-    if (*p_byte == HCIT_TYPE_NFC)
-    {
-        /* let NCI task process NCI message */
-        nci_cb.rcv_state = NCI_RCV_IDLE_ST;
-    }
-    /* if this is BT message */
-    else if (*p_byte == HCIT_TYPE_EVENT)
-    {
-        /* let NCI task use BRCM specific to read BT message */
-        nci_cb.rcv_state = NCI_RCV_VS_MSG_ST;
-    }
-    else
-    {
-        NCI_TRACE_ERROR1 ("Unknown packet type drop this byte 0x%x", *p_byte);
-        return (TRUE);
-    }
-
-    /* read next byte to replace BRCM specific byte */
-    if (USERIAL_Read (USERIAL_NFC_PORT, (UINT8 *)p_byte, 1) == 0)
-    {
-        /* no more data, wait for next NCI_TASK_EVT_DATA_RDY */
-        return (FALSE);
-    }
-    else
-    {
-        /* continue to process received byte */
-        return (TRUE);
-    }
-}
-
-/*******************************************************************************
-**
-** Function         nci_brcm_rx_bt_msg
-**
-** Description      NFCC sends BT message to DH.
-**                  Reassemble BT message
 **                  Notify command complete if initializing NFCC
 **                  Forward BT message to NFC task
 **
-** Returns          TRUE, if NFCC can receive NCI message
+** Returns          void
 **
 *******************************************************************************/
-static void nci_brcm_rx_bt_msg (UINT8 *p_byte)
+static void nci_brcm_proc_bt_msg (void)
 {
     tNFC_BTVSC_CPLT vcs_cplt_params;
     UINT8           *p;
     BT_HDR          *p_msg;
     UINT16          opcode, old_opcode;
-    tNFC_BTVSC_CPLT_CBACK *p_cback = nci_cb.p_last_cback;
+    tNFC_BTVSC_CPLT_CBACK *p_cback = NULL;
 
-    /* read BT message */
-    if (nci_brcm_receive_msg (&nci_brcm_cb, *p_byte))
-    {
         /* if complete BT message is received successfully */
         if (nci_brcm_cb.p_rcv_msg)
         {
             p_msg   = nci_brcm_cb.p_rcv_msg;
-            NFC_TRACE_DEBUG1 ("nci_brcm_rx_bt_msg GOT an BT msgs init_sta:%d", nci_brcm_cb.initializing_state);
-            NFC_TRACE_DEBUG2 ("event: 0x%x, last_ls:0x%x", p_msg->event, nci_cb.nci_last_ls);
+            NFC_TRACE_DEBUG1 ("nci_brcm_proc_bt_msg GOT an BT msgs init_sta:%d", nci_brcm_cb.initializing_state);
+            NFC_TRACE_DEBUG2 ("event: 0x%x, wait_rsp:0x%x", p_msg->event, nci_brcm_cb.nci_wait_rsp);
             /* increase the cmd window here */
-            if (p_msg->event == BT_EVT_TO_NFC_NCI_VS && nci_cb.nci_last_ls == NCI_MSGS_LS_VSC)
+            if (p_msg->event == BT_EVT_TO_NFC_NCI_VS && nci_brcm_cb.nci_wait_rsp == NCI_WAIT_RSP_PROP)
             {
-                p = (UINT8 *)(p_msg + 1) + p_msg->offset;
+                p = (UINT8 *) (p_msg + 1) + p_msg->offset;
                 if (*p == HCI_COMMAND_COMPLETE_EVT)
                 {
                     p  += 3; /* code, len, cmd window */
                     STREAM_TO_UINT16 (opcode, p);
-                    p   = nci_cb.last_hdr;
+                    p   = nci_brcm_cb.last_hdr;
                     STREAM_TO_UINT16 (old_opcode, p);
                     if (opcode == old_opcode)
                     {
-                        if (p_msg->offset >= NFC_RECEIVE_MSGS_OFFSET)
-                            ((tNFC_NCI_MSG *)p_msg)->p_cback  = nci_cb.p_last_cback;
-                        nci_update_window(TRUE);
+                        nci_brcm_cb.nci_wait_rsp = NCI_WAIT_RSP_NONE;
+                        p_cback                  = nci_brcm_cb.p_vsc_cback;
+                        nci_brcm_cb.p_vsc_cback  = NULL;
+                        ncit_stop_quick_timer (&nci_brcm_cb.nci_wait_rsp_timer);
                     }
                 }
             }
@@ -711,7 +576,7 @@ static void nci_brcm_rx_bt_msg (UINT8 *p_byte)
             if (nci_brcm_cb.initializing_state == NCI_BRCM_INIT_STATE_W4_AUTOBAUD)
             {
                 /* stop timer for auto-baud */
-                nci_stop_quick_timer (&nci_brcm_cb.auto_baud_timer);
+                ncit_stop_quick_timer (&nci_brcm_cb.auto_baud_timer);
 
                 /* NFCC auto-baud detection is done. */
 
@@ -734,7 +599,7 @@ static void nci_brcm_rx_bt_msg (UINT8 *p_byte)
             else if (nci_brcm_cb.initializing_state == NCI_BRCM_INIT_STATE_W4_APP_COMPLETE)
             {
                 /* this is command complete event for baud rate update or download patch */
-                p = (UINT8 *)(p_msg + 1) + p_msg->offset;
+                p = (UINT8 *) (p_msg + 1) + p_msg->offset;
 
                 p += 1;    /* skip opcode */
                 STREAM_TO_UINT8  (vcs_cplt_params.param_len, p);
@@ -747,7 +612,7 @@ static void nci_brcm_rx_bt_msg (UINT8 *p_byte)
 
                 if (p_cback)
                 {
-                    nci_cb.p_last_cback = NULL;
+                    nci_brcm_cb.p_vsc_cback = NULL;
                     (*p_cback) (&vcs_cplt_params);
                 }
 
@@ -762,53 +627,48 @@ static void nci_brcm_rx_bt_msg (UINT8 *p_byte)
             nci_brcm_cb.p_rcv_msg = NULL;
         }
 
-        /* start from checking BRCM packet type */
-        nci_cb.rcv_state = NCI_RCV_VS_PREAMBLE_ST;
+}
+
+/*******************************************************************************
+**
+** Function         nci_brcm_rcv_msg_cback
+**
+** Description      The callback function to send the message received from NFCC
+**                  to NFC task for processing
+**
+** Returns          nothing
+**
+*******************************************************************************/
+void nci_brcm_rcv_msg_cback (BT_HDR *p_msg)
+{
+    /* if this is not vendor specific transport message */
+    if (nci_brcm_proc_rx_nci_msg (p_msg))
+    {
+        /* Send message to NFC_TASK for processing by the stack */
+        GKI_send_msg (NFC_TASK, NFC_MBOX_ID, p_msg);
+    }
+    else
+    {
+        /* Message has been processed by the vs_evt_hdlr */
+        GKI_freebuf(p_msg);
     }
 }
 
 /*******************************************************************************
 **
-** Function         nci_brcm_tx_bt_hcit
+** Function         nci_brcm_vs_init_done
 **
-** Description      save bt msg info in control block
-**                  Add packet type (HCIT_TYPE_COMMAND)
+** Description      The function sets ncit_cb.p_vs_rcv_cback back to NULL
+**                  can calls ncit_task_vs_init_done() to let NCIT know that the init
+**                  process is complete
 **
-** Returns          TRUE, if NFCC can receive NCI message
+** Returns          nothing
 **
 *******************************************************************************/
-static BOOLEAN nci_brcm_tx_bt_hcit (BT_HDR *p_msg)
+void nci_brcm_vs_init_done (void)
 {
-    UINT8   *p;
-    BOOLEAN send_to_nfcc = TRUE;
-    UINT8   hcit;
-
-#if (BT_TRACE_PROTOCOL == TRUE)
-    DispHciCmd (p_msg);
-#endif
-    /* save the message header to double check the response */
-    nci_cb.nci_last_ls  = (UINT8)(p_msg->layer_specific);
-    p                   = (UINT8 *)(p_msg + 1) + p_msg->offset;
-    memcpy(nci_cb.last_hdr, p, NCI_SAVED_HDR_SIZE);
-    nci_cb.p_last_cback = ((BT_HDR_BTVSC *)p_msg)->p_cback;
-
-    if (p_msg->offset > 0)
-    {
-        /* add packet type for BT message */
-        p_msg->offset--;
-        p_msg->len++;
-
-        p = (UINT8 *)(p_msg + 1) + p_msg->offset;
-        *p = HCIT_TYPE_COMMAND;
-    }
-    else
-    {
-        NCI_TRACE_ERROR0 ("nci_brcm_tx_bt_hcit () : No space for packet type");
-        hcit = HCIT_TYPE_COMMAND;
-        USERIAL_Write (USERIAL_NFC_PORT, &hcit, 1);
-    }
-
-    return (send_to_nfcc);
+    /* use nci_brcm_rcv_msg_cback() to process NCI VS RSP/NTF */
+    ncit_task_vs_init_done ();
 }
 
 /*******************************************************************************
@@ -821,88 +681,50 @@ static BOOLEAN nci_brcm_tx_bt_hcit (BT_HDR *p_msg)
 ** Returns          TRUE, if need to process after returning this function
 **
 *******************************************************************************/
-static BOOLEAN nci_brcm_evt_hdlr (tNCI_INT_EVT event, void *p_data)
+static BOOLEAN nci_brcm_evt_hdlr (tNCIT_INT_EVT event, void *p_data)
 {
-    BOOLEAN continue_to_proc = TRUE, free_buf = TRUE;
+    BOOLEAN continue_to_proc = TRUE;
     BT_HDR  *p_msg;
 
 #if (BT_TRACE_VERBOSE == TRUE)
-    NCI_TRACE_EVENT2("nci_brcm_evt_hdlr ():%s(0x%04x)", nci_brcm_evt_2_str(event), event);
+    NCI_TRACE_EVENT2 ("nci_brcm_evt_hdlr ():%s (0x%04x)", nci_brcm_evt_2_str (event), event);
 #else
-    NCI_TRACE_EVENT1("nci_brcm_evt_hdlr ():0x%04x", event);
+    NCI_TRACE_EVENT1 ("nci_brcm_evt_hdlr ():0x%04x", event);
 #endif
 
     switch (event)
     {
-    case NCI_INT_CHECK_STATE_EVT:   /* Checks if the NFCC can accept messages     */
+    case NCIT_INT_CHECK_NFCC_STATE_EVT:   /* Checks if the NFCC can accept messages     */
         continue_to_proc = nci_brcm_power_mode_execute (NCI_BRCM_LP_TX_DATA_EVT);
         break;
 
-    case NCI_INT_SEND_NCI_MSG_EVT:  /* NFC task sends NCI command to NFCC */
-        continue_to_proc = nci_brcm_tx_nci_hcit ((BT_HDR*)p_data);
+    case NCIT_INT_SEND_NCI_MSG_EVT:  /* NFC task sends NCI command to NFCC */
+        continue_to_proc = nci_brcm_tx_nci_hcit ((BT_HDR*) p_data);
         break;
 
-    case NCI_INT_SEND_VS_CMD_EVT:
-        /* the command is dispatched from command queue to be sent to transport */
-        continue_to_proc = nci_brcm_tx_bt_hcit ((BT_HDR*)p_data);
-        break;
-
-    case NCI_INT_DATA_RDY_EVT:      /* transport get data from NFCC */
-
-        if (nci_cb.rcv_state == NCI_RCV_VS_PREAMBLE_ST)
+    case NCIT_INT_DATA_RDY_EVT:      /* transport get data from NFCC */
+        if (nci_brcm_receive_msg (&nci_brcm_cb, *(UINT8 *)p_data))
         {
-            continue_to_proc = nci_brcm_proc_rx_packet_type ((UINT8 *)p_data);
-        }
-        else if (nci_cb.rcv_state == NCI_RCV_VS_MSG_ST)
-        {
-            /* read BT message */
-            nci_brcm_rx_bt_msg ((UINT8 *)p_data);
+            /* received BT message */
+            nci_brcm_proc_bt_msg ();
         }
         break;
 
-    case NCI_INT_RX_NCI_MSG_EVT:    /* received complete NCI message from NFCC */
+    case NCIT_INT_VS_MSG_EVT:    /* BRCM NCI APIs are called and events are posted to process */
 
-        p_msg = (BT_HDR*)p_data;
-        continue_to_proc = nci_brcm_proc_rx_nci_msg (p_msg);
+        p_msg = (BT_HDR*) p_data;
+
+        if (nci_brcm_cb.p_vs_brcm_evt_hdlr)
+        {
+            (*nci_brcm_cb.p_vs_brcm_evt_hdlr) (p_msg);
+        }
+        GKI_freebuf (p_msg);
         break;
 
-    case NCI_INT_VS_MSG_EVT:    /* NFC task sends BT message to NFCC or called BRCM NCI APIs */
+    case NCIT_INT_VS_INIT_EVT:   /* NFCC is turned on */
 
-        p_msg = (BT_HDR*)p_data;
-
-        switch (p_msg->event & BT_SUB_EVT_MASK)
-        {
-        case NCI_BRCM_HCI_CMD_EVT:
-            /* put this message in NCI command queue */
-            p_msg->event    = NCI_INT_SEND_VS_CMD_EVT;
-            nci_send_cmd(p_msg);
-            /* do not free buffer, it will be freed after processing */
-            free_buf = FALSE;
-            break;
-
-        case NCI_BRCM_API_ENABLE_SNOOZE_EVT:
-            nci_brcm_enable_snooze_mode (((tNCI_BRCM_SNOOZE_MSG *)p_data)->nfc_wake_active_mode);
-            break;
-
-        case NCI_BRCM_API_DISABLE_SNOOZE_EVT:
-            nci_brcm_disable_snooze_mode ();
-            break;
-
-        default:
-            if (nci_brcm_cb.p_vs_brcm_evt_hdlr)
-            {
-                (*nci_brcm_cb.p_vs_brcm_evt_hdlr) (p_msg);
-            }
-            break;
-        }
-
-        if (free_buf)
-        {
-            GKI_freebuf (p_msg);
-        }
-        break;
-
-    case NCI_INT_VS_INIT_EVT:   /* NFCC is turned on */
+        /* process received message before posting to NFC task */
+        ncit_cb.p_vs_rcv_cback = nci_brcm_rcv_msg_cback;
 
         /* if application registered callback for device initialization */
         if (nci_brcm_cb.p_dev_init_cback)
@@ -925,30 +747,27 @@ static BOOLEAN nci_brcm_evt_hdlr (tNCI_INT_EVT event, void *p_data)
         else
         {
             /* notify complete of BRCM initialization */
-            nci_task_vs_init_done ();
+            nci_brcm_vs_init_done ();
         }
         break;
 
-    case NCI_INT_TERMINATE_EVT: /* NFCC is going to shut down */
+    case NCIT_INT_TERMINATE_EVT: /* NFCC is going to shut down */
 
+        /* reset low power mode variables */
         if (  (nci_brcm_cb.power_mode == NCI_BRCM_POWER_MODE_FULL)
-            &&(nci_brcm_cb.snooze_mode_enabled)  )
+            &&(nci_brcm_cb.snooze_mode != NFC_LP_SNOOZE_MODE_NONE)  )
         {
             nci_brcm_set_nfc_wake (NCI_ASSERT_NFC_WAKE);
         }
 
-        nci_brcm_cb.power_mode          = NCI_BRCM_POWER_MODE_FULL;
-        nci_brcm_cb.snooze_mode_enabled = FALSE;
+        nci_brcm_cb.power_mode  = NCI_BRCM_POWER_MODE_FULL;
+        nci_brcm_cb.snooze_mode = NFC_LP_SNOOZE_MODE_NONE;
 
-        nci_stop_quick_timer (&nci_brcm_cb.lp_timer);
+        /* Stop command-pending timer */
+        ncit_stop_quick_timer (&nci_brcm_cb.nci_wait_rsp_timer);
+        ncit_stop_quick_timer (&nci_brcm_cb.lp_timer);
 
-#if (defined(NFC_RESTORE_BAUD_ON_SHUTDOWN) && (NFC_RESTORE_BAUD_ON_SHUTDOWN == TRUE))
-        if (nci_brcm_cb.userial_baud_rate != NFC_DEFAULT_BAUD)
-        {
-            NCI_BrcmSetBaudRate (NFC_DEFAULT_BAUD, NULL);
-            GKI_delay (100);
-        }
-#endif
+        nci_brcm_reset_baud_on_shutdown ();
         break;
 
     default:
@@ -957,6 +776,29 @@ static BOOLEAN nci_brcm_evt_hdlr (tNCI_INT_EVT event, void *p_data)
 
     return (continue_to_proc);
 }
+
+/*******************************************************************************
+**
+** Function         nci_brcm_cmd_timeout_cback
+**
+** Description      callback function for timeout
+**
+** Returns          void
+**
+*******************************************************************************/
+void nci_brcm_cmd_timeout_cback (void *p_tle)
+{
+    TIMER_LIST_ENT  *p_tlent = (TIMER_LIST_ENT *)p_tle;
+
+    NCI_TRACE_DEBUG0 ("nci_brcm_cmd_timeout_cback ()");
+
+    if (p_tlent->event == NCIT_TTYPE_NCI_WAIT_RSP)
+    {
+        /* report an error */
+        ncit_send_error (NFC_ERR_CMD_TIMEOUT);
+    }
+}
+
 
 /*******************************************************************************
 **
@@ -973,16 +815,13 @@ void nci_brcm_init (tBRCM_DEV_INIT_CONFIG *p_dev_init_config,
 {
     NCI_TRACE_DEBUG0 ("nci_brcm_init ()");
 
-    nci_cb.p_vs_evt_hdlr  = nci_brcm_evt_hdlr;
-    nci_cb.init_rcv_state = NCI_RCV_VS_PREAMBLE_ST; /* to process packet type */
+    ncit_cb.p_vs_evt_hdlr  = nci_brcm_evt_hdlr;
+    ncit_cb.init_rcv_state = NCIT_RCV_PROP_MSG_ST; /* to process packet type */
 
     /* Clear nci brcm control block */
-    memset(&nci_brcm_cb, 0, sizeof(tNCI_BRCM_CB));
+    memset (&nci_brcm_cb, 0, sizeof (tNCI_BRCM_CB));
 
-    nci_brcm_cb.userial_baud_rate = NFC_DEFAULT_BAUD;
     nci_brcm_cb.lp_timer.p_cback  = nci_brcm_lp_timeout_cback;
-
-    nci_brcm_cb.auto_baud_timer.p_cback = nci_brcm_auto_baud_timeout_cback;
 
     nci_brcm_cb.p_dev_init_cback  = p_dev_init_cback;
 
@@ -991,6 +830,8 @@ void nci_brcm_init (tBRCM_DEV_INIT_CONFIG *p_dev_init_config,
         nci_brcm_cb.dev_init_config.flags     = p_dev_init_config->flags;
         nci_brcm_cb.dev_init_config.xtal_freq = p_dev_init_config->xtal_freq;
     }
+    nci_brcm_cb.nci_wait_rsp_tout             = (BRCM_PRM_SPD_TOUT*QUICK_TIMER_TICKS_PER_SEC)/1000;
+    nci_brcm_cb.nci_wait_rsp_timer.p_cback    = nci_brcm_cmd_timeout_cback;
 
     nci_vs_brcm_init ();
 }
@@ -1007,17 +848,40 @@ void nci_brcm_init (tBRCM_DEV_INIT_CONFIG *p_dev_init_config,
 void nci_brcm_send_nci_cmd (const UINT8 *p_data, UINT16 len, tNFC_VS_CBACK *p_cback)
 {
     BT_HDR *p_buf;
-    NCI_TRACE_DEBUG0 ("nci_brcm_send_nci_cmd ()");
-    if ((p_buf = (BT_HDR *)GKI_getbuf ((UINT16)(BT_HDR_SIZE + NCI_VSC_MSG_HDR_SIZE + len))) != NULL)
+    UINT8  *ps;
+
+    NFC_TRACE_DEBUG1 ("nci_brcm_send_nci_cmd (): nci_wait_rsp = 0x%x", nci_brcm_cb.nci_wait_rsp);
+
+    if (nci_brcm_cb.nci_wait_rsp != NCI_WAIT_RSP_NONE)
     {
+        NFC_TRACE_ERROR0 ("nci_brcm_send_nci_cmd(): no command window");
+        return;
+    }
+
+    if ((p_buf = (BT_HDR *) GKI_getbuf ((UINT16) (BT_HDR_SIZE + NCI_VSC_MSG_HDR_SIZE + len))) != NULL)
+    {
+        nci_brcm_cb.nci_wait_rsp = NCI_WAIT_RSP_VSC;
+
         p_buf->offset           = NCI_VSC_MSG_HDR_SIZE;
         p_buf->event            = BT_EVT_TO_NFC_NCI;
-        p_buf->layer_specific   = NCI_MSGS_LS_NCI_VSC;
-        p_buf->len              = len;
-        memcpy ((UINT8*)(p_buf + 1) + p_buf->offset, p_data, len);
-        ((tNFC_NCI_VS_MSG *)p_buf)->p_cback = p_cback;
+        p_buf->len    = len;
 
-        nci_send_cmd (p_buf);
+        memcpy ((UINT8*) (p_buf + 1) + p_buf->offset, p_data, len);
+
+        /* Keep a copy of the command and send to NCI transport */
+
+        /* save the message header to double check the response */
+        ps   = (UINT8 *)(p_buf + 1) + p_buf->offset;
+        memcpy(nci_brcm_cb.last_hdr, ps, NCI_SAVED_HDR_SIZE);
+        memcpy(nci_brcm_cb.last_cmd, ps + NCI_MSG_HDR_SIZE, NFC_SAVED_CMD_SIZE);
+
+        /* save the callback for NCI VSCs */
+        nci_brcm_cb.p_vsc_cback = p_cback;
+
+        ncit_send_cmd (p_buf);
+
+        /* start NFC command-timeout timer */
+        ncit_start_quick_timer (&nci_brcm_cb.nci_wait_rsp_timer, (UINT16)(NCIT_TTYPE_NCI_WAIT_RSP), nci_brcm_cb.nci_wait_rsp_tout);
     }
 }
 
@@ -1033,74 +897,52 @@ void nci_brcm_send_nci_cmd (const UINT8 *p_data, UINT16 len, tNFC_VS_CBACK *p_cb
 void nci_brcm_send_bt_cmd (const UINT8 *p_data, UINT16 len, tNFC_BTVSC_CPLT_CBACK *p_cback)
 {
     BT_HDR *p_buf;
+    UINT8  *p;
 
-    NCI_TRACE_DEBUG0 ("nci_brcm_send_bt_cmd ()");
-    if ((p_buf = (BT_HDR *)GKI_getbuf ((UINT16)(BT_HDR_SIZE + NCI_VSC_MSG_HDR_SIZE + len))) != NULL)
+    NFC_TRACE_DEBUG1 ("nci_brcm_send_bt_cmd (): nci_wait_rsp = 0x%x", nci_brcm_cb.nci_wait_rsp);
+
+    if (nci_brcm_cb.nci_wait_rsp != NCI_WAIT_RSP_NONE)
     {
-        p_buf->offset           = NCI_VSC_MSG_HDR_SIZE;
-        p_buf->event            = NCI_INT_SEND_VS_CMD_EVT;
-        p_buf->layer_specific   = NCI_MSGS_LS_VSC;
-        p_buf->len              = len;
-        memcpy ((UINT8*)(p_buf + 1) + p_buf->offset, p_data, len);
-        ((BT_HDR_BTVSC *)p_buf)->p_cback = p_cback;
+        NFC_TRACE_ERROR0 ("nci_brcm_send_bt_cmd(): no command window");
+        return;
+    }
 
-        nci_send_cmd (p_buf);
+    if ((p_buf = (BT_HDR *) GKI_getbuf ((UINT16) (BT_HDR_SIZE + NCI_VSC_MSG_HDR_SIZE + len))) != NULL)
+    {
+        nci_brcm_cb.nci_wait_rsp = NCI_WAIT_RSP_PROP;
+
+        p_buf->offset = NCI_VSC_MSG_HDR_SIZE;
+        p_buf->len    = len;
+
+        memcpy ((UINT8*) (p_buf + 1) + p_buf->offset, p_data, len);
+
+#if (BT_TRACE_PROTOCOL == TRUE)
+        DispHciCmd (p_buf);
+#endif
+
+        /* save the message header to double check the response */
+        p = (UINT8 *)(p_buf + 1) + p_buf->offset;
+        memcpy(nci_brcm_cb.last_hdr, p, NCI_SAVED_HDR_SIZE);
+
+        /* save the callback for NCI VSCs)  */
+        nci_brcm_cb.p_vsc_cback = p_cback;
+
+        /* add packet type for BT message */
+        p_buf->offset--;
+        p_buf->len++;
+
+        p  = (UINT8 *) (p_buf + 1) + p_buf->offset;
+        *p = HCIT_TYPE_COMMAND;
+
+        USERIAL_Write (USERIAL_NFC_PORT, p, p_buf->len);
+
+        GKI_freebuf (p_buf);
+
+        /* start NFC command-timeout timer */
+        ncit_start_quick_timer (&nci_brcm_cb.nci_wait_rsp_timer, (UINT16)(NCIT_TTYPE_NCI_WAIT_RSP), nci_brcm_cb.nci_wait_rsp_tout);
     }
 }
 
-/*******************************************************************************
-**
-** Function         nci_brcm_update_baudrate_cback
-**
-** Description      This is baud rate update complete callback.
-**
-** Returns          void
-**
-*******************************************************************************/
-static void nci_brcm_update_baudrate_cback (tNFC_BTVSC_CPLT *pData)
-{
-    tNFC_STATUS status = pData->p_param_buf[0];
-
-    /* if it is completed */
-    if (status == HCI_SUCCESS)
-    {
-        nci_brcm_set_local_baud_rate (nci_brcm_cb.userial_baud_rate);
-    }
-
-    if (nci_brcm_cb.p_update_baud_cback)
-    {
-        (nci_brcm_cb.p_update_baud_cback) (status);
-        nci_brcm_cb.p_update_baud_cback = NULL;
-    }
-}
-
-/*******************************************************************************
-**
-** Function         NCI_BrcmSetBaudRate
-**
-** Description      Set UART baud rate
-**
-** Returns          void
-**
-*******************************************************************************/
-void NCI_BrcmSetBaudRate (UINT8             userial_baud_rate,
-                          tNFC_STATUS_CBACK *p_update_baud_cback)
-{
-    UINT8 *p = nci_brcm_set_baudrate_cmd + NCI_BRCM_OFFSET_BAUDRATE;
-    UINT32 baud;
-
-    NCI_TRACE_DEBUG1 ("NCI_BrcmSetBaudRate (): userial_baud_rate=%d", userial_baud_rate);
-
-    baud = USERIAL_GetLineSpeed (userial_baud_rate);
-    UINT32_TO_STREAM (p, baud);
-
-    nci_brcm_cb.userial_baud_rate   = userial_baud_rate;
-    nci_brcm_cb.p_update_baud_cback = p_update_baud_cback;
-
-    nci_brcm_send_bt_cmd (nci_brcm_set_baudrate_cmd,
-                          BRCM_BT_HCI_CMD_HDR_SIZE + HCI_BRCM_UPDATE_BAUD_RATE_UNENCODED_LENGTH,
-                          nci_brcm_update_baudrate_cback);
-}
 
 /*******************************************************************************
 **
@@ -1117,93 +959,111 @@ void NCI_BrcmDevInitDone (void)
 
     if (nci_brcm_cb.initializing_state == NCI_BRCM_INIT_STATE_W4_APP_COMPLETE)
     {
-        NFC_BRCM_NCI_STATE(NCI_BRCM_INIT_STATE_IDLE);
-        nci_set_cmd_timeout_val (NFC_CMD_CMPL_TIMEOUT * QUICK_TIMER_TICKS_PER_SEC);
-        nci_cb.nci_cmd_cmpl_timer.p_cback   = nci_task_timeout_cback;
+        NFC_BRCM_NCI_STATE (NCI_BRCM_INIT_STATE_IDLE);
+        nci_brcm_cb.nci_wait_rsp_timer.p_cback   = nci_brcm_cmd_timeout_cback;
 
-        nci_task_vs_init_done ();
+        nci_brcm_vs_init_done ();
     }
 }
 
 /*******************************************************************************
 **
-** Function         NCI_BrcmEnableSnoozeMode
+** Function         nci_brcm_set_snooze_mode_cback
 **
-** Description      Notify NCI transport that snooze mode has been enabled.
+** Description      This is baud rate update complete callback.
 **
-** Returns          tNFC_STATUS
+** Returns          void
 **
 *******************************************************************************/
-tNFC_STATUS NCI_BrcmEnableSnoozeMode (UINT8 nfc_wake_active_mode)
+static void nci_brcm_set_snooze_mode_cback (tNFC_BTVSC_CPLT *pData)
 {
-    tNCI_BRCM_SNOOZE_MSG *p_msg;
+    tNFC_STATUS status = pData->p_param_buf[0];
+    tNFC_STATUS_CBACK *p_cback;
 
-    NCI_TRACE_API1 ("NCI_BrcmEnableSnoozeMode (): nfc_wake_active_mode = %d", nfc_wake_active_mode);
-
-    if (nci_brcm_cb.power_mode == NCI_BRCM_POWER_MODE_FULL)
+    /* if it is completed */
+    if (status == HCI_SUCCESS)
     {
-        p_msg = (tNCI_BRCM_SNOOZE_MSG *)GKI_getbuf (sizeof (tNCI_BRCM_SNOOZE_MSG));
 
-        if (p_msg)
+        nci_brcm_set_nfc_wake (NCI_ASSERT_NFC_WAKE);
+
+        if ( nci_brcm_cb.snooze_mode != NFC_LP_SNOOZE_MODE_NONE)
         {
-            p_msg->bt_hdr.event = (BT_EVT_TO_NFC_NCI_VS | NCI_BRCM_API_ENABLE_SNOOZE_EVT);
-            p_msg->nfc_wake_active_mode = nfc_wake_active_mode;
-
-            GKI_send_msg (NCI_TASK, NCI_TASK_MBOX, p_msg);
-
-            return (NFC_STATUS_OK);
+            /* start idle timer */
+            ncit_start_quick_timer (&nci_brcm_cb.lp_timer, 0x00,
+                                   ((UINT32) NCI_LP_IDLE_TIMEOUT) * QUICK_TIMER_TICKS_PER_SEC / 1000);
         }
         else
         {
-            NCI_TRACE_ERROR0 ("NCI_BrcmEnableSnoozeMode (): Out of buffer");
-            return (NFC_STATUS_FAILED);
+            ncit_stop_quick_timer (&nci_brcm_cb.lp_timer);
         }
     }
-    else
+
+    if (nci_brcm_cb.p_prop_cback)
     {
-        NCI_TRACE_ERROR0 ("NCI_BrcmEnableSnoozeMode (): Not full power mode");
-        return (NFC_STATUS_FAILED);
+        p_cback = nci_brcm_cb.p_prop_cback;
+        nci_brcm_cb.p_prop_cback = NULL;
+        (p_cback) (status);
     }
 }
 
 /*******************************************************************************
 **
-** Function         NCI_BrcmDisableSnoozeMode
+** Function         NCI_BrcmSetSnoozeMode
 **
-** Description      Notify NCI transport that snooze mode has been disabled.
+** Description      Set snooze mode
+**                  snooze_mode
+**                      NFC_LP_SNOOZE_MODE_NONE - Snooze mode disabled
+**                      NFC_LP_SNOOZE_MODE_UART - Snooze mode for UART
+**                      NFC_LP_SNOOZE_MODE_SPI_I2C - Snooze mode for SPI/I2C
+**
+**                  idle_threshold_dh/idle_threshold_nfcc
+**                      Idle Threshold Host in 100ms unit
+**
+**                  nfc_wake_active_mode/dh_wake_active_mode
+**                      NFC_LP_ACTIVE_LOW - high to low voltage is asserting
+**                      NFC_LP_ACTIVE_HIGH - low to high voltage is asserting
+**
+**                  p_snooze_cback
+**                      Notify status of operation
 **
 ** Returns          tNFC_STATUS
 **
 *******************************************************************************/
-tNFC_STATUS NCI_BrcmDisableSnoozeMode (void)
+tNFC_STATUS NCI_BrcmSetSnoozeMode (UINT8 snooze_mode,
+                                   UINT8 idle_threshold_dh,
+                                   UINT8 idle_threshold_nfcc,
+                                   UINT8 nfc_wake_active_mode,
+                                   UINT8 dh_wake_active_mode,
+                                   tNFC_STATUS_CBACK *p_snooze_cback)
 {
-    BT_HDR *p_msg;
+    UINT8 cmd[BRCM_BT_HCI_CMD_HDR_SIZE + HCI_BRCM_WRITE_SLEEP_MODE_LENGTH];
+    UINT8 *p;
 
-    NCI_TRACE_API0 ("NCI_BrcmDisableSnoozeMode ()");
+    NCI_TRACE_API1 ("NCI_BrcmSetSnoozeMode (): snooze_mode = %d", snooze_mode);
 
-    if (nci_brcm_cb.power_mode == NCI_BRCM_POWER_MODE_FULL)
-    {
-        p_msg = (BT_HDR *)GKI_getbuf (sizeof (BT_HDR));
+    nci_brcm_cb.snooze_mode          = snooze_mode;
+    nci_brcm_cb.nfc_wake_active_mode = nfc_wake_active_mode;
+    nci_brcm_cb.p_prop_cback         = p_snooze_cback;
 
-        if (p_msg)
-        {
-            p_msg->event = (BT_EVT_TO_NFC_NCI_VS | NCI_BRCM_API_DISABLE_SNOOZE_EVT);
+    p = cmd;
 
-            GKI_send_msg (NCI_TASK, NCI_TASK_MBOX, p_msg);
+    /* Add the HCI command */
+    UINT16_TO_STREAM (p, HCI_BRCM_WRITE_SLEEP_MODE);
+    UINT8_TO_STREAM  (p, HCI_BRCM_WRITE_SLEEP_MODE_LENGTH);
 
-            return (NFC_STATUS_OK);
-        }
-        else
-        {
-            NCI_TRACE_ERROR0 ("NCI_BrcmDisableSnoozeMode (): Out of buffer");
-            return (NFC_STATUS_FAILED);
-        }
-    }
-    else
-    {
-        NCI_TRACE_ERROR0 ("NCI_BrcmDisableSnoozeMode (): Not full power mode");
-        return (NFC_STATUS_FAILED);
-    }
+    memset (p, 0x00, HCI_BRCM_WRITE_SLEEP_MODE_LENGTH);
+
+    UINT8_TO_STREAM  (p, snooze_mode);          /* Sleep Mode               */
+
+    UINT8_TO_STREAM  (p, idle_threshold_dh);    /* Idle Threshold Host      */
+    UINT8_TO_STREAM  (p, idle_threshold_nfcc);  /* Idle Threshold HC        */
+    UINT8_TO_STREAM  (p, nfc_wake_active_mode); /* BT Wake Active Mode      */
+    UINT8_TO_STREAM  (p, dh_wake_active_mode);  /* Host Wake Active Mode    */
+
+    nci_brcm_send_bt_cmd (cmd,
+                          BRCM_BT_HCI_CMD_HDR_SIZE + HCI_BRCM_WRITE_SLEEP_MODE_LENGTH,
+                          nci_brcm_set_snooze_mode_cback);
+    return (NFC_STATUS_OK);
 }
 
 #if (BT_TRACE_VERBOSE == TRUE)
@@ -1214,26 +1074,22 @@ tNFC_STATUS NCI_BrcmDisableSnoozeMode (void)
 ** Description      convert nci brcm evt to string
 **
 *******************************************************************************/
-static char *nci_brcm_evt_2_str(UINT16 event)
+static char *nci_brcm_evt_2_str (UINT16 event)
 {
     switch (event)
     {
-    case NCI_INT_CHECK_STATE_EVT:
-        return "NCI_INT_CHECK_STATE_EVT";
-    case NCI_INT_SEND_NCI_MSG_EVT:
-        return "NCI_INT_SEND_NCI_MSG_EVT";
-    case NCI_INT_SEND_VS_CMD_EVT:
-        return "NCI_INT_SEND_VS_CMD_EVT";
-    case NCI_INT_DATA_RDY_EVT:
-        return "NCI_INT_DATA_RDY_EVT";
-    case NCI_INT_RX_NCI_MSG_EVT:
-        return "NCI_INT_RX_NCI_MSG_EVT";
-    case NCI_INT_VS_MSG_EVT:
-        return "NCI_INT_VS_MSG_EVT";
-    case NCI_INT_VS_INIT_EVT:
-        return "NCI_INT_VS_INIT_EVT";
-    case NCI_INT_TERMINATE_EVT:
-        return "NCI_INT_TERMINATE_EVT";
+    case NCIT_INT_CHECK_NFCC_STATE_EVT:
+        return "NCIT_INT_CHECK_NFCC_STATE_EVT";
+    case NCIT_INT_SEND_NCI_MSG_EVT:
+        return "NCIT_INT_SEND_NCI_MSG_EVT";
+    case NCIT_INT_DATA_RDY_EVT:
+        return "NCIT_INT_DATA_RDY_EVT";
+    case NCIT_INT_VS_MSG_EVT:
+        return "NCIT_INT_VS_MSG_EVT";
+    case NCIT_INT_VS_INIT_EVT:
+        return "NCIT_INT_VS_INIT_EVT";
+    case NCIT_INT_TERMINATE_EVT:
+        return "NCIT_INT_TERMINATE_EVT";
     }
     return "Unknown";
 }

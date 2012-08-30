@@ -34,7 +34,6 @@ extern "C" {
 #define FW_PRE_PATCH                        "FW_PRE_PATCH"
 #define FW_PATCH                            "FW_PATCH"
 #define NFA_CONFIG_FORMAT                   "NFA_CONFIG_FORMAT"
-#define NFA_CONFIG_XTAL_INDEX               "NFA_CONFIG_XTAL_INDEX"
 
 #define MAX_BUFFER      (512)
 static char sPrePatchFn[MAX_BUFFER+1];
@@ -55,6 +54,7 @@ static UINT8 nfa_dm_start_up_vsc_cfg[NFA_DM_START_UP_CFG_PARAM_MAX_LEN];
 extern UINT8 *p_nfa_dm_start_up_vsc_cfg;
 extern UINT8 *p_nfa_dm_lptd_cfg;
 static UINT8 nfa_dm_lptd_cfg[LPTD_PARAM_LEN];
+extern tSNOOZE_MODE_CONFIG gSnoozeModeCfg;
 
 /*******************************************************************************
 **
@@ -127,43 +127,21 @@ static const char* findPatchramFile(char * pConfigName, char * pBuffer, int buff
 
 /*******************************************************************************
 **
-** Function         continueAfterSetXtalIndex
+** Function:    continueAfterSetSnoozeMode
 **
-** Description      continue the reset process after set_xtalIndex is called.
+** Description: Called after Snooze Mode is enabled.
 **
-** Returns          none
+** Returns:     none
 **
 *******************************************************************************/
-extern "C" void continueAfterSetXtalIndex (tNFC_VS_EVT event, UINT16 len, UINT8* p_data)
+static void continueAfterSetSnoozeMode(tNFC_STATUS status)
 {
-    ALOGD("%s :complete", __func__);
+    ALOGD("continueAfterSetSnoozeMode: status=%i", status);
 
     NCI_BrcmDevInitDone();
-}
 
-/*******************************************************************************
-**
-** Function         readXtalIndex
-**
-** Description      continue the reset process after set_xtalIndex is called.
-**
-** Returns          none
-**
-*******************************************************************************/
-static void readXtalIndex(UINT8 xtalIndex)
-{
-    BT_HDR  *pMsg = (BT_HDR *)GKI_getbuf((UINT16)(BT_HDR_SIZE + NCI_VSC_MSG_HDR_SIZE + 1));
 
-    ALOGD("%s: index=0x%02x",__func__, xtalIndex);
 
-    if (pMsg)
-    {
-        pMsg->offset = NCI_VSC_MSG_HDR_SIZE;
-        UINT8 *p = (UINT8*)(pMsg + 1) + pMsg->offset;
-        *p = xtalIndex;    /* xtalIndex 0x04 for 24Mhz */
-        pMsg->len = 1;
-        NFC_SendVsCommand(NCI_MSG_GET_XTAL_INDEX_FROM_DH, pMsg, continueAfterSetXtalIndex);
-    }
 }
 
 /*******************************************************************************
@@ -199,15 +177,26 @@ extern "C" void postDownloadPatchram(tNFC_STATUS status)
     if (status != NFC_STATUS_OK)
         ALOGE("Patch download failed");
 
-    if (GetNumValue((char*)NFA_CONFIG_XTAL_INDEX, &xtalIndex, sizeof(xtalIndex)))
+    /* Set snooze mode here */
+    if (gSnoozeModeCfg.snooze_mode != NFC_LP_SNOOZE_MODE_NONE)
     {
-        ALOGD("%s: setting XTAL index=%d", __func__, xtalIndex);
-
-        /* Proceed with setting XTAL, then next step of NFC startup sequence */
-        readXtalIndex(xtalIndex);
+        status = NCI_BrcmSetSnoozeMode(gSnoozeModeCfg.snooze_mode,
+                                       gSnoozeModeCfg.idle_threshold_dh,
+                                       gSnoozeModeCfg.idle_threshold_nfcc,
+                                       gSnoozeModeCfg.nfc_wake_active_mode,
+                                       gSnoozeModeCfg.dh_wake_active_mode,
+                                       continueAfterSetSnoozeMode);
+        if (status != NFC_STATUS_OK)
+        {
+            ALOGE("postDownloadPatchram: Setting snooze mode failed, status=%i", status);
+            NCI_BrcmDevInitDone();
+        }
     }
-    else /* Proceed with next step of NFC startup sequence */
+    else
+    {
+        ALOGD("postDownloadPatchram: Not using Snooze Mode");
         NCI_BrcmDevInitDone();
+    }
 }
 
 #if (defined(NFA_APP_DOWNLOAD_NFC_PATCHRAM) && (NFA_APP_DOWNLOAD_NFC_PATCHRAM == TRUE))

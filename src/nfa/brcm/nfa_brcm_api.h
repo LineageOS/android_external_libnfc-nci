@@ -26,8 +26,6 @@ enum
 {
     NFA_DM_LPTD_EVT = (NFA_DM_VS_EVT_BASE + 1),             /* False detect in LPTD mode                */
     NFA_DM_FIRMWARE_BUILD_INFO_EVT,                         /* Result of  NFA_BrcmGetFirmwareBuildInfo  */
-    NFA_DM_SNOOZE_ENABLED_EVT,                              /* Result of  NFA_EnableSnoozeMode          */
-    NFA_DM_SNOOZE_DISABLED_EVT,                             /* Result of  NFA_DisableSnoozeMode         */
     NFA_DM_VS_LAST_EVT
 };
 
@@ -35,19 +33,13 @@ enum
 /* Dereference using tNFA_DM_CBACK_DATA->p_vs_data        */
 typedef union
 {
-    tNFA_STATUS             status;                         /* Data for NFA_DM_SNOOZE_ENABLED_EVT       */
-                                                            /* Data for NFA_DM_SNOOZE_DISABLED_EVT      */
+    tNFA_STATUS             status;
     tNFA_BRCM_FW_BUILD_INFO fw_build_info;                  /* Data for NFA_DM_FIRMWARE_BUILD_INFO_EVT  */
 } tNFA_BRCM_DM_CBACK_DATA;
 
 /* compile-time configuration structure */
 typedef struct
 {
-    UINT8   snooze_mode;                /* Snooze Mode */
-    UINT8   idle_threshold_dh;          /* Idle Threshold Host */
-    UINT8   idle_threshold_nfcc;        /* Idle Threshold NFCC   */
-    UINT8   nfc_wake_active_mode;       /* NFC_LP_ACTIVE_LOW or NFC_LP_ACTIVE_HIGH */
-    UINT8   dh_wake_active_mode;        /* NFC_LP_ACTIVE_LOW or NFC_LP_ACTIVE_HIGH */
     BOOLEAN power_cycle_to_full;        /* Power cycle to full power mode from CEx */
     UINT8   lp_params;                  /* parameter for low power mode command    */
     UINT8   primary_threshold;          /* Primary Threshold for battery monitor   */
@@ -97,33 +89,6 @@ NFC_API extern void NFA_BrcmInit (tBRCM_DEV_INIT_CONFIG *p_dev_init_config,
 **
 *******************************************************************************/
 NFC_API extern tNFA_STATUS NFA_BrcmGetFirmwareBuildInfo (void);
-
-/*******************************************************************************
-**
-** Function         NFA_EnableSnoozeMode
-**
-** Description      This function is called to enable Snooze Mode as configured
-**                  in nfa_dm_brcm_cfg.c.
-**                  NFA_DM_SNOOZE_ENABLED_EVT will be sent to indicate status.
-**
-** Returns          NFA_STATUS_OK if successfully initiated
-**                  NFA_STATUS_FAILED otherwise
-**
-*******************************************************************************/
-NFC_API extern tNFA_STATUS NFA_EnableSnoozeMode (void);
-
-/*******************************************************************************
-**
-** Function         NFA_DisableSnoozeMode
-**
-** Description      This function is called to disable Snooze Mode
-**                  NFA_DM_SNOOZE_DISABLED_EVT will be sent to indicate status.
-**
-** Returns          NFA_STATUS_OK if successfully initiated
-**                  NFA_STATUS_FAILED otherwise
-**
-*******************************************************************************/
-NFC_API extern tNFA_STATUS NFA_DisableSnoozeMode (void);
 
 /*******************************************************************************
 **

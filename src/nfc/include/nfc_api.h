@@ -823,7 +823,7 @@ extern "C" {
 **                  - the NFCC must be powered up, and ready to receive commands.
 **                  - GKI must be enabled
 **                  - NFC_TASK must be started
-**                  - NCI_TASK must be started (if using dedicated NCI transport)
+**                  - NCIT_TASK must be started (if using dedicated NCI transport)
 **
 **                  This function opens the NCI transport (if applicable),
 **                  resets the NFC controller, and initializes the NFC subsystems.

@@ -15,12 +15,6 @@
 #include "nfa_sys_int.h"
 #include "nfa_brcm_api.h"
 
-#if (NFC_NFCEE_INCLUDED == TRUE)
-#include "nfa_ee_api.h"
-#include "nfa_ee_int.h"
-#include "nfa_hci_int.h"
-#endif
-
 #if (NFC_BRCM_VS_INCLUDED == TRUE)
 #include "hcidefs.h"
 #include "nfa_brcm_int.h"
@@ -32,6 +26,11 @@
 #ifndef NFA_DM_LPTD_PARAM_EXTRA_LEN
 #define NFA_DM_LPTD_PARAM_EXTRA_LEN     (2 + 14) /* 2 is for T, L. 14 is  potential extra bytes for LPTD */
 #endif
+
+#define NFA_I93_RW_CFG_LEN              (5)
+#define NFA_I93_RW_CFG_PARAM_LEN        (3)
+#define NFA_I93_AFI                     (0)
+#define NFA_I93_ENABLE_SMART_POLL       (1)
 
 static void nfa_brcm_pre_sys_enable (void);
 static BOOLEAN nfa_brcm_pre_evt_hdlr (BT_HDR *p_msg);
@@ -60,6 +59,15 @@ static const tNFA_SYS_REG nfa_brcm_post_sys_reg =
     nfa_brcm_post_proc_nfcc_power_mode
 };
 
+static UINT8 nfa_i93_rw_cfg[NFA_I93_RW_CFG_LEN] =
+{
+    NCI_PARAM_ID_I93_DATARATE,
+    NFA_I93_RW_CFG_PARAM_LEN,
+    RW_I93_FLAG_DATA_RATE,     /* Bit0:Sub carrier, Bit1:Data rate, Bit4:Enable/Disable AFI */
+    NFA_I93_AFI,               /* AFI if Bit 4 is set in the flag byte */
+    NFA_I93_ENABLE_SMART_POLL  /* Bit0:Enable/Disable smart poll */
+};
+
 /*****************************************************************************
 ** Extern function prototypes
 *****************************************************************************/
@@ -72,9 +80,6 @@ static char *nfa_dm_brcm_evt_2_str (UINT16 event);
 #endif
 
 static BOOLEAN nfa_dm_brcm_evt_hdlr (BT_HDR *p_msg);
-
-static BOOLEAN nfa_dm_brcm_act_enable_snooze (BT_HDR *p_msg);
-static BOOLEAN nfa_dm_brcm_act_disable_snooze (BT_HDR *p_msg);
 static BOOLEAN nfa_dm_brcm_act_multi_tech_rsp (BT_HDR *p_msg);
 static BOOLEAN nfa_dm_brcm_act_get_build_info (BT_HDR *p_msg);
 
@@ -85,8 +90,6 @@ static BOOLEAN nfa_dm_brcm_act_get_build_info (BT_HDR *p_msg);
 /* action function list */
 tNFA_DM_BRCM_ACTION nfa_dm_brcm_action[] =
 {
-    nfa_dm_brcm_act_enable_snooze,    /* NFA_DM_BRCM_API_ENABLE_SNOOZE_EVT     */
-    nfa_dm_brcm_act_disable_snooze,   /* NFA_DM_BRCM_API_DISABLE_SNOOZE_EVT    */
     nfa_dm_brcm_act_multi_tech_rsp,   /* NFA_DM_BRCM_API_MULTI_TECH_RSP_EVT    */
     nfa_dm_brcm_act_get_build_info,   /* NFA_DM_BRCM_API_GET_BUILD_INFO_EVT    */
     NULL                              /* NFA_DM_BRCM_VS_1_EVT                  */
@@ -181,11 +184,6 @@ void nfa_dm_brcm_init (void)
 
     memset (&nfa_brcm_cb, 0, sizeof (tNFA_BRCM_CB));
     nfa_brcm_cb.dm_enable_multi_resp = NFA_DM_MULTI_TECH_RESP;
-
-    if (p_nfa_dm_lp_cfg->snooze_mode != NFC_LP_SNOOZE_MODE_NONE)
-    {
-        nfa_brcm_cb.dm_flags |= NFA_DM_BRCM_FLAGS_SNOOZE_ENABLED;
-    }
 }
 
 /*******************************************************************************
@@ -225,6 +223,10 @@ void nfa_dm_brcm_restore (void)
         nfa_dm_check_set_config (p_nfa_dm_start_up_cfg[0], &p_nfa_dm_start_up_cfg[1], FALSE);
     }
 
+#if (RW_I93_FLAG_DATA_RATE == I93_FLAG_DATA_RATE_HIGH)
+    nfa_dm_check_set_config (NFA_I93_RW_CFG_LEN, nfa_i93_rw_cfg, FALSE);
+#endif
+
     if (nfa_brcm_cb.dm_enable_multi_resp)
     {
         /* FW FSM is disabled as default */
@@ -238,217 +240,6 @@ void nfa_dm_brcm_restore (void)
         /* Register callback for VS event */
         NFC_RegVSCback (TRUE, nfa_dm_brcm_vse_cback);
     }
-
-    if (nfa_brcm_cb.dm_flags & NFA_DM_BRCM_FLAGS_SNOOZE_ENABLED)
-    {
-        /* NFA_DM_BRCM_FLAGS_SNOOZE_ENABLED will be set when successfully done */
-        nfa_brcm_cb.dm_flags &= ~NFA_DM_BRCM_FLAGS_SNOOZE_ENABLED;
-
-        /* set busy flag for setting snooze mode */
-        nfa_dm_cb.flags |= NFA_DM_FLAGS_SETTING_PWR_MODE;
-        nfa_dm_brcm_act_enable_snooze (NULL);
-    }
-}
-
-/*******************************************************************************
-**
-** Function         nfa_dm_brcm_snooze_vsc_cback
-**
-** Description      Callback function for snooze mode setting
-**
-** Returns          void
-**
-*******************************************************************************/
-static void nfa_dm_brcm_snooze_vsc_cback (tNFC_BTVSC_CPLT *p_vsc_cplt_info)
-{
-    UINT8 btvsc_hci_status;
-    UINT8 *p = p_vsc_cplt_info->p_param_buf;
-    UINT8 event = NFA_STATUS_FAILED;
-    tNFA_STATUS status;
-
-    NFA_TRACE_DEBUG0 ("nfa_dm_brcm_snooze_vsc_cback()");
-
-    STREAM_TO_UINT8 (btvsc_hci_status, p);
-
-    /* setting is done */
-    nfa_dm_cb.flags &= ~NFA_DM_FLAGS_SETTING_PWR_MODE;
-
-    /* if enabling snooze mode */
-    if (nfa_brcm_cb.dm_flags & NFA_DM_BRCM_FLAGS_SNOOZE_ENABLING)
-    {
-        nfa_brcm_cb.dm_flags &= ~NFA_DM_BRCM_FLAGS_SNOOZE_ENABLING;
-
-        if (btvsc_hci_status == HCI_SUCCESS)
-        {
-            nfa_brcm_cb.dm_flags |= NFA_DM_BRCM_FLAGS_SNOOZE_ENABLED;
-            status = NFA_STATUS_OK;
-
-            NCI_BrcmEnableSnoozeMode (p_nfa_dm_lp_cfg->nfc_wake_active_mode);
-        }
-        event = NFA_DM_SNOOZE_ENABLED_EVT;
-    }
-    else
-    {
-        if (btvsc_hci_status == HCI_SUCCESS)
-        {
-            nfa_brcm_cb.dm_flags &= ~NFA_DM_BRCM_FLAGS_SNOOZE_ENABLED;
-            status = NFA_STATUS_OK;
-
-            NCI_BrcmDisableSnoozeMode ();
-        }
-        event = NFA_DM_SNOOZE_DISABLED_EVT;
-    }
-
-    /* if application initiated */
-    if (nfa_brcm_cb.dm_flags & NFA_DM_BRCM_FLAGS_SNOOZE_API)
-    {
-        nfa_brcm_cb.dm_flags &= ~NFA_DM_BRCM_FLAGS_SNOOZE_API;
-
-        (*nfa_dm_cb.p_dm_cback) (event, (tNFA_DM_CBACK_DATA*)&status);
-    }
-}
-
-/*******************************************************************************
-**
-** Function         nfa_dm_brcm_act_enable_snooze
-**
-** Description      Enable snooze mode
-**
-** Returns          TRUE (message buffer to be freed by caller)
-**
-*******************************************************************************/
-BOOLEAN nfa_dm_brcm_act_enable_snooze (BT_HDR *p_msg)
-{
-    tNFA_STATUS status;
-    UINT8 data[HCI_BRCM_WRITE_SLEEP_MODE_LENGTH];
-    UINT8 *p = data;
-
-    NFA_TRACE_DEBUG0 ("nfa_dm_brcm_act_enable_snooze ()");
-
-    if (p_msg != NULL)
-    {
-        /* this is called from API */
-        nfa_brcm_cb.dm_flags |= NFA_DM_BRCM_FLAGS_SNOOZE_API;
-    }
-
-    /* if snooze mode is already enabled */
-    if (nfa_brcm_cb.dm_flags & NFA_DM_BRCM_FLAGS_SNOOZE_ENABLED)
-    {
-        /* setting is done */
-        nfa_dm_cb.flags &= ~NFA_DM_FLAGS_SETTING_PWR_MODE;
-
-        /* if application initiated */
-        if (nfa_brcm_cb.dm_flags & NFA_DM_BRCM_FLAGS_SNOOZE_API)
-        {
-            nfa_brcm_cb.dm_flags &= ~NFA_DM_BRCM_FLAGS_SNOOZE_API;
-
-            status = NFA_STATUS_OK;
-            (*nfa_dm_cb.p_dm_cback) (NFA_DM_SNOOZE_ENABLED_EVT, (tNFA_DM_CBACK_DATA*)&status);
-        }
-    }
-    else
-    {
-        /* set flag for enabling snooze mode */
-        nfa_brcm_cb.dm_flags |= NFA_DM_BRCM_FLAGS_SNOOZE_ENABLING;
-
-        memset (data, 0x00, HCI_BRCM_WRITE_SLEEP_MODE_LENGTH);
-
-        UINT8_TO_STREAM(p, p_nfa_dm_lp_cfg->snooze_mode);          /* Sleep Mode               */
-
-        UINT8_TO_STREAM(p, p_nfa_dm_lp_cfg->idle_threshold_dh);    /* Idle Threshold Host      */
-        UINT8_TO_STREAM(p, p_nfa_dm_lp_cfg->idle_threshold_nfcc);  /* Idle Threshold HC        */
-        UINT8_TO_STREAM(p, p_nfa_dm_lp_cfg->nfc_wake_active_mode); /* BT Wake Active Mode      */
-        UINT8_TO_STREAM(p, p_nfa_dm_lp_cfg->dh_wake_active_mode);  /* Host Wake Active Mode    */
-
-        status = NFC_SendBtVsCommand (HCI_BRCM_WRITE_SLEEP_MODE,
-                                      HCI_BRCM_WRITE_SLEEP_MODE_LENGTH,
-                                      (UINT8 *)data,
-                                      nfa_dm_brcm_snooze_vsc_cback);
-
-        if (status != NFC_STATUS_OK)
-        {
-            /* setting is done */
-            nfa_dm_cb.flags &= ~NFA_DM_FLAGS_SETTING_PWR_MODE;
-
-            /* if application initiated */
-            if (nfa_brcm_cb.dm_flags & NFA_DM_BRCM_FLAGS_SNOOZE_API)
-            {
-                nfa_brcm_cb.dm_flags &= ~NFA_DM_BRCM_FLAGS_SNOOZE_API;
-                (*nfa_dm_cb.p_dm_cback) (NFA_DM_SNOOZE_ENABLED_EVT, (tNFA_DM_CBACK_DATA*)&status);
-            }
-        }
-    }
-
-    return (TRUE);
-}
-
-/*******************************************************************************
-**
-** Function         nfa_dm_brcm_act_disable_snooze
-**
-** Description      Disable snooze mode
-**
-** Returns          TRUE (message buffer to be freed by caller)
-**
-*******************************************************************************/
-BOOLEAN nfa_dm_brcm_act_disable_snooze (BT_HDR *p_msg)
-{
-    tNFA_STATUS status;
-    UINT8 data[HCI_BRCM_WRITE_SLEEP_MODE_LENGTH];
-    UINT8 *p = data;
-
-    NFA_TRACE_DEBUG0 ("nfa_dm_brcm_act_disable_snooze ()");
-
-    if (p_msg != NULL)
-    {
-        /* this is called from API */
-        nfa_brcm_cb.dm_flags |= NFA_DM_BRCM_FLAGS_SNOOZE_API;
-    }
-
-    /* if snooze mode is already disabled */
-    if ((nfa_brcm_cb.dm_flags & NFA_DM_BRCM_FLAGS_SNOOZE_ENABLED) == 0x00)
-    {
-        /* setting is done */
-        nfa_dm_cb.flags &= ~NFA_DM_FLAGS_SETTING_PWR_MODE;
-
-        /* if application initiated */
-        if (nfa_brcm_cb.dm_flags & NFA_DM_BRCM_FLAGS_SNOOZE_API)
-        {
-            nfa_brcm_cb.dm_flags &= ~NFA_DM_BRCM_FLAGS_SNOOZE_API;
-
-            status = NFA_STATUS_OK;
-            (*nfa_dm_cb.p_dm_cback) (NFA_DM_SNOOZE_ENABLED_EVT, (tNFA_DM_CBACK_DATA*)&status);
-        }
-    }
-    else
-    {
-        /* set flag for disabling snooze mode */
-        nfa_brcm_cb.dm_flags &= ~NFA_DM_BRCM_FLAGS_SNOOZE_ENABLING;
-
-        memset (data, 0x00, HCI_BRCM_WRITE_SLEEP_MODE_LENGTH);
-
-        UINT8_TO_STREAM(p, NFC_LP_SNOOZE_MODE_NONE);          /* Sleep Mode               */
-
-        status = NFC_SendBtVsCommand (HCI_BRCM_WRITE_SLEEP_MODE,
-                                      HCI_BRCM_WRITE_SLEEP_MODE_LENGTH,
-                                      (UINT8 *)data,
-                                      nfa_dm_brcm_snooze_vsc_cback);
-
-        if (status != NFC_STATUS_OK)
-        {
-            /* setting is done */
-            nfa_dm_cb.flags &= ~NFA_DM_FLAGS_SETTING_PWR_MODE;
-
-            /* if application initiated */
-            if (nfa_brcm_cb.dm_flags & NFA_DM_BRCM_FLAGS_SNOOZE_API)
-            {
-                nfa_brcm_cb.dm_flags &= ~NFA_DM_BRCM_FLAGS_SNOOZE_API;
-                (*nfa_dm_cb.p_dm_cback) (NFA_DM_SNOOZE_ENABLED_EVT, (tNFA_DM_CBACK_DATA*)&status);
-            }
-        }
-    }
-
-    return (TRUE);
 }
 
 /*******************************************************************************
@@ -548,12 +339,6 @@ static char *nfa_dm_brcm_evt_2_str (UINT16 event)
 {
     switch (event)
     {
-    case NFA_DM_BRCM_API_ENABLE_SNOOZE_EVT:
-        return "NFA_DM_BRCM_API_ENABLE_SNOOZE_EVT";
-
-    case NFA_DM_BRCM_API_DISABLE_SNOOZE_EVT:
-        return "NFA_DM_BRCM_API_DISABLE_SNOOZE_EVT";
-
     case NFA_DM_BRCM_API_MULTI_TECH_RSP_EVT:
         return "NFA_DM_BRCM_API_MULTI_TECH_RSP_EVT";
 
@@ -722,6 +507,8 @@ static void nfa_brcm_post_proc_nfcc_power_mode (UINT8 nfcc_power_state)
     nfa_sys_cback_notify_nfcc_power_mode_proc_complete (NFA_ID_VS_POST);
 }
 
+
+
 /*******************************************************************************
 ** APIs
 *******************************************************************************/
@@ -802,98 +589,6 @@ tNFA_STATUS NFA_BrcmGetFirmwareBuildInfo (void)
     if ((p_msg = (BT_HDR *) GKI_getbuf (sizeof (BT_HDR))) != NULL)
     {
         p_msg->event = NFA_DM_BRCM_API_GET_BUILD_INFO_EVT;
-
-        nfa_sys_sendmsg (p_msg);
-
-        return (NFA_STATUS_OK);
-    }
-
-    return (NFA_STATUS_FAILED);
-}
-
-/*******************************************************************************
-** Low Power Mode APIs
-*******************************************************************************/
-/*******************************************************************************
-**
-** Function         NFA_EnableSnoozeMode
-**
-** Description      This function is called to enable Snooze Mode as configured
-**                  in nfa_dm_brcm_cfg.c.
-**                  NFA_DM_SNOOZE_ENABLED_EVT will be sent to indicate status.
-**
-** Returns          NFA_STATUS_OK if successfully initiated
-**                  NFA_STATUS_FAILED otherwise
-**
-*******************************************************************************/
-tNFA_STATUS NFA_EnableSnoozeMode (void)
-{
-    BT_HDR *p_msg;
-
-    NFA_TRACE_API0 ("NFA_EnableSnoozeMode ()");
-
-    if (nfa_dm_cb.flags & NFA_DM_FLAGS_SETTING_PWR_MODE)
-    {
-        NFA_TRACE_ERROR0 ("NFA_EnableSnoozeMode (): NFA DM is busy to update power mode");
-        return (NFA_STATUS_FAILED);
-    }
-    else if (nfa_dm_cb.nfcc_pwr_mode != NFA_DM_PWR_MODE_FULL)
-    {
-        NFA_TRACE_ERROR0 ("NFA_EnableSnoozeMode (): Current mode is not full power mode");
-        return (NFA_STATUS_FAILED);
-    }
-    else
-    {
-        nfa_dm_cb.flags |= NFA_DM_FLAGS_SETTING_PWR_MODE;
-    }
-
-    if ((p_msg = (BT_HDR *) GKI_getbuf (sizeof (BT_HDR))) != NULL)
-    {
-        p_msg->event = NFA_DM_BRCM_API_ENABLE_SNOOZE_EVT;
-
-        nfa_sys_sendmsg (p_msg);
-
-        return (NFA_STATUS_OK);
-    }
-
-    return (NFA_STATUS_FAILED);
-}
-
-/*******************************************************************************
-**
-** Function         NFA_DisableSnoozeMode
-**
-** Description      This function is called to disable Snooze Mode
-**                  NFA_DM_SNOOZE_DISABLED_EVT will be sent to indicate status.
-**
-** Returns          NFA_STATUS_OK if successfully initiated
-**                  NFA_STATUS_FAILED otherwise
-**
-*******************************************************************************/
-tNFA_STATUS NFA_DisableSnoozeMode (void)
-{
-    BT_HDR *p_msg;
-
-    NFA_TRACE_API0 ("NFA_DisableSnoozeMode ()");
-
-    if (nfa_dm_cb.flags & NFA_DM_FLAGS_SETTING_PWR_MODE)
-    {
-        NFA_TRACE_ERROR0 ("NFA_DisableSnoozeMode (): NFA DM is busy to update power mode");
-        return (NFA_STATUS_FAILED);
-    }
-    else if (nfa_dm_cb.nfcc_pwr_mode != NFA_DM_PWR_MODE_FULL)
-    {
-        NFA_TRACE_ERROR0 ("NFA_DisableSnoozeMode (): Current mode is not full power mode");
-        return (NFA_STATUS_FAILED);
-    }
-    else
-    {
-        nfa_dm_cb.flags |= NFA_DM_FLAGS_SETTING_PWR_MODE;
-    }
-
-    if ((p_msg = (BT_HDR *) GKI_getbuf (sizeof (BT_HDR))) != NULL)
-    {
-        p_msg->event = NFA_DM_BRCM_API_DISABLE_SNOOZE_EVT;
 
         nfa_sys_sendmsg (p_msg);
 

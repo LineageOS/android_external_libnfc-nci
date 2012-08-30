@@ -22,7 +22,7 @@
 #include "ce_int.h"
 #include "llcp_int.h"
 
-#if (defined(NFA_INCLUDED) && NFA_INCLUDED == TRUE)
+#if (defined (NFA_INCLUDED) && NFA_INCLUDED == TRUE)
 #include "nfa_sys.h"
 #include "nfa_dm_int.h"
 #endif
@@ -37,10 +37,10 @@
 ** Returns          The new or current trace level
 **
 *******************************************************************************/
-void nfc_notify_shared_transport_ready(void)
+void nfc_notify_shared_transport_ready (void)
 {
-    if (nci_cfg.shared_transport)
-        GKI_send_event(NFC_TASK, NFC_TASK_EVT_TRANSPORT_READY);
+    if (ncit_cfg.shared_transport)
+        GKI_send_event (NFC_TASK, NFC_TASK_EVT_TRANSPORT_READY);
 }
 
 /*******************************************************************************
@@ -62,10 +62,10 @@ void nfc_start_timer (TIMER_LIST_ENT *p_tle, UINT16 type, UINT32 timeout)
     if (nfc_cb.timer_queue.p_first == NULL)
     {
         /* if timer starts on other than NFC task (scritp wrapper) */
-        if(GKI_get_taskid() != NFC_TASK)
+        if (GKI_get_taskid () != NFC_TASK)
         {
             /* post event to start timer in NFC task */
-            if ((p_msg = (BT_HDR *)GKI_getbuf(BT_HDR_SIZE)) != NULL)
+            if ((p_msg = (BT_HDR *) GKI_getbuf (BT_HDR_SIZE)) != NULL)
             {
                 p_msg->event = BT_EVT_TO_START_TIMER;
                 GKI_send_msg (NFC_TASK, NFC_MBOX_ID, p_msg);
@@ -109,7 +109,7 @@ UINT32 nfc_remaining_time (TIMER_LIST_ENT *p_tle)
 ** Returns          void
 **
 *******************************************************************************/
-void nfc_process_timer_evt(void)
+void nfc_process_timer_evt (void)
 {
     TIMER_LIST_ENT  *p_tle;
 
@@ -120,21 +120,26 @@ void nfc_process_timer_evt(void)
         p_tle = nfc_cb.timer_queue.p_first;
         GKI_remove_from_timer_list (&nfc_cb.timer_queue, p_tle);
 
-        if (p_tle->event == NFC_TTYPE_WAIT_2_DEACTIVATE)
+        switch (p_tle->event)
         {
-            nfc_wait_2_deactivate_timeout();
-        }
-        else
-        {
-            NFC_TRACE_DEBUG2("nfc_process_timer_evt: timer:0x%x event (0x%04x)", p_tle, p_tle->event);
-            NFC_TRACE_DEBUG1("nfc_process_timer_evt: unhandled timer event (0x%04x)", p_tle->event);
+        case NFC_TTYPE_NCI_WAIT_RSP:
+            nfc_ncif_cmd_timeout();
+            break;
+
+        case NFC_TTYPE_WAIT_2_DEACTIVATE:
+            nfc_wait_2_deactivate_timeout ();
+            break;
+
+        default:
+            NFC_TRACE_DEBUG2 ("nfc_process_timer_evt: timer:0x%x event (0x%04x)", p_tle, p_tle->event);
+            NFC_TRACE_DEBUG1 ("nfc_process_timer_evt: unhandled timer event (0x%04x)", p_tle->event);
         }
     }
 
     /* if timer list is empty stop periodic GKI timer */
     if (nfc_cb.timer_queue.p_first == NULL)
     {
-        GKI_stop_timer(NFC_TIMER_ID);
+        GKI_stop_timer (NFC_TIMER_ID);
     }
 }
 
@@ -154,7 +159,7 @@ void nfc_stop_timer (TIMER_LIST_ENT *p_tle)
     /* if timer list is empty stop periodic GKI timer */
     if (nfc_cb.timer_queue.p_first == NULL)
     {
-        GKI_stop_timer(NFC_TIMER_ID);
+        GKI_stop_timer (NFC_TIMER_ID);
     }
 }
 
@@ -179,10 +184,10 @@ void nfc_start_quick_timer (TIMER_LIST_ENT *p_tle, UINT16 type, UINT32 timeout)
     if (nfc_cb.quick_timer_queue.p_first == NULL)
     {
         /* if timer starts on other than NFC task (scritp wrapper) */
-        if(GKI_get_taskid() != NFC_TASK)
+        if (GKI_get_taskid () != NFC_TASK)
         {
             /* post event to start timer in NFC task */
-            if ((p_msg = (BT_HDR *)GKI_getbuf(BT_HDR_SIZE)) != NULL)
+            if ((p_msg = (BT_HDR *) GKI_getbuf (BT_HDR_SIZE)) != NULL)
             {
                 p_msg->event = BT_EVT_TO_START_QUICK_TIMER;
                 GKI_send_msg (NFC_TASK, NFC_MBOX_ID, p_msg);
@@ -191,7 +196,7 @@ void nfc_start_quick_timer (TIMER_LIST_ENT *p_tle, UINT16 type, UINT32 timeout)
         else
         {
             /* Quick-timer is required for LLCP */
-            GKI_start_timer (NFC_QUICK_TIMER_ID, ((GKI_SECS_TO_TICKS (1)/QUICK_TIMER_TICKS_PER_SEC)), TRUE);
+            GKI_start_timer (NFC_QUICK_TIMER_ID, ((GKI_SECS_TO_TICKS (1) / QUICK_TIMER_TICKS_PER_SEC)), TRUE);
         }
     }
 
@@ -222,7 +227,7 @@ void nfc_stop_quick_timer (TIMER_LIST_ENT *p_tle)
     /* if timer list is empty stop periodic GKI timer */
     if (nfc_cb.quick_timer_queue.p_first == NULL)
     {
-        GKI_stop_timer(NFC_QUICK_TIMER_ID);
+        GKI_stop_timer (NFC_QUICK_TIMER_ID);
     }
 }
 
@@ -235,7 +240,7 @@ void nfc_stop_quick_timer (TIMER_LIST_ENT *p_tle)
 ** Returns          void
 **
 *******************************************************************************/
-void nfc_process_quick_timer_evt(void)
+void nfc_process_quick_timer_evt (void)
 {
     TIMER_LIST_ENT  *p_tle;
 
@@ -278,7 +283,7 @@ void nfc_process_quick_timer_evt(void)
 #endif
         default:
             if (nfc_cb.p_vs_evt_hdlr)
-                (*nfc_cb.p_vs_evt_hdlr)(NFC_INT_TIMEOUT_EVT, p_tle);
+                (*nfc_cb.p_vs_evt_hdlr) (NFC_INT_TIMEOUT_EVT, p_tle);
             break;
         }
     }
@@ -286,7 +291,7 @@ void nfc_process_quick_timer_evt(void)
     /* if timer list is empty stop periodic GKI timer */
     if (nfc_cb.quick_timer_queue.p_first == NULL)
     {
-        GKI_stop_timer(NFC_QUICK_TIMER_ID);
+        GKI_stop_timer (NFC_QUICK_TIMER_ID);
     }
 }
 
@@ -302,12 +307,12 @@ void nfc_process_quick_timer_evt(void)
 ** Returns          nothing
 **
 *******************************************************************************/
-void nfc_task_enable_nfc(void)
+void nfc_task_enable_nfc (void)
 {
     nfc_cb.flags |= NFC_FL_ENABLED;
 
     /* Reset the NFC controller. */
-    nci_snd_core_reset(NCI_RESET_TYPE_RESET_CFG);
+    nci_snd_core_reset (NCI_RESET_TYPE_RESET_CFG);
 }
 
 /*******************************************************************************
@@ -319,7 +324,7 @@ void nfc_task_enable_nfc(void)
 ** Returns          nothing
 **
 *******************************************************************************/
-void nfc_task_handle_terminate(void)
+void nfc_task_handle_terminate (void)
 {
     BT_HDR        *p_msg;
     tNFC_RESPONSE  evt_data;
@@ -327,7 +332,7 @@ void nfc_task_handle_terminate(void)
     /* Free any messages still in the mbox */
     while ((p_msg = (BT_HDR *) GKI_read_mbox (NFC_MBOX_ID)) != NULL)
     {
-        GKI_freebuf(p_msg);
+        GKI_freebuf (p_msg);
     }
 
     if (nfc_cb.nfc_state == NFC_STATE_NFCC_POWER_OFF_SLEEP)
@@ -335,39 +340,39 @@ void nfc_task_handle_terminate(void)
         /* clear flags for transport */
         nfc_cb.flags &= ~NFC_FL_NCI_TRANSPORT_ENABLED;
 
-        nfc_gen_cleanup();
+        nfc_gen_cleanup ();
 
         /* if it's power cycle NFCC */
         if (nfc_cb.flags & NFC_FL_POWER_CYCLE_NFCC)
         {
             nfc_cb.flags |= NFC_FL_W4_TRANSPORT_READY;
-            GKI_send_event(NCI_TASK, NCI_TASK_EVT_POWER_CYCLE);
+            GKI_send_event (NCIT_TASK, NCIT_TASK_EVT_POWER_CYCLE);
         }
         else
         {
             /* if it is not shared transport, close port */
-            if (!nci_cfg.shared_transport)
+            if (!ncit_cfg.shared_transport)
             {
-                GKI_send_event(NCI_TASK, NCI_TASK_EVT_TERMINATE);
+                GKI_send_event (NCIT_TASK, NCIT_TASK_EVT_TERMINATE);
             }
 
             if (nfc_cb.p_resp_cback)
             {
                 evt_data.status = NFC_STATUS_OK;
-                (*nfc_cb.p_resp_cback)(NFC_NFCC_POWER_OFF_REVT, &evt_data);
+                (*nfc_cb.p_resp_cback) (NFC_NFCC_POWER_OFF_REVT, &evt_data);
             }
         }
     }
     else
     {
         /* Perform final clean up */
-        nfc_main_cleanup();
+        nfc_main_cleanup ();
 
         /* Stop the timers */
-        GKI_stop_timer(NFC_TIMER_ID);
-        GKI_stop_timer(NFC_QUICK_TIMER_ID);
-#if (defined(NFA_INCLUDED) && NFA_INCLUDED == TRUE)
-        GKI_stop_timer(NFA_TIMER_ID);
+        GKI_stop_timer (NFC_TIMER_ID);
+        GKI_stop_timer (NFC_QUICK_TIMER_ID);
+#if (defined (NFA_INCLUDED) && NFA_INCLUDED == TRUE)
+        GKI_stop_timer (NFA_TIMER_ID);
 #endif
     }
 }
@@ -388,14 +393,14 @@ UINT32 nfc_task (UINT32 param)
     BOOLEAN free_buf, ret;
 
     /* Initialize the nfc control block */
-    memset (&nfc_cb, 0, sizeof(tNFC_CB));
+    memset (&nfc_cb, 0, sizeof (tNFC_CB));
     nfc_cb.trace_level = NFC_INITIAL_TRACE_LEVEL;
 
-#if (defined(NFA_INCLUDED) && NFA_INCLUDED == TRUE)
-    memset(&nfa_dm_cb, 0, sizeof(tNFA_DM_CB));
+#if (defined (NFA_INCLUDED) && NFA_INCLUDED == TRUE)
+    memset (&nfa_dm_cb, 0, sizeof (tNFA_DM_CB));
 #endif
 
-    NFC_TRACE_DEBUG0("NFC_TASK started.");
+    NFC_TRACE_DEBUG0 ("NFC_TASK started.");
 
     /* main loop */
     while (TRUE)
@@ -410,45 +415,45 @@ UINT32 nfc_task (UINT32 param)
             /* If transport enabled then proceed with enabling NFC */
             if (nfc_cb.flags & NFC_FL_NCI_TRANSPORT_ENABLED)
             {
-                NFC_TRACE_DEBUG0("NFC_TASK got NFC_TASK_EVT_ENABLE. Proceeding with NFC start up.");
-                nfc_task_enable_nfc();
+                NFC_TRACE_DEBUG0 ("NFC_TASK got NFC_TASK_EVT_ENABLE. Proceeding with NFC start up.");
+                nfc_task_enable_nfc ();
             }
             else
             {
                 /* Transport not ready. Wait for transport to be ready before enabling */
                 nfc_cb.flags |= NFC_FL_W4_TRANSPORT_READY;
-                NFC_TRACE_DEBUG0("NFC_TASK got NFC_TASK_EVT_ENABLE. Waiting for NCI transport..");
+                NFC_TRACE_DEBUG0 ("NFC_TASK got NFC_TASK_EVT_ENABLE. Waiting for NCI transport..");
             }
         }
 
-        /* Handle NFC_TASK_EVT_TRANSPORT_READY from NCI_TASK (for dedicated transport) or BTU_TASK (for shared BT/NFC transport) */
+        /* Handle NFC_TASK_EVT_TRANSPORT_READY from NCIT_TASK (for dedicated transport) */
         if (event & NFC_TASK_EVT_TRANSPORT_READY)
         {
-            NFC_TRACE_DEBUG0("NFC_TASK got NFC_TASK_EVT_TRANSPORT_READY.");
+            NFC_TRACE_DEBUG0 ("NFC_TASK got NFC_TASK_EVT_TRANSPORT_READY.");
             nfc_cb.flags |= NFC_FL_NCI_TRANSPORT_ENABLED;
 
             /* if enable is pending, then enable now */
             if (nfc_cb.flags & NFC_FL_W4_TRANSPORT_READY)
             {
-                NFC_TRACE_DEBUG0("Proceeding with NFC start up.");
+                NFC_TRACE_DEBUG0 ("Proceeding with NFC start up.");
                 nfc_cb.flags &= ~NFC_FL_W4_TRANSPORT_READY;
                 nfc_cb.flags &= ~NFC_FL_POWER_CYCLE_NFCC;
 
                 if (nfc_cb.nfc_state == NFC_STATE_NFCC_POWER_OFF_SLEEP)
                 {
                     nfc_cb.nfc_state = NFC_STATE_RESTARTING;
-                    nci_snd_core_reset(NCI_RESET_TYPE_RESET_CFG);
+                    nci_snd_core_reset (NCI_RESET_TYPE_RESET_CFG);
                 }
                 else
-                    nfc_task_enable_nfc();
+                    nfc_task_enable_nfc ();
             }
         }
 
         /* Handle termination signal */
         if (event & NFC_TASK_EVT_TERMINATE)
         {
-            NFC_TRACE_DEBUG0("NFC_TASK got NFC_TASK_EVT_TERMINATE. Shutting down NFC...");
-            nfc_task_handle_terminate();
+            NFC_TRACE_DEBUG0 ("NFC_TASK got NFC_TASK_EVT_TERMINATE. Shutting down NFC...");
+            nfc_task_handle_terminate ();
 
             continue;
         }
@@ -476,25 +481,21 @@ UINT32 nfc_task (UINT32 param)
 
                     case BT_EVT_TO_START_QUICK_TIMER :
                         /* Quick-timer is required for LLCP */
-                        GKI_start_timer (NFC_QUICK_TIMER_ID, ((GKI_SECS_TO_TICKS (1)/QUICK_TIMER_TICKS_PER_SEC)), TRUE);
+                        GKI_start_timer (NFC_QUICK_TIMER_ID, ((GKI_SECS_TO_TICKS (1) / QUICK_TIMER_TICKS_PER_SEC)), TRUE);
                         break;
 
                     case BT_EVT_TO_NFC_ERR:
-                        nfc_main_handle_err(p_msg);
+                        nfc_main_handle_err (p_msg);
                         free_buf = FALSE;
                         break;
 
-                    case BT_EVT_TO_NFC_MSGS:
-                        nfc_main_handle_msgs(p_msg);
-                        break;
-
                     default:
-                        NFC_TRACE_DEBUG1("nfc_task: unhandle mbox message, event=%04x", p_msg->event);
+                        NFC_TRACE_DEBUG1 ("nfc_task: unhandle mbox message, event=%04x", p_msg->event);
                         break;
                 }
 
                 if (nfc_cb.p_vs_evt_hdlr)
-                    ret = (*nfc_cb.p_vs_evt_hdlr)((UINT16)(NFC_INT_MBOX_EVT| (p_msg->event & BT_EVT_MASK)), p_msg);
+                    ret = (*nfc_cb.p_vs_evt_hdlr) ((UINT16) (NFC_INT_MBOX_EVT| (p_msg->event & BT_EVT_MASK)), p_msg);
 
                 if (free_buf && ret == FALSE)
                 {
@@ -506,36 +507,36 @@ UINT32 nfc_task (UINT32 param)
         /* Process gki timer tick */
         if (event & NFC_TIMER_EVT_MASK)
         {
-            nfc_process_timer_evt();
+            nfc_process_timer_evt ();
         }
 
         /* Process quick timer tick */
         if (event & NFC_QUICK_TIMER_EVT_MASK)
         {
-            nfc_process_quick_timer_evt();
+            nfc_process_quick_timer_evt ();
         }
 
-#if (defined(NFA_INCLUDED) && NFA_INCLUDED == TRUE)
+#if (defined (NFA_INCLUDED) && NFA_INCLUDED == TRUE)
         if (event & NFA_MBOX_EVT_MASK)
         {
-            while ((p_msg = (BT_HDR *) GKI_read_mbox(NFA_MBOX_ID)) != NULL)
+            while ((p_msg = (BT_HDR *) GKI_read_mbox (NFA_MBOX_ID)) != NULL)
             {
-                nfa_sys_event(p_msg);
+                nfa_sys_event (p_msg);
             }
         }
 
         if (event & NFA_TIMER_EVT_MASK)
         {
-            nfa_sys_timer_update();
+            nfa_sys_timer_update ();
         }
 #endif
 
     }
 
 
-    NFC_TRACE_DEBUG0("nfc_task terminated");
+    NFC_TRACE_DEBUG0 ("nfc_task terminated");
 
-    GKI_exit_task(GKI_get_taskid());
+    GKI_exit_task (GKI_get_taskid ());
     return 0;
 }
 

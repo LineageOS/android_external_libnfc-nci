@@ -864,11 +864,14 @@ static void nfa_hci_api_send_event (tNFA_HCI_EVENT_DATA *p_evt_data)
                     if (p_evt_data->send_evt.rsp_len)
                     {
                         nfa_hci_cb.pipe_in_use  = p_evt_data->send_evt.pipe;
-                        nfa_hci_cb.w4_rsp_evt   = TRUE;
                         nfa_hci_cb.rsp_buf_size = p_evt_data->send_evt.rsp_len;
                         nfa_hci_cb.p_rsp_buf    = p_evt_data->send_evt.p_rsp_buf;
-                        nfa_hci_cb.hci_state    = NFA_HCI_STATE_WAIT_RSP;
-                        nfa_sys_start_timer (&nfa_hci_cb.timer, NFA_HCI_RSP_TIMEOUT_EVT, NFA_HCI_EVT_RSP_TIMEOUT_VAL);
+                        if (p_evt_data->send_evt.rsp_timeout)
+                        {
+                            nfa_hci_cb.w4_rsp_evt   = TRUE;
+                            nfa_hci_cb.hci_state    = NFA_HCI_STATE_WAIT_RSP;
+                            nfa_sys_start_timer (&nfa_hci_cb.timer, NFA_HCI_RSP_TIMEOUT_EVT, p_evt_data->send_evt.rsp_timeout);
+                        }
                     }
                     else
                     {

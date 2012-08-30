@@ -710,16 +710,22 @@ BOOLEAN nfa_dm_act_deactivate (tNFA_DM_MSG *p_data)
             deact_type  = NFA_DEACTIVATE_TYPE_DISCOVERY;
             if (p_data->deactivate.sleep_mode)
             {
-                if (nfa_dm_cb.disc_cb.disc_state != NFA_DM_RFST_LISTEN_SLEEP)
+                if (nfa_dm_cb.disc_cb.disc_state == NFA_DM_RFST_W4_HOST_SELECT)
+                {
+                    /* Deactivate to sleep mode not allowed in this state. */
+                    deact_type = NFA_DEACTIVATE_TYPE_IDLE;
+                }
+                else if (nfa_dm_cb.disc_cb.disc_state != NFA_DM_RFST_LISTEN_SLEEP)
                 {
                     deact_type = NFA_DEACTIVATE_TYPE_SLEEP;
                 }
             }
-            else
+            if (nfa_dm_cb.disc_cb.disc_state == NFA_DM_RFST_W4_ALL_DISCOVERIES)
             {
+                /* Only deactivate to IDLE is allowed in this state. */
                 deact_type = NFA_DEACTIVATE_TYPE_IDLE;
             }
-            if ((deact_type != NFA_DEACTIVATE_TYPE_DISCOVERY) && (nfa_dm_rf_deactivate (deact_type) == NFA_STATUS_OK))
+            if (nfa_dm_rf_deactivate (deact_type) == NFA_STATUS_OK)
             {
                 nfa_rw_stop_presence_check_timer ();
                 return (TRUE);

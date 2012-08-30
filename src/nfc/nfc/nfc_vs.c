@@ -19,6 +19,7 @@
 
 #if (NFC_INCLUDED == TRUE)
 #include "nfc_int.h"
+#include "nci_int.h"
 
 /****************************************************************************
 ** Declarations
@@ -46,7 +47,7 @@ tNFC_STATUS NFC_RegVSCback (BOOLEAN          is_register,
 
     if (is_register)
     {
-        for (i=0; i<NFC_NUM_VS_CBACKS; i++)
+        for (i = 0; i < NFC_NUM_VS_CBACKS; i++)
         {
             /* find an empty spot to hold the callback function */
             if (nfc_cb.p_vs_cb[i] == NULL)
@@ -59,7 +60,7 @@ tNFC_STATUS NFC_RegVSCback (BOOLEAN          is_register,
     }
     else
     {
-        for (i=0; i<NFC_NUM_VS_CBACKS; i++)
+        for (i = 0; i < NFC_NUM_VS_CBACKS; i++)
         {
             /* find the callback to de-register */
             if (nfc_cb.p_vs_cb[i] == p_cback)
@@ -88,9 +89,9 @@ tNFC_STATUS NFC_RegVSCback (BOOLEAN          is_register,
 ** Returns          tNFC_STATUS
 **
 *******************************************************************************/
-tNFC_STATUS NFC_SendVsCommand(UINT8          oid,
-                              BT_HDR        *p_data,
-                              tNFC_VS_CBACK *p_cback)
+tNFC_STATUS NFC_SendVsCommand (UINT8          oid,
+                               BT_HDR        *p_data,
+                               tNFC_VS_CBACK *p_cback)
 {
     tNFC_STATUS     status = NFC_STATUS_OK;
     UINT8           *pp;
@@ -98,7 +99,7 @@ tNFC_STATUS NFC_SendVsCommand(UINT8          oid,
     /* Allow VSC with 0-length payload */
     if (p_data == NULL)
     {
-        p_data = NCI_GET_CMD_BUF(0);
+        p_data = NCI_GET_CMD_BUF (0);
         if (p_data)
         {
             p_data->offset  = NCI_VSC_MSG_HDR_SIZE;
@@ -109,23 +110,24 @@ tNFC_STATUS NFC_SendVsCommand(UINT8          oid,
     /* Validate parameters */
     if ((p_data == NULL) || (p_data->offset < NCI_VSC_MSG_HDR_SIZE) || (p_data->len > NCI_MAX_VSC_SIZE))
     {
-        NFC_TRACE_ERROR1 ( "buffer offset must be >= %d", NCI_VSC_MSG_HDR_SIZE);
+        NFC_TRACE_ERROR1 ("buffer offset must be >= %d", NCI_VSC_MSG_HDR_SIZE);
         if (p_data)
-            GKI_freebuf(p_data);
+            GKI_freebuf (p_data);
         return NFC_STATUS_INVALID_PARAM;
     }
 
-    p_data->event   = BT_EVT_TO_NFC_NCI;
+    p_data->event           = BT_EVT_TO_NFC_NCI;
+    p_data->layer_specific  = NCI_WAIT_RSP_VSC;
     /* save the callback function in the BT_HDR, to receive the response */
-    ((tNFC_NCI_VS_MSG *)p_data)->p_cback = p_cback;
+    ((tNFC_NCI_VS_MSG *) p_data)->p_cback = p_cback;
 
     p_data->offset -= NCI_MSG_HDR_SIZE;
-    pp              = (UINT8 *)(p_data + 1) + p_data->offset;
-    NCI_MSG_BLD_HDR0(pp, NCI_MT_CMD, NCI_GID_PROP);
-    NCI_MSG_BLD_HDR1(pp, oid);
-    *pp             = (UINT8)p_data->len;
+    pp              = (UINT8 *) (p_data + 1) + p_data->offset;
+    NCI_MSG_BLD_HDR0 (pp, NCI_MT_CMD, NCI_GID_PROP);
+    NCI_MSG_BLD_HDR1 (pp, oid);
+    *pp             = (UINT8) p_data->len;
     p_data->len    += NCI_MSG_HDR_SIZE;
-    nfc_ncif_send_vsc (p_data);
+    nfc_ncif_check_cmd_queue (p_data);
     return status;
 }
 

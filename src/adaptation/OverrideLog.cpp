@@ -12,6 +12,7 @@
 #include "OverrideLog.h"
 #include <cutils/properties.h>
 #include "config.h"
+#define LOG_TAG "BrcmNfcJni"
 
 
 /*******************************************************************************
@@ -46,6 +47,11 @@ unsigned char initializeGlobalAppLogLevel ()
         sscanf (valueStr, "%lu", &num);
         appl_trace_level = (unsigned char) num;
     }
+
+    //0xFF is a special value used by the stack to query the current
+    //trace level; it does not change any trace level
+    if (appl_trace_level == 0xFF)
+        appl_trace_level = BT_TRACE_LEVEL_DEBUG;
     ALOGD ("%s: level=%u", __FUNCTION__, appl_trace_level);
     return appl_trace_level;
 }

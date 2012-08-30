@@ -19,10 +19,6 @@
 #include "nfa_mem_co.h"
 #include "nfa_hci_defs.h"
 
-#ifndef NFA_HCI_RSP_TIMEOUT_VAL
-#define NFA_HCI_RSP_TIMEOUT_VAL    1000
-#endif
-
 static void handle_debug_loopback (BT_HDR *p_buf, UINT8 pipe, UINT8 type, UINT8 instruction);
 BOOLEAN HCI_LOOPBACK_DEBUG = FALSE;
 
@@ -393,7 +389,7 @@ tNFA_STATUS nfa_hciu_send_msg (UINT8 pipe_id, UINT8 type, UINT8 instruction, UIN
         if (nfa_hci_cb.hci_state == NFA_HCI_STATE_IDLE)
             nfa_hci_cb.hci_state = NFA_HCI_STATE_WAIT_RSP;
 
-        nfa_sys_start_timer (&nfa_hci_cb.timer, NFA_HCI_RSP_TIMEOUT_EVT, NFA_HCI_RSP_TIMEOUT_VAL);
+        nfa_sys_start_timer (&nfa_hci_cb.timer, NFA_HCI_RSP_TIMEOUT_EVT, NFA_HCI_CMD_RSP_TIMEOUT);
     }
 
     return status;

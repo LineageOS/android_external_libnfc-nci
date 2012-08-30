@@ -84,10 +84,6 @@ enum
 
 typedef UINT16 tNFA_HCI_INT_EVT;
 
-#ifndef NFA_HCI_EVT_RSP_TIMEOUT_VAL
-#define NFA_HCI_EVT_RSP_TIMEOUT_VAL    10000
-#endif
-
 /* Internal event structures.
 **
 ** Note, every internal structure starts with a BT_HDR and an app handle
@@ -211,6 +207,7 @@ typedef struct
     UINT8               *p_evt_buf;
     UINT16              rsp_len;
     UINT8               *p_rsp_buf;
+    UINT16              rsp_timeout;
 } tNFA_HCI_API_SEND_EVENT_EVT;
 
 /* data type for NFA_HCI_API_SEND_CMD_EVT */

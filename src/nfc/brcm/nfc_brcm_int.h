@@ -22,12 +22,11 @@
 #include "userial.h"
 
 
-#if (defined(NFC_SHARED_TRANSPORT_ENABLED) && (NFC_SHARED_TRANSPORT_ENABLED==TRUE))
+#if (defined (NFC_SHARED_TRANSPORT_ENABLED) && (NFC_SHARED_TRANSPORT_ENABLED==TRUE))
 #include "btm_api.h"
 #endif
 
 #define NFC_TTYPE_CE_T1T_CONT_RSP           (NFC_TTYPE_VS_BASE + 1)
-#define NFC_TTYPE_CE_T2T_CONT_RSP           (NFC_TTYPE_VS_BASE + 2)
 
 enum
 {
@@ -159,22 +158,28 @@ typedef struct
 ** CE Type 1 Tag control block
 *****************************************************************************/
 
+#define CE_T2T_TAG_SIZE		            2048
+
+/* CE Type 2 Tag control blocks */
 typedef struct
 {
+    UINT8           t2t_mem[CE_T2T_TAG_SIZE]; /* Tag Content                                  */
+    UINT8           uid[TAG_MAX_UID_LEN]; /* UID of the Tag                                   */
     tCE_CBACK       *p_cback;           /* Pointer to the callback function to notify events  */
-    UINT8           uid[TAG_MAX_UID_LEN]; /* Unique Identifier of the tag                     */
-    UINT8           wait_rsp;           /* Expected response                                  */
-    UINT8           cur_op;             /* Current operation                                  */
-    UINT8           state;              /* Current state of the T2 card emulation i/f module  */
-    TIMER_LIST_ENT  timer;              /* T2 Card emulation timer                            */
+    UINT8           state;              /* Current state of the T2 card emulation module      */
+    UINT8           substate;           /* Current sub state of the T2 card emulation module  */
+    UINT8           sector;             /* Current sector selected by peer RW module          */
+    TIMER_LIST_ENT  t2_timer;           /* T2 Card emulation timer                            */
     UINT8           *p_ndef_msg;        /* Pointer to NDEF Message content                    */
     UINT16          ndef_msg_offset;    /* Offset of the NDEF Msg sent/read from controller   */
-    UINT16          ndef_msg_len;       /* Length of the NDEF Msg after rw updation           */
-    UINT16          init_ndef_msg_len;  /* Length of the NDEF Msg before rw updation          */
+    UINT16          ndef_msg_len;       /* Length of the NDEF Msg                             */
+
     UINT16          ndef_msg_max;       /* Size of the scratch buffer                         */
+    UINT8           num_dyn_lock_bytes; /* Total number of dynamic lock bytes in the tag      */
+    UINT8           num_res_bytes;      /* Total number of reserved bytes in the tag          */
+    UINT16          scratch_buf_offset; /* Offset used to maintain scratch buf during r/w op  */
     UINT8           *p_scratch_buf;     /* Buffer to hold the updated NDEF Msg                */
-    BOOLEAN         b_dynamic_mem;      /* Flag to indicate Tag has dynamic memory structure  */
-    BOOLEAN         b_readonly;         /* Flag to indicate Tag is read only or not           */
+
 } tCE_T2T_MEM;
 
 /* CE memory control blocks */
@@ -204,24 +209,21 @@ typedef struct
 {
     tBRCM_PRM_CB            prm;
     tBRCM_PRM_I2C_FIX       prm_i2c;
-    tNFC_STATUS_CBACK       *p_update_baud_cback;       /* Application callback for pending baud-rate change */
     tNFC_BRCM_FW_BUILD_INFO *p_build_info;              /* Buffer for collecting build and patch info for NFC_BrcmGetFirmwareBuildInfo */
 } tNFC_BRCM_CB;
 
 /* BRCM NCI rcv states */
 enum
 {
-    NCI_BRCM_RCV_IDLE_ST,       /* wating for new message */
-    NCI_BRCM_RCV_HCI_HDR_ST,    /* reading HCI header     */
-    NCI_BRCM_RCV_DATA_ST        /* reading whole message  */
+    NCI_BRCM_RCV_PKT_TYPE_ST,   /* wating for packet type           */
+    NCI_BRCM_RCV_BT_IDLE_ST,    /* wating for new BT HCI message    */
+    NCI_BRCM_RCV_BT_HDR_ST,     /* reading BT HCI header            */
+    NCI_BRCM_RCV_BT_PAYLOAD_ST  /* reading whole BT HCI message     */
 };
 
 /* BRCM NCI events */
 enum
 {
-    NCI_BRCM_HCI_CMD_EVT,               /* BT message is sent from NFC task         */
-    NCI_BRCM_API_ENABLE_SNOOZE_EVT,     /* NCI_BrcmEnableSnoozeMode () is called    */
-    NCI_BRCM_API_DISABLE_SNOOZE_EVT,    /* NCI_BrcmDisableSnoozeMode () is called   */
     NCI_BRCM_API_ENTER_CE_LOW_PWR_EVT,  /* NCI_BrcmEnterCELowPowerMode () is called */
     NCI_BRCM_API_ENTER_FULL_PWR_EVT     /* NCI_BrcmEnterFullPowerMode () is called  */
 };
@@ -236,6 +238,19 @@ typedef struct
 typedef BOOLEAN (tNFC_VS_BRCM_PWR_HDLR) (UINT8 event);
 typedef BOOLEAN (tNFC_VS_BRCM_EVT_HDLR) (BT_HDR *p_msg);
 
+#define NCI_SAVED_HDR_SIZE          (2)
+#define NCI_SAVED_CMD_SIZE          (2)
+
+#ifndef BRCM_NCI_DEBUG
+#define BRCM_NCI_DEBUG  TRUE
+#endif
+
+#if (BRCM_NCI_DEBUG == TRUE)
+#define NFC_BRCM_NCI_STATE(sta)  NCI_TRACE_DEBUG2 ("init sta: %d->%d", nci_brcm_cb.initializing_state, sta); nci_brcm_cb.initializing_state = sta;
+#else
+#define NFC_BRCM_NCI_STATE(sta)  nci_brcm_cb.initializing_state = sta;
+#endif
+
 
 /* BRCM NFCC initializing state */
 enum
@@ -245,6 +260,7 @@ enum
     NCI_BRCM_INIT_STATE_W4_XTAL_SET,        /* Waiting for crystal setting rsp       */
     NCI_BRCM_INIT_STATE_W4_RESET,           /* Waiting for reset rsp                 */
     NCI_BRCM_INIT_STATE_W4_BUILD_INFO,      /* Waiting for build info rsp            */
+    NCI_BRCM_INIT_STATE_W4_PATCH_INFO,      /* Waiting for patch info rsp            */
     NCI_BRCM_INIT_STATE_W4_APP_COMPLETE     /* Waiting for complete from application */
 };
 
@@ -259,7 +275,7 @@ typedef struct
 
     UINT8                   power_mode;             /* NFCC power mode                          */
     UINT8                   power_state;            /* NFCC power state in a power mode         */
-    BOOLEAN                 snooze_mode_enabled;    /* TRUE if snooze mode enabled              */
+    BOOLEAN                 snooze_mode;            /* snooze mode                              */
     UINT8                   nfc_wake_active_mode;   /* NFC_LP_ACTIVE_LOW or NFC_LP_ACTIVE_HIGH  */
 
     tNCI_BRCM_INIT_STATE    initializing_state;     /* state of initializing NFCC               */
@@ -270,13 +286,22 @@ typedef struct
     UINT8                   auto_baud_count;        /* count for auto-baud trial                */
 
     UINT8                   userial_baud_rate;      /* reconfigured baud rate                   */
-    tNFC_STATUS_CBACK       *p_update_baud_cback;   /* callback to notify complete of update    */
+
+    tNFC_STATUS_CBACK       *p_prop_cback;          /* callback to notify complete of proprietary update */
 
     tNFC_VS_BRCM_PWR_HDLR   *p_vs_brcm_pwr_hdlr;    /* VS low power mode handler */
     tNFC_VS_BRCM_EVT_HDLR   *p_vs_brcm_evt_hdlr;    /* VS event handler          */
 
     tBRCM_DEV_INIT_CBACK    *p_dev_init_cback;      /* called for app to start initialization */
     tBRCM_DEV_INIT_CONFIG   dev_init_config;        /* BRCM device initialization config      */
+    tNCI_WAIT_RSP           nci_wait_rsp;           /* nci wait response flag */
+    TIMER_LIST_ENT          nci_wait_rsp_timer;     /* Timer for waiting for nci command response */
+    UINT16                  nci_wait_rsp_tout;      /* NCI command timeout (in ms) */
+    UINT8                   last_hdr[NCI_SAVED_HDR_SIZE];/* part of last NCI command header */
+    UINT8                   last_cmd[NCI_SAVED_CMD_SIZE];/* part of last NCI command payload */
+    void                    *p_vsc_cback;           /* the callback function for last VSC command */
+
+    UINT32                  brcm_hw_id;             /* BRCM NFCC HW ID */
 } tNCI_BRCM_CB;
 
 /*****************************************************************************
@@ -310,20 +335,20 @@ extern const UINT8 nci_brcm_prop_build_info_cmd[];
 ****************************************************************************/
 /* nci_brcm.c */
 void nci_brcm_init (tBRCM_DEV_INIT_CONFIG *p_dev_init_config, tBRCM_DEV_INIT_CBACK *p_dev_init_cback);
+void nci_brcm_vs_init_done (void);
 void nci_brcm_send_nci_cmd (const UINT8 *p_data, UINT16 len, tNFC_VS_CBACK *p_cback);
 void nci_brcm_send_bt_cmd (const UINT8 *p_data, UINT16 len, tNFC_BTVSC_CPLT_CBACK *p_cback);
 void nci_brcm_set_local_baud_rate (UINT8 baud);
 void nci_brcm_set_nfc_wake (UINT8 cmd);
 
-/* nfc_btvscif_brcm.c */
-extern void nfc_brcm_btvscif_process_event (BT_HDR *p_msg);
-
 /* nfc_prm_brcm.c */
-void nfc_brcm_prm_spd_reset_ntf(UINT8 reset_reason, UINT8 reset_type);
+void nfc_brcm_prm_spd_reset_ntf (UINT8 reset_reason, UINT8 reset_type);
 
 #define ce_brcm_init()
 
-#define nci_vs_brcm_init();
+#define nci_vs_brcm_init()
+#define nci_brcm_start_auto_baud_detection()
+#define nci_brcm_reset_baud_on_shutdown()
 
 #ifdef __cplusplus
 }

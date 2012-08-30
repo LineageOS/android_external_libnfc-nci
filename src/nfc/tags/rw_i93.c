@@ -91,7 +91,7 @@ void rw_i93_get_product_version (UINT8 *p_uid)
         return;
     }
 
-    RW_TRACE_DEBUG0 ("rw_i93_get_product_version()");
+    RW_TRACE_DEBUG0 ("rw_i93_get_product_version ()");
 
     memcpy (p_i93->uid, p_uid, I93_UID_BYTE_LEN);
 
@@ -159,7 +159,7 @@ void rw_i93_get_product_version (UINT8 *p_uid)
 *******************************************************************************/
 void rw_i93_send_to_upper (BT_HDR *p_resp)
 {
-    UINT8      *p = (UINT8 *)(p_resp + 1) + p_resp->offset, *p_uid;
+    UINT8      *p = (UINT8 *) (p_resp + 1) + p_resp->offset, *p_uid;
     UINT16     length = p_resp->len;
     tRW_I93_CB *p_i93 = &rw_cb.tcb.i93;
     tRW_DATA   rw_data;
@@ -167,7 +167,7 @@ void rw_i93_send_to_upper (BT_HDR *p_resp)
     UINT8      flags;
     BT_HDR     *p_buff;
 
-    RW_TRACE_DEBUG0 ("rw_i93_send_to_upper()");
+    RW_TRACE_DEBUG0 ("rw_i93_send_to_upper ()");
 
     STREAM_TO_UINT8 (flags, p);
     length--;
@@ -180,7 +180,7 @@ void rw_i93_send_to_upper (BT_HDR *p_resp)
         STREAM_TO_UINT8 (rw_data.i93_cmd_cmpl.error_code, p);
 
         rw_cb.tcb.i93.sent_cmd = 0;
-        (*(rw_cb.p_cback))(RW_I93_CMD_CMPL_EVT, &rw_data);
+        (*(rw_cb.p_cback)) (RW_I93_CMD_CMPL_EVT, &rw_data);
         return;
     }
 
@@ -206,7 +206,7 @@ void rw_i93_send_to_upper (BT_HDR *p_resp)
     case I93_CMD_GET_MULTI_BLK_SEC:
 
         /* forward tag data or security status */
-        p_buff = (BT_HDR*)GKI_getbuf ((UINT16)(length + BT_HDR_SIZE));
+        p_buff = (BT_HDR*) GKI_getbuf ((UINT16) (length + BT_HDR_SIZE));
 
         if (p_buff)
         {
@@ -288,7 +288,14 @@ void rw_i93_send_to_upper (BT_HDR *p_resp)
         if (rw_data.i93_sys_info.info_flags & I93_INFO_FLAG_IC_REF)
         {
             STREAM_TO_UINT8 (rw_data.i93_sys_info.IC_reference, p);
+
             p_i93->ic_reference = rw_data.i93_sys_info.IC_reference;
+
+            if ((p_i93->uid[0] == I93_UID_FIRST_BYTE) && (p_i93->uid[1] == I93_UID_IC_MFG_CODE_NXP) && (p_i93->ic_reference == I93_IC_REF_ICODE_SLI_L))
+            {
+                p_i93->num_block  = 8;
+                p_i93->block_size = 4;
+            }
         }
 
         event = RW_I93_SYS_INFO_EVT;
@@ -301,11 +308,11 @@ void rw_i93_send_to_upper (BT_HDR *p_resp)
     rw_cb.tcb.i93.sent_cmd = 0;
     if (event != RW_I93_MAX_EVT)
     {
-        (*(rw_cb.p_cback))(event, &rw_data);
+        (*(rw_cb.p_cback)) (event, &rw_data);
     }
     else
     {
-        RW_TRACE_ERROR0 ("rw_i93_send_to_upper(): Invalid response");
+        RW_TRACE_ERROR0 ("rw_i93_send_to_upper (): Invalid response");
     }
 }
 
@@ -324,9 +331,9 @@ BOOLEAN rw_i93_send_to_lower (BT_HDR *p_msg)
     DispRWI93Tag (p_msg, FALSE, 0x00);
 #endif
 
-    if (NFC_SendData(NFC_RF_CONN_ID, p_msg) != NFC_STATUS_OK)
+    if (NFC_SendData (NFC_RF_CONN_ID, p_msg) != NFC_STATUS_OK)
     {
-        RW_TRACE_ERROR0 ("rw_i93_send_to_lower(): NFC_SendData() failed");
+        RW_TRACE_ERROR0 ("rw_i93_send_to_lower (): NFC_SendData () failed");
         return FALSE;
     }
 
@@ -350,22 +357,22 @@ tNFC_STATUS rw_i93_send_cmd_inventory (UINT8 *p_uid, UINT8 afi)
     BT_HDR      *p_cmd;
     UINT8       *p;
 
-    RW_TRACE_DEBUG1 ("rw_i93_send_cmd_inventory() AFI:0x%02X", afi);
+    RW_TRACE_DEBUG1 ("rw_i93_send_cmd_inventory () AFI:0x%02X", afi);
 
-    p_cmd = (BT_HDR *)GKI_getpoolbuf(NFC_RW_POOL_ID);
+    p_cmd = (BT_HDR *) GKI_getpoolbuf (NFC_RW_POOL_ID);
 
     if (!p_cmd)
     {
-        RW_TRACE_ERROR0 ("rw_i93_send_cmd_inventory(): Cannot allocate buffer");
+        RW_TRACE_ERROR0 ("rw_i93_send_cmd_inventory (): Cannot allocate buffer");
         return NFC_STATUS_NO_BUFFERS;
     }
 
     p_cmd->offset = NCI_MSG_OFFSET_SIZE + NCI_DATA_HDR_SIZE;
     p_cmd->len    = 4;
-    p = (UINT8 *)(p_cmd + 1) + p_cmd->offset;
+    p = (UINT8 *) (p_cmd + 1) + p_cmd->offset;
 
     /* Flags */
-    UINT8_TO_STREAM (p, (I93_FLAG_SLOT_ONE|I93_FLAG_INVENTORY_SET|I93_FLAG_AFI_PRESENT));
+    UINT8_TO_STREAM (p, (I93_FLAG_SLOT_ONE | I93_FLAG_INVENTORY_SET | I93_FLAG_AFI_PRESENT | RW_I93_FLAG_SUB_CARRIER | RW_I93_FLAG_DATA_RATE));
 
     /* Command Code */
     UINT8_TO_STREAM (p, I93_CMD_INVENTORY);
@@ -409,22 +416,22 @@ tNFC_STATUS rw_i93_send_cmd_stay_quiet (void)
     BT_HDR      *p_cmd;
     UINT8       *p;
 
-    RW_TRACE_DEBUG0 ("rw_i93_send_cmd_stay_quiet()");
+    RW_TRACE_DEBUG0 ("rw_i93_send_cmd_stay_quiet ()");
 
-    p_cmd = (BT_HDR *)GKI_getpoolbuf(NFC_RW_POOL_ID);
+    p_cmd = (BT_HDR *) GKI_getpoolbuf (NFC_RW_POOL_ID);
 
     if (!p_cmd)
     {
-        RW_TRACE_ERROR0 ("rw_i93_send_cmd_stay_quiet(): Cannot allocate buffer");
+        RW_TRACE_ERROR0 ("rw_i93_send_cmd_stay_quiet (): Cannot allocate buffer");
         return NFC_STATUS_NO_BUFFERS;
     }
 
     p_cmd->offset = NCI_MSG_OFFSET_SIZE + NCI_DATA_HDR_SIZE;
     p_cmd->len    = 10;
-    p = (UINT8 *)(p_cmd + 1) + p_cmd->offset;
+    p = (UINT8 *) (p_cmd + 1) + p_cmd->offset;
 
     /* Flags */
-    UINT8_TO_STREAM (p, (I93_FLAG_ADDRESS_SET));
+    UINT8_TO_STREAM (p, (I93_FLAG_ADDRESS_SET | RW_I93_FLAG_SUB_CARRIER | RW_I93_FLAG_DATA_RATE));
 
     /* Command Code */
     UINT8_TO_STREAM (p, I93_CMD_STAY_QUIET);
@@ -438,7 +445,7 @@ tNFC_STATUS rw_i93_send_cmd_stay_quiet (void)
 
         /* restart timer for stay quiet */
         nfc_start_quick_timer (&rw_cb.tcb.i93.timer, NFC_TTYPE_RW_I93_RESPONSE,
-                               (RW_I93_TOUT_STAY_QUIET*QUICK_TIMER_TICKS_PER_SEC)/1000);
+                               (RW_I93_TOUT_STAY_QUIET * QUICK_TIMER_TICKS_PER_SEC) / 1000);
         return NFC_STATUS_OK;
     }
     else
@@ -461,35 +468,35 @@ tNFC_STATUS rw_i93_send_cmd_read_single_block (UINT8 block_number, BOOLEAN read_
     BT_HDR      *p_cmd;
     UINT8       *p;
 
-    RW_TRACE_DEBUG0 ("rw_i93_send_cmd_read_single_block()");
+    RW_TRACE_DEBUG0 ("rw_i93_send_cmd_read_single_block ()");
 
-    p_cmd = (BT_HDR *)GKI_getpoolbuf(NFC_RW_POOL_ID);
+    p_cmd = (BT_HDR *) GKI_getpoolbuf (NFC_RW_POOL_ID);
 
     if (!p_cmd)
     {
-        RW_TRACE_ERROR0 ("rw_i93_send_cmd_read_single_block(): Cannot allocate buffer");
+        RW_TRACE_ERROR0 ("rw_i93_send_cmd_read_single_block (): Cannot allocate buffer");
         return NFC_STATUS_NO_BUFFERS;
     }
 
     p_cmd->offset = NCI_MSG_OFFSET_SIZE + NCI_DATA_HDR_SIZE;
     p_cmd->len    = 11;
-    p = (UINT8 *)(p_cmd + 1) + p_cmd->offset;
+    p = (UINT8 *) (p_cmd + 1) + p_cmd->offset;
 
     /* Flags */
     if (read_security)
     {
-        UINT8_TO_STREAM (p, (I93_FLAG_ADDRESS_SET|I93_FLAG_OPTION_SET));
+        UINT8_TO_STREAM (p, (I93_FLAG_ADDRESS_SET | I93_FLAG_OPTION_SET | RW_I93_FLAG_SUB_CARRIER | RW_I93_FLAG_DATA_RATE));
     }
     else
     {
-        UINT8_TO_STREAM (p, (I93_FLAG_ADDRESS_SET));
+        UINT8_TO_STREAM (p, (I93_FLAG_ADDRESS_SET | RW_I93_FLAG_SUB_CARRIER | RW_I93_FLAG_DATA_RATE));
     }
 
     /* Command Code */
     UINT8_TO_STREAM (p, I93_CMD_READ_SINGLE_BLOCK);
 
     /* Parameters */
-    ARRAY8_TO_STREAM(p, rw_cb.tcb.i93.uid);     /* UID */
+    ARRAY8_TO_STREAM (p, rw_cb.tcb.i93.uid);     /* UID */
     UINT8_TO_STREAM (p, block_number);          /* Block number */
 
     if (rw_i93_send_to_lower (p_cmd))
@@ -517,39 +524,39 @@ tNFC_STATUS rw_i93_send_cmd_write_single_block (UINT8 block_number, UINT8 *p_dat
     BT_HDR      *p_cmd;
     UINT8       *p;
 
-    RW_TRACE_DEBUG0 ("rw_i93_send_cmd_write_single_block()");
+    RW_TRACE_DEBUG0 ("rw_i93_send_cmd_write_single_block ()");
 
-    p_cmd = (BT_HDR *)GKI_getpoolbuf(NFC_RW_POOL_ID);
+    p_cmd = (BT_HDR *) GKI_getpoolbuf (NFC_RW_POOL_ID);
 
     if (!p_cmd)
     {
-        RW_TRACE_ERROR0 ("rw_i93_send_cmd_write_single_block(): Cannot allocate buffer");
+        RW_TRACE_ERROR0 ("rw_i93_send_cmd_write_single_block (): Cannot allocate buffer");
         return NFC_STATUS_NO_BUFFERS;
     }
 
     p_cmd->offset = NCI_MSG_OFFSET_SIZE + NCI_DATA_HDR_SIZE;
     p_cmd->len    = 11 + rw_cb.tcb.i93.block_size;
-    p = (UINT8 *)(p_cmd + 1) + p_cmd->offset;
+    p = (UINT8 *) (p_cmd + 1) + p_cmd->offset;
 
     /* Flags */
-    if ((rw_cb.tcb.i93.product_version == RW_I93_TAG_IT_HF_I_PLUS_INLAY)
-      ||(rw_cb.tcb.i93.product_version == RW_I93_TAG_IT_HF_I_PLUS_CHIP)
-      ||(rw_cb.tcb.i93.product_version == RW_I93_TAG_IT_HF_I_STD_CHIP_INLAY)
-      ||(rw_cb.tcb.i93.product_version == RW_I93_TAG_IT_HF_I_PRO_CHIP_INLAY))
+    if (  (rw_cb.tcb.i93.product_version == RW_I93_TAG_IT_HF_I_PLUS_INLAY)
+        ||(rw_cb.tcb.i93.product_version == RW_I93_TAG_IT_HF_I_PLUS_CHIP)
+        ||(rw_cb.tcb.i93.product_version == RW_I93_TAG_IT_HF_I_STD_CHIP_INLAY)
+        ||(rw_cb.tcb.i93.product_version == RW_I93_TAG_IT_HF_I_PRO_CHIP_INLAY)  )
     {
         /* Option must be set for TI tag */
-        UINT8_TO_STREAM (p, (I93_FLAG_ADDRESS_SET|I93_FLAG_OPTION_SET));
+        UINT8_TO_STREAM (p, (I93_FLAG_ADDRESS_SET | I93_FLAG_OPTION_SET | RW_I93_FLAG_SUB_CARRIER | RW_I93_FLAG_DATA_RATE));
     }
     else
     {
-        UINT8_TO_STREAM (p, (I93_FLAG_ADDRESS_SET));
+        UINT8_TO_STREAM (p, (I93_FLAG_ADDRESS_SET | RW_I93_FLAG_SUB_CARRIER | RW_I93_FLAG_DATA_RATE));
     }
 
     /* Command Code */
     UINT8_TO_STREAM (p, I93_CMD_WRITE_SINGLE_BLOCK);
 
     /* Parameters */
-    ARRAY8_TO_STREAM(p, rw_cb.tcb.i93.uid);    /* UID */
+    ARRAY8_TO_STREAM (p, rw_cb.tcb.i93.uid);    /* UID */
     UINT8_TO_STREAM (p, block_number);         /* Block number */
 
     /* Data */
@@ -580,39 +587,39 @@ tNFC_STATUS rw_i93_send_cmd_lock_block (UINT8 block_number)
     BT_HDR      *p_cmd;
     UINT8       *p;
 
-    RW_TRACE_DEBUG0 ("rw_i93_send_cmd_lock_block()");
+    RW_TRACE_DEBUG0 ("rw_i93_send_cmd_lock_block ()");
 
-    p_cmd = (BT_HDR *)GKI_getpoolbuf(NFC_RW_POOL_ID);
+    p_cmd = (BT_HDR *) GKI_getpoolbuf (NFC_RW_POOL_ID);
 
     if (!p_cmd)
     {
-        RW_TRACE_ERROR0 ("rw_i93_send_cmd_lock_block(): Cannot allocate buffer");
+        RW_TRACE_ERROR0 ("rw_i93_send_cmd_lock_block (): Cannot allocate buffer");
         return NFC_STATUS_NO_BUFFERS;
     }
 
     p_cmd->offset = NCI_MSG_OFFSET_SIZE + NCI_DATA_HDR_SIZE;
     p_cmd->len    = 11;
-    p = (UINT8 *)(p_cmd + 1) + p_cmd->offset;
+    p = (UINT8 *) (p_cmd + 1) + p_cmd->offset;
 
     /* Flags */
-    if ((rw_cb.tcb.i93.product_version == RW_I93_TAG_IT_HF_I_PLUS_INLAY)
-      ||(rw_cb.tcb.i93.product_version == RW_I93_TAG_IT_HF_I_PLUS_CHIP)
-      ||(rw_cb.tcb.i93.product_version == RW_I93_TAG_IT_HF_I_STD_CHIP_INLAY)
-      ||(rw_cb.tcb.i93.product_version == RW_I93_TAG_IT_HF_I_PRO_CHIP_INLAY))
+    if (  (rw_cb.tcb.i93.product_version == RW_I93_TAG_IT_HF_I_PLUS_INLAY)
+        ||(rw_cb.tcb.i93.product_version == RW_I93_TAG_IT_HF_I_PLUS_CHIP)
+        ||(rw_cb.tcb.i93.product_version == RW_I93_TAG_IT_HF_I_STD_CHIP_INLAY)
+        ||(rw_cb.tcb.i93.product_version == RW_I93_TAG_IT_HF_I_PRO_CHIP_INLAY)  )
     {
         /* Option must be set for TI tag */
-        UINT8_TO_STREAM (p, (I93_FLAG_ADDRESS_SET|I93_FLAG_OPTION_SET));
+        UINT8_TO_STREAM (p, (I93_FLAG_ADDRESS_SET | I93_FLAG_OPTION_SET | RW_I93_FLAG_SUB_CARRIER | RW_I93_FLAG_DATA_RATE));
     }
     else
     {
-        UINT8_TO_STREAM (p, (I93_FLAG_ADDRESS_SET));
+        UINT8_TO_STREAM (p, (I93_FLAG_ADDRESS_SET | RW_I93_FLAG_SUB_CARRIER | RW_I93_FLAG_DATA_RATE));
     }
 
     /* Command Code */
     UINT8_TO_STREAM (p, I93_CMD_LOCK_BLOCK);
 
     /* Parameters */
-    ARRAY8_TO_STREAM(p, rw_cb.tcb.i93.uid);    /* UID */
+    ARRAY8_TO_STREAM (p, rw_cb.tcb.i93.uid);    /* UID */
     UINT8_TO_STREAM (p, block_number);         /* Block number */
 
     if (rw_i93_send_to_lower (p_cmd))
@@ -640,28 +647,28 @@ tNFC_STATUS rw_i93_send_cmd_read_multi_blocks (UINT8 first_block_number, UINT16 
     BT_HDR      *p_cmd;
     UINT8       *p;
 
-    RW_TRACE_DEBUG0 ("rw_i93_send_cmd_read_multi_blocks()");
+    RW_TRACE_DEBUG0 ("rw_i93_send_cmd_read_multi_blocks ()");
 
-    p_cmd = (BT_HDR *)GKI_getpoolbuf(NFC_RW_POOL_ID);
+    p_cmd = (BT_HDR *) GKI_getpoolbuf (NFC_RW_POOL_ID);
 
     if (!p_cmd)
     {
-        RW_TRACE_ERROR0 ("rw_i93_send_cmd_read_multi_blocks(): Cannot allocate buffer");
+        RW_TRACE_ERROR0 ("rw_i93_send_cmd_read_multi_blocks (): Cannot allocate buffer");
         return NFC_STATUS_NO_BUFFERS;
     }
 
     p_cmd->offset = NCI_MSG_OFFSET_SIZE + NCI_DATA_HDR_SIZE;
     p_cmd->len    = 12;
-    p = (UINT8 *)(p_cmd + 1) + p_cmd->offset;
+    p = (UINT8 *) (p_cmd + 1) + p_cmd->offset;
 
     /* Flags */
-    UINT8_TO_STREAM (p, (I93_FLAG_ADDRESS_SET));
+    UINT8_TO_STREAM (p, (I93_FLAG_ADDRESS_SET | RW_I93_FLAG_SUB_CARRIER | RW_I93_FLAG_DATA_RATE));
 
     /* Command Code */
     UINT8_TO_STREAM (p, I93_CMD_READ_MULTI_BLOCK);
 
     /* Parameters */
-    ARRAY8_TO_STREAM(p, rw_cb.tcb.i93.uid);    /* UID */
+    ARRAY8_TO_STREAM (p, rw_cb.tcb.i93.uid);    /* UID */
     UINT8_TO_STREAM (p, first_block_number);   /* First block number */
     UINT8_TO_STREAM (p, number_blocks - 1);    /* Number of blocks, 0x00 to read one block */
 
@@ -692,28 +699,28 @@ tNFC_STATUS rw_i93_send_cmd_write_multi_blocks (UINT8  first_block_number,
     BT_HDR      *p_cmd;
     UINT8       *p;
 
-    RW_TRACE_DEBUG0 ("rw_i93_send_cmd_write_multi_blocks()");
+    RW_TRACE_DEBUG0 ("rw_i93_send_cmd_write_multi_blocks ()");
 
-    p_cmd = (BT_HDR *)GKI_getpoolbuf(NFC_RW_POOL_ID);
+    p_cmd = (BT_HDR *) GKI_getpoolbuf (NFC_RW_POOL_ID);
 
     if (!p_cmd)
     {
-        RW_TRACE_ERROR0 ("rw_i93_send_cmd_write_multi_blocks(): Cannot allocate buffer");
+        RW_TRACE_ERROR0 ("rw_i93_send_cmd_write_multi_blocks (): Cannot allocate buffer");
         return NFC_STATUS_NO_BUFFERS;
     }
 
     p_cmd->offset = NCI_MSG_OFFSET_SIZE + NCI_DATA_HDR_SIZE;
     p_cmd->len    = 12 + number_blocks * rw_cb.tcb.i93.block_size;
-    p = (UINT8 *)(p_cmd + 1) + p_cmd->offset;
+    p = (UINT8 *) (p_cmd + 1) + p_cmd->offset;
 
     /* Flags */
-    UINT8_TO_STREAM (p, (I93_FLAG_ADDRESS_SET));
+    UINT8_TO_STREAM (p, (I93_FLAG_ADDRESS_SET | RW_I93_FLAG_SUB_CARRIER | RW_I93_FLAG_DATA_RATE));
 
     /* Command Code */
     UINT8_TO_STREAM (p, I93_CMD_WRITE_MULTI_BLOCK);
 
     /* Parameters */
-    ARRAY8_TO_STREAM(p, rw_cb.tcb.i93.uid);    /* UID */
+    ARRAY8_TO_STREAM (p, rw_cb.tcb.i93.uid);   /* UID */
     UINT8_TO_STREAM (p, first_block_number);   /* First block number */
     UINT8_TO_STREAM (p, number_blocks - 1);    /* Number of blocks, 0x00 to read one block */
 
@@ -745,22 +752,22 @@ tNFC_STATUS rw_i93_send_cmd_select (UINT8 *p_uid)
     BT_HDR      *p_cmd;
     UINT8       *p;
 
-    RW_TRACE_DEBUG0 ("rw_i93_send_cmd_select()");
+    RW_TRACE_DEBUG0 ("rw_i93_send_cmd_select ()");
 
-    p_cmd = (BT_HDR *)GKI_getpoolbuf(NFC_RW_POOL_ID);
+    p_cmd = (BT_HDR *) GKI_getpoolbuf (NFC_RW_POOL_ID);
 
     if (!p_cmd)
     {
-        RW_TRACE_ERROR0 ("rw_i93_send_cmd_select(): Cannot allocate buffer");
+        RW_TRACE_ERROR0 ("rw_i93_send_cmd_select (): Cannot allocate buffer");
         return NFC_STATUS_NO_BUFFERS;
     }
 
     p_cmd->offset = NCI_MSG_OFFSET_SIZE + NCI_DATA_HDR_SIZE;
     p_cmd->len    = 10 ;
-    p = (UINT8 *)(p_cmd + 1) + p_cmd->offset;
+    p = (UINT8 *) (p_cmd + 1) + p_cmd->offset;
 
     /* Flags */
-    UINT8_TO_STREAM (p, (I93_FLAG_ADDRESS_SET));
+    UINT8_TO_STREAM (p, (I93_FLAG_ADDRESS_SET | RW_I93_FLAG_SUB_CARRIER | RW_I93_FLAG_DATA_RATE));
 
     /* Command Code */
     UINT8_TO_STREAM (p, I93_CMD_SELECT);
@@ -793,22 +800,22 @@ tNFC_STATUS rw_i93_send_cmd_reset_to_ready (void)
     BT_HDR      *p_cmd;
     UINT8       *p;
 
-    RW_TRACE_DEBUG0 ("rw_i93_send_cmd_reset_to_ready()");
+    RW_TRACE_DEBUG0 ("rw_i93_send_cmd_reset_to_ready ()");
 
-    p_cmd = (BT_HDR *)GKI_getpoolbuf(NFC_RW_POOL_ID);
+    p_cmd = (BT_HDR *) GKI_getpoolbuf (NFC_RW_POOL_ID);
 
     if (!p_cmd)
     {
-        RW_TRACE_ERROR0 ("rw_i93_send_cmd_reset_to_ready(): Cannot allocate buffer");
+        RW_TRACE_ERROR0 ("rw_i93_send_cmd_reset_to_ready (): Cannot allocate buffer");
         return NFC_STATUS_NO_BUFFERS;
     }
 
     p_cmd->offset = NCI_MSG_OFFSET_SIZE + NCI_DATA_HDR_SIZE;
     p_cmd->len    = 10 ;
-    p = (UINT8 *)(p_cmd + 1) + p_cmd->offset;
+    p = (UINT8 *) (p_cmd + 1) + p_cmd->offset;
 
     /* Flags */
-    UINT8_TO_STREAM (p, (I93_FLAG_ADDRESS_SET));
+    UINT8_TO_STREAM (p, (I93_FLAG_ADDRESS_SET | RW_I93_FLAG_SUB_CARRIER | RW_I93_FLAG_DATA_RATE));
 
     /* Command Code */
     UINT8_TO_STREAM (p, I93_CMD_RESET_TO_READY);
@@ -841,28 +848,28 @@ tNFC_STATUS rw_i93_send_cmd_write_afi (UINT8 afi)
     BT_HDR      *p_cmd;
     UINT8       *p;
 
-    RW_TRACE_DEBUG0 ("rw_i93_send_cmd_write_afi()");
+    RW_TRACE_DEBUG0 ("rw_i93_send_cmd_write_afi ()");
 
-    p_cmd = (BT_HDR *)GKI_getpoolbuf(NFC_RW_POOL_ID);
+    p_cmd = (BT_HDR *) GKI_getpoolbuf (NFC_RW_POOL_ID);
 
     if (!p_cmd)
     {
-        RW_TRACE_ERROR0 ("rw_i93_send_cmd_write_afi(): Cannot allocate buffer");
+        RW_TRACE_ERROR0 ("rw_i93_send_cmd_write_afi (): Cannot allocate buffer");
         return NFC_STATUS_NO_BUFFERS;
     }
 
     p_cmd->offset = NCI_MSG_OFFSET_SIZE + NCI_DATA_HDR_SIZE;
     p_cmd->len    = 11;
-    p = (UINT8 *)(p_cmd + 1) + p_cmd->offset;
+    p = (UINT8 *) (p_cmd + 1) + p_cmd->offset;
 
     /* Flags */
-    UINT8_TO_STREAM (p, (I93_FLAG_ADDRESS_SET));
+    UINT8_TO_STREAM (p, (I93_FLAG_ADDRESS_SET | RW_I93_FLAG_SUB_CARRIER | RW_I93_FLAG_DATA_RATE));
 
     /* Command Code */
     UINT8_TO_STREAM (p, I93_CMD_WRITE_AFI);
 
     /* Parameters */
-    ARRAY8_TO_STREAM(p, rw_cb.tcb.i93.uid);    /* UID */
+    ARRAY8_TO_STREAM (p, rw_cb.tcb.i93.uid);    /* UID */
     UINT8_TO_STREAM (p, afi);                  /* AFI */
 
     if (rw_i93_send_to_lower (p_cmd))
@@ -890,22 +897,22 @@ tNFC_STATUS rw_i93_send_cmd_lock_afi (void)
     BT_HDR      *p_cmd;
     UINT8       *p;
 
-    RW_TRACE_DEBUG0 ("rw_i93_send_cmd_lock_afi()");
+    RW_TRACE_DEBUG0 ("rw_i93_send_cmd_lock_afi ()");
 
-    p_cmd = (BT_HDR *)GKI_getpoolbuf(NFC_RW_POOL_ID);
+    p_cmd = (BT_HDR *) GKI_getpoolbuf (NFC_RW_POOL_ID);
 
     if (!p_cmd)
     {
-        RW_TRACE_ERROR0 ("rw_i93_send_cmd_lock_afi(): Cannot allocate buffer");
+        RW_TRACE_ERROR0 ("rw_i93_send_cmd_lock_afi (): Cannot allocate buffer");
         return NFC_STATUS_NO_BUFFERS;
     }
 
     p_cmd->offset = NCI_MSG_OFFSET_SIZE + NCI_DATA_HDR_SIZE;
     p_cmd->len    = 10;
-    p = (UINT8 *)(p_cmd + 1) + p_cmd->offset;
+    p = (UINT8 *) (p_cmd + 1) + p_cmd->offset;
 
     /* Flags */
-    UINT8_TO_STREAM (p, (I93_FLAG_ADDRESS_SET));
+    UINT8_TO_STREAM (p, (I93_FLAG_ADDRESS_SET | RW_I93_FLAG_SUB_CARRIER | RW_I93_FLAG_DATA_RATE));
 
     /* Command Code */
     UINT8_TO_STREAM (p, I93_CMD_LOCK_AFI);
@@ -938,28 +945,28 @@ tNFC_STATUS rw_i93_send_cmd_write_dsfid (UINT8 dsfid)
     BT_HDR      *p_cmd;
     UINT8       *p;
 
-    RW_TRACE_DEBUG0 ("rw_i93_send_cmd_write_dsfid()");
+    RW_TRACE_DEBUG0 ("rw_i93_send_cmd_write_dsfid ()");
 
-    p_cmd = (BT_HDR *)GKI_getpoolbuf(NFC_RW_POOL_ID);
+    p_cmd = (BT_HDR *) GKI_getpoolbuf (NFC_RW_POOL_ID);
 
     if (!p_cmd)
     {
-        RW_TRACE_ERROR0 ("rw_i93_send_cmd_write_dsfid(): Cannot allocate buffer");
+        RW_TRACE_ERROR0 ("rw_i93_send_cmd_write_dsfid (): Cannot allocate buffer");
         return NFC_STATUS_NO_BUFFERS;
     }
 
     p_cmd->offset = NCI_MSG_OFFSET_SIZE + NCI_DATA_HDR_SIZE;
     p_cmd->len    = 11;
-    p = (UINT8 *)(p_cmd + 1) + p_cmd->offset;
+    p = (UINT8 *) (p_cmd + 1) + p_cmd->offset;
 
     /* Flags */
-    UINT8_TO_STREAM (p, (I93_FLAG_ADDRESS_SET));
+    UINT8_TO_STREAM (p, (I93_FLAG_ADDRESS_SET | RW_I93_FLAG_SUB_CARRIER | RW_I93_FLAG_DATA_RATE));
 
     /* Command Code */
     UINT8_TO_STREAM (p, I93_CMD_WRITE_DSFID);
 
     /* Parameters */
-    ARRAY8_TO_STREAM(p, rw_cb.tcb.i93.uid);    /* UID */
+    ARRAY8_TO_STREAM (p, rw_cb.tcb.i93.uid);    /* UID */
     UINT8_TO_STREAM (p, dsfid);                /* DSFID */
 
     if (rw_i93_send_to_lower (p_cmd))
@@ -987,22 +994,22 @@ tNFC_STATUS rw_i93_send_cmd_lock_dsfid (void)
     BT_HDR      *p_cmd;
     UINT8       *p;
 
-    RW_TRACE_DEBUG0 ("rw_i93_send_cmd_lock_dsfid()");
+    RW_TRACE_DEBUG0 ("rw_i93_send_cmd_lock_dsfid ()");
 
-    p_cmd = (BT_HDR *)GKI_getpoolbuf(NFC_RW_POOL_ID);
+    p_cmd = (BT_HDR *) GKI_getpoolbuf (NFC_RW_POOL_ID);
 
     if (!p_cmd)
     {
-        RW_TRACE_ERROR0 ("rw_i93_send_cmd_lock_dsfid(): Cannot allocate buffer");
+        RW_TRACE_ERROR0 ("rw_i93_send_cmd_lock_dsfid (): Cannot allocate buffer");
         return NFC_STATUS_NO_BUFFERS;
     }
 
     p_cmd->offset = NCI_MSG_OFFSET_SIZE + NCI_DATA_HDR_SIZE;
     p_cmd->len    = 10;
-    p = (UINT8 *)(p_cmd + 1) + p_cmd->offset;
+    p = (UINT8 *) (p_cmd + 1) + p_cmd->offset;
 
     /* Flags */
-    UINT8_TO_STREAM (p, (I93_FLAG_ADDRESS_SET));
+    UINT8_TO_STREAM (p, (I93_FLAG_ADDRESS_SET | RW_I93_FLAG_SUB_CARRIER | RW_I93_FLAG_DATA_RATE));
 
     /* Command Code */
     UINT8_TO_STREAM (p, I93_CMD_LOCK_DSFID);
@@ -1035,22 +1042,22 @@ tNFC_STATUS rw_i93_send_cmd_get_sys_info (UINT8 *p_uid)
     BT_HDR      *p_cmd;
     UINT8       *p;
 
-    RW_TRACE_DEBUG0 ("rw_i93_send_cmd_get_sys_info()");
+    RW_TRACE_DEBUG0 ("rw_i93_send_cmd_get_sys_info ()");
 
-    p_cmd = (BT_HDR *)GKI_getpoolbuf(NFC_RW_POOL_ID);
+    p_cmd = (BT_HDR *) GKI_getpoolbuf (NFC_RW_POOL_ID);
 
     if (!p_cmd)
     {
-        RW_TRACE_ERROR0 ("rw_i93_send_cmd_get_sys_info(): Cannot allocate buffer");
+        RW_TRACE_ERROR0 ("rw_i93_send_cmd_get_sys_info (): Cannot allocate buffer");
         return NFC_STATUS_NO_BUFFERS;
     }
 
     p_cmd->offset = NCI_MSG_OFFSET_SIZE + NCI_DATA_HDR_SIZE;
     p_cmd->len    = 10;
-    p = (UINT8 *)(p_cmd + 1) + p_cmd->offset;
+    p = (UINT8 *) (p_cmd + 1) + p_cmd->offset;
 
     /* Flags */
-    UINT8_TO_STREAM (p, (I93_FLAG_ADDRESS_SET));
+    UINT8_TO_STREAM (p, (I93_FLAG_ADDRESS_SET | RW_I93_FLAG_SUB_CARRIER | RW_I93_FLAG_DATA_RATE));
 
     /* Command Code */
     UINT8_TO_STREAM (p, I93_CMD_GET_SYS_INFO);
@@ -1058,11 +1065,11 @@ tNFC_STATUS rw_i93_send_cmd_get_sys_info (UINT8 *p_uid)
     /* Parameters */
     if (p_uid)
     {
-        ARRAY8_TO_STREAM(p, p_uid);               /* UID */
+        ARRAY8_TO_STREAM (p, p_uid);               /* UID */
     }
     else
     {
-        ARRAY8_TO_STREAM(p, rw_cb.tcb.i93.uid);   /* UID */
+        ARRAY8_TO_STREAM (p, rw_cb.tcb.i93.uid);   /* UID */
     }
 
     if (rw_i93_send_to_lower (p_cmd))
@@ -1091,28 +1098,28 @@ tNFC_STATUS rw_i93_send_cmd_get_multi_block_sec (UINT8  first_block_number,
     BT_HDR      *p_cmd;
     UINT8       *p;
 
-    RW_TRACE_DEBUG0 ("rw_i93_send_cmd_get_multi_block_sec()");
+    RW_TRACE_DEBUG0 ("rw_i93_send_cmd_get_multi_block_sec ()");
 
-    p_cmd = (BT_HDR *)GKI_getpoolbuf(NFC_RW_POOL_ID);
+    p_cmd = (BT_HDR *) GKI_getpoolbuf (NFC_RW_POOL_ID);
 
     if (!p_cmd)
     {
-        RW_TRACE_ERROR0 ("rw_i93_send_cmd_get_multi_block_sec(): Cannot allocate buffer");
+        RW_TRACE_ERROR0 ("rw_i93_send_cmd_get_multi_block_sec (): Cannot allocate buffer");
         return NFC_STATUS_NO_BUFFERS;
     }
 
     p_cmd->offset = NCI_MSG_OFFSET_SIZE + NCI_DATA_HDR_SIZE;
     p_cmd->len    = 12;
-    p = (UINT8 *)(p_cmd + 1) + p_cmd->offset;
+    p = (UINT8 *) (p_cmd + 1) + p_cmd->offset;
 
     /* Flags */
-    UINT8_TO_STREAM (p, (I93_FLAG_ADDRESS_SET));
+    UINT8_TO_STREAM (p, (I93_FLAG_ADDRESS_SET | RW_I93_FLAG_SUB_CARRIER | RW_I93_FLAG_DATA_RATE));
 
     /* Command Code */
     UINT8_TO_STREAM (p, I93_CMD_GET_MULTI_BLK_SEC);
 
     /* Parameters */
-    ARRAY8_TO_STREAM(p, rw_cb.tcb.i93.uid);    /* UID */
+    ARRAY8_TO_STREAM (p, rw_cb.tcb.i93.uid);    /* UID */
     UINT8_TO_STREAM (p, first_block_number);   /* First block number */
     UINT8_TO_STREAM (p, number_blocks - 1);    /* Number of blocks, 0x00 to read one block */
 
@@ -1142,7 +1149,7 @@ tNFC_STATUS rw_i93_get_next_blocks (UINT16 offset)
     UINT8      first_block;
     UINT16     num_block;
 
-    first_block = (UINT8)(offset / p_i93->block_size);
+    first_block = (UINT8) (offset / p_i93->block_size);
 
     /* more blocks, more efficent but more error rate */
 
@@ -1178,7 +1185,7 @@ tNFC_STATUS rw_i93_get_next_blocks (UINT16 offset)
 *******************************************************************************/
 void rw_i93_sm_detect_ndef (BT_HDR *p_resp)
 {
-    UINT8      *p = (UINT8 *)(p_resp + 1) + p_resp->offset, *p_uid;
+    UINT8      *p = (UINT8 *) (p_resp + 1) + p_resp->offset, *p_uid;
     UINT8       flags, u8 = 0, cc[4], first_block, last_block;
     UINT16      length = p_resp->len;
     tRW_I93_CB *p_i93 = &rw_cb.tcb.i93;
@@ -1186,10 +1193,10 @@ void rw_i93_sm_detect_ndef (BT_HDR *p_resp)
     tNFC_STATUS status = NFC_STATUS_FAILED;
 
 #if (BT_TRACE_VERBOSE == TRUE)
-    RW_TRACE_DEBUG2 ("rw_i93_sm_detect_ndef() sub_state:%s(0x%x)",
-                      rw_i93_get_sub_state_name(p_i93->sub_state), p_i93->sub_state);
+    RW_TRACE_DEBUG2 ("rw_i93_sm_detect_ndef () sub_state:%s (0x%x)",
+                      rw_i93_get_sub_state_name (p_i93->sub_state), p_i93->sub_state);
 #else
-    RW_TRACE_DEBUG1 ("rw_i93_sm_detect_ndef() sub_state:0x%x", p_i93->sub_state);
+    RW_TRACE_DEBUG1 ("rw_i93_sm_detect_ndef () sub_state:0x%x", p_i93->sub_state);
 #endif
 
     STREAM_TO_UINT8 (flags, p);
@@ -1208,7 +1215,7 @@ void rw_i93_sm_detect_ndef (BT_HDR *p_resp)
 
         STREAM_TO_UINT8 (u8, p); /* DSFID */
         p_uid = p_i93->uid;
-        STREAM_TO_ARRAY8(p_uid, p);
+        STREAM_TO_ARRAY8 (p_uid, p);
 
         if (u8 != I93_DFS_UNSUPPORTED)
         {
@@ -1257,20 +1264,16 @@ void rw_i93_sm_detect_ndef (BT_HDR *p_resp)
 
             status = NFC_STATUS_OK;
         }
-        else if (p_i93->info_flags & I93_INFO_FLAG_IC_REF)
+        if (p_i93->info_flags & I93_INFO_FLAG_IC_REF)
         {
             STREAM_TO_UINT8 (p_i93->ic_reference, p);
 
             /* I-CODE SLI-L/SLIX-L */
-            if ((p_i93->uid[0] == 0xE0)&&(p_i93->uid[1] == 0x04)&&(p_i93->ic_reference == 0x03))
+            if ((p_i93->uid[0] == I93_UID_FIRST_BYTE) && (p_i93->uid[1] == I93_UID_IC_MFG_CODE_NXP) && (p_i93->ic_reference == I93_IC_REF_ICODE_SLI_L))
             {
                 p_i93->num_block  = 8;
                 p_i93->block_size = 4;
                 status = NFC_STATUS_OK;
-            }
-            else
-            {
-                status = NFC_STATUS_FAILED;
             }
         }
 
@@ -1312,8 +1315,11 @@ void rw_i93_sm_detect_ndef (BT_HDR *p_resp)
         ** CC[3] : Bit 0:Read multiple blocks is supported
         */
 
-        if ((cc[0] == I93_ICODE_CC_MAGIC_NUMER)
-          &&(cc[2] * 8 == p_i93->num_block * p_i93->block_size))
+        RW_TRACE_DEBUG4 ("rw_i93_sm_detect_ndef (): cc: 0x%02X 0x%02X 0x%02X 0x%02X", cc[0], cc[1], cc[2], cc[3]);
+        RW_TRACE_DEBUG2 ("rw_i93_sm_detect_ndef (): Total blocks:0x%04X, Block size:0x%02X", p_i93->num_block, p_i93->block_size );
+
+        if (  (cc[0] == I93_ICODE_CC_MAGIC_NUMER)
+            &&((cc[2] * 8) == (p_i93->num_block * p_i93->block_size))  )
         {
             if ((cc[1] & I93_ICODE_CC_READ_ACCESS_MASK) == I93_ICODE_CC_READ_ACCESS_GRANTED)
             {
@@ -1364,8 +1370,8 @@ void rw_i93_sm_detect_ndef (BT_HDR *p_resp)
                 {
                     continue;
                 }
-                else if ((*(p+u8) == I93_ICODE_TLV_TYPE_NDEF)
-                       ||(*(p+u8) == I93_ICODE_TLV_TYPE_PROP))
+                else if (  (*(p+u8) == I93_ICODE_TLV_TYPE_NDEF)
+                         ||(*(p+u8) == I93_ICODE_TLV_TYPE_PROP)  )
                 {
                     /* store found type and get length field */
                     p_i93->tlv_type = *(p+u8);
@@ -1443,19 +1449,20 @@ void rw_i93_sm_detect_ndef (BT_HDR *p_resp)
         }
 
         /* found NDEF TLV and read length field */
-        if ((p_i93->tlv_type == I93_ICODE_TLV_TYPE_NDEF)
-          &&(p_i93->tlv_detect_state == RW_I93_TLV_DETECT_STATE_VALUE))
+        if (  (p_i93->tlv_type == I93_ICODE_TLV_TYPE_NDEF)
+            &&(p_i93->tlv_detect_state == RW_I93_TLV_DETECT_STATE_VALUE)  )
         {
             p_i93->ndef_length = p_i93->tlv_length;
 
             /* get lock status to see if read-only */
-            if ((p_i93->product_version == RW_I93_TAG_IT_HF_I_STD_CHIP_INLAY)
-              ||(p_i93->product_version == RW_I93_TAG_IT_HF_I_PRO_CHIP_INLAY))
+            if (  (p_i93->product_version == RW_I93_TAG_IT_HF_I_STD_CHIP_INLAY)
+                ||(p_i93->product_version == RW_I93_TAG_IT_HF_I_PRO_CHIP_INLAY)
+                ||(p_i93->uid[1] == I93_UID_IC_MFG_CODE_NXP) && (p_i93->ic_reference & I93_ICODE_IC_REF_MBREAD_MASK)  )
             {
                 /* these doesn't support GetMultiBlockSecurityStatus */
 
                 p_i93->rw_offset = p_i93->ndef_tlv_start_offset;
-                first_block = (UINT8)(p_i93->ndef_tlv_start_offset / p_i93->block_size);
+                first_block = (UINT8) (p_i93->ndef_tlv_start_offset / p_i93->block_size);
 
                 /* read block to get lock status */
                 rw_i93_send_cmd_read_single_block (first_block, TRUE);
@@ -1495,13 +1502,14 @@ void rw_i93_sm_detect_ndef (BT_HDR *p_resp)
 
     case RW_I93_SUBSTATE_CHECK_LOCK_STATUS:
 
-        if ((p_i93->product_version == RW_I93_TAG_IT_HF_I_STD_CHIP_INLAY)
-          ||(p_i93->product_version == RW_I93_TAG_IT_HF_I_PRO_CHIP_INLAY))
+        if (  (p_i93->product_version == RW_I93_TAG_IT_HF_I_STD_CHIP_INLAY)
+            ||(p_i93->product_version == RW_I93_TAG_IT_HF_I_PRO_CHIP_INLAY)
+            ||(p_i93->uid[1] == I93_UID_IC_MFG_CODE_NXP) && (p_i93->ic_reference & I93_ICODE_IC_REF_MBREAD_MASK)  )
         {
             /* these doesn't support GetMultiBlockSecurityStatus */
 
-            u8 = (UINT8)(p_i93->rw_offset / p_i93->block_size);
-            last_block  = (UINT8)(p_i93->ndef_tlv_last_offset / p_i93->block_size);
+            u8 = (UINT8) (p_i93->rw_offset / p_i93->block_size);
+            last_block  = (UINT8) (p_i93->ndef_tlv_last_offset / p_i93->block_size);
 
             if ((*p) & I93_BLOCK_LOCKED)
             {
@@ -1518,7 +1526,7 @@ void rw_i93_sm_detect_ndef (BT_HDR *p_resp)
                     p_i93->rw_offset += p_i93->block_size;
 
                     /* read block to get lock status */
-                    rw_i93_send_cmd_read_single_block ((UINT8)(p_i93->rw_offset/p_i93->block_size), TRUE);
+                    rw_i93_send_cmd_read_single_block ((UINT8) (p_i93->rw_offset / p_i93->block_size), TRUE);
                     break;
                 }
             }
@@ -1537,13 +1545,13 @@ void rw_i93_sm_detect_ndef (BT_HDR *p_resp)
                                      - (p_i93->ndef_tlv_last_offset % p_i93->block_size)
                                      - 1;
 
-            first_block = (UINT8)(p_i93->ndef_tlv_start_offset / p_i93->block_size);
-            last_block  = (UINT8)(p_i93->ndef_tlv_last_offset / p_i93->block_size);
+            first_block = (UINT8) (p_i93->ndef_tlv_start_offset / p_i93->block_size);
+            last_block  = (UINT8) (p_i93->ndef_tlv_last_offset / p_i93->block_size);
 
             for (u8 = first_block; u8 < p_i93->num_block; u8++)
             {
                 /* if any block of NDEF TLV is locked */
-                if ( u8 <= last_block)
+                if (u8 <= last_block)
                 {
                     if (*(p+u8) & I93_BLOCK_LOCKED)
                     {
@@ -1556,8 +1564,8 @@ void rw_i93_sm_detect_ndef (BT_HDR *p_resp)
                     if (*(p+u8) & I93_BLOCK_LOCKED)
                     {
                         /* no more consecutive unlocked block */
-                        if ((p_i93->ndef_length < 0xFF)
-                          &&(p_i93->max_ndef_length >= 0xFF))
+                        if (  (p_i93->ndef_length < 0xFF)
+                            &&(p_i93->max_ndef_length >= 0xFF)  )
                         {
                             /* 3 bytes length field must be used */
                             p_i93->max_ndef_length -= 2;
@@ -1595,12 +1603,12 @@ void rw_i93_sm_detect_ndef (BT_HDR *p_resp)
         p_i93->state    = RW_I93_STATE_IDLE;
         p_i93->sent_cmd = 0;
 
-        RW_TRACE_DEBUG3 ("NDEF cur_size(%d),max_size(%d), flags(0x%x)",
+        RW_TRACE_DEBUG3 ("NDEF cur_size(%d),max_size (%d), flags (0x%x)",
                          rw_data.ndef.cur_size,
                          rw_data.ndef.max_size,
                          rw_data.ndef.flags);
 
-        (*(rw_cb.p_cback))(RW_I93_NDEF_DETECT_EVT, &rw_data);
+        (*(rw_cb.p_cback)) (RW_I93_NDEF_DETECT_EVT, &rw_data);
         break;
 
     default:
@@ -1619,13 +1627,13 @@ void rw_i93_sm_detect_ndef (BT_HDR *p_resp)
 *******************************************************************************/
 void rw_i93_sm_read_ndef (BT_HDR *p_resp)
 {
-    UINT8      *p = (UINT8 *)(p_resp + 1) + p_resp->offset;
+    UINT8      *p = (UINT8 *) (p_resp + 1) + p_resp->offset;
     UINT8       flags;
     UINT16      offset, length = p_resp->len;
     tRW_I93_CB *p_i93 = &rw_cb.tcb.i93;
     tRW_DATA    rw_data;
 
-    RW_TRACE_DEBUG0 ("rw_i93_sm_read_ndef()");
+    RW_TRACE_DEBUG0 ("rw_i93_sm_read_ndef ()");
 
     STREAM_TO_UINT8 (flags, p);
     length--;
@@ -1682,19 +1690,19 @@ void rw_i93_sm_read_ndef (BT_HDR *p_resp)
         p_i93->state    = RW_I93_STATE_IDLE;
         p_i93->sent_cmd = 0;
 
-        RW_TRACE_DEBUG2 ("NDEF read complete read(%d)/total(%d)",
+        RW_TRACE_DEBUG2 ("NDEF read complete read (%d)/total (%d)",
                          p_resp->len,
                          p_i93->ndef_length);
 
-        (*(rw_cb.p_cback))(RW_I93_NDEF_READ_CPLT_EVT, &rw_data);
+        (*(rw_cb.p_cback)) (RW_I93_NDEF_READ_CPLT_EVT, &rw_data);
     }
     else
     {
-        RW_TRACE_DEBUG2 ("NDEF read segment read(%d)/total(%d)",
+        RW_TRACE_DEBUG2 ("NDEF read segment read (%d)/total (%d)",
                          p_resp->len,
                          p_i93->ndef_length);
 
-        (*(rw_cb.p_cback))(RW_I93_NDEF_READ_EVT, &rw_data);
+        (*(rw_cb.p_cback)) (RW_I93_NDEF_READ_EVT, &rw_data);
 
         /* this will make read data from next block */
         p_i93->rw_offset += length;
@@ -1721,17 +1729,17 @@ void rw_i93_sm_read_ndef (BT_HDR *p_resp)
 *******************************************************************************/
 void rw_i93_sm_update_ndef (BT_HDR *p_resp)
 {
-    UINT8      *p = (UINT8 *)(p_resp + 1) + p_resp->offset;
+    UINT8      *p = (UINT8 *) (p_resp + 1) + p_resp->offset;
     UINT8       flags, xx, length_offset, block_number, buff[I93_MAX_BLOCK_LENGH];
     UINT16      length = p_resp->len;
     tRW_I93_CB *p_i93 = &rw_cb.tcb.i93;
     tRW_DATA    rw_data;
 
 #if (BT_TRACE_VERBOSE == TRUE)
-    RW_TRACE_DEBUG2 ("rw_i93_sm_update_ndef() sub_state:%s(0x%x)",
-                      rw_i93_get_sub_state_name(p_i93->sub_state), p_i93->sub_state);
+    RW_TRACE_DEBUG2 ("rw_i93_sm_update_ndef () sub_state:%s (0x%x)",
+                      rw_i93_get_sub_state_name (p_i93->sub_state), p_i93->sub_state);
 #else
-    RW_TRACE_DEBUG1 ("rw_i93_sm_update_ndef() sub_state:0x%x", p_i93->sub_state);
+    RW_TRACE_DEBUG1 ("rw_i93_sm_update_ndef () sub_state:0x%x", p_i93->sub_state);
 #endif
 
     STREAM_TO_UINT8 (flags, p);
@@ -1739,11 +1747,12 @@ void rw_i93_sm_update_ndef (BT_HDR *p_resp)
 
     if (flags & I93_FLAG_ERROR_DETECTED)
     {
-        if (((p_i93->product_version == RW_I93_TAG_IT_HF_I_PLUS_INLAY)
-           ||(p_i93->product_version == RW_I93_TAG_IT_HF_I_PLUS_CHIP)
-           ||(p_i93->product_version == RW_I93_TAG_IT_HF_I_STD_CHIP_INLAY)
-           ||(p_i93->product_version == RW_I93_TAG_IT_HF_I_PRO_CHIP_INLAY))
-           &&(*p == I93_ERROR_CODE_BLOCK_FAIL_TO_WRITE))
+        if (  (  (p_i93->product_version == RW_I93_TAG_IT_HF_I_PLUS_INLAY)
+               ||(p_i93->product_version == RW_I93_TAG_IT_HF_I_PLUS_CHIP)
+               ||(p_i93->product_version == RW_I93_TAG_IT_HF_I_STD_CHIP_INLAY)
+               ||(p_i93->product_version == RW_I93_TAG_IT_HF_I_PRO_CHIP_INLAY)  )
+                                         &&
+              (*p == I93_ERROR_CODE_BLOCK_FAIL_TO_WRITE)  )
         {
             /* ignore error */
         }
@@ -1791,7 +1800,7 @@ void rw_i93_sm_update_ndef (BT_HDR *p_resp)
             }
         }
 
-        block_number = (UINT8)((p_i93->ndef_tlv_start_offset + 1) / p_i93->block_size);
+        block_number = (UINT8) ((p_i93->ndef_tlv_start_offset + 1) / p_i93->block_size);
 
         if (rw_i93_send_cmd_write_single_block (block_number, p) == NFC_STATUS_OK)
         {
@@ -1810,7 +1819,7 @@ void rw_i93_sm_update_ndef (BT_HDR *p_resp)
         /* if it's not the end of tag memory */
         if (p_i93->rw_offset < p_i93->block_size * p_i93->num_block)
         {
-            block_number = (UINT8)(p_i93->rw_offset / p_i93->block_size);
+            block_number = (UINT8) (p_i93->rw_offset / p_i93->block_size);
 
             /* if we have more data to write */
             if (p_i93->rw_length < p_i93->ndef_length)
@@ -1824,7 +1833,7 @@ void rw_i93_sm_update_ndef (BT_HDR *p_resp)
                 if (p_i93->rw_length > p_i93->ndef_length)
                 {
                     /* length of NDEF TLV in the block */
-                    xx = (UINT8)(p_i93->block_size - (p_i93->rw_length - p_i93->ndef_length));
+                    xx = (UINT8) (p_i93->block_size - (p_i93->rw_length - p_i93->ndef_length));
 
                     /* set NULL TLV in the unused part of block */
                     memset (buff, I93_ICODE_TLV_TYPE_NULL, p_i93->block_size);
@@ -1832,8 +1841,8 @@ void rw_i93_sm_update_ndef (BT_HDR *p_resp)
                     p = buff;
 
                     /* if it's the end of tag memory */
-                    if ((p_i93->rw_offset >= p_i93->block_size * p_i93->num_block)
-                      &&(xx < p_i93->block_size))
+                    if (  (p_i93->rw_offset >= p_i93->block_size * p_i93->num_block)
+                        &&(xx < p_i93->block_size)  )
                     {
                         buff[xx] = I93_ICODE_TLV_TYPE_TERM;
                     }
@@ -1849,7 +1858,7 @@ void rw_i93_sm_update_ndef (BT_HDR *p_resp)
             else
             {
                 /* if this is the very next block of NDEF TLV */
-                if ( block_number == (p_i93->ndef_tlv_last_offset / p_i93->block_size) + 1)
+                if (block_number == (p_i93->ndef_tlv_last_offset / p_i93->block_size) + 1)
                 {
                     p_i93->rw_offset += p_i93->block_size;
 
@@ -1867,7 +1876,7 @@ void rw_i93_sm_update_ndef (BT_HDR *p_resp)
                 {
                     /* finished writing NDEF and Terminator TLV */
                     /* read length field to update length       */
-                    block_number = (UINT8)((p_i93->ndef_tlv_start_offset + 1) / p_i93->block_size);
+                    block_number = (UINT8) ((p_i93->ndef_tlv_start_offset + 1) / p_i93->block_size);
 
                     if (rw_i93_send_cmd_read_single_block (block_number, FALSE) == NFC_STATUS_OK)
                     {
@@ -1904,7 +1913,7 @@ void rw_i93_sm_update_ndef (BT_HDR *p_resp)
             {
                 /* finished writing NDEF and Terminator TLV */
                 /* read length field to update length       */
-                block_number = (UINT8)((p_i93->ndef_tlv_start_offset + 1) / p_i93->block_size);
+                block_number = (UINT8) ((p_i93->ndef_tlv_start_offset + 1) / p_i93->block_size);
 
                 if (rw_i93_send_cmd_read_single_block (block_number, FALSE) == NFC_STATUS_OK)
                 {
@@ -1941,7 +1950,7 @@ void rw_i93_sm_update_ndef (BT_HDR *p_resp)
             /* if we got ack for writing, read next block to update rest of length field */
             if (length == 0)
             {
-                block_number = (UINT8)(p_i93->rw_offset / p_i93->block_size);
+                block_number = (UINT8) (p_i93->rw_offset / p_i93->block_size);
 
                 if (rw_i93_send_cmd_read_single_block (block_number, FALSE) != NFC_STATUS_OK)
                 {
@@ -1958,16 +1967,16 @@ void rw_i93_sm_update_ndef (BT_HDR *p_resp)
                     if (p_i93->rw_length == 3)
                         *(p + xx) = 0xFF;
                     else if (p_i93->rw_length == 2)
-                        *(p + xx) = (UINT8)((p_i93->ndef_length >> 8) & 0xFF);
+                        *(p + xx) = (UINT8) ((p_i93->ndef_length >> 8) & 0xFF);
                     else if (p_i93->rw_length == 1)
-                        *(p + xx) = (UINT8)(p_i93->ndef_length & 0xFF);
+                        *(p + xx) = (UINT8) (p_i93->ndef_length & 0xFF);
 
                     p_i93->rw_length--;
                     if (p_i93->rw_length == 0)
                         break;
                 }
 
-                block_number = (UINT8)(p_i93->rw_offset / p_i93->block_size);
+                block_number = (UINT8) (p_i93->rw_offset / p_i93->block_size);
 
                 if (rw_i93_send_cmd_write_single_block (block_number, p) == NFC_STATUS_OK)
                 {
@@ -1992,7 +2001,7 @@ void rw_i93_sm_update_ndef (BT_HDR *p_resp)
             p_i93->p_update_data = NULL;
 
             rw_data.status = NFC_STATUS_OK;
-            (*(rw_cb.p_cback))(RW_I93_NDEF_UPDATE_CPLT_EVT, &rw_data);
+            (*(rw_cb.p_cback)) (RW_I93_NDEF_UPDATE_CPLT_EVT, &rw_data);
         }
         break;
 
@@ -2017,7 +2026,7 @@ void rw_i93_sm_update_ndef (BT_HDR *p_resp)
 *******************************************************************************/
 void rw_i93_sm_format (BT_HDR *p_resp)
 {
-    UINT8      *p = (UINT8 *)(p_resp + 1) + p_resp->offset, *p_uid;
+    UINT8      *p = (UINT8 *) (p_resp + 1) + p_resp->offset, *p_uid;
     UINT8       flags, u8 = 0, block_number;
     UINT16      length = p_resp->len;
     tRW_I93_CB *p_i93 = &rw_cb.tcb.i93;
@@ -2025,10 +2034,10 @@ void rw_i93_sm_format (BT_HDR *p_resp)
     tNFC_STATUS status = NFC_STATUS_FAILED;
 
 #if (BT_TRACE_VERBOSE == TRUE)
-    RW_TRACE_DEBUG2 ("rw_i93_sm_format() sub_state:%s(0x%x)",
-                      rw_i93_get_sub_state_name(p_i93->sub_state), p_i93->sub_state);
+    RW_TRACE_DEBUG2 ("rw_i93_sm_format () sub_state:%s (0x%x)",
+                      rw_i93_get_sub_state_name (p_i93->sub_state), p_i93->sub_state);
 #else
-    RW_TRACE_DEBUG1 ("rw_i93_sm_format() sub_state:0x%x", p_i93->sub_state);
+    RW_TRACE_DEBUG1 ("rw_i93_sm_format () sub_state:0x%x", p_i93->sub_state);
 #endif
 
     STREAM_TO_UINT8 (flags, p);
@@ -2036,11 +2045,12 @@ void rw_i93_sm_format (BT_HDR *p_resp)
 
     if (flags & I93_FLAG_ERROR_DETECTED)
     {
-        if (((p_i93->product_version == RW_I93_TAG_IT_HF_I_PLUS_INLAY)
-           ||(p_i93->product_version == RW_I93_TAG_IT_HF_I_PLUS_CHIP)
-           ||(p_i93->product_version == RW_I93_TAG_IT_HF_I_STD_CHIP_INLAY)
-           ||(p_i93->product_version == RW_I93_TAG_IT_HF_I_PRO_CHIP_INLAY))
-           &&(*p == I93_ERROR_CODE_BLOCK_FAIL_TO_WRITE))
+        if (  (  (p_i93->product_version == RW_I93_TAG_IT_HF_I_PLUS_INLAY)
+               ||(p_i93->product_version == RW_I93_TAG_IT_HF_I_PLUS_CHIP)
+               ||(p_i93->product_version == RW_I93_TAG_IT_HF_I_STD_CHIP_INLAY)
+               ||(p_i93->product_version == RW_I93_TAG_IT_HF_I_PRO_CHIP_INLAY)  )
+                                         &&
+              (*p == I93_ERROR_CODE_BLOCK_FAIL_TO_WRITE)  )
         {
             /* ignore error */
         }
@@ -2058,7 +2068,7 @@ void rw_i93_sm_format (BT_HDR *p_resp)
 
         p++; /* skip DSFID */
         p_uid = p_i93->uid;
-        STREAM_TO_ARRAY8(p_uid, p);     /* store UID */
+        STREAM_TO_ARRAY8 (p_uid, p);     /* store UID */
 
         /* get system information to get memory size */
         if (rw_i93_send_cmd_get_sys_info (NULL) == NFC_STATUS_OK)
@@ -2075,7 +2085,7 @@ void rw_i93_sm_format (BT_HDR *p_resp)
 
         STREAM_TO_UINT8 (flags, p);  /* info_flags */
         p_uid = p_i93->uid;
-        STREAM_TO_ARRAY8(p_uid, p);  /* store UID */
+        STREAM_TO_ARRAY8 (p_uid, p);  /* store UID */
 
         if (flags & I93_INFO_FLAG_DSFID)
         {
@@ -2107,20 +2117,16 @@ void rw_i93_sm_format (BT_HDR *p_resp)
 
             status = NFC_STATUS_OK;
         }
-        else if (flags & I93_INFO_FLAG_IC_REF)
+        if (flags & I93_INFO_FLAG_IC_REF)
         {
             STREAM_TO_UINT8 (p_i93->ic_reference, p);
 
             /* I-CODE SLI-L/SLIX-L */
-            if ((p_i93->product_version == RW_I93_ICODE_SLI_L)&&(p_i93->ic_reference == 0x03))
+            if ((p_i93->product_version == RW_I93_ICODE_SLI_L) && (p_i93->ic_reference == I93_IC_REF_ICODE_SLI_L))
             {
                 p_i93->num_block  = 8;
                 p_i93->block_size = 4;
                 status = NFC_STATUS_OK;
-            }
-            else
-            {
-                status = NFC_STATUS_FAILED;
             }
         }
 
@@ -2153,8 +2159,24 @@ void rw_i93_sm_format (BT_HDR *p_resp)
         }
         else
         {
-            /* get lock status of all blocks */
-            if (rw_i93_send_cmd_get_multi_block_sec (0, p_i93->num_block) == NFC_STATUS_OK)
+            /* get lock status to see if read-only */
+            if ((p_i93->uid[1] == I93_UID_IC_MFG_CODE_NXP) && (p_i93->ic_reference & I93_ICODE_IC_REF_MBREAD_MASK))
+            {
+                /* these doesn't support GetMultiBlockSecurityStatus */
+
+                rw_cb.tcb.i93.rw_offset = 0;
+
+                /* read blocks with option flag to get block security status */
+                if (rw_i93_send_cmd_read_single_block (0x00, TRUE) == NFC_STATUS_OK)
+                {
+                    p_i93->sub_state = RW_I93_SUBSTATE_CHECK_READ_ONLY;
+                }
+                else
+                {
+                    rw_i93_handle_error (NFC_STATUS_FAILED);
+                }
+            }
+            else if (rw_i93_send_cmd_get_multi_block_sec (0, p_i93->num_block) == NFC_STATUS_OK)
             {
                 p_i93->sub_state = RW_I93_SUBSTATE_CHECK_READ_ONLY;
             }
@@ -2163,6 +2185,7 @@ void rw_i93_sm_format (BT_HDR *p_resp)
                 rw_i93_handle_error (NFC_STATUS_FAILED);
             }
         }
+
         break;
 
     case RW_I93_SUBSTATE_WAIT_RESET_DSFID_AFI:
@@ -2200,8 +2223,24 @@ void rw_i93_sm_format (BT_HDR *p_resp)
         }
         else
         {
-            /* get lock status of all blocks */
-            if (rw_i93_send_cmd_get_multi_block_sec (0, p_i93->num_block) == NFC_STATUS_OK)
+            /* get lock status to see if read-only */
+            if ((p_i93->uid[1] == I93_UID_IC_MFG_CODE_NXP) && (p_i93->ic_reference & I93_ICODE_IC_REF_MBREAD_MASK))
+            {
+                /* these doesn't support GetMultiBlockSecurityStatus */
+
+                rw_cb.tcb.i93.rw_offset = 0;
+
+                /* read blocks with option flag to get block security status */
+                if (rw_i93_send_cmd_read_single_block (0x00, TRUE) == NFC_STATUS_OK)
+                {
+                    p_i93->sub_state = RW_I93_SUBSTATE_CHECK_READ_ONLY;
+                }
+                else
+                {
+                    rw_i93_handle_error (NFC_STATUS_FAILED);
+                }
+            }
+            else if (rw_i93_send_cmd_get_multi_block_sec (0, p_i93->num_block) == NFC_STATUS_OK)
             {
                 p_i93->sub_state = RW_I93_SUBSTATE_CHECK_READ_ONLY;
             }
@@ -2214,8 +2253,9 @@ void rw_i93_sm_format (BT_HDR *p_resp)
 
     case RW_I93_SUBSTATE_CHECK_READ_ONLY:
 
-        if ((p_i93->product_version == RW_I93_TAG_IT_HF_I_STD_CHIP_INLAY)
-          ||(p_i93->product_version == RW_I93_TAG_IT_HF_I_PRO_CHIP_INLAY))
+        if (  (p_i93->product_version == RW_I93_TAG_IT_HF_I_STD_CHIP_INLAY)
+            ||(p_i93->product_version == RW_I93_TAG_IT_HF_I_PRO_CHIP_INLAY)
+            ||(p_i93->uid[1] == I93_UID_IC_MFG_CODE_NXP) && (p_i93->ic_reference & I93_ICODE_IC_REF_MBREAD_MASK)  )
         {
             if ((*p) & I93_BLOCK_LOCKED)
             {
@@ -2226,10 +2266,14 @@ void rw_i93_sm_format (BT_HDR *p_resp)
             /* if we checked all of user blocks */
             if ((p_i93->rw_offset / p_i93->block_size) + 1 == p_i93->num_block)
             {
-                /* read the block which has AFI */
-                p_i93->rw_offset = I93_TAG_IT_HF_I_STD_PRO_CHIP_INLAY_AFI_LOCATION;
-                rw_i93_send_cmd_read_single_block ((UINT8)(p_i93->rw_offset/p_i93->block_size), TRUE);
-                break;
+                if (  (p_i93->product_version == RW_I93_TAG_IT_HF_I_STD_CHIP_INLAY)
+                    ||(p_i93->product_version == RW_I93_TAG_IT_HF_I_PRO_CHIP_INLAY)  )
+                {
+                    /* read the block which has AFI */
+                    p_i93->rw_offset = I93_TAG_IT_HF_I_STD_PRO_CHIP_INLAY_AFI_LOCATION;
+                    rw_i93_send_cmd_read_single_block ((UINT8) (p_i93->rw_offset/p_i93->block_size), TRUE);
+                    break;
+                }
             }
             else if (p_i93->rw_offset == I93_TAG_IT_HF_I_STD_PRO_CHIP_INLAY_AFI_LOCATION)
             {
@@ -2238,7 +2282,7 @@ void rw_i93_sm_format (BT_HDR *p_resp)
             else
             {
                 p_i93->rw_offset += p_i93->block_size;
-                rw_i93_send_cmd_read_single_block ((UINT8)(p_i93->rw_offset/p_i93->block_size), TRUE);
+                rw_i93_send_cmd_read_single_block ((UINT8) (p_i93->rw_offset/p_i93->block_size), TRUE);
                 break;
             }
         }
@@ -2256,11 +2300,11 @@ void rw_i93_sm_format (BT_HDR *p_resp)
         }
 
         /* get buffer to store CC, zero length NDEF TLV and Terminator TLV */
-        p_i93->p_update_data = (UINT8*)GKI_getbuf(RW_I93_FORMAT_DATA_LEN);
+        p_i93->p_update_data = (UINT8*) GKI_getbuf (RW_I93_FORMAT_DATA_LEN);
 
         if (!p_i93->p_update_data)
         {
-            RW_TRACE_ERROR0 ("rw_i93_sm_format(): Cannot allocate buffer");
+            RW_TRACE_ERROR0 ("rw_i93_sm_format (): Cannot allocate buffer");
             rw_i93_handle_error (NFC_STATUS_FAILED);
             break;
         }
@@ -2270,24 +2314,24 @@ void rw_i93_sm_format (BT_HDR *p_resp)
         /* Capability Container */
         *(p++) = I93_ICODE_CC_MAGIC_NUMER;                      /* magic number */
         *(p++) = 0x40;                                          /* version 1.0, read/write */
-        *(p++) = (UINT8)((p_i93->num_block * p_i93->block_size) / 8);    /* memory size */
+        *(p++) = (UINT8) ((p_i93->num_block * p_i93->block_size) / 8);    /* memory size */
 
-        if ((p_i93->product_version == RW_I93_ICODE_SLI)
-          ||(p_i93->product_version == RW_I93_ICODE_SLI_S)
-          ||(p_i93->product_version == RW_I93_ICODE_SLI_L))
+        if (  (p_i93->product_version == RW_I93_ICODE_SLI)
+            ||(p_i93->product_version == RW_I93_ICODE_SLI_S)
+            ||(p_i93->product_version == RW_I93_ICODE_SLI_L)  )
         {
-            if (p_i93->ic_reference & 0x02)
+            if (p_i93->ic_reference & I93_ICODE_IC_REF_MBREAD_MASK)
                 *(p++) = I93_ICODE_CC_IPREAD_MASK;  /* IPREAD */
             else
                 *(p++) = I93_ICODE_CC_MBREAD_MASK;  /* MBREAD, read multi block command supported */
         }
-        else if ((p_i93->product_version == RW_I93_TAG_IT_HF_I_PLUS_INLAY)
-               ||(p_i93->product_version == RW_I93_TAG_IT_HF_I_PLUS_CHIP))
+        else if (  (p_i93->product_version == RW_I93_TAG_IT_HF_I_PLUS_INLAY)
+                 ||(p_i93->product_version == RW_I93_TAG_IT_HF_I_PLUS_CHIP)  )
         {
             *(p++) = I93_ICODE_CC_MBREAD_MASK;      /* MBREAD, read multi block command supported */
         }
-        else if ((p_i93->product_version == RW_I93_TAG_IT_HF_I_STD_CHIP_INLAY)
-               ||(p_i93->product_version == RW_I93_TAG_IT_HF_I_PRO_CHIP_INLAY))
+        else if (  (p_i93->product_version == RW_I93_TAG_IT_HF_I_STD_CHIP_INLAY)
+                 ||(p_i93->product_version == RW_I93_TAG_IT_HF_I_PRO_CHIP_INLAY)  )
         {
             *(p++) = 0;
         }
@@ -2321,7 +2365,7 @@ void rw_i93_sm_format (BT_HDR *p_resp)
         /* if we have more data to write */
         if (p_i93->rw_offset < RW_I93_FORMAT_DATA_LEN)
         {
-            block_number = (UINT8)(p_i93->rw_offset / p_i93->block_size);
+            block_number = (UINT8) (p_i93->rw_offset / p_i93->block_size);
             p = p_i93->p_update_data + p_i93->rw_offset;
 
             if (rw_i93_send_cmd_write_single_block (block_number, p) == NFC_STATUS_OK)
@@ -2343,7 +2387,7 @@ void rw_i93_sm_format (BT_HDR *p_resp)
             p_i93->sent_cmd = 0;
 
             rw_data.status = NFC_STATUS_OK;
-            (*(rw_cb.p_cback))(RW_I93_FORMAT_CPLT_EVT, &rw_data);
+            (*(rw_cb.p_cback)) (RW_I93_FORMAT_CPLT_EVT, &rw_data);
         }
         break;
 
@@ -2367,17 +2411,17 @@ void rw_i93_sm_format (BT_HDR *p_resp)
 *******************************************************************************/
 void rw_i93_sm_set_read_only (BT_HDR *p_resp)
 {
-    UINT8      *p = (UINT8 *)(p_resp + 1) + p_resp->offset;
+    UINT8      *p = (UINT8 *) (p_resp + 1) + p_resp->offset;
     UINT8       flags, block_number;
     UINT16      length = p_resp->len;
     tRW_I93_CB *p_i93 = &rw_cb.tcb.i93;
     tRW_DATA    rw_data;
 
 #if (BT_TRACE_VERBOSE == TRUE)
-    RW_TRACE_DEBUG2 ("rw_i93_sm_set_read_only() sub_state:%s(0x%x)",
-                      rw_i93_get_sub_state_name(p_i93->sub_state), p_i93->sub_state);
+    RW_TRACE_DEBUG2 ("rw_i93_sm_set_read_only () sub_state:%s (0x%x)",
+                      rw_i93_get_sub_state_name (p_i93->sub_state), p_i93->sub_state);
 #else
-    RW_TRACE_DEBUG1 ("rw_i93_sm_set_read_only() sub_state:0x%x", p_i93->sub_state);
+    RW_TRACE_DEBUG1 ("rw_i93_sm_set_read_only () sub_state:0x%x", p_i93->sub_state);
 #endif
 
     STREAM_TO_UINT8 (flags, p);
@@ -2385,11 +2429,12 @@ void rw_i93_sm_set_read_only (BT_HDR *p_resp)
 
     if (flags & I93_FLAG_ERROR_DETECTED)
     {
-        if (((p_i93->product_version == RW_I93_TAG_IT_HF_I_PLUS_INLAY)
-           ||(p_i93->product_version == RW_I93_TAG_IT_HF_I_PLUS_CHIP)
-           ||(p_i93->product_version == RW_I93_TAG_IT_HF_I_STD_CHIP_INLAY)
-           ||(p_i93->product_version == RW_I93_TAG_IT_HF_I_PRO_CHIP_INLAY))
-           &&(*p == I93_ERROR_CODE_BLOCK_FAIL_TO_WRITE))
+        if (  (  (p_i93->product_version == RW_I93_TAG_IT_HF_I_PLUS_INLAY)
+               ||(p_i93->product_version == RW_I93_TAG_IT_HF_I_PLUS_CHIP)
+               ||(p_i93->product_version == RW_I93_TAG_IT_HF_I_STD_CHIP_INLAY)
+               ||(p_i93->product_version == RW_I93_TAG_IT_HF_I_PRO_CHIP_INLAY)  )
+                                         &&
+              (*p == I93_ERROR_CODE_BLOCK_FAIL_TO_WRITE)  )
         {
             /* ignore error */
         }
@@ -2422,7 +2467,7 @@ void rw_i93_sm_set_read_only (BT_HDR *p_resp)
 
         /* successfully write CC then lock all blocks of NDEF TLV */
         p_i93->rw_offset = p_i93->ndef_tlv_start_offset;
-        block_number     = (UINT8)(p_i93->rw_offset / p_i93->block_size);
+        block_number     = (UINT8) (p_i93->rw_offset / p_i93->block_size);
 
         if (rw_i93_send_cmd_lock_block (block_number) == NFC_STATUS_OK)
         {
@@ -2441,7 +2486,7 @@ void rw_i93_sm_set_read_only (BT_HDR *p_resp)
         if (p_i93->rw_offset < p_i93->ndef_tlv_last_offset)
         {
             /* get the next block of NDEF TLV */
-            block_number = (UINT8)(p_i93->rw_offset / p_i93->block_size);
+            block_number = (UINT8) (p_i93->rw_offset / p_i93->block_size);
 
             if (rw_i93_send_cmd_lock_block (block_number) == NFC_STATUS_OK)
             {
@@ -2472,7 +2517,7 @@ void rw_i93_sm_set_read_only (BT_HDR *p_resp)
             p_i93->sent_cmd    = 0;
 
             rw_data.status = NFC_STATUS_OK;
-            (*(rw_cb.p_cback))(RW_I93_SET_TAG_RO_EVT, &rw_data);
+            (*(rw_cb.p_cback)) (RW_I93_SET_TAG_RO_EVT, &rw_data);
         }
         break;
 
@@ -2483,7 +2528,7 @@ void rw_i93_sm_set_read_only (BT_HDR *p_resp)
         p_i93->sent_cmd   = 0;
 
         rw_data.status = NFC_STATUS_OK;
-        (*(rw_cb.p_cback))(RW_I93_SET_TAG_RO_EVT, &rw_data);
+        (*(rw_cb.p_cback)) (RW_I93_SET_TAG_RO_EVT, &rw_data);
         break;
 
     default:
@@ -2506,7 +2551,7 @@ void rw_i93_handle_error (tNFC_STATUS status)
     tRW_DATA    rw_data;
     tRW_EVENT   event;
 
-    RW_TRACE_DEBUG2 ("rw_i93_handle_error(): status:0x%02X, state:0x%X",
+    RW_TRACE_DEBUG2 ("rw_i93_handle_error (): status:0x%02X, state:0x%X",
                       status, p_i93->state);
 
     nfc_stop_quick_timer (&p_i93->timer);
@@ -2515,7 +2560,7 @@ void rw_i93_handle_error (tNFC_STATUS status)
     {
         rw_data.status = status;
 
-        switch(p_i93->state)
+        switch (p_i93->state)
         {
         case RW_I93_STATE_IDLE:   /* in case of RawFrame */
             event = RW_I93_INTF_ERROR_EVT;
@@ -2538,6 +2583,8 @@ void rw_i93_handle_error (tNFC_STATUS status)
 
         case RW_I93_STATE_DETECT_NDEF:
             rw_data.ndef.protocol = NFC_PROTOCOL_15693;
+            rw_data.ndef.cur_size = 0;
+            rw_data.ndef.max_size = 0;
             rw_data.ndef.flags    = 0;
             rw_data.ndef.flags   |= RW_NDEF_FL_FORMATABLE;
             rw_data.ndef.flags   |= RW_NDEF_FL_UNKNOWN;
@@ -2580,7 +2627,7 @@ void rw_i93_handle_error (tNFC_STATUS status)
 
         if (event != RW_I93_MAX_EVT)
         {
-            (*(rw_cb.p_cback))(event, &rw_data);
+            (*(rw_cb.p_cback)) (event, &rw_data);
         }
     }
     else
@@ -2600,7 +2647,7 @@ void rw_i93_handle_error (tNFC_STATUS status)
 *******************************************************************************/
 void rw_i93_process_timeout (TIMER_LIST_ENT *p_tle)
 {
-    RW_TRACE_DEBUG1 ("rw_i93_process_timeout() event=%d", p_tle->event);
+    RW_TRACE_DEBUG1 ("rw_i93_process_timeout () event=%d", p_tle->event);
 
     if (p_tle->event == NFC_TTYPE_RW_I93_RESPONSE)
     {
@@ -2608,7 +2655,7 @@ void rw_i93_process_timeout (TIMER_LIST_ENT *p_tle)
     }
     else
     {
-        RW_TRACE_ERROR1 ("rw_i93_process_timeout() unknown event=%d", p_tle->event);
+        RW_TRACE_ERROR1 ("rw_i93_process_timeout () unknown event=%d", p_tle->event);
     }
 }
 
@@ -2624,27 +2671,27 @@ void rw_i93_process_timeout (TIMER_LIST_ENT *p_tle)
 static void rw_i93_data_cback (UINT8 conn_id, tNFC_CONN_EVT event, tNFC_CONN *p_data)
 {
     tRW_I93_CB *p_i93  = &rw_cb.tcb.i93;
-    BT_HDR     *p_resp = (BT_HDR *)p_data->data.p_data;
+    BT_HDR     *p_resp = (BT_HDR *) p_data->data.p_data;
     tRW_DATA    rw_data;
 
 #if (BT_TRACE_VERBOSE == TRUE)
     UINT8  begin_state   = p_i93->state;
 #endif
 
-    RW_TRACE_DEBUG1 ("rw_i93_data_cback() event = 0x%X", event);
+    RW_TRACE_DEBUG1 ("rw_i93_data_cback () event = 0x%X", event);
 
-    if ((event == NFC_DEACTIVATE_CEVT)
-      ||(event == NFC_ERROR_CEVT))
+    if (  (event == NFC_DEACTIVATE_CEVT)
+        ||(event == NFC_ERROR_CEVT)  )
     {
         nfc_stop_quick_timer (&p_i93->timer);
 
         if (event == NFC_ERROR_CEVT)
         {
-            rw_i93_handle_error ((tNFC_STATUS)(*(UINT8*)p_data));
+            rw_i93_handle_error ((tNFC_STATUS) (*(UINT8*) p_data));
         }
         else
         {
-            NFC_SetStaticRfCback(NULL);
+            NFC_SetStaticRfCback (NULL);
             p_i93->state = RW_I93_STATE_NOT_ACTIVATED;
         }
         return;
@@ -2662,13 +2709,13 @@ static void rw_i93_data_cback (UINT8 conn_id, tNFC_CONN_EVT event, tNFC_CONN *p_
 #endif
 
 #if (BT_TRACE_VERBOSE == TRUE)
-    RW_TRACE_DEBUG2 ("RW I93 state: <%s(%d)>",
+    RW_TRACE_DEBUG2 ("RW I93 state: <%s (%d)>",
                         rw_i93_get_state_name (p_i93->state), p_i93->state);
 #else
     RW_TRACE_DEBUG1 ("RW I93 state: %d", p_i93->state);
 #endif
 
-    switch(p_i93->state)
+    switch (p_i93->state)
     {
     case RW_I93_STATE_IDLE:
         /* Unexpected Response from VICC, it should be raw frame response */
@@ -2678,12 +2725,12 @@ static void rw_i93_data_cback (UINT8 conn_id, tNFC_CONN_EVT event, tNFC_CONN *p_
         {
             rw_data.raw_frame.status = NFC_STATUS_OK;
             rw_data.raw_frame.p_data = p_resp;
-            (*(rw_cb.p_cback))(RW_I93_RAW_FRAME_EVT, &rw_data);
+            (*(rw_cb.p_cback)) (RW_I93_RAW_FRAME_EVT, &rw_data);
             p_resp = NULL;
         }
         else
         {
-            GKI_freebuf(p_resp);
+            GKI_freebuf (p_resp);
         }
         break;
     case RW_I93_STATE_BUSY:
@@ -2723,13 +2770,13 @@ static void rw_i93_data_cback (UINT8 conn_id, tNFC_CONN_EVT event, tNFC_CONN *p_
 
         /* if any response, send presence check with ok */
         rw_data.status  = NFC_STATUS_OK;
-        (*(rw_cb.p_cback))(RW_I93_PRESENCE_CHECK_EVT, &rw_data);
+        (*(rw_cb.p_cback)) (RW_I93_PRESENCE_CHECK_EVT, &rw_data);
         GKI_freebuf (p_resp);
         break;
 
     default:
-        RW_TRACE_ERROR1 ("rw_i93_data_cback(): invalid state=%d", p_i93->state);
-        GKI_freebuf(p_resp);
+        RW_TRACE_ERROR1 ("rw_i93_data_cback (): invalid state=%d", p_i93->state);
+        GKI_freebuf (p_resp);
         break;
     }
 
@@ -2756,9 +2803,9 @@ tNFC_STATUS rw_i93_select (void)
 {
     tRW_I93_CB  *p_i93 = &rw_cb.tcb.i93;
 
-    RW_TRACE_DEBUG0 ("rw_i93_select()");
+    RW_TRACE_DEBUG0 ("rw_i93_select ()");
 
-    NFC_SetStaticRfCback(rw_i93_data_cback);
+    NFC_SetStaticRfCback (rw_i93_data_cback);
 
     p_i93->state = RW_I93_STATE_IDLE;
 
@@ -2784,11 +2831,11 @@ tNFC_STATUS RW_I93Inventory (UINT8 afi, UINT8 *p_uid)
 {
     tNFC_STATUS status;
 
-    RW_TRACE_API1 ("RW_I93Inventory(), AFI:0x%02X", afi);
+    RW_TRACE_API1 ("RW_I93Inventory (), AFI:0x%02X", afi);
 
     if (rw_cb.tcb.i93.state != RW_I93_STATE_IDLE)
     {
-        RW_TRACE_ERROR1 ("RW_I93Inventory():Unable to start command at state(0x%X)",
+        RW_TRACE_ERROR1 ("RW_I93Inventory ():Unable to start command at state (0x%X)",
                           rw_cb.tcb.i93.state);
         return NFC_STATUS_BUSY;
     }
@@ -2828,11 +2875,11 @@ tNFC_STATUS RW_I93StayQuiet (void)
 {
     tNFC_STATUS status;
 
-    RW_TRACE_API0 ("RW_I93StayQuiet()");
+    RW_TRACE_API0 ("RW_I93StayQuiet ()");
 
     if (rw_cb.tcb.i93.state != RW_I93_STATE_IDLE)
     {
-        RW_TRACE_ERROR1 ("RW_I93StayQuiet():Unable to start command at state(0x%X)",
+        RW_TRACE_ERROR1 ("RW_I93StayQuiet ():Unable to start command at state (0x%X)",
                           rw_cb.tcb.i93.state);
         return NFC_STATUS_BUSY;
     }
@@ -2864,11 +2911,11 @@ tNFC_STATUS RW_I93ReadSingleBlock (UINT8 block_number)
 {
     tNFC_STATUS status;
 
-    RW_TRACE_API1 ("RW_I93ReadSingleBlock() block_number:0x%02X", block_number);
+    RW_TRACE_API1 ("RW_I93ReadSingleBlock () block_number:0x%02X", block_number);
 
     if (rw_cb.tcb.i93.state != RW_I93_STATE_IDLE)
     {
-        RW_TRACE_ERROR1 ("RW_I93ReadSingleBlock():Unable to start command at state(0x%X)",
+        RW_TRACE_ERROR1 ("RW_I93ReadSingleBlock ():Unable to start command at state (0x%X)",
                           rw_cb.tcb.i93.state);
         return NFC_STATUS_BUSY;
     }
@@ -2902,18 +2949,18 @@ tNFC_STATUS RW_I93WriteSingleBlock (UINT8 block_number,
 {
     tNFC_STATUS status;
 
-    RW_TRACE_API0 ("RW_I93WriteSingleBlock()");
+    RW_TRACE_API0 ("RW_I93WriteSingleBlock ()");
 
     if (rw_cb.tcb.i93.state != RW_I93_STATE_IDLE)
     {
-        RW_TRACE_ERROR1 ("RW_I93WriteSingleBlock():Unable to start command at state(0x%X)",
+        RW_TRACE_ERROR1 ("RW_I93WriteSingleBlock ():Unable to start command at state (0x%X)",
                           rw_cb.tcb.i93.state);
         return NFC_STATUS_BUSY;
     }
 
     if (rw_cb.tcb.i93.block_size == 0)
     {
-        RW_TRACE_ERROR0 ("RW_I93WriteSingleBlock():Block size is unknown");
+        RW_TRACE_ERROR0 ("RW_I93WriteSingleBlock ():Block size is unknown");
         return NFC_STATUS_FAILED;
     }
 
@@ -2944,11 +2991,11 @@ tNFC_STATUS RW_I93LockBlock (UINT8 block_number)
 {
     tNFC_STATUS status;
 
-    RW_TRACE_API0 ("RW_I93LockBlock()");
+    RW_TRACE_API0 ("RW_I93LockBlock ()");
 
     if (rw_cb.tcb.i93.state != RW_I93_STATE_IDLE)
     {
-        RW_TRACE_ERROR1 ("RW_I93LockBlock():Unable to start command at state(0x%X)",
+        RW_TRACE_ERROR1 ("RW_I93LockBlock ():Unable to start command at state (0x%X)",
                           rw_cb.tcb.i93.state);
         return NFC_STATUS_BUSY;
     }
@@ -2981,11 +3028,11 @@ tNFC_STATUS RW_I93ReadMultipleBlocks (UINT8  first_block_number,
 {
     tNFC_STATUS status;
 
-    RW_TRACE_API0 ("RW_I93ReadMultipleBlocks()");
+    RW_TRACE_API0 ("RW_I93ReadMultipleBlocks ()");
 
     if (rw_cb.tcb.i93.state != RW_I93_STATE_IDLE)
     {
-        RW_TRACE_ERROR1 ("RW_I93ReadMultipleBlocks():Unable to start command at state(0x%X)",
+        RW_TRACE_ERROR1 ("RW_I93ReadMultipleBlocks ():Unable to start command at state (0x%X)",
                           rw_cb.tcb.i93.state);
         return NFC_STATUS_BUSY;
     }
@@ -3015,22 +3062,22 @@ tNFC_STATUS RW_I93ReadMultipleBlocks (UINT8  first_block_number,
 *******************************************************************************/
 tNFC_STATUS RW_I93WriteMultipleBlocks (UINT8  first_block_number,
                                        UINT16 number_blocks,
-                                       UINT8 *p_data)
+                                       UINT8  *p_data)
 {
     tNFC_STATUS status;
 
-    RW_TRACE_API0 ("RW_I93WriteMultipleBlocks()");
+    RW_TRACE_API0 ("RW_I93WriteMultipleBlocks ()");
 
     if (rw_cb.tcb.i93.state != RW_I93_STATE_IDLE)
     {
-        RW_TRACE_ERROR1 ("RW_I93WriteMultipleBlocks():Unable to start command at state(0x%X)",
+        RW_TRACE_ERROR1 ("RW_I93WriteMultipleBlocks ():Unable to start command at state (0x%X)",
                           rw_cb.tcb.i93.state);
         return NFC_STATUS_BUSY;
     }
 
     if (rw_cb.tcb.i93.block_size == 0)
     {
-        RW_TRACE_ERROR0 ("RW_I93WriteSingleBlock():Block size is unknown");
+        RW_TRACE_ERROR0 ("RW_I93WriteSingleBlock ():Block size is unknown");
         return NFC_STATUS_FAILED;
     }
 
@@ -3066,11 +3113,11 @@ tNFC_STATUS RW_I93Select (UINT8 *p_uid)
 {
     tNFC_STATUS status;
 
-    RW_TRACE_API0 ("RW_I93Select()");
+    RW_TRACE_API0 ("RW_I93Select ()");
 
     if (rw_cb.tcb.i93.state != RW_I93_STATE_IDLE)
     {
-        RW_TRACE_ERROR1 ("RW_I93Select():Unable to start command at state(0x%X)",
+        RW_TRACE_ERROR1 ("RW_I93Select ():Unable to start command at state (0x%X)",
                           rw_cb.tcb.i93.state);
         return NFC_STATUS_BUSY;
     }
@@ -3085,7 +3132,7 @@ tNFC_STATUS RW_I93Select (UINT8 *p_uid)
     }
     else
     {
-        RW_TRACE_ERROR0 ("RW_I93Select():UID shall be provided");
+        RW_TRACE_ERROR0 ("RW_I93Select ():UID shall be provided");
         status = NFC_STATUS_FAILED;
     }
 
@@ -3110,11 +3157,11 @@ tNFC_STATUS RW_I93ResetToReady (void)
 {
     tNFC_STATUS status;
 
-    RW_TRACE_API0 ("RW_I93ResetToReady()");
+    RW_TRACE_API0 ("RW_I93ResetToReady ()");
 
     if (rw_cb.tcb.i93.state != RW_I93_STATE_IDLE)
     {
-        RW_TRACE_ERROR1 ("RW_I93ResetToReady():Unable to start command at state(0x%X)",
+        RW_TRACE_ERROR1 ("RW_I93ResetToReady ():Unable to start command at state (0x%X)",
                           rw_cb.tcb.i93.state);
         return NFC_STATUS_BUSY;
     }
@@ -3146,11 +3193,11 @@ tNFC_STATUS RW_I93WriteAFI (UINT8 afi)
 {
     tNFC_STATUS status;
 
-    RW_TRACE_API0 ("RW_I93WriteAFI()");
+    RW_TRACE_API0 ("RW_I93WriteAFI ()");
 
     if (rw_cb.tcb.i93.state != RW_I93_STATE_IDLE)
     {
-        RW_TRACE_ERROR1 ("RW_I93WriteAFI():Unable to start command at state(0x%X)",
+        RW_TRACE_ERROR1 ("RW_I93WriteAFI ():Unable to start command at state (0x%X)",
                           rw_cb.tcb.i93.state);
         return NFC_STATUS_BUSY;
     }
@@ -3182,11 +3229,11 @@ tNFC_STATUS RW_I93LockAFI (void)
 {
     tNFC_STATUS status;
 
-    RW_TRACE_API0 ("RW_I93LockAFI()");
+    RW_TRACE_API0 ("RW_I93LockAFI ()");
 
     if (rw_cb.tcb.i93.state != RW_I93_STATE_IDLE)
     {
-        RW_TRACE_ERROR1 ("RW_I93LockAFI():Unable to start command at state(0x%X)",
+        RW_TRACE_ERROR1 ("RW_I93LockAFI ():Unable to start command at state (0x%X)",
                           rw_cb.tcb.i93.state);
         return NFC_STATUS_BUSY;
     }
@@ -3218,11 +3265,11 @@ tNFC_STATUS RW_I93WriteDSFID (UINT8 dsfid)
 {
     tNFC_STATUS status;
 
-    RW_TRACE_API0 ("RW_I93WriteDSFID()");
+    RW_TRACE_API0 ("RW_I93WriteDSFID ()");
 
     if (rw_cb.tcb.i93.state != RW_I93_STATE_IDLE)
     {
-        RW_TRACE_ERROR1 ("RW_I93WriteDSFID():Unable to start command at state(0x%X)",
+        RW_TRACE_ERROR1 ("RW_I93WriteDSFID ():Unable to start command at state (0x%X)",
                           rw_cb.tcb.i93.state);
         return NFC_STATUS_BUSY;
     }
@@ -3254,11 +3301,11 @@ tNFC_STATUS RW_I93LockDSFID (void)
 {
     tNFC_STATUS status;
 
-    RW_TRACE_API0 ("RW_I93LockDSFID()");
+    RW_TRACE_API0 ("RW_I93LockDSFID ()");
 
     if (rw_cb.tcb.i93.state != RW_I93_STATE_IDLE)
     {
-        RW_TRACE_ERROR1 ("RW_I93LockDSFID():Unable to start command at state(0x%X)",
+        RW_TRACE_ERROR1 ("RW_I93LockDSFID ():Unable to start command at state (0x%X)",
                           rw_cb.tcb.i93.state);
         return NFC_STATUS_BUSY;
     }
@@ -3290,11 +3337,11 @@ tNFC_STATUS RW_I93GetSysInfo (UINT8 *p_uid)
 {
     tNFC_STATUS status;
 
-    RW_TRACE_API0 ("RW_I93GetSysInfo()");
+    RW_TRACE_API0 ("RW_I93GetSysInfo ()");
 
     if (rw_cb.tcb.i93.state != RW_I93_STATE_IDLE)
     {
-        RW_TRACE_ERROR1 ("RW_I93GetSysInfo():Unable to start command at state(0x%X)",
+        RW_TRACE_ERROR1 ("RW_I93GetSysInfo ():Unable to start command at state (0x%X)",
                           rw_cb.tcb.i93.state);
         return NFC_STATUS_BUSY;
     }
@@ -3335,11 +3382,11 @@ tNFC_STATUS RW_I93GetMultiBlockSecurityStatus (UINT8  first_block_number,
 {
     tNFC_STATUS status;
 
-    RW_TRACE_API0 ("RW_I93GetMultiBlockSecurityStatus()");
+    RW_TRACE_API0 ("RW_I93GetMultiBlockSecurityStatus ()");
 
     if (rw_cb.tcb.i93.state != RW_I93_STATE_IDLE)
     {
-        RW_TRACE_ERROR1 ("RW_I93GetMultiBlockSecurityStatus():Unable to start command at state(0x%X)",
+        RW_TRACE_ERROR1 ("RW_I93GetMultiBlockSecurityStatus ():Unable to start command at state (0x%X)",
                           rw_cb.tcb.i93.state);
         return NFC_STATUS_BUSY;
     }
@@ -3370,11 +3417,11 @@ tNFC_STATUS RW_I93DetectNDef (void)
     tNFC_STATUS status;
     tRW_I93_RW_SUBSTATE sub_state;
 
-    RW_TRACE_API0 ("RW_I93DetectNDef()");
+    RW_TRACE_API0 ("RW_I93DetectNDef ()");
 
     if (rw_cb.tcb.i93.state != RW_I93_STATE_IDLE)
     {
-        RW_TRACE_ERROR1 ("RW_I93DetectNDef():Unable to start command at state(0x%X)",
+        RW_TRACE_ERROR1 ("RW_I93DetectNDef ():Unable to start command at state (0x%X)",
                           rw_cb.tcb.i93.state);
         return NFC_STATUS_FAILED;
     }
@@ -3384,8 +3431,8 @@ tNFC_STATUS RW_I93DetectNDef (void)
         status = rw_i93_send_cmd_inventory (NULL, 0x00);
         sub_state = RW_I93_SUBSTATE_WAIT_UID;
     }
-    else if ((rw_cb.tcb.i93.num_block == 0)
-           ||(rw_cb.tcb.i93.block_size == 0))
+    else if (  (rw_cb.tcb.i93.num_block == 0)
+             ||(rw_cb.tcb.i93.block_size == 0)  )
     {
         status = rw_i93_send_cmd_get_sys_info (rw_cb.tcb.i93.uid);
         sub_state = RW_I93_SUBSTATE_WAIT_SYS_INFO;
@@ -3412,7 +3459,7 @@ tNFC_STATUS RW_I93DetectNDef (void)
 ** Function         RW_I93ReadNDef
 **
 ** Description      This function performs NDEF read procedure
-**                  Note: RW_I93DetectNDef() must be called before using this
+**                  Note: RW_I93DetectNDef () must be called before using this
 **
 **                  The following event will be returned
 **                      RW_I93_NDEF_READ_EVT for each segmented NDEF message
@@ -3425,17 +3472,17 @@ tNFC_STATUS RW_I93DetectNDef (void)
 *******************************************************************************/
 tNFC_STATUS RW_I93ReadNDef (void)
 {
-    RW_TRACE_API0 ("RW_I93ReadNDef()");
+    RW_TRACE_API0 ("RW_I93ReadNDef ()");
 
     if (rw_cb.tcb.i93.state != RW_I93_STATE_IDLE)
     {
-        RW_TRACE_ERROR1 ("RW_I93ReadNDef():Unable to start command at state(0x%X)",
+        RW_TRACE_ERROR1 ("RW_I93ReadNDef ():Unable to start command at state (0x%X)",
                           rw_cb.tcb.i93.state);
         return NFC_STATUS_FAILED;
     }
 
-    if ((rw_cb.tcb.i93.tlv_type == I93_ICODE_TLV_TYPE_NDEF)
-      &&(rw_cb.tcb.i93.ndef_length > 0))
+    if (  (rw_cb.tcb.i93.tlv_type == I93_ICODE_TLV_TYPE_NDEF)
+        &&(rw_cb.tcb.i93.ndef_length > 0)  )
     {
         rw_cb.tcb.i93.rw_offset = rw_cb.tcb.i93.ndef_tlv_start_offset;
         rw_cb.tcb.i93.rw_length = 0;
@@ -3451,7 +3498,7 @@ tNFC_STATUS RW_I93ReadNDef (void)
     }
     else
     {
-        RW_TRACE_ERROR0 ("RW_I93ReadNDef():No NDEF detected");
+        RW_TRACE_ERROR0 ("RW_I93ReadNDef ():No NDEF detected");
         return NFC_STATUS_FAILED;
     }
 
@@ -3463,7 +3510,7 @@ tNFC_STATUS RW_I93ReadNDef (void)
 ** Function         RW_I93UpdateNDef
 **
 ** Description      This function performs NDEF update procedure
-**                  Note: RW_I93DetectNDef() must be called before using this
+**                  Note: RW_I93DetectNDef () must be called before using this
 **                        Updating data must not be removed until returning event
 **
 **                  The following event will be returned
@@ -3478,11 +3525,11 @@ tNFC_STATUS RW_I93UpdateNDef (UINT16 length, UINT8 *p_data)
 {
     UINT8 block_number;
 
-    RW_TRACE_API1 ("RW_I93UpdateNDef() length:%d", length);
+    RW_TRACE_API1 ("RW_I93UpdateNDef () length:%d", length);
 
     if (rw_cb.tcb.i93.state != RW_I93_STATE_IDLE)
     {
-        RW_TRACE_ERROR1 ("RW_I93UpdateNDef():Unable to start command at state(0x%X)",
+        RW_TRACE_ERROR1 ("RW_I93UpdateNDef ():Unable to start command at state (0x%X)",
                           rw_cb.tcb.i93.state);
         return NFC_STATUS_FAILED;
     }
@@ -3491,12 +3538,12 @@ tNFC_STATUS RW_I93UpdateNDef (UINT16 length, UINT8 *p_data)
     {
         if (rw_cb.tcb.i93.intl_flags & RW_I93_FLAG_READ_ONLY)
         {
-            RW_TRACE_ERROR0 ("RW_I93UpdateNDef():NDEF is read-only");
+            RW_TRACE_ERROR0 ("RW_I93UpdateNDef ():NDEF is read-only");
             return NFC_STATUS_FAILED;
         }
         if (rw_cb.tcb.i93.max_ndef_length < length)
         {
-            RW_TRACE_ERROR2 ("RW_I93UpdateNDef():data(%d bytes) is more than max NDEF length(%d)",
+            RW_TRACE_ERROR2 ("RW_I93UpdateNDef ():data (%d bytes) is more than max NDEF length (%d)",
                               length, rw_cb.tcb.i93.max_ndef_length);
             return NFC_STATUS_FAILED;
         }
@@ -3508,7 +3555,7 @@ tNFC_STATUS RW_I93UpdateNDef (UINT16 length, UINT8 *p_data)
         rw_cb.tcb.i93.rw_offset = rw_cb.tcb.i93.ndef_tlv_start_offset + 1;
         rw_cb.tcb.i93.rw_length = 0;
 
-        block_number = (UINT8)(rw_cb.tcb.i93.rw_offset / rw_cb.tcb.i93.block_size);
+        block_number = (UINT8) (rw_cb.tcb.i93.rw_offset / rw_cb.tcb.i93.block_size);
 
         if (rw_i93_send_cmd_read_single_block (block_number, FALSE) == NFC_STATUS_OK)
         {
@@ -3522,7 +3569,7 @@ tNFC_STATUS RW_I93UpdateNDef (UINT16 length, UINT8 *p_data)
     }
     else
     {
-        RW_TRACE_ERROR0 ("RW_I93ReadNDef():No NDEF detected");
+        RW_TRACE_ERROR0 ("RW_I93ReadNDef ():No NDEF detected");
         return NFC_STATUS_FAILED;
     }
 
@@ -3546,17 +3593,17 @@ tNFC_STATUS RW_I93FormatNDef (void)
     tNFC_STATUS status;
     tRW_I93_RW_SUBSTATE sub_state;
 
-    RW_TRACE_API0 ("RW_I93FormatNDef()");
+    RW_TRACE_API0 ("RW_I93FormatNDef ()");
 
     if (rw_cb.tcb.i93.state != RW_I93_STATE_IDLE)
     {
-        RW_TRACE_ERROR1 ("RW_I93FormatNDef():Unable to start command at state(0x%X)",
+        RW_TRACE_ERROR1 ("RW_I93FormatNDef ():Unable to start command at state (0x%X)",
                           rw_cb.tcb.i93.state);
         return NFC_STATUS_FAILED;
     }
 
-    if ((rw_cb.tcb.i93.product_version == RW_I93_TAG_IT_HF_I_STD_CHIP_INLAY)
-      ||(rw_cb.tcb.i93.product_version == RW_I93_TAG_IT_HF_I_PRO_CHIP_INLAY))
+    if (  (rw_cb.tcb.i93.product_version == RW_I93_TAG_IT_HF_I_STD_CHIP_INLAY)
+        ||(rw_cb.tcb.i93.product_version == RW_I93_TAG_IT_HF_I_PRO_CHIP_INLAY)  )
     {
         /* These don't support GetSystemInformation and GetMultiBlockSecurityStatus */
         rw_cb.tcb.i93.rw_offset = 0;
@@ -3586,7 +3633,7 @@ tNFC_STATUS RW_I93FormatNDef (void)
 ** Function         RW_I93SetTagReadOnly
 **
 ** Description      This function performs NDEF read-only procedure
-**                  Note: RW_I93DetectNDef() must be called before using this
+**                  Note: RW_I93DetectNDef () must be called before using this
 **                        Updating data must not be removed until returning event
 **
 **                  The RW_I93_SET_TAG_RO_EVT event will be returned.
@@ -3597,11 +3644,11 @@ tNFC_STATUS RW_I93FormatNDef (void)
 *******************************************************************************/
 tNFC_STATUS RW_I93SetTagReadOnly (void)
 {
-    RW_TRACE_API0 ("RW_I93SetTagReadOnly()");
+    RW_TRACE_API0 ("RW_I93SetTagReadOnly ()");
 
     if (rw_cb.tcb.i93.state != RW_I93_STATE_IDLE)
     {
-        RW_TRACE_ERROR1 ("RW_I93SetTagReadOnly():Unable to start command at state(0x%X)",
+        RW_TRACE_ERROR1 ("RW_I93SetTagReadOnly ():Unable to start command at state (0x%X)",
                           rw_cb.tcb.i93.state);
         return NFC_STATUS_FAILED;
     }
@@ -3610,7 +3657,7 @@ tNFC_STATUS RW_I93SetTagReadOnly (void)
     {
         if (rw_cb.tcb.i93.intl_flags & RW_I93_FLAG_READ_ONLY)
         {
-            RW_TRACE_ERROR0 ("RW_I93SetTagReadOnly():NDEF is already read-only");
+            RW_TRACE_ERROR0 ("RW_I93SetTagReadOnly ():NDEF is already read-only");
             return NFC_STATUS_FAILED;
         }
 
@@ -3627,7 +3674,7 @@ tNFC_STATUS RW_I93SetTagReadOnly (void)
     }
     else
     {
-        RW_TRACE_ERROR0 ("RW_I93SetTagReadOnly():No NDEF detected");
+        RW_TRACE_ERROR0 ("RW_I93SetTagReadOnly ():No NDEF detected");
         return NFC_STATUS_FAILED;
     }
 
@@ -3654,7 +3701,7 @@ tNFC_STATUS RW_I93PresenceCheck (void)
     tNFC_STATUS status;
     tRW_DATA    evt_data;
 
-    RW_TRACE_API0 ("RW_I93PresenceCheck()");
+    RW_TRACE_API0 ("RW_I93PresenceCheck ()");
 
     if (!rw_cb.p_cback)
     {
@@ -3663,7 +3710,7 @@ tNFC_STATUS RW_I93PresenceCheck (void)
     else if (rw_cb.tcb.i93.state == RW_I93_STATE_NOT_ACTIVATED)
     {
         evt_data.status = NFC_STATUS_FAILED;
-        (*rw_cb.p_cback)(RW_T4T_PRESENCE_CHECK_EVT, &evt_data);
+        (*rw_cb.p_cback) (RW_T4T_PRESENCE_CHECK_EVT, &evt_data);
 
         return NFC_STATUS_OK;
     }

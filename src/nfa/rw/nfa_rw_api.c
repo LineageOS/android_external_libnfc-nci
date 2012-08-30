@@ -4,7 +4,7 @@
 **
 **  Description:    NFA interface for tag Reader/Writer
 **
-**  Copyright (c) 2010, Broadcom Corp., All Rights Reserved.
+**  Copyright (c) 2010-2012, Broadcom Corp., All Rights Reserved.
 **  Broadcom Bluetooth Core. Proprietary and confidential.
 **
 *****************************************************************************/
@@ -80,7 +80,7 @@ tNFA_STATUS NFA_RwDetectNDef (void)
 **                  etc.).
 **
 **                  Upon receiving the NDEF message, the message will be sent to
-**                  the handler registered with NFA_RegisterNDefHandler or
+**                  the handler registered with NFA_RegisterNDefTypeHandler or
 **                  NFA_RequestExclusiveRfControl (if exclusive RF mode is active)
 **
 ** Returns:

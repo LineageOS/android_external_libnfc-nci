@@ -99,7 +99,7 @@ NFC_API extern tNFC_STATUS CE_T3tSetLocalNDEFMsg (BOOLEAN read_only,
 ** Returns          NFC_STATUS_OK if success
 **
 *******************************************************************************/
-NFC_API extern tNFC_STATUS CE_T3tSetLocalNDefParams(UINT8 nbr, UINT8 nbw);
+NFC_API extern tNFC_STATUS CE_T3tSetLocalNDefParams (UINT8 nbr, UINT8 nbw);
 
 /*******************************************************************************
 **
@@ -164,9 +164,9 @@ NFC_API extern tNFC_STATUS CE_T4tSetLocalNDEFMsg (BOOLEAN    read_only,
 **                  CE_T4T_AID_HANDLE_INVALID otherwisse
 **
 *******************************************************************************/
-NFC_API extern tCE_T4T_AID_HANDLE CE_T4tRegisterAID (UINT8 aid_len,
-                                                     UINT8 *p_aid,
-                                                     tCE_CBACK *p_cback);
+NFC_API extern tCE_T4T_AID_HANDLE CE_T4tRegisterAID (UINT8      aid_len,
+                                                     UINT8      *p_aid,
+                                                     tCE_CBACK  *p_cback);
 
 /*******************************************************************************
 **

@@ -55,6 +55,7 @@
 #define NFA_EE_FLAG_FIRST_PPSE          0x02    /* to clear PPSE in NV */
 #endif
 
+
 /* data type for NFA_EE_API_SET_PPSE_RSP_EVT */
 typedef struct
 {
@@ -92,10 +93,7 @@ typedef struct
 } tNFA_EE_NCI_VS;
 
 
-#define NFA_DM_BRCM_FLAGS_SNOOZE_ENABLED   0x0001     /* Snooze mode enabled             */
-#define NFA_DM_BRCM_FLAGS_SNOOZE_API       0x0002     /* Snooze API is called            */
-#define NFA_DM_BRCM_FLAGS_VS_CBACK_REG     0x0004     /* VS Callback has been registered */
-#define NFA_DM_BRCM_FLAGS_SNOOZE_ENABLING  0x0008     /* Snooze mode enabling            */
+#define NFA_DM_BRCM_FLAGS_VS_CBACK_REG     0x0001     /* VS Callback has been registered */
 #define NFA_DM_BRCM_FLAGS_RESERVED         0xFF00     /* Reserved for BRCM VS            */
 
 typedef UINT16 tNFA_DM_BRCM_FLAGS;
@@ -104,9 +102,7 @@ typedef UINT16 tNFA_DM_BRCM_FLAGS;
 enum
 {
     /* device manager local device API events */
-    NFA_DM_BRCM_API_ENABLE_SNOOZE_EVT   = NFA_DM_MAX_EVT,
-    NFA_DM_BRCM_API_DISABLE_SNOOZE_EVT,
-    NFA_DM_BRCM_API_MULTI_TECH_RSP_EVT,
+    NFA_DM_BRCM_API_MULTI_TECH_RSP_EVT = NFA_DM_MAX_EVT,
     NFA_DM_BRCM_API_GET_BUILD_INFO_EVT,
     NFA_DM_BRCM_VS_1_EVT,
     NFA_DM_BRCM_MAX_EVT
@@ -140,6 +136,7 @@ typedef struct
     UINT16              ee_canned_ppse_len;     /* Canned PPSE RSP length           */
     UINT8               ee_mem_type;            /* The memory type VSC Access App   */
     UINT8               ee_num_vsc;             /* the number of vsc sent           */
+    UINT8               ee_max_num;             /* Max number of NFCEEs             */
 
     /* data members for NFA-HCI */
     TIMER_LIST_ENT      hci_timer;                          /* Timer to avoid indefinitely waiting for response */
@@ -164,8 +161,10 @@ extern void nfa_dm_brcm_restore (void);
 extern void nfa_dm_brcm_set_fw_fsm (BOOLEAN enable);
 
 #define nfa_ee_brcm_init()
+
 #define nfa_ee_brcm_enable()
 #define nfa_ee_brcm_disable()
+#define nfa_ee_brcm_nop_evt_hdlr(p_evt_data)
 
 #if (NFC_NFCEE_INCLUDED == TRUE)
 /* VS functions from NFA-HCI */
@@ -189,8 +188,6 @@ extern UINT8 *p_nfa_dm_pll_325_cfg;
 extern UINT8 *p_nfa_dm_start_up_cfg;
 extern UINT8 *p_nfa_dm_start_up_vsc_cfg;
 extern UINT8 *p_nfa_lp_ce_power_cfg;
-extern UINT8 *p_nfa_power_bitmap_full;
-extern UINT8 *p_nfa_power_bitmap_ce_lp;
 
 #define nfa_dm_vs_brcm_init()
 

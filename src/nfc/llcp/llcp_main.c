@@ -40,7 +40,7 @@ void llcp_init (void)
 
     llcp_cb.trace_level = LLCP_INITIAL_TRACE_LEVEL;
 
-    LLCP_TRACE_DEBUG0 ("LLCP - llcp_init()");
+    LLCP_TRACE_DEBUG0 ("LLCP - llcp_init ()");
 
     llcp_cb.lcb.local_link_miu = (LLCP_MIU <= LLCP_MAX_MIU ? LLCP_MIU : LLCP_MAX_MIU);
     llcp_cb.lcb.local_opt      = LLCP_OPT_VALUE;
@@ -62,21 +62,21 @@ void llcp_init (void)
     llcp_cb.num_rx_buff = (pool_count * LLCP_RX_BUFF_RATIO) / 100;
 
     /* rx congestion start/end threshold */
-    llcp_cb.overall_rx_congest_start = (UINT8)((llcp_cb.num_rx_buff * LLCP_RX_CONGEST_START) / 100);
-    llcp_cb.overall_rx_congest_end   = (UINT8)((llcp_cb.num_rx_buff * LLCP_RX_CONGEST_END) / 100);
+    llcp_cb.overall_rx_congest_start = (UINT8) ((llcp_cb.num_rx_buff * LLCP_RX_CONGEST_START) / 100);
+    llcp_cb.overall_rx_congest_end   = (UINT8) ((llcp_cb.num_rx_buff * LLCP_RX_CONGEST_END) / 100);
 
     /* max number of buffers for receiving data on logical data link */
-    llcp_cb.max_num_ll_rx_buff = (UINT8)((llcp_cb.num_rx_buff * LLCP_LL_RX_BUFF_LIMIT) / 100);
+    llcp_cb.max_num_ll_rx_buff = (UINT8) ((llcp_cb.num_rx_buff * LLCP_LL_RX_BUFF_LIMIT) / 100);
 
     LLCP_TRACE_DEBUG4 ("num_rx_buff = %d, rx_congest_start = %d, rx_congest_end = %d, max_num_ll_rx_buff = %d",
                         llcp_cb.num_rx_buff, llcp_cb.overall_rx_congest_start,
                         llcp_cb.overall_rx_congest_end, llcp_cb.max_num_ll_rx_buff);
 
     /* max number of buffers for transmitting data */
-    llcp_cb.max_num_tx_buff    = (UINT8)(pool_count - llcp_cb.num_rx_buff);
+    llcp_cb.max_num_tx_buff    = (UINT8) (pool_count - llcp_cb.num_rx_buff);
 
     /* max number of buffers for transmitting data on logical data link */
-    llcp_cb.max_num_ll_tx_buff = (UINT8)((llcp_cb.max_num_tx_buff * LLCP_LL_TX_BUFF_LIMIT) / 100);
+    llcp_cb.max_num_ll_tx_buff = (UINT8) ((llcp_cb.max_num_tx_buff * LLCP_LL_TX_BUFF_LIMIT) / 100);
 
     LLCP_TRACE_DEBUG2 ("max_num_tx_buff = %d, max_num_ll_tx_buff = %d",
                         llcp_cb.max_num_tx_buff, llcp_cb.max_num_ll_tx_buff);
@@ -100,14 +100,14 @@ void llcp_cleanup (void)
     UINT8 sap;
     tLLCP_APP_CB *p_app_cb;
 
-    LLCP_TRACE_DEBUG0 ("LLCP - llcp_cleanup()");
+    LLCP_TRACE_DEBUG0 ("LLCP - llcp_cleanup ()");
 
     for (sap = LLCP_SAP_SDP; sap < LLCP_NUM_SAPS; sap++)
     {
         p_app_cb = llcp_util_get_app_cb (sap);
 
-        if ((p_app_cb)
-          &&(p_app_cb->p_app_cback))
+        if (  (p_app_cb)
+            &&(p_app_cb->p_app_cback)  )
         {
             LLCP_Deregister (sap);
         }
@@ -146,7 +146,7 @@ void llcp_process_timeout (TIMER_LIST_ENT *p_tle)
 
     case NFC_TTYPE_LLCP_DATA_LINK:
         reason = LLCP_SAP_DISCONNECT_REASON_TIMEOUT;
-        llcp_dlsm_execute ((tLLCP_DLCB *)(p_tle->param), LLCP_DLC_EVENT_TIMEOUT, &reason);
+        llcp_dlsm_execute ((tLLCP_DLCB *) (p_tle->param), LLCP_DLC_EVENT_TIMEOUT, &reason);
         break;
 
     case NFC_TTYPE_LLCP_DELAY_FIRST_PDU:

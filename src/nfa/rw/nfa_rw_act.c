@@ -115,20 +115,22 @@ static void nfa_rw_error_cleanup (UINT8 event)
 
 /*******************************************************************************
 **
-** Function         nfa_rw_start_presence_check_timer
+** Function         nfa_rw_check_start_presence_check_timer
 **
 ** Description      Start timer for presence check
 **
 ** Returns          Nothing
 **
 *******************************************************************************/
-static void nfa_rw_start_presence_check_timer(void)
+static void nfa_rw_check_start_presence_check_timer (void)
 {
+#if (defined (NFA_DM_AUTO_PRESENCE_CHECK) && (NFA_DM_AUTO_PRESENCE_CHECK == TRUE))
     if (nfa_rw_cb.flags & NFA_RW_FL_NOT_EXCL_RF_MODE)
     {
         NFA_TRACE_DEBUG0("Starting presence check timer...");
         nfa_sys_start_timer(&nfa_rw_cb.tle, NFA_RW_PRESENCE_CHECK_TICK_EVT, NFA_RW_PRESENCE_CHECK_INTERVAL);
     }
+#endif   /* NFA_DM_AUTO_PRESENCE_CHECK  */
 }
 
 /*******************************************************************************
@@ -367,51 +369,60 @@ void nfa_rw_handle_presence_check_rsp (tNFC_STATUS status)
 {
     BT_HDR *p_pending_msg;
 
-    /* Send command complete event to state machine */
+    /* Clear the BUSY flag and restart the presence-check timer */
     nfa_rw_command_complete();
 
-    /* Handle response from auto presence check */
-    if (nfa_rw_cb.flags & NFA_RW_FL_NOT_EXCL_RF_MODE)
+    /* Handle presence check due to auto-presence-check  */
+    if (nfa_rw_cb.flags & NFA_RW_FL_AUTO_PRESENCE_CHECK_BUSY)
     {
-        if (status != NFC_STATUS_OK)
+        nfa_rw_cb.flags &= ~NFA_RW_FL_AUTO_PRESENCE_CHECK_BUSY;
+
+        /* If an API was called during auto-presence-check, then handle it now */
+        if (nfa_rw_cb.p_pending_msg)
         {
-            /* Presence check failed. Deactivate */
-            NFA_TRACE_DEBUG0("Auto presence check failed. Deactivating...");
-            nfa_dm_rf_deactivate (NFA_DEACTIVATE_TYPE_DISCOVERY);
-
-            nfa_rw_cb.flags &= ~NFA_RW_FL_AUTO_PRESENCE_CHECK_SUCCESS;
-
-            /* if there was a pending command message to send, free it now */
-            if (nfa_rw_cb.p_pending_msg)
+            /* If NFA_RwPresenceCheck was called during auto-presence-check, notify app of result */
+            if (nfa_rw_cb.p_pending_msg->op_req.op == NFA_RW_OP_PRESENCE_CHECK)
             {
+                /* Notify app of presence check status */
+                nfa_dm_act_conn_cback_notify(NFA_PRESENCE_CHECK_EVT, (tNFA_CONN_EVT_DATA *)&status);
                 GKI_freebuf(nfa_rw_cb.p_pending_msg);
                 nfa_rw_cb.p_pending_msg = NULL;
             }
-        }
-        else
-        {
-            nfa_rw_cb.flags |= NFA_RW_FL_AUTO_PRESENCE_CHECK_SUCCESS;
-            if (nfa_rw_cb.p_pending_msg == NULL)
-            {
-                /* Restart presence check timer */
-                nfa_rw_start_presence_check_timer();
-            }
-
-            /* If a command is pending, then perform it now */
-            else
+            /* For all other APIs called during auto-presence check, perform the command now (if tag is still present) */
+            else if (status == NFC_STATUS_OK)
             {
                 NFA_TRACE_DEBUG0("Performing deferred operation after presence check...");
                 p_pending_msg = (BT_HDR *)nfa_rw_cb.p_pending_msg;
                 nfa_rw_cb.p_pending_msg = NULL;
                 nfa_rw_handle_event(p_pending_msg);
             }
+            else
+            {
+                /* Tag no longer present. Free command for pending API command */
+                GKI_freebuf(nfa_rw_cb.p_pending_msg);
+                nfa_rw_cb.p_pending_msg = NULL;
+            }
+        }
+
+        /* Auto-presence check failed. Deactivate */
+        if (status != NFC_STATUS_OK)
+        {
+            NFA_TRACE_DEBUG0("Auto presence check failed. Deactivating...");
+            nfa_dm_rf_deactivate (NFA_DEACTIVATE_TYPE_DISCOVERY);
         }
     }
-    /* Handle presence check response for foregound polling */
+    /* Handle presence check due to NFA_RwPresenceCheck API call */
     else
     {
         /* Notify app of presence check status */
         nfa_dm_act_conn_cback_notify(NFA_PRESENCE_CHECK_EVT, (tNFA_CONN_EVT_DATA *)&status);
+
+        /* If in normal mode (not-exclusive RF mode) then deactivate the link if presence check failed */
+        if ((nfa_rw_cb.flags & NFA_RW_FL_NOT_EXCL_RF_MODE) && (status != NFC_STATUS_OK))
+        {
+            NFA_TRACE_DEBUG0("Presence check failed. Deactivating...");
+            nfa_dm_rf_deactivate (NFA_DEACTIVATE_TYPE_DISCOVERY);
+        }
     }
 }
 
@@ -1688,6 +1699,8 @@ BOOLEAN nfa_rw_presence_check_tick(tNFA_RW_MSG *p_data)
 {
     /* Store the current operation */
     nfa_rw_cb.cur_op = NFA_RW_OP_PRESENCE_CHECK;
+    nfa_rw_cb.flags |= NFA_RW_FL_AUTO_PRESENCE_CHECK_BUSY;
+    NFA_TRACE_DEBUG0("Auto-presence check starting...");
 
     /* Perform presence check */
     nfa_rw_presence_check(NULL);
@@ -2328,8 +2341,8 @@ BOOLEAN nfa_rw_activate_ntf(tNFA_RW_MSG *p_data)
     /* Check if we are in exclusive RF mode */
     if (p_data->activate_ntf.excl_rf_not_active)
     {
-        /* Not in exclusive RF mode. Enable auto-presence check, and initially indicate that tag is present */
-        nfa_rw_cb.flags |= (NFA_RW_FL_NOT_EXCL_RF_MODE | NFA_RW_FL_AUTO_PRESENCE_CHECK_ENABLED | NFA_RW_FL_AUTO_PRESENCE_CHECK_SUCCESS);
+        /* Not in exclusive RF mode */
+        nfa_rw_cb.flags |= NFA_RW_FL_NOT_EXCL_RF_MODE;
     }
 
     /* If protocol not supported by RW module, notify app of NFA_ACTIVATED_EVT and start presence check if needed */
@@ -2340,7 +2353,7 @@ BOOLEAN nfa_rw_activate_ntf(tNFA_RW_MSG *p_data)
 
         /* Notify app of NFA_ACTIVATED_EVT and start presence check timer */
         nfa_dm_notify_activation_status (NFA_STATUS_OK, NULL);
-        nfa_rw_start_presence_check_timer();
+        nfa_rw_check_start_presence_check_timer ();
         return TRUE;
     }
 
@@ -2431,7 +2444,7 @@ BOOLEAN nfa_rw_activate_ntf(tNFA_RW_MSG *p_data)
     if (activate_notify)
     {
         nfa_dm_notify_activation_status (NFA_STATUS_OK, &tag_params);
-        nfa_rw_start_presence_check_timer();
+        nfa_rw_check_start_presence_check_timer ();
     }
 
 
@@ -2482,7 +2495,6 @@ BOOLEAN nfa_rw_deactivate_ntf(tNFA_RW_MSG *p_data)
 BOOLEAN nfa_rw_handle_op_req (tNFA_RW_MSG *p_data)
 {
     BOOLEAN freebuf = TRUE;
-    tNFA_CONN_EVT_DATA conn_evt;
 
     /* Check if activated */
     if (!(nfa_rw_cb.flags & NFA_RW_FL_ACTIVATED))
@@ -2490,22 +2502,27 @@ BOOLEAN nfa_rw_handle_op_req (tNFA_RW_MSG *p_data)
         NFA_TRACE_ERROR0("nfa_rw_handle_op_req: not activated");
         return TRUE;
     }
-    /* Check if currently busy */
-    else if (nfa_rw_cb.flags & NFA_RW_FL_BUSY)
+    /* Check if currently busy with another API call */
+    else if (nfa_rw_cb.flags & NFA_RW_FL_API_BUSY)
     {
         return (nfa_rw_op_req_while_busy(p_data));
+    }
+    /* Check if currently busy with auto-presence check */
+    else if (nfa_rw_cb.flags & NFA_RW_FL_AUTO_PRESENCE_CHECK_BUSY)
+    {
+        /* Cache the command (will be handled once auto-presence check is completed) */
+        NFA_TRACE_DEBUG1("Deferring operation %i until after auto-presence check is completed", p_data->op_req.op);
+        nfa_rw_cb.p_pending_msg = p_data;
+        nfa_rw_cb.flags |= NFA_RW_FL_API_BUSY;
+        return (freebuf);
     }
 
     NFA_TRACE_DEBUG1("nfa_rw_handle_op_req: op=0x%02x", p_data->op_req.op);
 
-    nfa_rw_cb.flags |= NFA_RW_FL_BUSY;
+    nfa_rw_cb.flags |= NFA_RW_FL_API_BUSY;
 
     /* Stop the presence check timer */
-    /* Do not stop timer if command is NFA_RwPresenceCheck /w internal check enabled (no cmd is sent to the NFCC in this case) */
-    if (!((nfa_rw_cb.flags & NFA_RW_FL_AUTO_PRESENCE_CHECK_ENABLED) && (p_data->op_req.op == NFA_RW_OP_PRESENCE_CHECK)))
-    {
-        nfa_rw_stop_presence_check_timer();
-    }
+    nfa_rw_stop_presence_check_timer();
 
     /* Store the current operation */
     nfa_rw_cb.cur_op = p_data->op_req.op;
@@ -2533,18 +2550,7 @@ BOOLEAN nfa_rw_handle_op_req (tNFA_RW_MSG *p_data)
         break;
 
     case NFA_RW_OP_PRESENCE_CHECK:
-        /* if auot presence check is enabled, then return result from last presence check */
-        if ((nfa_rw_cb.flags & NFA_RW_FL_AUTO_PRESENCE_CHECK_ENABLED))
-        {
-            /* Command complete - perform cleanup, notify app */
-            nfa_rw_command_complete();
-            conn_evt.status = ((nfa_rw_cb.flags & NFA_RW_FL_AUTO_PRESENCE_CHECK_SUCCESS) ? NFA_STATUS_OK : NFA_STATUS_FAILED);
-            nfa_dm_act_conn_cback_notify(NFA_PRESENCE_CHECK_EVT, &conn_evt);
-        }
-        else
-        {
-            nfa_rw_presence_check(p_data);
-        }
+        nfa_rw_presence_check(p_data);
         break;
 
     case NFA_RW_OP_FORMAT_TAG:
@@ -2662,90 +2668,70 @@ static BOOLEAN nfa_rw_op_req_while_busy(tNFA_RW_MSG *p_data)
     tNFA_CONN_EVT_DATA  conn_evt_data;
     UINT8               event;
 
-    /* If initiating presence check */
-    if (p_data->op_req.op == NFA_RW_OP_PRESENCE_CHECK)
-    {
-        /* If busy with another API, then we can return success for this presence check */
-        /* (if tag is removed, next presence check will have fail status)               */
-        NFA_TRACE_DEBUG0("nfa_rw_op_req_while_busy: presence check while in busy state");
-        conn_evt_data.status = NFA_STATUS_OK;
-        nfa_dm_act_conn_cback_notify (NFA_PRESENCE_CHECK_EVT, &conn_evt_data);
-    }
-    /* If auto presence check is in progress, then save the command until presence check is complete */
-    else if (  (nfa_rw_cb.flags & NFA_RW_FL_AUTO_PRESENCE_CHECK_ENABLED)
-             &&(nfa_rw_cb.cur_op == NFA_RW_OP_PRESENCE_CHECK)
-             &&(nfa_rw_cb.p_pending_msg == NULL)  )
-    {
-        NFA_TRACE_DEBUG1("nfa_rw_op_req_while_busy: deferring operation %i until after presence check is completed", p_data->op_req.op);
-        nfa_rw_cb.p_pending_msg = p_data;
-        freebuf = FALSE;
-    }
-    else
-    {
-        NFA_TRACE_ERROR0("nfa_rw_op_req_while_busy: unable to handle API");
+    NFA_TRACE_ERROR0("nfa_rw_op_req_while_busy: unable to handle API");
 
-        conn_evt_data.status = NFA_STATUS_BUSY;
+    /* Return appropriate event for requested API, with status=BUSY */
+    conn_evt_data.status = NFA_STATUS_BUSY;
 
-        switch (p_data->op_req.op)
-        {
-        case NFA_RW_OP_DETECT_NDEF:
-            conn_evt_data.ndef_detect.cur_size = 0;
-            conn_evt_data.ndef_detect.max_size = 0;
-            conn_evt_data.ndef_detect.flags    = RW_NDEF_FL_UNKNOWN;
-            event = NFA_NDEF_DETECT_EVT;
-            break;
-        case NFA_RW_OP_READ_NDEF:
-        case NFA_RW_OP_T1T_RID:
-        case NFA_RW_OP_T1T_RALL:
-        case NFA_RW_OP_T1T_READ:
-        case NFA_RW_OP_T1T_RSEG:
-        case NFA_RW_OP_T1T_READ8:
-        case NFA_RW_OP_T2T_READ:
-        case NFA_RW_OP_T3T_READ:
-            event = NFA_READ_CPLT_EVT;
-            break;
-        case NFA_RW_OP_WRITE_NDEF:
-        case NFA_RW_OP_T1T_WRITE:
-        case NFA_RW_OP_T1T_WRITE8:
-        case NFA_RW_OP_T2T_WRITE:
-        case NFA_RW_OP_T3T_WRITE:
-            event = NFA_WRITE_CPLT_EVT;
-            break;
-        case NFA_RW_OP_FORMAT_TAG:
-            event = NFA_FORMAT_CPLT_EVT;
-            break;
-            case NFA_RW_OP_DETECT_LOCK_TLV:
-        case NFA_RW_OP_DETECT_MEM_TLV:
-            event = NFA_TLV_DETECT_EVT;
-            break;
-        case NFA_RW_OP_SET_TAG_RO:
-            event = NFA_SET_TAG_RO_EVT;
-            break;
-        case NFA_RW_OP_T2T_SECTOR_SELECT:
-            event = NFA_SELECT_CPLT_EVT;
-            break;
-        case NFA_RW_OP_I93_INVENTORY:
-        case NFA_RW_OP_I93_STAY_QUIET:
-        case NFA_RW_OP_I93_READ_SINGLE_BLOCK:
-        case NFA_RW_OP_I93_WRITE_SINGLE_BLOCK:
-        case NFA_RW_OP_I93_LOCK_BLOCK:
-        case NFA_RW_OP_I93_READ_MULTI_BLOCK:
-        case NFA_RW_OP_I93_WRITE_MULTI_BLOCK:
-        case NFA_RW_OP_I93_SELECT:
-        case NFA_RW_OP_I93_RESET_TO_READY:
-        case NFA_RW_OP_I93_WRITE_AFI:
-        case NFA_RW_OP_I93_LOCK_AFI:
-        case NFA_RW_OP_I93_WRITE_DSFID:
-        case NFA_RW_OP_I93_LOCK_DSFID:
-        case NFA_RW_OP_I93_GET_SYS_INFO:
-        case NFA_RW_OP_I93_GET_MULTI_BLOCK_STATUS:
-            event = NFA_I93_CMD_CPLT_EVT;
-            break;
-        default:
-            return (freebuf);
-        }
-        nfa_dm_act_conn_cback_notify(event, &conn_evt_data);
+    switch (p_data->op_req.op)
+    {
+    case NFA_RW_OP_DETECT_NDEF:
+        conn_evt_data.ndef_detect.cur_size = 0;
+        conn_evt_data.ndef_detect.max_size = 0;
+        conn_evt_data.ndef_detect.flags    = RW_NDEF_FL_UNKNOWN;
+        event = NFA_NDEF_DETECT_EVT;
+        break;
+    case NFA_RW_OP_READ_NDEF:
+    case NFA_RW_OP_T1T_RID:
+    case NFA_RW_OP_T1T_RALL:
+    case NFA_RW_OP_T1T_READ:
+    case NFA_RW_OP_T1T_RSEG:
+    case NFA_RW_OP_T1T_READ8:
+    case NFA_RW_OP_T2T_READ:
+    case NFA_RW_OP_T3T_READ:
+        event = NFA_READ_CPLT_EVT;
+        break;
+    case NFA_RW_OP_WRITE_NDEF:
+    case NFA_RW_OP_T1T_WRITE:
+    case NFA_RW_OP_T1T_WRITE8:
+    case NFA_RW_OP_T2T_WRITE:
+    case NFA_RW_OP_T3T_WRITE:
+        event = NFA_WRITE_CPLT_EVT;
+        break;
+    case NFA_RW_OP_FORMAT_TAG:
+        event = NFA_FORMAT_CPLT_EVT;
+        break;
+        case NFA_RW_OP_DETECT_LOCK_TLV:
+    case NFA_RW_OP_DETECT_MEM_TLV:
+        event = NFA_TLV_DETECT_EVT;
+        break;
+    case NFA_RW_OP_SET_TAG_RO:
+        event = NFA_SET_TAG_RO_EVT;
+        break;
+    case NFA_RW_OP_T2T_SECTOR_SELECT:
+        event = NFA_SELECT_CPLT_EVT;
+        break;
+    case NFA_RW_OP_I93_INVENTORY:
+    case NFA_RW_OP_I93_STAY_QUIET:
+    case NFA_RW_OP_I93_READ_SINGLE_BLOCK:
+    case NFA_RW_OP_I93_WRITE_SINGLE_BLOCK:
+    case NFA_RW_OP_I93_LOCK_BLOCK:
+    case NFA_RW_OP_I93_READ_MULTI_BLOCK:
+    case NFA_RW_OP_I93_WRITE_MULTI_BLOCK:
+    case NFA_RW_OP_I93_SELECT:
+    case NFA_RW_OP_I93_RESET_TO_READY:
+    case NFA_RW_OP_I93_WRITE_AFI:
+    case NFA_RW_OP_I93_LOCK_AFI:
+    case NFA_RW_OP_I93_WRITE_DSFID:
+    case NFA_RW_OP_I93_LOCK_DSFID:
+    case NFA_RW_OP_I93_GET_SYS_INFO:
+    case NFA_RW_OP_I93_GET_MULTI_BLOCK_STATUS:
+        event = NFA_I93_CMD_CPLT_EVT;
+        break;
+    default:
+        return (freebuf);
     }
+    nfa_dm_act_conn_cback_notify(event, &conn_evt_data);
 
     return (freebuf);
 }
@@ -2763,11 +2749,8 @@ static BOOLEAN nfa_rw_op_req_while_busy(tNFA_RW_MSG *p_data)
 void nfa_rw_command_complete(void)
 {
     /* Clear the busy flag */
-    nfa_rw_cb.flags &= ~NFA_RW_FL_BUSY;
+    nfa_rw_cb.flags &= ~NFA_RW_FL_API_BUSY;
 
-    /* If current operation is not PRESENCE_CHECK, then restart presence_check timer */
-    if (nfa_rw_cb.cur_op != NFA_RW_OP_PRESENCE_CHECK)
-    {
-        nfa_rw_start_presence_check_timer();
-    }
+    /* Restart presence_check timer */
+    nfa_rw_check_start_presence_check_timer ();
 }

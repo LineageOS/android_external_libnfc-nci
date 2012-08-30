@@ -499,7 +499,9 @@ NFC_API extern tNFA_STATUS NFA_HciSendResponse (tNFA_HANDLE   hci_handle,
 **                  or if an error occurs. The application should wait for this
 **                  event before releasing event buffer passed as argument.
 **                  If the app is expecting a response to the event then it can
-**                  provide response buffer for collecting the response.
+**                  provide response buffer for collecting the response. If it
+**                  provides a response buffer it should also provide response
+**                  timeout indicating duration validity of the response buffer.
 **                  Maximum of NFA_MAX_HCI_EVENT_LEN bytes APDU can be received
 **                  using internal buffer if no response buffer is provided by
 **                  the application. The app will be notified by
@@ -518,7 +520,8 @@ NFC_API extern tNFA_STATUS NFA_HciSendEvent (tNFA_HANDLE hci_handle,
                                             UINT16       evt_size,
                                             UINT8        *p_data,
                                             UINT16       rsp_size,
-                                            UINT8        *p_rsp_buf);
+                                            UINT8        *p_rsp_buf,
+                                            UINT16       rsp_timeout);
 
 /*******************************************************************************
 **

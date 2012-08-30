@@ -357,7 +357,7 @@ typedef UINT8 tBRCM_PRM_FORMAT;
 ** NCI_BrcmDevInitDone() must be called to proceed with stack start up.
 */
 
-typedef void (tBRCM_DEV_INIT_CBACK) (UINT32 brcm_hw_id);
+typedef void (tBRCM_DEV_INIT_CBACK) (UINT32 brcm_hw_id, UINT8 nvm_type);
 
 /****************************
 **  CE T1/T2 Constants
@@ -372,10 +372,10 @@ enum
     CE_T1T_MAX_EVT,
 
     /* Type 2 tag events */
-    CE_T2T_SETMEM_EVT = CE_T2T_FIRST_EVT,
-    CE_T2T_NDEF_UPDATE_START_EVT,
+    CE_T2T_NDEF_UPDATE_START_EVT  = CE_T2T_FIRST_EVT,
     CE_T2T_NDEF_UPDATE_CPLT_EVT,
-    CE_T2T_MAX_EVT
+    CE_T2T_RAW_FRAME_EVT,
+    CE_T2T_MAX_EVT,
 };
 
 /* Crystal Frequency Index (in 1 KHz) */
@@ -503,25 +503,33 @@ NFC_API extern tNFC_STATUS CE_BrcmSetActivatedTagType (tNFC_ACTIVATE_DEVT *p_act
 
 /*******************************************************************************
 **
-** Function         NCI_BrcmEnableSnoozeMode
+** Function         NCI_BrcmSetSnoozeMode
 **
-** Description      Notify NCI transport that snooze mode has been enabled.
+** Description      Set snooze mode
+**                  snooze_mode
+**                      NFC_LP_SNOOZE_MODE_NONE - Snooze mode disabled
+**                      NFC_LP_SNOOZE_MODE_UART - Snooze mode for UART
+**                      NFC_LP_SNOOZE_MODE_SPI_I2C - Snooze mode for SPI/I2C
+**
+**                  idle_threshold_dh/idle_threshold_nfcc
+**                      Idle Threshold Host in 100ms unit
+**
+**                  nfc_wake_active_mode/dh_wake_active_mode
+**                      NFC_LP_ACTIVE_LOW - high to low voltage is asserting
+**                      NFC_LP_ACTIVE_HIGH - low to high voltage is asserting
+**
+**                  p_snooze_cback
+**                      Notify status of operation
 **
 ** Returns          tNFC_STATUS
 **
 *******************************************************************************/
-NFC_API extern tNFC_STATUS NCI_BrcmEnableSnoozeMode (UINT8 nfc_wake_active_mode);
-
-/*******************************************************************************
-**
-** Function         NCI_BrcmDisableSnoozeMode
-**
-** Description      Notify NCI transport that snooze mode has been disabled.
-**
-** Returns          tNFC_STATUS
-**
-*******************************************************************************/
-NFC_API extern tNFC_STATUS NCI_BrcmDisableSnoozeMode (void);
+NFC_API extern tNFC_STATUS NCI_BrcmSetSnoozeMode (UINT8 snooze_mode,
+                                                  UINT8 idle_threshold_dh,
+                                                  UINT8 idle_threshold_nfcc,
+                                                  UINT8 nfc_wake_active_mode,
+                                                  UINT8 dh_wake_active_mode,
+                                                  tNFC_STATUS_CBACK *p_snooze_cback);
 
 /*******************************************************************************
 **

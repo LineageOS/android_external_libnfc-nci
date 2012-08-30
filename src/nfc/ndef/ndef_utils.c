@@ -12,7 +12,6 @@
 #include <string.h>
 #include "ndef_utils.h"
 
-
 /*******************************************************************************
 **
 **              Static Local Functions
@@ -20,9 +19,6 @@
 *******************************************************************************/
 
 
-#if (NDEF_SHIFT_INCLUDED == FALSE)
-#include "gki.h"
-#else
 /*******************************************************************************
 **
 ** Function         shiftdown
@@ -56,7 +52,6 @@ static void shiftup (UINT8 *p_dest, UINT8 *p_src, UINT32 len)
     for (xx = 0; xx < len; xx++)
         *pd++ = *ps++;
 }
-#endif
 
 /*******************************************************************************
 **
@@ -949,7 +944,7 @@ extern tNDEF_STATUS NDEF_MsgInsertRec (UINT8 *p_msg, UINT32 max_size, UINT32 *p_
         *p_msg &= ~NDEF_MB_MASK;
 
     /* Make space for the new record */
-    NDEF_SHIFT_DOWN (p_rec, (UINT32)(*p_cur_size - (p_rec - p_msg)), recSize);
+    shiftdown (p_rec, (UINT32)(*p_cur_size - (p_rec - p_msg)), recSize);
 
     /* If adding at the beginning, set begin bit */
     if (index == 0)
@@ -1111,7 +1106,7 @@ tNDEF_STATUS NDEF_MsgAppendPayload (UINT8 *p_msg, UINT32 max_size, UINT32 *p_cur
     /* If we need to increase the length field from 1 to 4 bytes, do it first */
     if (incr_lenfld)
     {
-        NDEF_SHIFT_DOWN (pp + 1, (UINT32)(*p_cur_size - (pp - p_msg) - 1), 3);
+        shiftdown (pp + 1, (UINT32)(*p_cur_size - (pp - p_msg) - 1), 3);
         p_prev_pl += 3;
     }
 
@@ -1129,7 +1124,7 @@ tNDEF_STATUS NDEF_MsgAppendPayload (UINT8 *p_msg, UINT32 max_size, UINT32 *p_cur
 
     /* If we are not the last record, make space for the extra payload */
     if ((*p_rec & NDEF_ME_MASK) == 0)
-        NDEF_SHIFT_DOWN (pp, (UINT32)(*p_cur_size - (pp - p_msg)), add_pl_len);
+        shiftdown (pp, (UINT32)(*p_cur_size - (pp - p_msg)), add_pl_len);
 
     /* Now copy in the additional payload data */
     memcpy (pp, p_add_pl, add_pl_len);
@@ -1193,7 +1188,7 @@ tNDEF_STATUS NDEF_MsgReplacePayload (UINT8 *p_msg, UINT32 max_size, UINT32 *p_cu
             if ((*p_cur_size + paylen_delta + 3) > max_size)
                 return (NDEF_MSG_INSUFFICIENT_MEM);
 
-            NDEF_SHIFT_DOWN (pp + 1, (UINT32)(*p_cur_size - (pp - p_msg) - 1), 3);
+            shiftdown (pp + 1, (UINT32)(*p_cur_size - (pp - p_msg) - 1), 3);
             p_prev_pl   += 3;
             *p_cur_size += 3;
             *p_rec      &= ~NDEF_SR_MASK;
@@ -1214,7 +1209,7 @@ tNDEF_STATUS NDEF_MsgReplacePayload (UINT8 *p_msg, UINT32 max_size, UINT32 *p_cu
 
         /* If we are not the last record, make space for the extra payload */
         if ((*p_rec & NDEF_ME_MASK) == 0)
-            NDEF_SHIFT_DOWN (pp, (UINT32)(*p_cur_size - (pp - p_msg)), paylen_delta);
+            shiftdown (pp, (UINT32)(*p_cur_size - (pp - p_msg)), paylen_delta);
 
         *p_cur_size += paylen_delta;
     }
@@ -1227,7 +1222,7 @@ tNDEF_STATUS NDEF_MsgReplacePayload (UINT8 *p_msg, UINT32 max_size, UINT32 *p_cu
         /* the payload length field goes from 4 bytes to 1 byte        */
         if ( (prev_paylen > 255) && (new_pl_len < 256) )
         {
-            NDEF_SHIFT_UP (pp + 1, pp + 4, (UINT32)(*p_cur_size - (pp - p_msg) - 3));
+            shiftup (pp + 1, pp + 4, (UINT32)(*p_cur_size - (pp - p_msg) - 3));
             p_prev_pl   -= 3;
             *p_cur_size -= 3;
             *p_rec      |= NDEF_SR_MASK;
@@ -1246,7 +1241,7 @@ tNDEF_STATUS NDEF_MsgReplacePayload (UINT8 *p_msg, UINT32 max_size, UINT32 *p_cu
 
         /* If we are not the last record, remove the extra space from the previous payload */
         if ((*p_rec & NDEF_ME_MASK) == 0)
-            NDEF_SHIFT_UP (pp - paylen_delta, pp, (UINT32)(*p_cur_size - (pp - p_msg)));
+            shiftup (pp - paylen_delta, pp, (UINT32)(*p_cur_size - (pp - p_msg)));
 
         *p_cur_size -= paylen_delta;
     }
@@ -1304,7 +1299,7 @@ tNDEF_STATUS NDEF_MsgReplaceType (UINT8 *p_msg, UINT32 max_size, UINT32 *p_cur_s
 
         /* Point to the end of the previous type, and make space for the extra data */
         pp = p_prev_type + prev_type_len;
-        NDEF_SHIFT_DOWN (pp, (UINT32)(*p_cur_size - (pp - p_msg)), typelen_delta);
+        shiftdown (pp, (UINT32)(*p_cur_size - (pp - p_msg)), typelen_delta);
 
         *p_cur_size += typelen_delta;
     }
@@ -1315,7 +1310,7 @@ tNDEF_STATUS NDEF_MsgReplaceType (UINT8 *p_msg, UINT32 max_size, UINT32 *p_cur_s
 
         /* Point to the end of the previous type, and shift up to fill the the unused space */
         pp = p_prev_type + prev_type_len;
-        NDEF_SHIFT_UP (pp - typelen_delta, pp, (UINT32)(*p_cur_size - (pp - p_msg)));
+        shiftup (pp - typelen_delta, pp, (UINT32)(*p_cur_size - (pp - p_msg)));
 
         *p_cur_size -= typelen_delta;
     }
@@ -1382,7 +1377,7 @@ tNDEF_STATUS NDEF_MsgReplaceId (UINT8 *p_msg, UINT32 max_size, UINT32 *p_cur_siz
             if ((*p_cur_size + idlen_delta + 1) > max_size)
                 return (NDEF_MSG_INSUFFICIENT_MEM);
 
-            NDEF_SHIFT_DOWN (p_idlen_field, (UINT32)(*p_cur_size - (p_idlen_field - p_msg)), 1);
+            shiftdown (p_idlen_field, (UINT32)(*p_cur_size - (p_idlen_field - p_msg)), 1);
             p_prev_id   += 1;
             *p_cur_size += 1;
             *p_rec      |= NDEF_IL_MASK;
@@ -1392,7 +1387,7 @@ tNDEF_STATUS NDEF_MsgReplaceId (UINT8 *p_msg, UINT32 max_size, UINT32 *p_cur_siz
 
         /* Point to the end of the previous ID field, and make space for the extra data */
         pp = p_prev_id + prev_id_len;
-        NDEF_SHIFT_DOWN (pp, (UINT32)(*p_cur_size - (pp - p_msg)), idlen_delta);
+        shiftdown (pp, (UINT32)(*p_cur_size - (pp - p_msg)), idlen_delta);
 
         *p_cur_size += idlen_delta;
     }
@@ -1403,14 +1398,14 @@ tNDEF_STATUS NDEF_MsgReplaceId (UINT8 *p_msg, UINT32 max_size, UINT32 *p_cur_siz
 
         /* Point to the end of the previous ID, and shift up to fill the the unused space */
         pp = p_prev_id + prev_id_len;
-        NDEF_SHIFT_UP (pp - idlen_delta, pp, (UINT32)(*p_cur_size - (pp - p_msg)));
+        shiftup (pp - idlen_delta, pp, (UINT32)(*p_cur_size - (pp - p_msg)));
 
         *p_cur_size -= idlen_delta;
 
         /* If removing the ID, make sure that length field is also removed */
         if (new_id_len == 0)
         {
-            NDEF_SHIFT_UP (p_idlen_field, p_idlen_field + 1, (UINT32)(*p_cur_size - (p_idlen_field - p_msg - (UINT32)1)));
+            shiftup (p_idlen_field, p_idlen_field + 1, (UINT32)(*p_cur_size - (p_idlen_field - p_msg - (UINT32)1)));
             *p_rec      &= ~NDEF_IL_MASK;
             *p_cur_size -= 1;
         }
@@ -1457,7 +1452,7 @@ tNDEF_STATUS NDEF_MsgRemoveRec (UINT8 *p_msg, UINT32 *p_cur_size, INT32 index)
 
             *p_cur_size -= (UINT32)(pNext - p_msg);
 
-            NDEF_SHIFT_UP (p_msg, pNext, *p_cur_size);
+            shiftup (p_msg, pNext, *p_cur_size);
         }
         else
             *p_cur_size = 0;              /* No more records, lenght must be zero */
@@ -1486,7 +1481,7 @@ tNDEF_STATUS NDEF_MsgRemoveRec (UINT8 *p_msg, UINT32 *p_cur_size, INT32 index)
         return (FALSE);
 
     /* We are removing p_rec, so shift from pNext to the end */
-    NDEF_SHIFT_UP (p_rec, pNext, (UINT32)(*p_cur_size - (pNext - p_msg)));
+    shiftup (p_rec, pNext, (UINT32)(*p_cur_size - (pNext - p_msg)));
 
     *p_cur_size -= (UINT32)(pNext - p_rec);
 

@@ -58,7 +58,7 @@
 
 /* Version string for BCM20791B3 */
 const UINT8 BRCM_PRM_BCM20791B3_STR[]   = "20791B3";
-#define BRCM_PRM_BCM20791B3_STR_LEN     (sizeof(BRCM_PRM_BCM20791B3_STR)-1)
+#define BRCM_PRM_BCM20791B3_STR_LEN     (sizeof (BRCM_PRM_BCM20791B3_STR)-1)
 
 /* Mininum payload size for SPD NCI commands (used to validate PRM_SetSpdNciCmdPayloadSize) */
 /* Default is 32, as required by the NCI specifications; however this value may be          */
@@ -68,7 +68,7 @@ const UINT8 BRCM_PRM_BCM20791B3_STR[]   = "20791B3";
 #endif
 
 /* Vendor specified command complete callback */
-void nfc_brcm_prm_nci_command_complete_cback(tNFC_VS_EVT event, UINT16 data_len, UINT8 *p_data);
+void nfc_brcm_prm_nci_command_complete_cback (tNFC_VS_EVT event, UINT16 data_len, UINT8 *p_data);
 
 #define BRCM_PRM_CMD_TOUT                    (1000) /* timeout for command (in ms)              */
 #define BRCM_PRM_MINIDRV_2_PATCH_RAM_DELAY   (50)   /* delay after download mini driver (in ms) */
@@ -101,6 +101,8 @@ static UINT8 brcm_prm_get_patch_version_cmd [NCI_MSG_HDR_SIZE] =
 #define NFC_BRCM_PRM_STATE(str)
 #endif
 
+void nfc_brcm_prm_post_baud_update (tNFC_STATUS status);
+
 /*******************************************************************************
 **
 ** Function         nfc_brcm_prm_spd_handle_download_complete
@@ -110,13 +112,13 @@ static UINT8 brcm_prm_get_patch_version_cmd [NCI_MSG_HDR_SIZE] =
 ** Returns          void
 **
 *******************************************************************************/
-void nfc_brcm_prm_spd_handle_download_complete(UINT8 event)
+void nfc_brcm_prm_spd_handle_download_complete (UINT8 event)
 {
     nfc_brcm_cb.prm.state = BRCM_PRM_ST_IDLE;
 
     /* Notify application now */
     if (nfc_brcm_cb.prm.p_cback)
-        (nfc_brcm_cb.prm.p_cback)(event);
+        (nfc_brcm_cb.prm.p_cback) (event);
 }
 
 /*******************************************************************************
@@ -128,7 +130,7 @@ void nfc_brcm_prm_spd_handle_download_complete(UINT8 event)
 ** Returns          void
 **
 *******************************************************************************/
-void nfc_brcm_prm_spd_send_next_segment(void)
+void nfc_brcm_prm_spd_send_next_segment (void)
 {
     UINT8   *p_src;
     UINT16  len, offset = nfc_brcm_cb.prm.cur_patch_offset;
@@ -141,17 +143,17 @@ void nfc_brcm_prm_spd_send_next_segment(void)
     if (nfc_brcm_cb.prm.cur_patch_len_remaining < patch_hdr_size)
     {
         NCI_TRACE_ERROR0 ("Unexpected end of patch.");
-        nfc_brcm_prm_spd_handle_download_complete(BRCM_PRM_ABORT_INVALID_PATCH_EVT);
+        nfc_brcm_prm_spd_handle_download_complete (BRCM_PRM_ABORT_INVALID_PATCH_EVT);
         return;
     }
 
     /* Parse NCI command header */
-    p_src = (UINT8*)(nfc_brcm_cb.prm.p_cur_patch_data + offset);
-    STREAM_TO_UINT8  (hcit, p_src);
-    STREAM_TO_UINT8  (hdr0, p_src);
-    STREAM_TO_UINT8  (oid,  p_src);
-    STREAM_TO_UINT8  (len,  p_src);
-    STREAM_TO_UINT8  (type, p_src);
+    p_src = (UINT8*) (nfc_brcm_cb.prm.p_cur_patch_data + offset);
+    STREAM_TO_UINT8 (hcit, p_src);
+    STREAM_TO_UINT8 (hdr0, p_src);
+    STREAM_TO_UINT8 (oid,  p_src);
+    STREAM_TO_UINT8 (len,  p_src);
+    STREAM_TO_UINT8 (type, p_src);
 
 
     /* Update number of bytes comsumed */
@@ -170,10 +172,10 @@ void nfc_brcm_prm_spd_send_next_segment(void)
     {
         /* Check if patch is for BCM20791B3 */
         p_src += NCI_SPD_HEADER_OFFSET_CHIPVERLEN;
-        STREAM_TO_UINT8  (chipverlen, p_src);
-        STREAM_TO_ARRAY(chipverstr, p_src, NCI_SPD_HEADER_CHIPVER_LEN);
+        STREAM_TO_UINT8 (chipverlen, p_src);
+        STREAM_TO_ARRAY (chipverstr, p_src, NCI_SPD_HEADER_CHIPVER_LEN);
 
-        if (memcmp(BRCM_PRM_BCM20791B3_STR, chipverstr, BRCM_PRM_BCM20791B3_STR_LEN) == 0)
+        if (memcmp (BRCM_PRM_BCM20791B3_STR, chipverstr, BRCM_PRM_BCM20791B3_STR_LEN) == 0)
         {
             /* Patch is for BCM2079B3 - do not wait for RESET_NTF after patch download */
             nfc_brcm_cb.prm.flags &= ~BRCM_PRM_FLAGS_SUPPORT_RESET_NTF;
@@ -186,7 +188,7 @@ void nfc_brcm_prm_spd_send_next_segment(void)
     }
 
     /* Send the command (not including HCIT here) */
-    nci_brcm_send_nci_cmd ((UINT8*)(nfc_brcm_cb.prm.p_cur_patch_data + offset + 1), (UINT8)(len + NCI_MSG_HDR_SIZE),
+    nci_brcm_send_nci_cmd ((UINT8*) (nfc_brcm_cb.prm.p_cur_patch_data + offset + 1), (UINT8) (len + NCI_MSG_HDR_SIZE),
                             nfc_brcm_prm_nci_command_complete_cback);
 }
 
@@ -199,7 +201,7 @@ void nfc_brcm_prm_spd_send_next_segment(void)
 ** Returns          void
 **
 *******************************************************************************/
-void nfc_brcm_prm_spd_handle_next_patch_start(void)
+void nfc_brcm_prm_spd_handle_next_patch_start (void)
 {
     UINT32  cur_patch_mask;
     UINT32  cur_patch_len;
@@ -211,7 +213,7 @@ void nfc_brcm_prm_spd_handle_next_patch_start(void)
         cur_patch_len = nfc_brcm_cb.prm.spd_patch_desc[nfc_brcm_cb.prm.spd_cur_patch_idx].len;
 
         /* Check if this is a patch we need to download */
-        cur_patch_mask = ((UINT32)1 << nfc_brcm_cb.prm.spd_patch_desc[nfc_brcm_cb.prm.spd_cur_patch_idx].power_mode);
+        cur_patch_mask = ((UINT32) 1 << nfc_brcm_cb.prm.spd_patch_desc[nfc_brcm_cb.prm.spd_cur_patch_idx].power_mode);
         if (nfc_brcm_cb.prm.spd_patch_needed_mask & cur_patch_mask)
         {
             found_patch_to_download = TRUE;
@@ -225,20 +227,20 @@ void nfc_brcm_prm_spd_handle_next_patch_start(void)
             if (nfc_brcm_cb.prm.spd_cur_patch_idx >= nfc_brcm_cb.prm.spd_patch_count)
             {
                 /* No more to download */
-                nfc_brcm_prm_spd_handle_download_complete(BRCM_PRM_COMPLETE_EVT);
+                nfc_brcm_prm_spd_handle_download_complete (BRCM_PRM_COMPLETE_EVT);
                 return;
             }
             else if (!(nfc_brcm_cb.prm.flags & BRCM_PRM_FLAGS_USE_PATCHRAM_BUF))
             {
                 /* Notify adaptation layer to call PRM_DownloadContinue with the next patch header */
-                (nfc_brcm_cb.prm.p_cback)(BRCM_PRM_SPD_GET_NEXT_PATCH);
+                (nfc_brcm_cb.prm.p_cback) (BRCM_PRM_SPD_GET_NEXT_PATCH);
                 return;
             }
             else
             {
                 /* Patch in buffer. Skip over current patch. Check next patch */
-                nfc_brcm_cb.prm.cur_patch_len_remaining -= (UINT16)cur_patch_len;
-                nfc_brcm_cb.prm.cur_patch_offset += (UINT16)cur_patch_len;
+                nfc_brcm_cb.prm.cur_patch_len_remaining -= (UINT16) cur_patch_len;
+                nfc_brcm_cb.prm.cur_patch_offset += (UINT16) cur_patch_len;
             }
         }
     }
@@ -247,10 +249,10 @@ void nfc_brcm_prm_spd_handle_next_patch_start(void)
     /* Begin downloading patch */
     NCI_TRACE_DEBUG1 ("Downloading patch for power_mode %i.", nfc_brcm_cb.prm.spd_patch_desc[nfc_brcm_cb.prm.spd_cur_patch_idx].power_mode);
     nfc_brcm_cb.prm.state = BRCM_PRM_ST_SPD_DOWNLOADING;
-    nfc_brcm_prm_spd_send_next_segment();
+    nfc_brcm_prm_spd_send_next_segment ();
 }
 
-#if (defined(NFC_I2C_PATCH_INCLUDED) && (NFC_I2C_PATCH_INCLUDED == TRUE))
+#if (defined (NFC_I2C_PATCH_INCLUDED) && (NFC_I2C_PATCH_INCLUDED == TRUE))
 /*******************************************************************************
 **
 ** Function         nfc_brcm_prm_spd_download_i2c_fix
@@ -260,7 +262,7 @@ void nfc_brcm_prm_spd_handle_next_patch_start(void)
 ** Returns          void
 **
 *******************************************************************************/
-void nfc_brcm_prm_spd_download_i2c_fix(void)
+void nfc_brcm_prm_spd_download_i2c_fix (void)
 {
     UINT8 *p, *p_start;
     UINT16 patchfile_project_id;
@@ -284,46 +286,46 @@ void nfc_brcm_prm_spd_download_i2c_fix(void)
     if (nfc_brcm_cb.prm.cur_patch_len_remaining >= BRCM_PRM_NCD_PATCHFILE_HDR_LEN)
     {
         /* Parse patchfile header */
-        p = (UINT8 *)nfc_brcm_cb.prm.p_cur_patch_data;
+        p = (UINT8 *) nfc_brcm_cb.prm.p_cur_patch_data;
         p_start = p;
-        STREAM_TO_UINT16(patchfile_project_id, p);
-        STREAM_TO_UINT16(patchfile_ver_major, p);
-        STREAM_TO_UINT16(patchfile_ver_minor, p);
+        STREAM_TO_UINT16 (patchfile_project_id, p);
+        STREAM_TO_UINT16 (patchfile_ver_major, p);
+        STREAM_TO_UINT16 (patchfile_ver_minor, p);
 
         /* RFU */
         p++;
 
         /* Check how many patches are in the patch file */
-        STREAM_TO_UINT8(u8, p);
+        STREAM_TO_UINT8 (u8, p);
 
         /* Should only be one patch */
         if (u8 > 1)
         {
             NCI_TRACE_ERROR1 ("Invalid i2c fix: invalid number of patches (%i)", u8);
-            nfc_brcm_prm_spd_handle_download_complete(BRCM_PRM_ABORT_INVALID_PATCH_EVT);
+            nfc_brcm_prm_spd_handle_download_complete (BRCM_PRM_ABORT_INVALID_PATCH_EVT);
             return;
         }
 
 
         /* Get info about the i2c patch*/
-        STREAM_TO_UINT8(u8, p);                     /* power mode (not needed for i2c patch)    */
-        STREAM_TO_UINT16(patchfile_patchsize, p);   /* size of patch                            */
+        STREAM_TO_UINT8 (u8, p);                     /* power mode (not needed for i2c patch)    */
+        STREAM_TO_UINT16 (patchfile_patchsize, p);   /* size of patch                            */
 
         /* 5 byte RFU */
         p += 5;
 
         /* Adjust length to exclude patchfiloe header */
-        nfc_brcm_cb.prm.cur_patch_len_remaining -= (UINT16)(p - p_start);       /* Adjust size of patchfile                        */
-        nfc_brcm_cb.prm.cur_patch_offset += (UINT16)(p - p_start);              /* Bytes of patchfile transmitted/processed so far */
+        nfc_brcm_cb.prm.cur_patch_len_remaining -= (UINT16) (p - p_start);       /* Adjust size of patchfile                        */
+        nfc_brcm_cb.prm.cur_patch_offset += (UINT16) (p - p_start);              /* Bytes of patchfile transmitted/processed so far */
 
         /* Begin sending patch to the NFCC */
-        nfc_brcm_prm_spd_send_next_segment();
+        nfc_brcm_prm_spd_send_next_segment ();
     }
     else
     {
         /* ERROR: Bad length for patchfile */
         NCI_TRACE_ERROR0 ("Invalid i2c fix: unexpected end of patch");
-        nfc_brcm_prm_spd_handle_download_complete(BRCM_PRM_ABORT_INVALID_PATCH_EVT);
+        nfc_brcm_prm_spd_handle_download_complete (BRCM_PRM_ABORT_INVALID_PATCH_EVT);
     }
 }
 #endif /* NFC_I2C_PATCH_INCLUDED */
@@ -337,12 +339,12 @@ void nfc_brcm_prm_spd_download_i2c_fix(void)
 ** Returns          void
 **
 *******************************************************************************/
-void nfc_brcm_prm_spd_check_version(void)
+void nfc_brcm_prm_spd_check_version (void)
 {
     UINT8 *p, *p_start, i;
     UINT32 patchfile_patch_present_mask;
     UINT16 patchfile_project_id;
-    UINT16 patchfile_ver_major;
+    UINT16 patchfile_ver_major = 0;
     UINT16 patchfile_ver_minor;
     UINT16 patchfile_patchsize;
 
@@ -356,17 +358,17 @@ void nfc_brcm_prm_spd_check_version(void)
     if (nfc_brcm_cb.prm.cur_patch_len_remaining >= BRCM_PRM_NCD_PATCHFILE_HDR_LEN)
     {
         /* Parse patchfile header */
-        p = (UINT8 *)nfc_brcm_cb.prm.p_cur_patch_data;
+        p       = (UINT8 *) nfc_brcm_cb.prm.p_cur_patch_data;
         p_start = p;
-        STREAM_TO_UINT16(patchfile_project_id, p);
-        STREAM_TO_UINT16(patchfile_ver_major, p);
-        STREAM_TO_UINT16(patchfile_ver_minor, p);
+        STREAM_TO_UINT16 (patchfile_project_id, p);
+        STREAM_TO_UINT16 (patchfile_ver_major, p);
+        STREAM_TO_UINT16 (patchfile_ver_minor, p);
 
         /* RFU */
         p++;
 
         /* Check how many patches are in the patch file */
-        STREAM_TO_UINT8(nfc_brcm_cb.prm.spd_patch_count, p);
+        STREAM_TO_UINT8 (nfc_brcm_cb.prm.spd_patch_count, p);
 
         if (nfc_brcm_cb.prm.spd_patch_count > BRCM_PRM_MAX_PATCH_COUNT)
         {
@@ -381,13 +383,13 @@ void nfc_brcm_prm_spd_check_version(void)
         for (i = 0; i < nfc_brcm_cb.prm.spd_patch_count; i++)
         {
             /* Get power mode for this patch */
-            STREAM_TO_UINT8(nfc_brcm_cb.prm.spd_patch_desc[i].power_mode, p);
+            STREAM_TO_UINT8 (nfc_brcm_cb.prm.spd_patch_desc[i].power_mode, p);
 
             /* Update mask of power-modes present in the patchfile */
-            patchfile_patch_present_mask |= ((UINT32)1 << nfc_brcm_cb.prm.spd_patch_desc[i].power_mode);
+            patchfile_patch_present_mask |= ((UINT32) 1 << nfc_brcm_cb.prm.spd_patch_desc[i].power_mode);
 
             /* Get length of patch */
-            STREAM_TO_UINT16(nfc_brcm_cb.prm.spd_patch_desc[i].len, p);
+            STREAM_TO_UINT16 (nfc_brcm_cb.prm.spd_patch_desc[i].len, p);
 
             /* Add total size of patches */
             patchfile_patchsize += nfc_brcm_cb.prm.spd_patch_desc[i].len;
@@ -397,8 +399,8 @@ void nfc_brcm_prm_spd_check_version(void)
         }
 
         /* Adjust offset to after the patch file header */
-        nfc_brcm_cb.prm.cur_patch_offset += (UINT16)(p - p_start);              /* Bytes of patchfile transmitted/processed so far */
-        nfc_brcm_cb.prm.cur_patch_len_remaining -= (UINT16)(p - p_start);       /* Adjust size of patchfile                        */
+        nfc_brcm_cb.prm.cur_patch_offset += (UINT16) (p - p_start);              /* Bytes of patchfile transmitted/processed so far */
+        nfc_brcm_cb.prm.cur_patch_len_remaining -= (UINT16) (p - p_start);       /* Adjust size of patchfile                        */
 
 
         NCI_TRACE_DEBUG6 ("Patchfile info: ProjID=0x%04x,  Ver=%i.%i, Num patches=%i, PatchMask=0x%08x, PatchSize=%i",
@@ -409,7 +411,7 @@ void nfc_brcm_prm_spd_check_version(void)
         * Version check of patchfile against NVM
         *********************************************************************/
 
-#if (!defined(BRCM_PRM_SKIP_VERSION_CHECK) || (BRCM_PRM_SKIP_VERSION_CHECK == FALSE))
+#if (!defined (BRCM_PRM_SKIP_VERSION_CHECK) || (BRCM_PRM_SKIP_VERSION_CHECK == FALSE))
         /* Download the patchfile if no patches in NVM */
         if ((nfc_brcm_cb.prm.spd_project_id == 0) || (nfc_brcm_cb.prm.spd_nvm_patch_mask == 0))
         {
@@ -432,9 +434,9 @@ void nfc_brcm_prm_spd_check_version(void)
         /* unless NVM is corrupted (then don't skip download if patchfile has the same major ver)*/
         else if (  (nfc_brcm_cb.prm.spd_ver_major > patchfile_ver_major)
                  ||(  (nfc_brcm_cb.prm.spd_ver_major == patchfile_ver_major) && (nfc_brcm_cb.prm.spd_ver_minor == patchfile_ver_minor)
-                  && !((patchfile_patch_present_mask & (1<<BRCM_PRM_SPD_POWER_MODE_LPM)) && (nfc_brcm_cb.prm.spd_lpm_patch_size == 0))  /* Do not skip download: patchfile has LPM, but NVM does not */
-                  && !((patchfile_patch_present_mask & (1<<BRCM_PRM_SPD_POWER_MODE_FPM)) && (nfc_brcm_cb.prm.spd_fpm_patch_size == 0))  /* Do not skip download: patchfile has FPM, but NVM does not */
-                  && !(nfc_brcm_cb.prm.flags & (BRCM_PRM_FLAGS_NVM_FPM_CORRUPTED|BRCM_PRM_FLAGS_NVM_LPM_CORRUPTED))))
+                    && !((patchfile_patch_present_mask & ( 1 << BRCM_PRM_SPD_POWER_MODE_LPM)) && (nfc_brcm_cb.prm.spd_lpm_patch_size == 0))  /* Do not skip download: patchfile has LPM, but NVM does not */
+                    && !((patchfile_patch_present_mask & ( 1 << BRCM_PRM_SPD_POWER_MODE_FPM)) && (nfc_brcm_cb.prm.spd_fpm_patch_size == 0))  /* Do not skip download: patchfile has FPM, but NVM does not */
+                    && !(nfc_brcm_cb.prm.flags & (BRCM_PRM_FLAGS_NVM_FPM_CORRUPTED |BRCM_PRM_FLAGS_NVM_LPM_CORRUPTED))  )  )
         {
             /* NVM version is newer than patchfile */
             NCI_TRACE_DEBUG2 ("Patch download skipped. NVM patch (version %i.%i) is newer than the patchfile ",
@@ -477,23 +479,23 @@ void nfc_brcm_prm_spd_check_version(void)
     /* If we need to download anything, get the first patch to download */
     if (nfc_brcm_cb.prm.spd_patch_needed_mask)
     {
-#if (defined(NFC_I2C_PATCH_INCLUDED) && (NFC_I2C_PATCH_INCLUDED == TRUE))
+#if (defined (NFC_I2C_PATCH_INCLUDED) && (NFC_I2C_PATCH_INCLUDED == TRUE))
         /* Check if I2C patch is needed: if                                     */
         /*      - I2C patch file was provided using PRM_SetI2cPatch, and        */
         /*      -   current patch in NVM has ProjectID=0, or                    */
         /*          FPM is not present or corrupted, or                         */
-        /*          upgrading from pre-76 to 76 or newer                        */
+        /*          or patchfile is major-ver 76+                               */
         if (  (nfc_brcm_cb.prm_i2c.p_patch)
             &&(  (nfc_brcm_cb.prm.spd_project_id == 0)
                ||(nfc_brcm_cb.prm.spd_fpm_patch_size == 0)
                ||(nfc_brcm_cb.prm.flags & BRCM_PRM_FLAGS_NVM_FPM_CORRUPTED)
-               ||((nfc_brcm_cb.prm.spd_ver_major < 76) && (patchfile_ver_major >= 76))  )  )
+               ||(patchfile_ver_major >= 76)))
         {
             BT_TRACE_0 (TRACE_LAYER_HCI, TRACE_TYPE_DEBUG, "I2C patch fix required.");
             nfc_brcm_cb.prm.flags |= BRCM_PRM_FLAGS_I2C_FIX_REQUIRED;
 
             /* Download i2c fix first */
-            nfc_brcm_prm_spd_download_i2c_fix();
+            nfc_brcm_prm_spd_download_i2c_fix ();
             return;
         }
 #endif  /* NFC_I2C_PATCH_INCLUDED */
@@ -503,17 +505,17 @@ void nfc_brcm_prm_spd_check_version(void)
         if (!(nfc_brcm_cb.prm.flags & BRCM_PRM_FLAGS_USE_PATCHRAM_BUF))
         {
             /* Notify adaptation layer to call PRM_DownloadContinue with the next patch segment */
-            (nfc_brcm_cb.prm.p_cback)(BRCM_PRM_SPD_GET_NEXT_PATCH);
+            (nfc_brcm_cb.prm.p_cback) (BRCM_PRM_SPD_GET_NEXT_PATCH);
         }
         else
         {
-            nfc_brcm_prm_spd_handle_next_patch_start();
+            nfc_brcm_prm_spd_handle_next_patch_start ();
         }
     }
     else
     {
         /* Download complete */
-        nfc_brcm_prm_spd_handle_download_complete(return_code);
+        nfc_brcm_prm_spd_handle_download_complete (return_code);
     }
 }
 
@@ -527,7 +529,7 @@ void nfc_brcm_prm_spd_check_version(void)
 ** Returns          Status string
 **
 *******************************************************************************/
-UINT8 *nfc_brcm_prm_spd_status_str(UINT8 spd_status_code)
+UINT8 *nfc_brcm_prm_spd_status_str (UINT8 spd_status_code)
 {
     char *p_str;
 
@@ -579,7 +581,7 @@ UINT8 *nfc_brcm_prm_spd_status_str(UINT8 spd_status_code)
 
     }
 
-    return ((UINT8*)p_str);
+    return ((UINT8*) p_str);
 }
 #endif  /* (BT_TRACE_VERBOSE == TRUE) */
 
@@ -593,16 +595,16 @@ UINT8 *nfc_brcm_prm_spd_status_str(UINT8 spd_status_code)
 ** Returns          void
 **
 *******************************************************************************/
-void nfc_brcm_prm_nci_command_complete_cback(tNFC_VS_EVT event, UINT16 data_len, UINT8 *p_data)
+void nfc_brcm_prm_nci_command_complete_cback (tNFC_VS_EVT event, UINT16 data_len, UINT8 *p_data)
 {
     UINT8 status, u8;
     UINT8 *p;
     UINT32 post_signature_delay;
 
-    NFC_BRCM_PRM_STATE("nfc_brcm_prm_nci_command_complete_cback");
+    NFC_BRCM_PRM_STATE ("nfc_brcm_prm_nci_command_complete_cback");
 
     /* Stop the command-timeout timer */
-    nci_stop_quick_timer (&nci_cb.nci_cmd_cmpl_timer);
+    ncit_stop_quick_timer (&nci_brcm_cb.nci_wait_rsp_timer);
 
     /* Skip over NCI header */
     p = p_data + NCI_MSG_HDR_SIZE;
@@ -611,25 +613,25 @@ void nfc_brcm_prm_nci_command_complete_cback(tNFC_VS_EVT event, UINT16 data_len,
     if (event == NFC_VS_GET_PATCH_VERSION_EVT)
     {
         /* Get project id */
-        STREAM_TO_UINT16(nfc_brcm_cb.prm.spd_project_id, p);
+        STREAM_TO_UINT16 (nfc_brcm_cb.prm.spd_project_id, p);
 
         /* RFU */
         p++;
 
         /* Get chip version string */
-        STREAM_TO_UINT8(u8, p);
+        STREAM_TO_UINT8 (u8, p);
         p += BRCM_PRM_NCD_PATCH_VERSION_LEN;
 
         /* Get major/minor version */
-        STREAM_TO_UINT16(nfc_brcm_cb.prm.spd_ver_major, p);
-        STREAM_TO_UINT16(nfc_brcm_cb.prm.spd_ver_minor, p);
-        STREAM_TO_UINT16(nfc_brcm_cb.prm.spd_nvm_max_size, p);
-        STREAM_TO_UINT16(nfc_brcm_cb.prm.spd_patch_max_size, p);
-        STREAM_TO_UINT16(nfc_brcm_cb.prm.spd_lpm_patch_size, p);
-        STREAM_TO_UINT16(nfc_brcm_cb.prm.spd_fpm_patch_size, p);
+        STREAM_TO_UINT16 (nfc_brcm_cb.prm.spd_ver_major, p);
+        STREAM_TO_UINT16 (nfc_brcm_cb.prm.spd_ver_minor, p);
+        STREAM_TO_UINT16 (nfc_brcm_cb.prm.spd_nvm_max_size, p);
+        STREAM_TO_UINT16 (nfc_brcm_cb.prm.spd_patch_max_size, p);
+        STREAM_TO_UINT16 (nfc_brcm_cb.prm.spd_lpm_patch_size, p);
+        STREAM_TO_UINT16 (nfc_brcm_cb.prm.spd_fpm_patch_size, p);
 
         /* LPMPatchCodeHasBadCRC (if not bad crc, then indicate LPM patch is present in nvm) */
-        STREAM_TO_UINT8(u8, p);
+        STREAM_TO_UINT8 (u8, p);
         if (!u8)
         {
             nfc_brcm_cb.prm.spd_nvm_patch_mask |= (1 << BRCM_PRM_SPD_POWER_MODE_LPM);
@@ -642,7 +644,7 @@ void nfc_brcm_prm_nci_command_complete_cback(tNFC_VS_EVT event, UINT16 data_len,
 
 
         /* FPMPatchCodeHasBadCRC (if not bad crc, then indicate LPM patch is present in nvm) */
-        STREAM_TO_UINT8(u8, p);
+        STREAM_TO_UINT8 (u8, p);
         if (!u8)
         {
             nfc_brcm_cb.prm.spd_nvm_patch_mask |= (1 << BRCM_PRM_SPD_POWER_MODE_FPM);
@@ -654,7 +656,7 @@ void nfc_brcm_prm_nci_command_complete_cback(tNFC_VS_EVT event, UINT16 data_len,
         }
 
         /* Check if downloading patch to RAM only (no NVM) */
-        STREAM_TO_UINT8(u8, p);
+        STREAM_TO_UINT8 (u8, p);
         if (!u8)
             nfc_brcm_cb.prm.flags |= BRCM_PRM_FLAGS_NO_NVM;
 
@@ -664,12 +666,12 @@ void nfc_brcm_prm_nci_command_complete_cback(tNFC_VS_EVT event, UINT16 data_len,
         if (nfc_brcm_cb.prm.flags & BRCM_PRM_FLAGS_USE_PATCHRAM_BUF)
         {
             /* If patch is in a buffer, get patch version from buffer */
-            nfc_brcm_prm_spd_check_version();
+            nfc_brcm_prm_spd_check_version ();
         }
         else
         {
             /* Notify adaptation layer to send patch version (via PRM_DownloadContinue) */
-            (nfc_brcm_cb.prm.p_cback)(BRCM_PRM_SPD_GET_PATCHFILE_HDR_EVT);
+            (nfc_brcm_cb.prm.p_cback) (BRCM_PRM_SPD_GET_PATCHFILE_HDR_EVT);
         }
 
     }
@@ -677,19 +679,19 @@ void nfc_brcm_prm_nci_command_complete_cback(tNFC_VS_EVT event, UINT16 data_len,
     else if (event == NFC_VS_SEC_PATCH_DOWNLOAD_EVT)
     {
         /* Status and error code */
-        STREAM_TO_UINT8(status, p);
-        STREAM_TO_UINT8(u8, p);
+        STREAM_TO_UINT8 (status, p);
+        STREAM_TO_UINT8 (u8, p);
 
         if (status != NCI_STATUS_OK)
         {
 #if (BT_TRACE_VERBOSE == TRUE)
-            NCI_TRACE_ERROR2 ("Patch download failed, reason code=0x%X (%s)", status, nfc_brcm_prm_spd_status_str(status));
+            NCI_TRACE_ERROR2 ("Patch download failed, reason code=0x%X (%s)", status, nfc_brcm_prm_spd_status_str (status));
 #else
             NCI_TRACE_ERROR1 ("Patch download failed, reason code=0x%X", status);
 #endif
 
             /* Notify application */
-            nfc_brcm_prm_spd_handle_download_complete(BRCM_PRM_ABORT_INVALID_PATCH_EVT);
+            nfc_brcm_prm_spd_handle_download_complete (BRCM_PRM_ABORT_INVALID_PATCH_EVT);
             return;
         }
 
@@ -698,20 +700,20 @@ void nfc_brcm_prm_nci_command_complete_cback(tNFC_VS_EVT event, UINT16 data_len,
         {
             /* Wait for authentication complate (SECURE_PATCH_DOWNLOAD NTF) */
             nfc_brcm_cb.prm.state = BRCM_PRM_ST_SPD_AUTHENTICATING;
-            nci_start_quick_timer (&nci_cb.nci_cmd_cmpl_timer, 0x00,
-                                   (BRCM_PRM_SPD_TOUT*QUICK_TIMER_TICKS_PER_SEC)/1000);
+            ncit_start_quick_timer (&nci_brcm_cb.nci_wait_rsp_timer, 0x00,
+                                   (BRCM_PRM_SPD_TOUT * QUICK_TIMER_TICKS_PER_SEC) / 1000);
             return;
         }
         /* Download next segment */
         else if (nfc_brcm_cb.prm.flags & BRCM_PRM_FLAGS_USE_PATCHRAM_BUF)
         {
             /* If patch is in a buffer, get next patch from buffer */
-            nfc_brcm_prm_spd_send_next_segment();
+            nfc_brcm_prm_spd_send_next_segment ();
         }
         else
         {
             /* Notify adaptation layer to get next patch segment (via PRM_DownloadContinue) */
-            (nfc_brcm_cb.prm.p_cback)(BRCM_PRM_CONTINUE_EVT);
+            (nfc_brcm_cb.prm.p_cback) (BRCM_PRM_CONTINUE_EVT);
         }
     }
     /* Handle SECURE_PATCH_DOWNLOAD NTF */
@@ -719,8 +721,8 @@ void nfc_brcm_prm_nci_command_complete_cback(tNFC_VS_EVT event, UINT16 data_len,
     {
         NCI_TRACE_DEBUG1 ("prm flags:0x%x.", nfc_brcm_cb.prm.flags);
         /* Status and error code */
-        STREAM_TO_UINT8(status, p);
-        STREAM_TO_UINT8(u8, p);
+        STREAM_TO_UINT8 (status, p);
+        STREAM_TO_UINT8 (u8, p);
 
         /* Sanity check - should only get this NTF while in AUTHENTICATING stage */
         if (nfc_brcm_cb.prm.state == BRCM_PRM_ST_SPD_AUTHENTICATING)
@@ -728,11 +730,11 @@ void nfc_brcm_prm_nci_command_complete_cback(tNFC_VS_EVT event, UINT16 data_len,
             if (status != NCI_STATUS_OK)
             {
                 NCI_TRACE_ERROR0 ("Patch authentication failed");
-                nfc_brcm_prm_spd_handle_download_complete(BRCM_PRM_ABORT_BAD_SIGNATURE_EVT);
+                nfc_brcm_prm_spd_handle_download_complete (BRCM_PRM_ABORT_BAD_SIGNATURE_EVT);
                 return;
             }
 
-#if (defined(NFC_I2C_PATCH_INCLUDED) && (NFC_I2C_PATCH_INCLUDED == TRUE))
+#if (defined (NFC_I2C_PATCH_INCLUDED) && (NFC_I2C_PATCH_INCLUDED == TRUE))
             if (nfc_brcm_cb.prm.flags & BRCM_PRM_FLAGS_I2C_FIX_REQUIRED)
             {
                 NCI_TRACE_DEBUG1 ("PreI2C patch downloaded...waiting %i ms for NFCC to reboot.", BRCM_PRM_POST_I2C_FIX_DELAY);
@@ -748,7 +750,7 @@ void nfc_brcm_prm_nci_command_complete_cback(tNFC_VS_EVT event, UINT16 data_len,
                 nfc_brcm_cb.prm.flags &= ~BRCM_PRM_FLAGS_SIGNATURE_SENT;
 
                 /* Post PreI2C delay */
-                nci_start_quick_timer (&nci_cb.nci_cmd_cmpl_timer, 0x00, (BRCM_PRM_POST_I2C_FIX_DELAY * QUICK_TIMER_TICKS_PER_SEC) / 1000);
+                ncit_start_quick_timer (&nci_brcm_cb.nci_wait_rsp_timer, 0x00, (BRCM_PRM_POST_I2C_FIX_DELAY * QUICK_TIMER_TICKS_PER_SEC) / 1000);
 
                 return;
             }
@@ -761,6 +763,7 @@ void nfc_brcm_prm_nci_command_complete_cback(tNFC_VS_EVT event, UINT16 data_len,
                 /* 20791B4 or newer - wait for RESET_NTF */
                 post_signature_delay = BRCM_PRM_RESET_NTF_DELAY;
                 NCI_TRACE_DEBUG1 ("Patch downloaded and authenticated. Waiting %i ms for RESET NTF...", post_signature_delay);
+
             }
             else if (nfc_brcm_cb.prm.flags & BRCM_PRM_FLAGS_NO_NVM)
             {
@@ -777,23 +780,23 @@ void nfc_brcm_prm_nci_command_complete_cback(tNFC_VS_EVT event, UINT16 data_len,
 
             nfc_brcm_cb.prm.state = BRCM_PRM_ST_SPD_AUTH_DONE;
 
-            nci_start_quick_timer (&nci_cb.nci_cmd_cmpl_timer, 0x00,
-                                   (post_signature_delay*QUICK_TIMER_TICKS_PER_SEC)/1000);
+            ncit_start_quick_timer (&nci_brcm_cb.nci_wait_rsp_timer, 0x00,
+                                   (post_signature_delay * QUICK_TIMER_TICKS_PER_SEC) / 1000);
         }
         else
         {
             NCI_TRACE_ERROR0 ("Got unexpected SECURE_PATCH_DOWNLOAD NTF");
-            nfc_brcm_prm_spd_handle_download_complete(BRCM_PRM_ABORT_EVT);
+            nfc_brcm_prm_spd_handle_download_complete (BRCM_PRM_ABORT_EVT);
         }
     }
     else
     {
         /* Invalid response from NFCC during patch download */
-        NCI_TRACE_ERROR1("Invalid response from NFCC during patch download (opcode=0x%02X)", event);
-        nfc_brcm_prm_spd_handle_download_complete(BRCM_PRM_ABORT_INVALID_PATCH_EVT);
+        NCI_TRACE_ERROR1 ("Invalid response from NFCC during patch download (opcode=0x%02X)", event);
+        nfc_brcm_prm_spd_handle_download_complete (BRCM_PRM_ABORT_INVALID_PATCH_EVT);
     }
 
-    NFC_BRCM_PRM_STATE("prm_nci_command_complete_cback");
+    NFC_BRCM_PRM_STATE ("prm_nci_command_complete_cback");
 }
 
 /*******************************************************************************
@@ -808,7 +811,7 @@ void nfc_brcm_prm_nci_command_complete_cback(tNFC_VS_EVT event, UINT16 data_len,
 void nfc_brcm_prm_nfcc_ready_to_continue (void)
 {
     /* Clear the bit for the patch we just downloaded */
-    nfc_brcm_cb.prm.spd_patch_needed_mask &= ~((UINT32)1 << nfc_brcm_cb.prm.spd_patch_desc[nfc_brcm_cb.prm.spd_cur_patch_idx].power_mode);
+    nfc_brcm_cb.prm.spd_patch_needed_mask &= ~ ((UINT32) 1 << nfc_brcm_cb.prm.spd_patch_desc[nfc_brcm_cb.prm.spd_cur_patch_idx].power_mode);
 
     /* Check if another patch to download */
     nfc_brcm_cb.prm.spd_cur_patch_idx++;
@@ -820,12 +823,12 @@ void nfc_brcm_prm_nfcc_ready_to_continue (void)
         if (nfc_brcm_cb.prm.flags & BRCM_PRM_FLAGS_USE_PATCHRAM_BUF)
         {
             /* If patch is in a buffer, get next patch from buffer */
-            nfc_brcm_prm_spd_handle_next_patch_start();
+            nfc_brcm_prm_spd_handle_next_patch_start ();
         }
         else
         {
             /* Notify adaptation layer to get next patch header (via PRM_DownloadContinue) */
-            (nfc_brcm_cb.prm.p_cback)(BRCM_PRM_SPD_GET_NEXT_PATCH);
+            (nfc_brcm_cb.prm.p_cback) (BRCM_PRM_SPD_GET_NEXT_PATCH);
         }
 
     }
@@ -833,7 +836,7 @@ void nfc_brcm_prm_nfcc_ready_to_continue (void)
     {
         /* Done downloading */
         NCI_TRACE_DEBUG0 ("Patch downloaded and authenticated.");
-        nfc_brcm_prm_spd_handle_download_complete(BRCM_PRM_COMPLETE_EVT);
+        nfc_brcm_prm_spd_handle_download_complete (BRCM_PRM_COMPLETE_EVT);
     }
 }
 
@@ -847,7 +850,7 @@ void nfc_brcm_prm_nfcc_ready_to_continue (void)
 ** Returns          void
 **
 *******************************************************************************/
-void nfc_brcm_prm_spd_reset_ntf(UINT8 reset_reason, UINT8 reset_type)
+void nfc_brcm_prm_spd_reset_ntf (UINT8 reset_reason, UINT8 reset_type)
 {
     /* Check if we were expecting a RESET NTF */
     if (nfc_brcm_cb.prm.state == BRCM_PRM_ST_SPD_AUTH_DONE)
@@ -855,10 +858,12 @@ void nfc_brcm_prm_spd_reset_ntf(UINT8 reset_reason, UINT8 reset_type)
         NCI_TRACE_DEBUG2 ("Received RESET NTF after patch download (reset_reason=%i, reset_type=%i)", reset_reason, reset_type);
 
         /* Stop waiting for RESET NTF */
-        nci_stop_quick_timer (&nci_cb.nci_cmd_cmpl_timer);
+        ncit_stop_quick_timer (&nci_brcm_cb.nci_wait_rsp_timer);
 
+        {
         /* Continue with patch download */
-        nfc_brcm_prm_nfcc_ready_to_continue();
+        nfc_brcm_prm_nfcc_ready_to_continue ();
+    }
     }
     else
     {
@@ -897,13 +902,12 @@ void nfc_brcm_prm_post_baud_update (tNFC_STATUS status)
 *******************************************************************************/
 static void nfc_brcm_prm_process_timeout (void *p_tle)
 {
-    NFC_BRCM_PRM_STATE("nfc_brcm_prm_process_timeout");
+    NFC_BRCM_PRM_STATE ("nfc_brcm_prm_process_timeout");
 
     if (nfc_brcm_cb.prm.state == BRCM_PRM_ST_IDLE)
     {
         nfc_brcm_cb.prm.state = BRCM_PRM_ST_SPD_GET_VERSION;
 
-        nci_set_cmd_timeout_val ((BRCM_PRM_SPD_TOUT*QUICK_TIMER_TICKS_PER_SEC)/1000);
         /* Get currently downloaded patch version */
         nci_brcm_send_nci_cmd (brcm_prm_get_patch_version_cmd, NCI_MSG_HDR_SIZE, nfc_brcm_prm_nci_command_complete_cback);
     }
@@ -912,15 +916,8 @@ static void nfc_brcm_prm_process_timeout (void *p_tle)
         if (nfc_brcm_cb.prm.flags & BRCM_PRM_FLAGS_SUPPORT_RESET_NTF)
         {
             /* Timeout waiting for RESET NTF after signature sent */
-            NCI_TRACE_ERROR0("Timeout waiting for RESET NTF after patch download");
-            nfc_brcm_prm_spd_handle_download_complete(BRCM_PRM_ABORT_EVT);
-        }
-        else if (nci_brcm_cb.userial_baud_rate != NFC_DEFAULT_BAUD)
-        {
-            /* set local baud rate to default because NFCC cannot remember baud rate after rebooting */
-            nci_brcm_set_local_baud_rate (NFC_DEFAULT_BAUD);
-
-            NCI_BrcmSetBaudRate (nci_brcm_cb.userial_baud_rate, nfc_brcm_prm_post_baud_update);
+            NCI_TRACE_ERROR0 ("Timeout waiting for RESET NTF after patch download");
+            nfc_brcm_prm_spd_handle_download_complete (BRCM_PRM_ABORT_EVT);
         }
         else
         {
@@ -936,10 +933,10 @@ static void nfc_brcm_prm_process_timeout (void *p_tle)
     {
         NCI_TRACE_ERROR1 ("Patch download: command timeout (state=%i)", nfc_brcm_cb.prm.state);
 
-        nfc_brcm_prm_spd_handle_download_complete(BRCM_PRM_ABORT_EVT);
+        nfc_brcm_prm_spd_handle_download_complete (BRCM_PRM_ABORT_EVT);
     }
 
-    NFC_BRCM_PRM_STATE("nfc_brcm_prm_process_timeout");
+    NFC_BRCM_PRM_STATE ("nfc_brcm_prm_process_timeout");
 }
 
 
@@ -978,13 +975,13 @@ BOOLEAN PRM_DownloadStart (tBRCM_PRM_FORMAT format_type,
 {
     NCI_TRACE_API0 ("PRM_DownloadStart ()");
 
-    memset(&nfc_brcm_cb.prm, 0, sizeof(tBRCM_PRM_CB));
+    memset (&nfc_brcm_cb.prm, 0, sizeof (tBRCM_PRM_CB));
 
     if (p_patchram_buf)
     {
         nfc_brcm_cb.prm.p_cur_patch_data = p_patchram_buf;
         nfc_brcm_cb.prm.cur_patch_offset = 0;
-        nfc_brcm_cb.prm.cur_patch_len_remaining = (UINT16)patchram_len;
+        nfc_brcm_cb.prm.cur_patch_len_remaining = (UINT16) patchram_len;
         nfc_brcm_cb.prm.flags |= BRCM_PRM_FLAGS_USE_PATCHRAM_BUF;
 
         if (patchram_len == 0)
@@ -995,18 +992,18 @@ BOOLEAN PRM_DownloadStart (tBRCM_PRM_FORMAT format_type,
     nfc_brcm_cb.prm.dest_ram = dest_address;
     nfc_brcm_cb.prm.format   = format_type;
 
-    nci_cb.nci_cmd_cmpl_timer.p_cback = nfc_brcm_prm_process_timeout;
+    nci_brcm_cb.nci_wait_rsp_timer.p_cback = nfc_brcm_prm_process_timeout;
 
     if (format_type == BRCM_PRM_FORMAT_NCD)
     {
         /* Store patch buffer pointer and length */
-        nfc_brcm_cb.prm.p_spd_patch = p_patchram_buf;
+        nfc_brcm_cb.prm.p_spd_patch             = p_patchram_buf;
         nfc_brcm_cb.prm.spd_patch_len_remaining = (UINT16)patchram_len;
-        nfc_brcm_cb.prm.spd_patch_offset = 0;
+        nfc_brcm_cb.prm.spd_patch_offset        = 0;
 
         /* Need delay for controller to finish resetting */
-        nci_start_quick_timer (&nci_cb.nci_cmd_cmpl_timer, 0x00,
-                               (BRCM_PRM_SPD_PRE_DOWNLOAD_DELAY*QUICK_TIMER_TICKS_PER_SEC)/1000);
+        ncit_start_quick_timer (&nci_brcm_cb.nci_wait_rsp_timer, 0x00,
+                               (BRCM_PRM_SPD_PRE_DOWNLOAD_DELAY * QUICK_TIMER_TICKS_PER_SEC) / 1000);
     }
     else
     {
@@ -1055,15 +1052,15 @@ BOOLEAN PRM_DownloadContinue (UINT8 *p_patch_data,
     /* Call appropriate handler */
     if (nfc_brcm_cb.prm.state == BRCM_PRM_ST_SPD_COMPARE_VERSION)
     {
-        nfc_brcm_prm_spd_check_version();
+        nfc_brcm_prm_spd_check_version ();
     }
     else if (nfc_brcm_cb.prm.state == BRCM_PRM_ST_SPD_GET_PATCH_HEADER)
     {
-        nfc_brcm_prm_spd_handle_next_patch_start();
+        nfc_brcm_prm_spd_handle_next_patch_start ();
     }
     else if (nfc_brcm_cb.prm.state == BRCM_PRM_ST_SPD_DOWNLOADING)
     {
-        nfc_brcm_prm_spd_send_next_segment();
+        nfc_brcm_prm_spd_send_next_segment ();
     }
     else
     {
@@ -1091,7 +1088,7 @@ BOOLEAN PRM_DownloadContinue (UINT8 *p_patch_data,
 *******************************************************************************/
 void PRM_SetI2cPatch (UINT8 *p_i2c_patchfile_buf, UINT16 i2c_patchfile_len)
 {
-#if (defined(NFC_I2C_PATCH_INCLUDED) && (NFC_I2C_PATCH_INCLUDED == TRUE))
+#if (defined (NFC_I2C_PATCH_INCLUDED) && (NFC_I2C_PATCH_INCLUDED == TRUE))
     NCI_TRACE_API0 ("PRM_SetI2cPatch ()");
 
     nfc_brcm_cb.prm_i2c.p_patch = p_i2c_patchfile_buf;
@@ -1124,12 +1121,12 @@ tNFC_STATUS PRM_SetSpdNciCmdPayloadSize (UINT8 max_payload_size)
     /* Validate: minimum size is BRCM_PRM_MIN_NCI_CMD_PAYLOAD_SIZE */
     if (max_payload_size < BRCM_PRM_MIN_NCI_CMD_PAYLOAD_SIZE)
     {
-        BT_TRACE_2(TRACE_LAYER_HCI, TRACE_TYPE_ERROR, "PRM_SetSpdNciCmdPayloadSize: invalid size (%i). Must be between %i and 255", max_payload_size, BRCM_PRM_MIN_NCI_CMD_PAYLOAD_SIZE);
+        BT_TRACE_2 (TRACE_LAYER_HCI, TRACE_TYPE_ERROR, "PRM_SetSpdNciCmdPayloadSize: invalid size (%i). Must be between %i and 255", max_payload_size, BRCM_PRM_MIN_NCI_CMD_PAYLOAD_SIZE);
         return (NFC_STATUS_INVALID_PARAM);
     }
     else
     {
-        BT_TRACE_1(TRACE_LAYER_HCI, TRACE_TYPE_API, "PRM_SetSpdNciCmdPayloadSize: new message size during download: %i", max_payload_size);
+        BT_TRACE_1 (TRACE_LAYER_HCI, TRACE_TYPE_API, "PRM_SetSpdNciCmdPayloadSize: new message size during download: %i", max_payload_size);
         nfc_cb.nci_ctrl_size = max_payload_size;
         return (NFC_STATUS_OK);
     }

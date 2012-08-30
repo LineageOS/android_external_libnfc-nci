@@ -676,14 +676,21 @@ NFC_API extern tNFA_STATUS NFA_HciSendResponse (tNFA_HANDLE   hci_handle,
 **                  or if an error occurs. The application should wait for this
 **                  event before releasing event buffer passed as argument.
 **                  If the app is expecting a response to the event then it can
-**                  provide response buffer for collecting the response.
+**                  provide response buffer for collecting the response. If it
+**                  provides a response buffer it can also provide response
+**                  timeout indicating maximum timeout for the response.
 **                  Maximum of NFA_MAX_HCI_EVENT_LEN bytes APDU can be received
 **                  using internal buffer if no response buffer is provided by
 **                  the application. The app will be notified by
 **                  NFA_HCI_EVENT_RCVD_EVT after receiving the response event
-**                  or on timeout if app provided response buffer.
-**                  If response buffer is provided by the application, it should
-**                  wait for this event before releasing the response buffer.
+**                  or on timeout if app provided response buffer and response
+**                  timeout. If response buffer and response timeout is provided
+**                  by the application, it should wait for this event before
+**                  releasing the response buffer. If the application did not
+**                  provide response timeout then it should not release the
+**                  response buffer until it receives NFA_HCI_EVENT_RCVD_EVT or
+**                  after timeout it sends next event on the same pipe
+**                  and receives NFA_HCI_EVENT_SENT_EVT for that event.
 **
 ** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_FAILED otherwise
@@ -695,7 +702,8 @@ tNFA_STATUS NFA_HciSendEvent (tNFA_HANDLE  hci_handle,
                               UINT16       evt_size,
                               UINT8        *p_data,
                               UINT16       rsp_size,
-                              UINT8        *p_rsp_buf)
+                              UINT8        *p_rsp_buf,
+                              UINT16       rsp_timeout)
 {
     tNFA_HCI_API_SEND_EVENT_EVT *p_msg;
 
@@ -738,6 +746,7 @@ tNFA_STATUS NFA_HciSendEvent (tNFA_HANDLE  hci_handle,
         p_msg->p_evt_buf    = p_data;
         p_msg->rsp_len      = rsp_size;
         p_msg->p_rsp_buf    = p_rsp_buf;
+        p_msg->rsp_timeout  = rsp_timeout;
 
         nfa_sys_sendmsg (p_msg);
         return (NFA_STATUS_OK);

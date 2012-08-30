@@ -995,7 +995,7 @@ void nfa_ee_nci_disc_ntf(tNFA_EE_MSG *p_data)
         {
             if (nfa_dm_is_active() && (p_cb->ee_status != NFA_EE_STATUS_REMOVED))
             {
-                /* report this NFA_EE_NEW_EE_EVT only after NFA_ENABLE_EVT is reported */
+                /* report this NFA_EE_NEW_EE_EVT only after NFA_DM_ENABLE_EVT is reported */
                 p_info                  = &evt_data.new_ee;
                 p_info->ee_handle       = NFA_HANDLE_GROUP_EE | (tNFA_HANDLE)p_cb->nfcee_id;
                 p_info->ee_status       = p_cb->ee_status;

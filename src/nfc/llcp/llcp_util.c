@@ -31,12 +31,12 @@ BOOLEAN llcp_util_parse_link_params (UINT16 length, UINT8 *p_bytes)
 {
     UINT8 param_type, param_len, *p = p_bytes;
 
-    while( length )
+    while (length)
     {
-        BE_STREAM_TO_UINT8(param_type, p);
+        BE_STREAM_TO_UINT8 (param_type, p);
         length--;
 
-        switch(param_type)
+        switch (param_type)
         {
         case LLCP_VERSION_TYPE:
             BE_STREAM_TO_UINT8 (param_len, p);
@@ -46,7 +46,7 @@ BOOLEAN llcp_util_parse_link_params (UINT16 length, UINT8 *p_bytes)
 
         case LLCP_MIUX_TYPE:
             BE_STREAM_TO_UINT8 (param_len, p);
-            BE_STREAM_TO_UINT16(llcp_cb.lcb.peer_miu, p);
+            BE_STREAM_TO_UINT16 (llcp_cb.lcb.peer_miu, p);
             llcp_cb.lcb.peer_miu &= LLCP_MIUX_MASK;
             llcp_cb.lcb.peer_miu += LLCP_DEFAULT_MIU;
             LLCP_TRACE_DEBUG1 ("Peer MIU - %d bytes", llcp_cb.lcb.peer_miu);
@@ -54,7 +54,7 @@ BOOLEAN llcp_util_parse_link_params (UINT16 length, UINT8 *p_bytes)
 
         case LLCP_WKS_TYPE:
             BE_STREAM_TO_UINT8 (param_len, p);
-            BE_STREAM_TO_UINT16(llcp_cb.lcb.peer_wks, p);
+            BE_STREAM_TO_UINT16 (llcp_cb.lcb.peer_wks, p);
             LLCP_TRACE_DEBUG1 ("Peer WKS - 0x%04X", llcp_cb.lcb.peer_wks);
             break;
 
@@ -72,8 +72,8 @@ BOOLEAN llcp_util_parse_link_params (UINT16 length, UINT8 *p_bytes)
             break;
 
         default:
-            LLCP_TRACE_ERROR1 ("llcp_util_parse_link_params(): Unexpected type 0x%x", param_type);
-            BE_STREAM_TO_UINT8(param_len, p);
+            LLCP_TRACE_ERROR1 ("llcp_util_parse_link_params (): Unexpected type 0x%x", param_type);
+            BE_STREAM_TO_UINT8 (param_len, p);
             p += param_len;
             break;
         }
@@ -82,7 +82,7 @@ BOOLEAN llcp_util_parse_link_params (UINT16 length, UINT8 *p_bytes)
             length -= param_len + 1;
         else
         {
-            LLCP_TRACE_ERROR0 ("llcp_util_parse_link_params(): Bad LTV's");
+            LLCP_TRACE_ERROR0 ("llcp_util_parse_link_params (): Bad LTV's");
             return (FALSE);
         }
     }
@@ -203,7 +203,7 @@ void llcp_util_check_rx_congested_status (void)
         /* check if rx congestion clear */
         if (llcp_cb.total_rx_ui_pdu + llcp_cb.total_rx_i_pdu <= llcp_cb.overall_rx_congest_end)
         {
-            LLCP_TRACE_DEBUG3 ("llcp_util_check_rx_congested_status(): rx link is uncongested, %d+%d <= %d",
+            LLCP_TRACE_DEBUG3 ("llcp_util_check_rx_congested_status (): rx link is uncongested, %d+%d <= %d",
                                 llcp_cb.total_rx_ui_pdu, llcp_cb.total_rx_i_pdu,
                                 llcp_cb.overall_rx_congest_end);
 
@@ -212,8 +212,8 @@ void llcp_util_check_rx_congested_status (void)
             for (idx = 0; idx < LLCP_MAX_DATA_LINK; idx++)
             {
                 /* set flag to clear local busy status on data link connections */
-                if ((llcp_cb.dlcb[idx].state == LLCP_DLC_STATE_CONNECTED)
-                  &&(llcp_cb.dlcb[idx].is_rx_congested == FALSE))
+                if (  (llcp_cb.dlcb[idx].state == LLCP_DLC_STATE_CONNECTED)
+                    &&(llcp_cb.dlcb[idx].is_rx_congested == FALSE)  )
                 {
                     llcp_cb.dlcb[idx].flags |= LLCP_DATA_LINK_FLAG_PENDING_RR_RNR;
                 }
@@ -225,7 +225,7 @@ void llcp_util_check_rx_congested_status (void)
         /* check if rx link is congested */
         if (llcp_cb.total_rx_ui_pdu + llcp_cb.total_rx_i_pdu >= llcp_cb.overall_rx_congest_start)
         {
-            LLCP_TRACE_WARNING3 ("llcp_util_check_rx_congested_status(): rx link is congested, %d+%d >= %d",
+            LLCP_TRACE_WARNING3 ("llcp_util_check_rx_congested_status (): rx link is congested, %d+%d >= %d",
                                   llcp_cb.total_rx_ui_pdu, llcp_cb.total_rx_i_pdu,
                                   llcp_cb.overall_rx_congest_start);
 
@@ -234,8 +234,8 @@ void llcp_util_check_rx_congested_status (void)
             /* rx link congestion is started, send RNR to remote end point */
             for (idx = 0; idx < LLCP_MAX_DATA_LINK; idx++)
             {
-                if ((llcp_cb.dlcb[idx].state == LLCP_DLC_STATE_CONNECTED)
-                  &&(llcp_cb.dlcb[idx].is_rx_congested == FALSE))
+                if (  (llcp_cb.dlcb[idx].state == LLCP_DLC_STATE_CONNECTED)
+                    &&(llcp_cb.dlcb[idx].is_rx_congested == FALSE)  )
                 {
                     llcp_cb.dlcb[idx].flags |= LLCP_DATA_LINK_FLAG_PENDING_RR_RNR;
                 }
@@ -261,18 +261,18 @@ tLLCP_STATUS llcp_util_send_ui (UINT8 ssap, UINT8 dsap, tLLCP_APP_CB *p_app_cb, 
     p_msg->offset -= LLCP_PDU_HEADER_SIZE;
     p_msg->len    += LLCP_PDU_HEADER_SIZE;
 
-    p = (UINT8 *)(p_msg + 1) + p_msg->offset;
-    UINT16_TO_BE_STREAM (p, LLCP_GET_PDU_HEADER( dsap, LLCP_PDU_UI_TYPE, ssap ));
+    p = (UINT8 *) (p_msg + 1) + p_msg->offset;
+    UINT16_TO_BE_STREAM (p, LLCP_GET_PDU_HEADER (dsap, LLCP_PDU_UI_TYPE, ssap));
 
     GKI_enqueue (&p_app_cb->ui_xmit_q, p_msg);
     llcp_cb.total_tx_ui_pdu++;
 
     llcp_link_check_send_data ();
 
-    if ((p_app_cb->is_ui_tx_congested)
-      ||(p_app_cb->ui_xmit_q.count >= llcp_cb.ll_tx_congest_start)
-      ||(llcp_cb.overall_tx_congested)
-      ||(llcp_cb.total_tx_ui_pdu >= llcp_cb.max_num_ll_tx_buff))
+    if (  (p_app_cb->is_ui_tx_congested)
+        ||(p_app_cb->ui_xmit_q.count >= llcp_cb.ll_tx_congest_start)
+        ||(llcp_cb.overall_tx_congested)
+        ||(llcp_cb.total_tx_ui_pdu >= llcp_cb.max_num_ll_tx_buff)  )
     {
         /* set congested here so overall congestion check routine will not report event again, */
         /* or notify uncongestion later                                                        */
@@ -301,15 +301,15 @@ void llcp_util_send_disc (UINT8 dsap, UINT8 ssap)
     BT_HDR *p_msg;
     UINT8  *p;
 
-    p_msg = (BT_HDR*)GKI_getpoolbuf (LLCP_POOL_ID);
+    p_msg = (BT_HDR*) GKI_getpoolbuf (LLCP_POOL_ID);
 
     if (p_msg)
     {
         p_msg->len      = LLCP_PDU_DISC_SIZE;
         p_msg->offset   = NCI_MSG_OFFSET_SIZE + NCI_DATA_HDR_SIZE;
 
-        p = (UINT8 *)(p_msg + 1) + p_msg->offset;
-        UINT16_TO_BE_STREAM (p, LLCP_GET_PDU_HEADER( dsap, LLCP_PDU_DISC_TYPE, ssap ));
+        p = (UINT8 *) (p_msg + 1) + p_msg->offset;
+        UINT16_TO_BE_STREAM (p, LLCP_GET_PDU_HEADER (dsap, LLCP_PDU_DISC_TYPE, ssap));
 
         GKI_enqueue (&llcp_cb.lcb.sig_xmit_q, p_msg);
         llcp_link_check_send_data ();
@@ -330,7 +330,7 @@ tLLCP_DLCB *llcp_util_allocate_data_link (UINT8 reg_sap, UINT8 remote_sap)
     tLLCP_DLCB *p_dlcb = NULL;
     int         idx;
 
-    LLCP_TRACE_DEBUG2 ("llcp_util_allocate_data_link(): reg_sap = 0x%x, remote_sap = 0x%x",
+    LLCP_TRACE_DEBUG2 ("llcp_util_allocate_data_link (): reg_sap = 0x%x, remote_sap = 0x%x",
                         reg_sap, remote_sap);
 
     for (idx = 0; idx < LLCP_MAX_DATA_LINK; idx++)
@@ -339,26 +339,26 @@ tLLCP_DLCB *llcp_util_allocate_data_link (UINT8 reg_sap, UINT8 remote_sap)
         {
             p_dlcb = &(llcp_cb.dlcb[idx]);
 
-            memset (p_dlcb, 0, sizeof(tLLCP_DLCB));
+            memset (p_dlcb, 0, sizeof (tLLCP_DLCB));
             break;
         }
     }
 
     if (!p_dlcb)
     {
-        LLCP_TRACE_ERROR0 ("llcp_util_allocate_data_link(): Out of DLCB");
+        LLCP_TRACE_ERROR0 ("llcp_util_allocate_data_link (): Out of DLCB");
     }
     else
     {
         p_dlcb->p_app_cb    = llcp_util_get_app_cb (reg_sap);
         p_dlcb->local_sap   = reg_sap;
         p_dlcb->remote_sap  = remote_sap;
-        p_dlcb->timer.param = (TIMER_PARAM_TYPE)p_dlcb;
+        p_dlcb->timer.param = (TIMER_PARAM_TYPE) p_dlcb;
 
         /* this is for inactivity timer and congestion control. */
         llcp_cb.num_data_link_connection++;
 
-        LLCP_TRACE_DEBUG3 ("llcp_util_allocate_data_link(): local_sap = 0x%x, remote_sap = 0x%x, num_data_link_connection = %d",
+        LLCP_TRACE_DEBUG3 ("llcp_util_allocate_data_link (): local_sap = 0x%x, remote_sap = 0x%x, num_data_link_connection = %d",
                             p_dlcb->local_sap, p_dlcb->remote_sap, llcp_cb.num_data_link_connection);
     }
     return p_dlcb;
@@ -377,7 +377,7 @@ void llcp_util_deallocate_data_link (tLLCP_DLCB *p_dlcb)
 {
     if (p_dlcb)
     {
-        LLCP_TRACE_DEBUG1 ("llcp_util_deallocate_data_link(): local_sap = 0x%x", p_dlcb->local_sap);
+        LLCP_TRACE_DEBUG1 ("llcp_util_deallocate_data_link (): local_sap = 0x%x", p_dlcb->local_sap);
 
         if (p_dlcb->state != LLCP_DLC_STATE_IDLE)
         {
@@ -391,7 +391,7 @@ void llcp_util_deallocate_data_link (tLLCP_DLCB *p_dlcb)
                 llcp_cb.num_data_link_connection--;
             }
 
-            LLCP_TRACE_DEBUG1 ("llcp_util_deallocate_data_link(): num_data_link_connection = %d", llcp_cb.num_data_link_connection);
+            LLCP_TRACE_DEBUG1 ("llcp_util_deallocate_data_link (): num_data_link_connection = %d", llcp_cb.num_data_link_connection);
         }
     }
 }
@@ -420,41 +420,41 @@ tLLCP_STATUS llcp_util_send_connect (tLLCP_DLCB *p_dlcb, tLLCP_CONNECTION_PARAMS
         rw_len = 3;     /* TYPE, LEN, 1 byte RW */
         p_params->rw &= 0x0F;   /* only 4 bits  */
     }
-    if ((strlen(p_params->sn))&&(p_dlcb->remote_sap == LLCP_SAP_SDP))
+    if ((strlen (p_params->sn)) && (p_dlcb->remote_sap == LLCP_SAP_SDP))
     {
-        sn_len = (UINT16)(2 + strlen(p_params->sn));    /* TYPE, LEN, SN */
+        sn_len = (UINT16) (2 + strlen (p_params->sn));    /* TYPE, LEN, SN */
     }
 
-    p_msg = (BT_HDR*)GKI_getpoolbuf (LLCP_POOL_ID);
+    p_msg = (BT_HDR*) GKI_getpoolbuf (LLCP_POOL_ID);
 
     if (p_msg)
     {
         p_msg->len    = LLCP_PDU_HEADER_SIZE + miu_len + rw_len + sn_len;
         p_msg->offset = NCI_MSG_OFFSET_SIZE + NCI_DATA_HDR_SIZE;
 
-        p = (UINT8 *)(p_msg + 1) + p_msg->offset;
+        p = (UINT8 *) (p_msg + 1) + p_msg->offset;
 
-        UINT16_TO_BE_STREAM (p, LLCP_GET_PDU_HEADER( p_dlcb->remote_sap, LLCP_PDU_CONNECT_TYPE, p_dlcb->local_sap ));
+        UINT16_TO_BE_STREAM (p, LLCP_GET_PDU_HEADER (p_dlcb->remote_sap, LLCP_PDU_CONNECT_TYPE, p_dlcb->local_sap));
 
         if (miu_len)
         {
-            UINT8_TO_BE_STREAM(p,  LLCP_MIUX_TYPE);
-            UINT8_TO_BE_STREAM(p,  LLCP_MIUX_LEN);
-            UINT16_TO_BE_STREAM(p, p_params->miu - LLCP_DEFAULT_MIU);
+            UINT8_TO_BE_STREAM (p, LLCP_MIUX_TYPE);
+            UINT8_TO_BE_STREAM (p, LLCP_MIUX_LEN);
+            UINT16_TO_BE_STREAM (p, p_params->miu - LLCP_DEFAULT_MIU);
         }
 
         if (rw_len)
         {
-            UINT8_TO_BE_STREAM(p, LLCP_RW_TYPE);
-            UINT8_TO_BE_STREAM(p, LLCP_RW_LEN);
-            UINT8_TO_BE_STREAM(p, p_params->rw);
+            UINT8_TO_BE_STREAM (p, LLCP_RW_TYPE);
+            UINT8_TO_BE_STREAM (p, LLCP_RW_LEN);
+            UINT8_TO_BE_STREAM (p, p_params->rw);
         }
 
         if (sn_len)
         {
-            UINT8_TO_BE_STREAM(p, LLCP_SN_TYPE);
-            UINT8_TO_BE_STREAM(p, sn_len - 2);
-            memcpy(p, p_params->sn, sn_len - 2);
+            UINT8_TO_BE_STREAM (p, LLCP_SN_TYPE);
+            UINT8_TO_BE_STREAM (p, sn_len - 2);
+            memcpy (p, p_params->sn, sn_len - 2);
         }
 
         GKI_enqueue (&llcp_cb.lcb.sig_xmit_q, p_msg);
@@ -485,30 +485,30 @@ tLLCP_STATUS llcp_util_parse_connect (UINT8  *p_bytes, UINT16 length, tLLCP_CONN
 
     while (length)
     {
-        BE_STREAM_TO_UINT8(param_type, p);
+        BE_STREAM_TO_UINT8 (param_type, p);
         length--;
 
         switch (param_type)
         {
         case LLCP_MIUX_TYPE:
             BE_STREAM_TO_UINT8 (param_len, p);
-            BE_STREAM_TO_UINT16(p_params->miu, p);
+            BE_STREAM_TO_UINT16 (p_params->miu, p);
             p_params->miu &= LLCP_MIUX_MASK;
             p_params->miu += LLCP_DEFAULT_MIU;
 
-            LLCP_TRACE_DEBUG1 ("llcp_util_parse_connect(): LLCP_MIUX_TYPE:%d", p_params->miu);
+            LLCP_TRACE_DEBUG1 ("llcp_util_parse_connect (): LLCP_MIUX_TYPE:%d", p_params->miu);
             break;
 
         case LLCP_RW_TYPE:
-            BE_STREAM_TO_UINT8(param_len, p);
-            BE_STREAM_TO_UINT8(p_params->rw, p);
+            BE_STREAM_TO_UINT8 (param_len, p);
+            BE_STREAM_TO_UINT8 (p_params->rw, p);
             p_params->rw &= 0x0F;
 
-            LLCP_TRACE_DEBUG1 ("llcp_util_parse_connect(): LLCP_RW_TYPE:%d", p_params->rw);
+            LLCP_TRACE_DEBUG1 ("llcp_util_parse_connect (): LLCP_RW_TYPE:%d", p_params->rw);
             break;
 
         case LLCP_SN_TYPE:
-            BE_STREAM_TO_UINT8(param_len, p);
+            BE_STREAM_TO_UINT8 (param_len, p);
 
             if (param_len <= LLCP_MAX_SN_LEN)
             {
@@ -522,12 +522,12 @@ tLLCP_STATUS llcp_util_parse_connect (UINT8  *p_bytes, UINT16 length, tLLCP_CONN
             }
             p += param_len;
 
-            LLCP_TRACE_DEBUG1 ("llcp_util_parse_connect(): LLCP_SN_TYPE:<%s>", p_params->sn);
+            LLCP_TRACE_DEBUG1 ("llcp_util_parse_connect (): LLCP_SN_TYPE:<%s>", p_params->sn);
             break;
 
         default:
-            LLCP_TRACE_ERROR1 ("llcp_util_parse_connect(): Unexpected type 0x%x", param_type);
-            BE_STREAM_TO_UINT8(param_len, p);
+            LLCP_TRACE_ERROR1 ("llcp_util_parse_connect (): Unexpected type 0x%x", param_type);
+            BE_STREAM_TO_UINT8 (param_len, p);
             p += param_len;
             break;
         }
@@ -539,7 +539,7 @@ tLLCP_STATUS llcp_util_parse_connect (UINT8  *p_bytes, UINT16 length, tLLCP_CONN
         }
         else
         {
-            LLCP_TRACE_ERROR0 ("llcp_util_parse_connect(): Bad LTV's");
+            LLCP_TRACE_ERROR0 ("llcp_util_parse_connect (): Bad LTV's");
             return LLCP_STATUS_FAIL;
         }
     }
@@ -571,29 +571,29 @@ tLLCP_STATUS llcp_util_send_cc (tLLCP_DLCB *p_dlcb, tLLCP_CONNECTION_PARAMS *p_p
         p_params->rw &= 0x0F;
     }
 
-    p_msg = (BT_HDR*)GKI_getpoolbuf (LLCP_POOL_ID);
+    p_msg = (BT_HDR*) GKI_getpoolbuf (LLCP_POOL_ID);
 
     if (p_msg)
     {
         p_msg->len      = LLCP_PDU_HEADER_SIZE + miu_len + rw_len;
         p_msg->offset   = NCI_MSG_OFFSET_SIZE + NCI_DATA_HDR_SIZE;
 
-        p = (UINT8 *)(p_msg + 1) + p_msg->offset;
+        p = (UINT8 *) (p_msg + 1) + p_msg->offset;
 
-        UINT16_TO_BE_STREAM (p, LLCP_GET_PDU_HEADER( p_dlcb->remote_sap, LLCP_PDU_CC_TYPE, p_dlcb->local_sap ));
+        UINT16_TO_BE_STREAM (p, LLCP_GET_PDU_HEADER (p_dlcb->remote_sap, LLCP_PDU_CC_TYPE, p_dlcb->local_sap));
 
         if (miu_len)
         {
-            UINT8_TO_BE_STREAM(p,  LLCP_MIUX_TYPE);
-            UINT8_TO_BE_STREAM(p,  LLCP_MIUX_LEN);
-            UINT16_TO_BE_STREAM(p, p_params->miu - LLCP_DEFAULT_MIU);
+            UINT8_TO_BE_STREAM (p, LLCP_MIUX_TYPE);
+            UINT8_TO_BE_STREAM (p, LLCP_MIUX_LEN);
+            UINT16_TO_BE_STREAM (p, p_params->miu - LLCP_DEFAULT_MIU);
         }
 
         if (rw_len)
         {
-            UINT8_TO_BE_STREAM(p, LLCP_RW_TYPE);
-            UINT8_TO_BE_STREAM(p, LLCP_RW_LEN);
-            UINT8_TO_BE_STREAM(p, p_params->rw);
+            UINT8_TO_BE_STREAM (p, LLCP_RW_TYPE);
+            UINT8_TO_BE_STREAM (p, LLCP_RW_LEN);
+            UINT8_TO_BE_STREAM (p, p_params->rw);
         }
 
         GKI_enqueue (&llcp_cb.lcb.sig_xmit_q, p_msg);
@@ -621,33 +621,33 @@ tLLCP_STATUS llcp_util_parse_cc (UINT8 *p_bytes, UINT16 length, UINT16 *p_miu, U
     *p_miu = LLCP_DEFAULT_MIU;
     *p_rw  = LLCP_DEFAULT_RW;
 
-    while( length )
+    while (length)
     {
-        BE_STREAM_TO_UINT8(param_type, p);
+        BE_STREAM_TO_UINT8 (param_type, p);
         length--;
 
-        switch(param_type)
+        switch (param_type)
         {
         case LLCP_MIUX_TYPE:
-            BE_STREAM_TO_UINT8(param_len, p);
-            BE_STREAM_TO_UINT16((*p_miu), p);
+            BE_STREAM_TO_UINT8 (param_len, p);
+            BE_STREAM_TO_UINT16 ((*p_miu), p);
             (*p_miu) &= LLCP_MIUX_MASK;
             (*p_miu) += LLCP_DEFAULT_MIU;
 
-            LLCP_TRACE_DEBUG1 ("llcp_util_parse_cc(): LLCP_MIUX_TYPE:%d", *p_miu);
+            LLCP_TRACE_DEBUG1 ("llcp_util_parse_cc (): LLCP_MIUX_TYPE:%d", *p_miu);
             break;
 
         case LLCP_RW_TYPE:
-            BE_STREAM_TO_UINT8(param_len, p);
-            BE_STREAM_TO_UINT8((*p_rw), p);
+            BE_STREAM_TO_UINT8 (param_len, p);
+            BE_STREAM_TO_UINT8 ((*p_rw), p);
             (*p_rw) &= 0x0F;
 
-            LLCP_TRACE_DEBUG1 ("llcp_util_parse_cc(): LLCP_RW_TYPE:%d", *p_rw);
+            LLCP_TRACE_DEBUG1 ("llcp_util_parse_cc (): LLCP_RW_TYPE:%d", *p_rw);
             break;
 
         default:
-            LLCP_TRACE_ERROR1 ("llcp_util_parse_cc(): Unexpected type 0x%x", param_type);
-            BE_STREAM_TO_UINT8(param_len, p);
+            LLCP_TRACE_ERROR1 ("llcp_util_parse_cc (): Unexpected type 0x%x", param_type);
+            BE_STREAM_TO_UINT8 (param_len, p);
             p += param_len;
             break;
         }
@@ -656,7 +656,7 @@ tLLCP_STATUS llcp_util_parse_cc (UINT8 *p_bytes, UINT16 length, UINT16 *p_miu, U
             length -= param_len + 1;
         else
         {
-            LLCP_TRACE_ERROR0 ("llcp_util_parse_cc(): Bad LTV's");
+            LLCP_TRACE_ERROR0 ("llcp_util_parse_cc (): Bad LTV's");
             return LLCP_STATUS_FAIL;
         }
     }
@@ -677,15 +677,15 @@ void llcp_util_send_dm (UINT8 dsap, UINT8 ssap, UINT8 reason)
     BT_HDR *p_msg;
     UINT8  *p;
 
-    p_msg = (BT_HDR*)GKI_getpoolbuf (LLCP_POOL_ID);
+    p_msg = (BT_HDR*) GKI_getpoolbuf (LLCP_POOL_ID);
 
     if (p_msg)
     {
         p_msg->len    = LLCP_PDU_DM_SIZE;
         p_msg->offset = NCI_MSG_OFFSET_SIZE + NCI_DATA_HDR_SIZE;
 
-        p = (UINT8 *)(p_msg + 1) + p_msg->offset;
-        UINT16_TO_BE_STREAM (p, LLCP_GET_PDU_HEADER( dsap, LLCP_PDU_DM_TYPE, ssap ));
+        p = (UINT8 *) (p_msg + 1) + p_msg->offset;
+        UINT16_TO_BE_STREAM (p, LLCP_GET_PDU_HEADER (dsap, LLCP_PDU_DM_TYPE, ssap));
         UINT8_TO_BE_STREAM  (p, reason);
 
         GKI_enqueue (&llcp_cb.lcb.sig_xmit_q, p_msg);
@@ -710,14 +710,14 @@ void llcp_util_build_info_pdu (tLLCP_DLCB *p_dlcb, BT_HDR *p_msg)
 
     p_msg->offset -= LLCP_PDU_HEADER_SIZE + LLCP_SEQUENCE_SIZE;
     p_msg->len    += LLCP_PDU_HEADER_SIZE + LLCP_SEQUENCE_SIZE;
-    p = (UINT8 *)(p_msg + 1) + p_msg->offset;
+    p = (UINT8 *) (p_msg + 1) + p_msg->offset;
 
-    UINT16_TO_BE_STREAM (p, LLCP_GET_PDU_HEADER(p_dlcb->remote_sap, LLCP_PDU_I_TYPE, p_dlcb->local_sap));
+    UINT16_TO_BE_STREAM (p, LLCP_GET_PDU_HEADER (p_dlcb->remote_sap, LLCP_PDU_I_TYPE, p_dlcb->local_sap));
 
     /* if local_busy or rx congested then do not update receive sequence number to flow off */
-    if ((p_dlcb->local_busy)
-       ||(p_dlcb->is_rx_congested)
-       ||(llcp_cb.overall_rx_congested))
+    if (  (p_dlcb->local_busy)
+        ||(p_dlcb->is_rx_congested)
+        ||(llcp_cb.overall_rx_congested)  )
     {
         rcv_seq = p_dlcb->sent_ack_seq;
     }
@@ -726,7 +726,7 @@ void llcp_util_build_info_pdu (tLLCP_DLCB *p_dlcb, BT_HDR *p_msg)
         p_dlcb->sent_ack_seq = p_dlcb->next_rx_seq;
         rcv_seq = p_dlcb->sent_ack_seq;
     }
-    UINT8_TO_BE_STREAM  (p, LLCP_GET_SEQUENCE(p_dlcb->next_tx_seq, rcv_seq));
+    UINT8_TO_BE_STREAM  (p, LLCP_GET_SEQUENCE (p_dlcb->next_tx_seq, rcv_seq));
 }
 
 /*******************************************************************************
@@ -738,25 +738,25 @@ void llcp_util_build_info_pdu (tLLCP_DLCB *p_dlcb, BT_HDR *p_msg)
 ** Returns          tLLCP_STATUS
 **
 *******************************************************************************/
-tLLCP_STATUS llcp_util_send_frmr(tLLCP_DLCB *p_dlcb, UINT8 flags, UINT8 ptype, UINT8 sequence)
+tLLCP_STATUS llcp_util_send_frmr (tLLCP_DLCB *p_dlcb, UINT8 flags, UINT8 ptype, UINT8 sequence)
 {
     BT_HDR *p_msg;
     UINT8  *p;
 
-    p_msg = (BT_HDR*)GKI_getpoolbuf (LLCP_POOL_ID);
+    p_msg = (BT_HDR*) GKI_getpoolbuf (LLCP_POOL_ID);
 
     if (p_msg)
     {
         p_msg->len      = LLCP_PDU_FRMR_SIZE;
         p_msg->offset   = NCI_MSG_OFFSET_SIZE + NCI_DATA_HDR_SIZE;
 
-        p = (UINT8 *)(p_msg + 1) + p_msg->offset;
+        p = (UINT8 *) (p_msg + 1) + p_msg->offset;
 
-        UINT16_TO_BE_STREAM (p, LLCP_GET_PDU_HEADER(p_dlcb->remote_sap, LLCP_PDU_FRMR_TYPE, p_dlcb->local_sap));
-        UINT8_TO_BE_STREAM  (p, (flags << 4)|ptype);
-        UINT8_TO_BE_STREAM  (p, sequence);
-        UINT8_TO_BE_STREAM  (p, (p_dlcb->next_tx_seq << 4)|p_dlcb->next_rx_seq);
-        UINT8_TO_BE_STREAM  (p, (p_dlcb->rcvd_ack_seq << 4)|p_dlcb->sent_ack_seq);
+        UINT16_TO_BE_STREAM (p, LLCP_GET_PDU_HEADER (p_dlcb->remote_sap, LLCP_PDU_FRMR_TYPE, p_dlcb->local_sap));
+        UINT8_TO_BE_STREAM (p, (flags << 4) | ptype);
+        UINT8_TO_BE_STREAM (p, sequence);
+        UINT8_TO_BE_STREAM (p, (p_dlcb->next_tx_seq << 4) | p_dlcb->next_rx_seq);
+        UINT8_TO_BE_STREAM (p, (p_dlcb->rcvd_ack_seq << 4) | p_dlcb->sent_ack_seq);
 
         GKI_enqueue (&llcp_cb.lcb.sig_xmit_q, p_msg);
         llcp_link_check_send_data ();
@@ -765,7 +765,7 @@ tLLCP_STATUS llcp_util_send_frmr(tLLCP_DLCB *p_dlcb, UINT8 flags, UINT8 ptype, U
     }
     else
     {
-        LLCP_TRACE_ERROR0 ("llcp_util_send_frmr(): Out of resource");
+        LLCP_TRACE_ERROR0 ("llcp_util_send_frmr (): Out of resource");
         return LLCP_STATUS_FAIL;
     }
 }
@@ -799,9 +799,9 @@ void llcp_util_send_rr_rnr (tLLCP_DLCB *p_dlcb)
         else
         {
             /* if rx flow off because of local busy or congestion */
-            if ((p_dlcb->local_busy)
-               ||(p_dlcb->is_rx_congested)
-               ||(llcp_cb.overall_rx_congested))
+            if (  (p_dlcb->local_busy)
+                ||(p_dlcb->is_rx_congested)
+                ||(llcp_cb.overall_rx_congested)  )
             {
                 /* don't send RR/RNR */
                 return;
@@ -809,11 +809,11 @@ void llcp_util_send_rr_rnr (tLLCP_DLCB *p_dlcb)
         }
     }
 
-    if ((p_dlcb->local_busy)
-      ||(p_dlcb->is_rx_congested)
-      ||(llcp_cb.overall_rx_congested))
+    if (  (p_dlcb->local_busy)
+        ||(p_dlcb->is_rx_congested)
+        ||(llcp_cb.overall_rx_congested)  )
     {
-        LLCP_TRACE_DEBUG3 ("llcp_util_send_rr_rnr(): local_busy=%d,is_rx_congested=%d,overall_rx_congested=%d",
+        LLCP_TRACE_DEBUG3 ("llcp_util_send_rr_rnr (): local_busy=%d,is_rx_congested=%d,overall_rx_congested=%d",
                             p_dlcb->local_busy, p_dlcb->is_rx_congested, llcp_cb.overall_rx_congested);
 
         /* if local_busy or rx congested then do not update receive sequence number to flow off */
@@ -830,7 +830,7 @@ void llcp_util_send_rr_rnr (tLLCP_DLCB *p_dlcb)
         rcv_seq = p_dlcb->sent_ack_seq;
     }
 
-    p_msg = (BT_HDR*)GKI_getpoolbuf (LLCP_POOL_ID);
+    p_msg = (BT_HDR*) GKI_getpoolbuf (LLCP_POOL_ID);
 
     if (p_msg)
     {
@@ -839,11 +839,11 @@ void llcp_util_send_rr_rnr (tLLCP_DLCB *p_dlcb)
         p_msg->len    = pdu_size;
         p_msg->offset = NCI_MSG_OFFSET_SIZE + NCI_DATA_HDR_SIZE;
 
-        p = (UINT8 *)(p_msg + 1) + p_msg->offset;
+        p = (UINT8 *) (p_msg + 1) + p_msg->offset;
 
-        UINT16_TO_BE_STREAM (p, LLCP_GET_PDU_HEADER(p_dlcb->remote_sap, pdu_type, p_dlcb->local_sap));
+        UINT16_TO_BE_STREAM (p, LLCP_GET_PDU_HEADER (p_dlcb->remote_sap, pdu_type, p_dlcb->local_sap));
 
-        UINT8_TO_BE_STREAM  (p, rcv_seq);
+        UINT8_TO_BE_STREAM (p, rcv_seq);
 
 #if (BT_TRACE_VERBOSE == TRUE)
         LLCP_TRACE_DEBUG5 ("LLCP TX - N(S,R):(NA,%d) V(S,SA,R,RA):(%d,%d,%d,%d)",
@@ -856,7 +856,7 @@ void llcp_util_send_rr_rnr (tLLCP_DLCB *p_dlcb)
     }
     else
     {
-        LLCP_TRACE_ERROR0 ("llcp_util_send_rr_rnr(): Out of resource");
+        LLCP_TRACE_ERROR0 ("llcp_util_send_rr_rnr (): Out of resource");
     }
 }
 
@@ -875,7 +875,7 @@ tLLCP_APP_CB *llcp_util_get_app_cb (UINT8 local_sap)
 
     if (local_sap <= LLCP_UPPER_BOUND_WK_SAP)
     {
-        if ((local_sap != LLCP_SAP_LM)&&(local_sap < LLCP_MAX_WKS))
+        if ((local_sap != LLCP_SAP_LM) && (local_sap < LLCP_MAX_WKS))
         {
             p_app_cb = &llcp_cb.wks_cb[local_sap];
         }

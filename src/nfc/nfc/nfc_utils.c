@@ -30,12 +30,12 @@
 ** Returns          The allocated control block or NULL
 **
 *******************************************************************************/
-tNFC_CONN_CB * nfc_alloc_conn_cb( tNFC_CONN_CBACK *p_cback)
+tNFC_CONN_CB * nfc_alloc_conn_cb (tNFC_CONN_CBACK *p_cback)
 {
     int xx, max = NCI_MAX_CONN_CBS;
     tNFC_CONN_CB *p_conn_cb = NULL;
 
-    NFC_CHECK_MAX_CONN();
+    NFC_CHECK_MAX_CONN ();
     for (xx = 0; xx < max; xx++)
     {
         if (nfc_cb.conn_cb[xx].conn_id == NFC_ILLEGAL_CONN_ID)
@@ -59,7 +59,7 @@ tNFC_CONN_CB * nfc_alloc_conn_cb( tNFC_CONN_CBACK *p_cback)
 ** Returns          void
 **
 *******************************************************************************/
-void nfc_set_conn_id(tNFC_CONN_CB * p_cb, UINT8 conn_id)
+void nfc_set_conn_id (tNFC_CONN_CB * p_cb, UINT8 conn_id)
 {
     UINT8   handle;
 
@@ -67,9 +67,9 @@ void nfc_set_conn_id(tNFC_CONN_CB * p_cb, UINT8 conn_id)
         return;
 
     p_cb->conn_id           = conn_id;
-    handle                  = (UINT8)(p_cb - nfc_cb.conn_cb + 1);
+    handle                  = (UINT8) (p_cb - nfc_cb.conn_cb + 1);
     nfc_cb.conn_id[conn_id] = handle;
-    NFC_TRACE_DEBUG2("nfc_set_conn_id conn_id:%d, handle:%d", conn_id, handle);
+    NFC_TRACE_DEBUG2 ("nfc_set_conn_id conn_id:%d, handle:%d", conn_id, handle);
 }
 
 /*******************************************************************************
@@ -82,7 +82,7 @@ void nfc_set_conn_id(tNFC_CONN_CB * p_cb, UINT8 conn_id)
 ** Returns          The loopback test control block or NULL
 **
 *******************************************************************************/
-tNFC_CONN_CB * nfc_find_conn_cb_by_handle(UINT8 id)
+tNFC_CONN_CB * nfc_find_conn_cb_by_handle (UINT8 id)
 {
     int xx;
     tNFC_CONN_CB *p_conn_cb = NULL;
@@ -108,7 +108,7 @@ tNFC_CONN_CB * nfc_find_conn_cb_by_handle(UINT8 id)
 ** Returns          The control block or NULL
 **
 *******************************************************************************/
-tNFC_CONN_CB * nfc_find_conn_cb_by_conn_id(UINT8 conn_id)
+tNFC_CONN_CB * nfc_find_conn_cb_by_conn_id (UINT8 conn_id)
 {
     tNFC_CONN_CB *p_conn_cb = NULL;
     UINT8   handle;
@@ -150,14 +150,17 @@ tNFC_CONN_CB * nfc_find_conn_cb_by_conn_id(UINT8 conn_id)
 ** Returns          void
 **
 *******************************************************************************/
-void nfc_free_conn_cb( tNFC_CONN_CB *p_cb)
+void nfc_free_conn_cb (tNFC_CONN_CB *p_cb)
 {
     void    *p_buf;
 
     if (p_cb == NULL)
         return;
 
-    while ( (p_buf = GKI_dequeue(&p_cb->rx_q)) != NULL)
+    while ((p_buf = GKI_dequeue (&p_cb->rx_q)) != NULL)
+        GKI_freebuf (p_buf);
+
+    while ((p_buf = GKI_dequeue (&p_cb->tx_q)) != NULL)
         GKI_freebuf (p_buf);
 
     nfc_cb.conn_id[p_cb->conn_id]   = 0;
@@ -175,7 +178,7 @@ void nfc_free_conn_cb( tNFC_CONN_CB *p_cb)
 ** Returns          void
 **
 *******************************************************************************/
-NFC_API extern void nfc_reset_all_conn_cbs( void)
+NFC_API extern void nfc_reset_all_conn_cbs (void)
 {
     int xx;
     tNFC_CONN_CB *p_conn_cb = &nfc_cb.conn_cb[0];
@@ -184,13 +187,13 @@ NFC_API extern void nfc_reset_all_conn_cbs( void)
     deact.status     = NFC_STATUS_NOT_INITIALIZED;
     deact.type       = NFC_DEACTIVATE_TYPE_IDLE;
     deact.is_ntf     = TRUE;
-    for (xx=0; xx<NCI_MAX_CONN_CBS; xx++,p_conn_cb++)
+    for (xx = 0; xx < NCI_MAX_CONN_CBS; xx++, p_conn_cb++)
     {
         if (p_conn_cb->conn_id != NFC_ILLEGAL_CONN_ID)
         {
             if (p_conn_cb->p_cback)
-                (*p_conn_cb->p_cback)(p_conn_cb->conn_id, NFC_DEACTIVATE_CEVT, (tNFC_CONN *) &deact);
-            nfc_free_conn_cb(p_conn_cb);
+                (*p_conn_cb->p_cback) (p_conn_cb->conn_id, NFC_DEACTIVATE_CEVT, (tNFC_CONN *) &deact);
+            nfc_free_conn_cb (p_conn_cb);
         }
     }
 }

@@ -198,8 +198,8 @@ void rw_t1t_extract_lock_bytes (UINT8 *p_data)
         if (p_t1t->lockbyte[num_locks].b_lock_read == FALSE)
         {
             offset = p_t1t->lock_tlv[p_t1t->lockbyte[num_locks].tlv_index].offset + p_t1t->lockbyte[num_locks].byte_index;
-            if (  (offset <  end   )
-                &&(offset >= start )  )
+            if (  (offset <  end)
+                &&(offset >= start)  )
 
             {
                 if (p_cmd_rsp_info->opcode == T1T_CMD_RSEG)
@@ -240,8 +240,8 @@ void rw_t1t_update_tag_state (void)
     tRW_T1T_CB  *p_t1t          = &rw_cb.tcb.t1t;
 
     /* Set Tag state based on CC value and NDEF Message length */
-    if (  ((p_t1t->mem[T1T_CC_NMN_BYTE] == T1T_CC_NMN)   || (p_t1t->mem[T1T_CC_NMN_BYTE] == 0))
-        &&((p_t1t->mem[T1T_CC_VNO_BYTE] == T1T_CC_VNO)   || (p_t1t->mem[T1T_CC_VNO_BYTE] == T1T_CC_LEGACY_VNO))
+    if (  ((p_t1t->mem[T1T_CC_NMN_BYTE] == T1T_CC_NMN) || (p_t1t->mem[T1T_CC_NMN_BYTE] == 0))
+        &&((p_t1t->mem[T1T_CC_VNO_BYTE] == T1T_CC_VNO) || (p_t1t->mem[T1T_CC_VNO_BYTE] == T1T_CC_LEGACY_VNO))
         &&((p_t1t->mem[T1T_CC_RWA_BYTE] == T1T_CC_RWA_RW)|| (p_t1t->mem[T1T_CC_RWA_BYTE] == T1T_CC_RWA_RO))  )
     {
         /* Valid CC value, so Tag is initialized */
@@ -371,7 +371,7 @@ static tNFC_STATUS rw_t1t_handle_write_rsp (BOOLEAN *p_notify, UINT8 *p_data)
                 {
                     p_t1t->work_offset++;
                     /* send WRITE-E command */
-                    RW_T1T_BLD_ADD ((addr),1, (UINT8) p_t1t->work_offset);
+                    RW_T1T_BLD_ADD ((addr), 1, (UINT8) p_t1t->work_offset);
 
                     if ((status = rw_t1t_send_static_cmd (T1T_CMD_WRITE_E, addr, p_t1t->ndef_first_block[(UINT8) p_t1t->work_offset])) != NFC_STATUS_OK)
                         *p_notify = TRUE;
@@ -454,7 +454,7 @@ static tNFC_STATUS rw_t1t_handle_write_rsp (BOOLEAN *p_notify, UINT8 *p_data)
                 if (p_t1t->lockbyte[num_locks].lock_status == RW_T1T_LOCK_NOT_UPDATED)
                 {
                     offset = p_t1t->lock_tlv[p_t1t->lockbyte[num_locks].tlv_index].offset + p_t1t->lockbyte[num_locks].byte_index;
-                    num_bits = ((p_t1t->lockbyte[num_locks].byte_index + 1 )* 8 <= p_t1t->lock_tlv[p_t1t->lockbyte[num_locks].tlv_index].num_bits) ? 8 : p_t1t->lock_tlv[p_t1t->lockbyte[num_locks].tlv_index].num_bits % 8;
+                    num_bits = ((p_t1t->lockbyte[num_locks].byte_index + 1)* 8 <= p_t1t->lock_tlv[p_t1t->lockbyte[num_locks].tlv_index].num_bits) ? 8 : p_t1t->lock_tlv[p_t1t->lockbyte[num_locks].tlv_index].num_bits % 8;
 
                     if ((p_t1t->hr[0] & 0x0F) != 1)
                     {
@@ -465,9 +465,9 @@ static tNFC_STATUS rw_t1t_handle_write_rsp (BOOLEAN *p_notify, UINT8 *p_data)
                         while (lock_count < p_t1t->num_lockbytes)
                         {
                             next_offset = p_t1t->lock_tlv[p_t1t->lockbyte[lock_count].tlv_index].offset + p_t1t->lockbyte[lock_count].byte_index;
-                            next_num_bits = ((p_t1t->lockbyte[lock_count].byte_index + 1 )* 8 <= p_t1t->lock_tlv[p_t1t->lockbyte[lock_count].tlv_index].num_bits) ? 8 : p_t1t->lock_tlv[p_t1t->lockbyte[lock_count].tlv_index].num_bits % 8;
+                            next_num_bits = ((p_t1t->lockbyte[lock_count].byte_index + 1)* 8 <= p_t1t->lock_tlv[p_t1t->lockbyte[lock_count].tlv_index].num_bits) ? 8 : p_t1t->lock_tlv[p_t1t->lockbyte[lock_count].tlv_index].num_bits % 8;
 
-                            if (next_offset/T1T_BLOCK_SIZE == offset/T1T_BLOCK_SIZE )
+                            if (next_offset/T1T_BLOCK_SIZE == offset/T1T_BLOCK_SIZE)
                             {
                                 write_block[(UINT8) (next_offset%T1T_BLOCK_SIZE)] |=  tags_pow (2,next_num_bits) - 1;
                             }
@@ -893,7 +893,7 @@ static tNFC_STATUS rw_t1t_handle_tlv_detect_rsp (UINT8 *p_data)
 
     p_readbytes = p_data;
 
-    for (offset = start_offset; offset < end_offset  && !failed && !found; )
+    for (offset = start_offset; offset < end_offset  && !failed && !found;)
     {
         if (rw_t1t_is_lock_reserved_otp_byte ((UINT16) (offset)) == TRUE)
         {
@@ -923,11 +923,8 @@ static tNFC_STATUS rw_t1t_handle_tlv_detect_rsp (UINT8 *p_data)
                 {
                     tlv_detect_state = RW_T1T_SUBSTATE_WAIT_FIND_LEN_FIELD_LEN;
                 }
-                else if ((  (p_t1t->tlv_detect == TAG_LOCK_CTRL_TLV)
-                          &&(p_t1t->num_lockbytes > 0)  )
-                                       ||
-                         (  (p_t1t->tlv_detect == TAG_MEM_CTRL_TLV)
-                          &&(p_t1t->num_mem_tlvs > 0)  ))
+                else if (  ((p_t1t->tlv_detect == TAG_LOCK_CTRL_TLV) && (p_t1t->num_lockbytes > 0))
+                         ||((p_t1t->tlv_detect == TAG_MEM_CTRL_TLV) && (p_t1t->num_mem_tlvs > 0))  )
                 {
                     found = TRUE;
                 }
@@ -949,11 +946,8 @@ static tNFC_STATUS rw_t1t_handle_tlv_detect_rsp (UINT8 *p_data)
                     /* Backup ndef first block */
                     tlv_detect_state = RW_T1T_SUBSTATE_WAIT_FIND_LEN_FIELD_LEN;
                 }
-                else if ((  (p_t1t->tlv_detect == TAG_LOCK_CTRL_TLV)
-                          &&(p_t1t->num_lockbytes > 0)  )
-                                       ||
-                         (  (p_t1t->tlv_detect == TAG_MEM_CTRL_TLV)
-                          &&(p_t1t->num_mem_tlvs > 0)  ))
+                else if (  ((p_t1t->tlv_detect == TAG_LOCK_CTRL_TLV) && (p_t1t->num_lockbytes > 0))
+                         ||((p_t1t->tlv_detect == TAG_MEM_CTRL_TLV) && (p_t1t->num_mem_tlvs > 0))  )
                 {
                     found = TRUE;
                 }
@@ -964,11 +958,8 @@ static tNFC_STATUS rw_t1t_handle_tlv_detect_rsp (UINT8 *p_data)
                 break;
 
             case TAG_TERMINATOR_TLV:   /* Last TLV block in the data area. Must be no NDEF nessage */
-                if ((  (p_t1t->tlv_detect == TAG_LOCK_CTRL_TLV)
-                     &&(p_t1t->num_lockbytes > 0)  )
-                                    ||
-                    (  (p_t1t->tlv_detect == TAG_MEM_CTRL_TLV)
-                     &&(p_t1t->num_mem_tlvs > 0)  ))
+                if (  ((p_t1t->tlv_detect == TAG_LOCK_CTRL_TLV) && (p_t1t->num_lockbytes > 0))
+                    ||((p_t1t->tlv_detect == TAG_MEM_CTRL_TLV) && (p_t1t->num_mem_tlvs > 0))  )
                 {
                     found = TRUE;
                 }
@@ -1032,11 +1023,8 @@ static tNFC_STATUS rw_t1t_handle_tlv_detect_rsp (UINT8 *p_data)
                     tlv_detect_state = RW_T1T_SUBSTATE_WAIT_READ_TLV_VALUE;
                     bytes_count = T1T_DEFAULT_TLV_LEN;
                 }
-                else if ((  (p_t1t->tlv_detect == TAG_LOCK_CTRL_TLV)
-                          &&(p_t1t->num_lockbytes > 0)  )
-                                          ||
-                         (  (p_t1t->tlv_detect == TAG_MEM_CTRL_TLV )
-                          &&(p_t1t->num_mem_tlvs > 0)  ))
+                else if (  ((p_t1t->tlv_detect == TAG_LOCK_CTRL_TLV) && (p_t1t->num_lockbytes > 0))
+                         ||((p_t1t->tlv_detect == TAG_MEM_CTRL_TLV) && (p_t1t->num_mem_tlvs > 0))  )
                 {
                     found = TRUE;
                 }
@@ -1070,8 +1058,7 @@ static tNFC_STATUS rw_t1t_handle_tlv_detect_rsp (UINT8 *p_data)
             switch (found_tlv)
             {
             case TAG_NDEF_TLV:
-                if (  (bytes_count == p_t1t->ndef_msg_len)
-                    &&(p_t1t->tlv_detect == TAG_NDEF_TLV)  )
+                if ((bytes_count == p_t1t->ndef_msg_len) && (p_t1t->tlv_detect == TAG_NDEF_TLV))
                 {
                     /* The first byte offset after length field */
                     p_t1t->ndef_msg_offset = offset + p_t1t->work_offset;
@@ -1110,9 +1097,9 @@ static tNFC_STATUS rw_t1t_handle_tlv_detect_rsp (UINT8 *p_data)
                             p_t1t->lock_tlv[p_t1t->num_lock_tlvs].offset   = (tlv_value[0] >> 4) & 0x0F;
                             p_t1t->lock_tlv[p_t1t->num_lock_tlvs].offset  *= (UINT8) tags_pow (2, tlv_value[2] & 0x0F);
                             p_t1t->lock_tlv[p_t1t->num_lock_tlvs].offset  += tlv_value[0] & 0x0F;
-                            p_t1t->lock_tlv[p_t1t->num_lock_tlvs].bytes_locked_per_bit = (UINT8) tags_pow (2, ((tlv_value[2] & 0xF0) >> 4) );
+                            p_t1t->lock_tlv[p_t1t->num_lock_tlvs].bytes_locked_per_bit = (UINT8) tags_pow (2, ((tlv_value[2] & 0xF0) >> 4));
                             p_t1t->lock_tlv[p_t1t->num_lock_tlvs].num_bits = tlv_value[1];
-                            count = tlv_value[1] / 8 + ((tlv_value[1]%8 != 0)? 1:0);
+                            count = tlv_value[1] / 8 + ((tlv_value[1] % 8 != 0)? 1:0);
                             xx = 0;
                             while (xx < count)
                             {
@@ -1203,11 +1190,8 @@ static tNFC_STATUS rw_t1t_handle_tlv_detect_rsp (UINT8 *p_data)
     /* If not found and not failed, try to read next segment in Dynamic Memory structure */
     if (!found && !failed)
     {
-        if ((  (p_t1t->tlv_detect == TAG_LOCK_CTRL_TLV)
-             &&(p_t1t->num_lockbytes > 0)  )
-                        ||
-            (  (p_t1t->tlv_detect == TAG_MEM_CTRL_TLV)
-             &&(p_t1t->num_mem_tlvs > 0)  ))
+        if (  ((p_t1t->tlv_detect == TAG_LOCK_CTRL_TLV) && (p_t1t->num_lockbytes > 0))
+            ||((p_t1t->tlv_detect == TAG_MEM_CTRL_TLV) && (p_t1t->num_mem_tlvs > 0))  )
         {
             found = TRUE;
         }
@@ -1391,7 +1375,7 @@ static tNFC_STATUS rw_t1t_handle_ndef_read_rsp (UINT8 *p_data)
                 p_t1t->segment++;
                 /* send RSEG command */
                 RW_T1T_BLD_ADDS ((adds), (p_t1t->segment));
-                if ((ndef_status = rw_t1t_send_dyn_cmd (T1T_CMD_RSEG, adds, NULL) ) == NFC_STATUS_OK)
+                if ((ndef_status = rw_t1t_send_dyn_cmd (T1T_CMD_RSEG, adds, NULL)) == NFC_STATUS_OK)
                 {
                     ndef_status  = NFC_STATUS_CONTINUE;
                 }
@@ -1451,7 +1435,7 @@ static tNFC_STATUS rw_t1t_next_ndef_write_block (void)
             }
             while (index < T1T_BLOCK_SIZE && p_t1t->work_offset < (p_t1t->new_ndef_msg_len + new_lengthfield_len))
             {
-                if (rw_t1t_is_lock_reserved_otp_byte ((UINT16 ) (( block * T1T_BLOCK_SIZE ) + index)) == FALSE)
+                if (rw_t1t_is_lock_reserved_otp_byte ((UINT16) ((block * T1T_BLOCK_SIZE) + index)) == FALSE)
                 {
                     count++;
                 }
@@ -1678,13 +1662,13 @@ static UINT8 rw_t1t_prepare_ndef_bytes (UINT8 *p_data, UINT8 *p_length_field, UI
         if (  (block == p_t1t->num_ndef_finalblock)
             &&(block != first_block)  )
         {
-            memcpy(p_data,p_t1t->ndef_final_block,T1T_BLOCK_SIZE);
+            memcpy (p_data,p_t1t->ndef_final_block,T1T_BLOCK_SIZE);
         }
         /* Update length field */
         while (  (*p_index < T1T_BLOCK_SIZE)
                &&(p_t1t->work_offset < lengthfield_len)  )
         {
-            if (rw_t1t_is_lock_reserved_otp_byte ((UINT16 ) ((block * T1T_BLOCK_SIZE ) + *p_index)) == FALSE)
+            if (rw_t1t_is_lock_reserved_otp_byte ((UINT16) ((block * T1T_BLOCK_SIZE) + *p_index)) == FALSE)
             {
                 p_data[*p_index] = p_length_field[p_t1t->work_offset];
                 p_t1t->work_offset++;
@@ -1700,7 +1684,7 @@ static UINT8 rw_t1t_prepare_ndef_bytes (UINT8 *p_data, UINT8 *p_length_field, UI
         /* Update ndef message field */
         while (*p_index < T1T_BLOCK_SIZE && p_t1t->work_offset < (p_t1t->new_ndef_msg_len + lengthfield_len))
         {
-            if (rw_t1t_is_lock_reserved_otp_byte ((UINT16 ) ((block * T1T_BLOCK_SIZE ) + *p_index)) == FALSE)
+            if (rw_t1t_is_lock_reserved_otp_byte ((UINT16) ((block * T1T_BLOCK_SIZE) + *p_index)) == FALSE)
             {
                 p_data[*p_index] = p_t1t->p_ndef_buffer[p_t1t->work_offset - lengthfield_len];
                 p_t1t->work_offset++;
@@ -1795,16 +1779,15 @@ static UINT8 rw_t1t_get_ndef_flags (void)
 *******************************************************************************/
 static UINT16 rw_t1t_get_ndef_max_size (void)
 {
-    UINT16              count;
     UINT16              offset;
     tRW_T1T_CB          *p_t1t   = &rw_cb.tcb.t1t;
     UINT16              tag_size = (p_t1t->mem[T1T_CC_TMS_BYTE] +1)* T1T_BLOCK_SIZE;
     const tT1T_INIT_TAG *p_ret;
     UINT8               init_segment = p_t1t->segment;
 
-    count           = 0;
-    offset          = p_t1t->ndef_msg_offset;
-    p_t1t->segment  = (UINT8) (p_t1t->ndef_msg_offset/T1T_SEGMENT_SIZE);
+    p_t1t->max_ndef_msg_len = 0;
+    offset                  = p_t1t->ndef_msg_offset;
+    p_t1t->segment          = (UINT8) (p_t1t->ndef_msg_offset/T1T_SEGMENT_SIZE);
 
     if (  (tag_size < T1T_STATIC_SIZE)
         ||(tag_size > (T1T_SEGMENT_SIZE * T1T_MAX_SEGMENTS))
@@ -1814,18 +1797,18 @@ static UINT16 rw_t1t_get_ndef_max_size (void)
         if  (  ((p_t1t->hr[0] & 0xF0) == T1T_NDEF_SUPPORTED)
              &&((p_ret = t1t_tag_init_data (p_t1t->hr[0])) != NULL)  )
         {
-            count = ((p_ret->tms +1)* T1T_BLOCK_SIZE) - T1T_OTP_LOCK_RES_BYTES - T1T_UID_LEN - T1T_ADD_LEN - T1T_CC_LEN - T1T_TLV_TYPE_LEN - T1T_SHORT_NDEF_LEN_FIELD_LEN;
+            p_t1t->max_ndef_msg_len = ((p_ret->tms +1)* T1T_BLOCK_SIZE) - T1T_OTP_LOCK_RES_BYTES - T1T_UID_LEN - T1T_ADD_LEN - T1T_CC_LEN - T1T_TLV_TYPE_LEN - T1T_SHORT_NDEF_LEN_FIELD_LEN;
             if (p_ret->b_dynamic)
             {
-                count -= (T1T_TLV_TYPE_LEN + T1T_DEFAULT_TLV_LEN_FIELD_LEN + T1T_DEFAULT_TLV_LEN + T1T_TLV_TYPE_LEN + T1T_DEFAULT_TLV_LEN_FIELD_LEN + T1T_DEFAULT_TLV_LEN);
-                count -= T1T_DYNAMIC_LOCK_BYTES;
+                p_t1t->max_ndef_msg_len -= (T1T_TLV_TYPE_LEN + T1T_DEFAULT_TLV_LEN_FIELD_LEN + T1T_DEFAULT_TLV_LEN + T1T_TLV_TYPE_LEN + T1T_DEFAULT_TLV_LEN_FIELD_LEN + T1T_DEFAULT_TLV_LEN);
+                p_t1t->max_ndef_msg_len -= T1T_DYNAMIC_LOCK_BYTES;
             }
             offset = tag_size;
         }
         else
         {
             p_t1t->segment = init_segment;
-            return count;
+            return p_t1t->max_ndef_msg_len;
         }
     }
 
@@ -1836,23 +1819,23 @@ static UINT16 rw_t1t_get_ndef_max_size (void)
         {
             if (rw_t1t_is_read_only_byte ((UINT16) offset) == TRUE)
                 break;
-            count++;
+            p_t1t->max_ndef_msg_len++;
         }
         offset++;
         if (offset % T1T_SEGMENT_SIZE == 0)
         {
-            p_t1t->segment = (UINT8) (offset/T1T_SEGMENT_SIZE);
+            p_t1t->segment = (UINT8) (offset / T1T_SEGMENT_SIZE);
         }
     }
     /* NDEF Length field length changes based on NDEF size */
-    if (  (count >= T1T_LONG_NDEF_LEN_FIELD_BYTE0)
+    if (  (p_t1t->max_ndef_msg_len >= T1T_LONG_NDEF_LEN_FIELD_BYTE0)
         &&((p_t1t->ndef_msg_offset - p_t1t->ndef_header_offset) == T1T_SHORT_NDEF_LEN_FIELD_LEN)  )
     {
-        count -=  (count == T1T_LONG_NDEF_LEN_FIELD_BYTE0)? 1 : (T1T_LONG_NDEF_LEN_FIELD_LEN - T1T_SHORT_NDEF_LEN_FIELD_LEN);
+        p_t1t->max_ndef_msg_len -=  (p_t1t->max_ndef_msg_len == T1T_LONG_NDEF_LEN_FIELD_BYTE0)? 1 : (T1T_LONG_NDEF_LEN_FIELD_LEN - T1T_SHORT_NDEF_LEN_FIELD_LEN);
     }
 
     p_t1t->segment = init_segment;
-    return count;
+    return p_t1t->max_ndef_msg_len;
 }
 
 /*******************************************************************************
@@ -1950,7 +1933,7 @@ static void rw_t1t_update_attributes (void)
     }
 
     lower_offset  = p_t1t->segment * T1T_SEGMENT_SIZE;
-    upper_offset  = (p_t1t->segment + 1 )* T1T_SEGMENT_SIZE;
+    upper_offset  = (p_t1t->segment + 1)* T1T_SEGMENT_SIZE;
 
     if (p_t1t->segment == 0)
     {
@@ -2020,7 +2003,7 @@ static UINT8 rw_t1t_get_lock_bits_for_segment (UINT8 segment,UINT8 *p_start_byte
     UINT8       bytes_locked_per_bit;
     UINT8       num_bits;
 
-    upper_offset    = (segment + 1 ) * T1T_SEGMENT_SIZE;
+    upper_offset    = (segment + 1) * T1T_SEGMENT_SIZE;
 
     if (upper_offset > tag_size)
         upper_offset = tag_size;
@@ -2034,7 +2017,7 @@ static UINT8 rw_t1t_get_lock_bits_for_segment (UINT8 segment,UINT8 *p_start_byte
     {
         bytes_locked_per_bit = p_t1t->lock_tlv[p_t1t->lockbyte[num_dynamic_locks].tlv_index].bytes_locked_per_bit;
         /* Number of bits in the current lock byte */
-        b_all_bits_are_locks = ((p_t1t->lockbyte[num_dynamic_locks].byte_index + 1 ) * TAG_BITS_PER_BYTE <= p_t1t->lock_tlv[p_t1t->lockbyte[num_dynamic_locks].tlv_index].num_bits);
+        b_all_bits_are_locks = ((p_t1t->lockbyte[num_dynamic_locks].byte_index + 1) * TAG_BITS_PER_BYTE <= p_t1t->lock_tlv[p_t1t->lockbyte[num_dynamic_locks].tlv_index].num_bits);
         num_bits = b_all_bits_are_locks ? TAG_BITS_PER_BYTE : p_t1t->lock_tlv[p_t1t->lockbyte[num_dynamic_locks].tlv_index].num_bits % TAG_BITS_PER_BYTE;
 
         /* Skip lock bits that covers all previous segments */
@@ -2073,7 +2056,7 @@ static UINT8 rw_t1t_get_lock_bits_for_segment (UINT8 segment,UINT8 *p_start_byte
         bytes_locked_per_bit = p_t1t->lock_tlv[p_t1t->lockbyte[num_dynamic_locks].tlv_index].bytes_locked_per_bit;
 
         /* Number of bits in the current lock byte */
-        b_all_bits_are_locks = ((p_t1t->lockbyte[num_dynamic_locks].byte_index + 1 ) * TAG_BITS_PER_BYTE <= p_t1t->lock_tlv[p_t1t->lockbyte[num_dynamic_locks].tlv_index].num_bits);
+        b_all_bits_are_locks = ((p_t1t->lockbyte[num_dynamic_locks].byte_index + 1) * TAG_BITS_PER_BYTE <= p_t1t->lock_tlv[p_t1t->lockbyte[num_dynamic_locks].tlv_index].num_bits);
         num_bits             =  b_all_bits_are_locks ? TAG_BITS_PER_BYTE : p_t1t->lock_tlv[p_t1t->lockbyte[num_dynamic_locks].tlv_index].num_bits % TAG_BITS_PER_BYTE;
 
         /* Collect all lock bits that covers the current segment */
@@ -2213,7 +2196,8 @@ static void rw_t1t_update_lock_attributes (void)
                         {
                             bits_covered = 0;
                             block_count++;
-                            p_t1t->lock_attr[block_count] = 0;
+                            if (block_count < T1T_BLOCKS_PER_SEGMENT)
+                                p_t1t->lock_attr[block_count] = 0;
                         }
                     }
                     xx++;
@@ -2627,13 +2611,13 @@ tNFC_STATUS RW_T1tWriteNDef (UINT16 msg_len, UINT8 *p_msg)
 {
     tNFC_STATUS status          = NFC_STATUS_FAILED;
     tRW_T1T_CB  *p_t1t          = &rw_cb.tcb.t1t;
-    UINT16      last_byte_offset;
-    UINT16      count;
+    UINT16      num_ndef_bytes;
     UINT16      offset;
     UINT8       block;
     UINT8       addr;
-    UINT8       initial_lengthfield_len;
+    UINT8       init_lengthfield_len;
     UINT8       new_lengthfield_len;
+    UINT16      init_ndef_msg_offset;
 
     if (p_t1t->state != RW_T1T_STATE_IDLE)
     {
@@ -2655,87 +2639,76 @@ tNFC_STATUS RW_T1tWriteNDef (UINT16 msg_len, UINT8 *p_msg)
         return (NFC_STATUS_REFUSED);
     }
 
+    if (msg_len > p_t1t->max_ndef_msg_len)
+    {
+        RW_TRACE_ERROR1 ("RW_T1tWriteNDef - Cannot write NDEF of size greater than %u bytes", p_t1t->max_ndef_msg_len);
+        return (NFC_STATUS_REFUSED);
+    }
+
     p_t1t->p_ndef_buffer        = p_msg;
     p_t1t->new_ndef_msg_len     = msg_len;
     new_lengthfield_len         = p_t1t->new_ndef_msg_len > 254 ? 3:1;
-    initial_lengthfield_len     = (UINT8) (p_t1t->ndef_msg_offset - p_t1t->ndef_header_offset);
+    init_lengthfield_len        = (UINT8) (p_t1t->ndef_msg_offset - p_t1t->ndef_header_offset);
+    init_ndef_msg_offset        = p_t1t->ndef_msg_offset;
+
     /* ndef_msg_offset should reflect the new ndef message offset */
-    if (initial_lengthfield_len > new_lengthfield_len)
+    if (init_lengthfield_len > new_lengthfield_len)
     {
-        p_t1t->ndef_msg_offset -=  (T1T_LONG_NDEF_LEN_FIELD_LEN - T1T_SHORT_NDEF_LEN_FIELD_LEN);
+        p_t1t->ndef_msg_offset  =  init_ndef_msg_offset - (T1T_LONG_NDEF_LEN_FIELD_LEN - T1T_SHORT_NDEF_LEN_FIELD_LEN);
     }
-    else if (initial_lengthfield_len < new_lengthfield_len)
+    else if (init_lengthfield_len < new_lengthfield_len)
     {
-       p_t1t->ndef_msg_offset +=  (T1T_LONG_NDEF_LEN_FIELD_LEN - T1T_SHORT_NDEF_LEN_FIELD_LEN);
+        p_t1t->ndef_msg_offset  =  init_ndef_msg_offset + (T1T_LONG_NDEF_LEN_FIELD_LEN - T1T_SHORT_NDEF_LEN_FIELD_LEN);
     }
 
-    count                       = p_t1t->ndef_msg_offset;
-    offset                      = count;
-    last_byte_offset            = p_t1t->ndef_msg_offset + p_t1t->new_ndef_msg_len;
+    num_ndef_bytes              = 0;
+    offset                      = p_t1t->ndef_msg_offset;
     p_t1t->segment              = (UINT8) (p_t1t->ndef_msg_offset/T1T_SEGMENT_SIZE);
 
-    /* Locate NDEF final block based on the size of NDEF Message */
-    while (count < last_byte_offset && offset < (p_t1t->mem[T1T_CC_TMS_BYTE] +1)* T1T_BLOCK_SIZE)
+    /* Locate NDEF final block based on the size of new NDEF Message */
+    while (num_ndef_bytes < p_t1t->new_ndef_msg_len)
     {
         if (rw_t1t_is_lock_reserved_otp_byte ((UINT16) offset) == FALSE)
-        {
-            if (rw_t1t_is_read_only_byte((UINT16) offset) == TRUE)
-            {
-                return NFC_STATUS_REJECTED;
-            }
-            count++;
-        }
+            num_ndef_bytes++;
+
         offset++;
         if (offset % T1T_SEGMENT_SIZE == 0)
         {
-            p_t1t->segment      = (UINT8) (offset/T1T_SEGMENT_SIZE);
+            p_t1t->segment      = (UINT8) (offset / T1T_SEGMENT_SIZE);
         }
     }
-    if (count < last_byte_offset && offset >= (p_t1t->mem[T1T_CC_TMS_BYTE] + 1) * T1T_BLOCK_SIZE)
+
+    p_t1t->b_update = FALSE;
+    p_t1t->b_rseg   = FALSE;
+
+    if ((p_t1t->hr[0] & 0x0F) != 1)
     {
-        return NFC_STATUS_BUFFER_FULL;
+        /* Dynamic data structure */
+        block = (UINT8) ((offset - 1)/T1T_BLOCK_SIZE);
+        /* Read NDEF final block before updating */
+        if ((status = rw_t1t_send_dyn_cmd (T1T_CMD_READ8, block, NULL)) == NFC_STATUS_OK)
+        {
+            p_t1t->num_ndef_finalblock = block;
+            p_t1t->state    = RW_T1T_STATE_WRITE_NDEF;
+            p_t1t->substate = RW_T1T_SUBSTATE_WAIT_READ_NDEF_BLOCK;
+        }
     }
     else
     {
-        p_t1t->b_update = FALSE;
-        p_t1t->b_rseg   = FALSE;
-
-        if ((p_t1t->hr[0] & 0x0F) != 1)
+        /* NDEF detected and Static memory structure so send WRITE-E command */
+        RW_T1T_BLD_ADD ((addr), (T1T_CC_BLOCK), (T1T_CC_NMN_OFFSET));
+        if ((status = rw_t1t_send_static_cmd (T1T_CMD_WRITE_E, addr, 0)) == NFC_STATUS_OK)
         {
-            /* Dynamic data structure */
-            block = (UINT8) ((offset - 1)/T1T_BLOCK_SIZE);
-            /* Read NDEF final block before updating */
-            if ((status = rw_t1t_send_dyn_cmd (T1T_CMD_READ8, block, NULL)) == NFC_STATUS_OK)
-            {
-                p_t1t->num_ndef_finalblock = block;
-                p_t1t->state    = RW_T1T_STATE_WRITE_NDEF;
-                p_t1t->substate = RW_T1T_SUBSTATE_WAIT_READ_NDEF_BLOCK;
-            }
+            p_t1t->state    = RW_T1T_STATE_WRITE_NDEF;
+            p_t1t->substate = RW_T1T_SUBSTATE_WAIT_INVALIDATE_NDEF;
         }
-        else
-        {
-            /* NDEF detected and Static memory structure so send WRITE-E command */
-            RW_T1T_BLD_ADD ((addr), (T1T_CC_BLOCK), (T1T_CC_NMN_OFFSET));
-            if ((status = rw_t1t_send_static_cmd (T1T_CMD_WRITE_E, addr, 0)) == NFC_STATUS_OK)
-            {
-                p_t1t->state    = RW_T1T_STATE_WRITE_NDEF;
-                p_t1t->substate = RW_T1T_SUBSTATE_WAIT_INVALIDATE_NDEF;
-            }
 
-        }
     }
 
-    if (status != NFC_STATUS_OK )
+    if (status != NFC_STATUS_OK)
     {
         /* if status failed, reset ndef_msg_offset to initial message */
-        if (initial_lengthfield_len > new_lengthfield_len)
-        {
-            p_t1t->ndef_msg_offset  +=  (T1T_LONG_NDEF_LEN_FIELD_LEN - T1T_SHORT_NDEF_LEN_FIELD_LEN);
-        }
-        else if (initial_lengthfield_len < new_lengthfield_len)
-        {
-           p_t1t->ndef_msg_offset   -=  (T1T_LONG_NDEF_LEN_FIELD_LEN - T1T_SHORT_NDEF_LEN_FIELD_LEN);
-        }
+        p_t1t->ndef_msg_offset = init_ndef_msg_offset;
     }
     return status;
 }

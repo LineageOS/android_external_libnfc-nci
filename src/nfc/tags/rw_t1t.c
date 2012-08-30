@@ -98,7 +98,7 @@ static void rw_t1t_data_cback (UINT8 conn_id, tNFC_CONN_EVT event, tNFC_CONN *p_
 
 
     if (  (p_pkt->len != p_cmd_rsp_info->rsp_len)
-        ||((p_cmd_rsp_info->opcode != T1T_CMD_RALL)&&(p_cmd_rsp_info->opcode != T1T_CMD_RID)&&(*p != p_t1t->addr))  )
+        ||((p_cmd_rsp_info->opcode != T1T_CMD_RALL) && (p_cmd_rsp_info->opcode != T1T_CMD_RID) && (*p != p_t1t->addr))  )
 
     {
         /* If previous command was retransmitted and if response is pending to previous command retransmission,
@@ -118,9 +118,9 @@ static void rw_t1t_data_cback (UINT8 conn_id, tNFC_CONN_EVT event, tNFC_CONN *p_
             nfc_stop_quick_timer (&p_t1t->timer);
             /* Retrasmit the last sent command if retry-count < max retry */
 #if (BT_TRACE_VERBOSE == TRUE)
-            RW_TRACE_ERROR2 ("T1T Frame error. state=%s command (opcode)=0x%02x", rw_t1t_get_state_name (p_t1t->state), p_cmd_rsp_info->opcode);
+            RW_TRACE_ERROR2 ("T1T Frame error. state=%s command (opcode) = 0x%02x", rw_t1t_get_state_name (p_t1t->state), p_cmd_rsp_info->opcode);
 #else
-            RW_TRACE_ERROR2 ("T1T Frame error. state=0x%02x command=0x%02x ", p_t1t->state, p_cmd_rsp_info->opcode);
+            RW_TRACE_ERROR2 ("T1T Frame error. state=0x%02x command = 0x%02x ", p_t1t->state, p_cmd_rsp_info->opcode);
 #endif
             rw_t1t_process_frame_error ();
         }
@@ -245,7 +245,9 @@ void rw_t1t_conn_cback (UINT8 conn_id, tNFC_CONN_EVT event, tNFC_CONN *p_data)
             rw_main_update_trans_error_stats ();
 #endif  /* RW_STATS_INCLUDED */
 
-            if (p_data)
+            if (event == NFC_ERROR_CEVT)
+                evt_data.status = (tNFC_STATUS) (*(UINT8*) p_data);
+            else if (p_data)
                 evt_data.status = p_data->status;
             else
                 evt_data.status = NFC_STATUS_FAILED;
@@ -325,7 +327,7 @@ tNFC_STATUS rw_t1t_send_static_cmd (UINT8 opcode, UINT8 add, UINT8 dat)
             if ((status = NFC_SendData (NFC_RF_CONN_ID, p_data)) == NFC_STATUS_OK)
             {
                 nfc_start_quick_timer (&p_t1t->timer, NFC_TTYPE_RW_T1T_RESPONSE,
-                       (RW_T1T_TOUT_RESP*QUICK_TIMER_TICKS_PER_SEC) / 1000);
+                       (RW_T1T_TOUT_RESP * QUICK_TIMER_TICKS_PER_SEC) / 1000);
             }
         }
         else
@@ -394,7 +396,7 @@ tNFC_STATUS rw_t1t_send_dyn_cmd (UINT8 opcode, UINT8 add, UINT8 *p_dat)
             if ((status = NFC_SendData (NFC_RF_CONN_ID, p_data)) == NFC_STATUS_OK)
             {
                 nfc_start_quick_timer (&p_t1t->timer, NFC_TTYPE_RW_T1T_RESPONSE,
-                       (RW_T1T_TOUT_RESP*QUICK_TIMER_TICKS_PER_SEC) / 1000);
+                       (RW_T1T_TOUT_RESP * QUICK_TIMER_TICKS_PER_SEC) / 1000);
             }
         }
         else
@@ -581,7 +583,7 @@ static void rw_t1t_process_error (void)
             {
                 /* Start timer for waiting for response */
                 nfc_start_quick_timer (&p_t1t->timer, NFC_TTYPE_RW_T1T_RESPONSE,
-                                       (RW_T1T_TOUT_RESP*QUICK_TIMER_TICKS_PER_SEC)/1000);
+                                       (RW_T1T_TOUT_RESP * QUICK_TIMER_TICKS_PER_SEC)/1000);
 
                 return;
             }

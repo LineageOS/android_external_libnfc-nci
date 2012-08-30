@@ -145,6 +145,7 @@ typedef struct
     UINT8               tlv_detect;                         /* TLV type under detection                             */
     UINT16              ndef_msg_offset;                    /* The offset on Tag where first NDEF message is present*/
     UINT16              ndef_msg_len;                       /* Lenght of NDEF Message                               */
+    UINT16              max_ndef_msg_len;                   /* Maximum size of NDEF that can be written on the tag  */
     UINT16              ndef_header_offset;                 /* The offset on Tag where first NDEF tlv is present    */
     UINT8               ndef_block_written;                 /* Last block where NDEF bytes are written              */
     UINT8               num_ndef_finalblock;                /* Block number where NDEF's last byte will be present  */
@@ -168,10 +169,8 @@ typedef struct
 
 /* Infineon my-d move / my-d blank tag uid block settings */
 #define T2T_INFINEON_VERSION_BLOCK                      0x00
-#define T2T_INFINEON_MYD_MOVE_LEAN                      0x0510
+#define T2T_INFINEON_MYD_MOVE_LEAN                      0x0570
 #define T2T_INFINEON_MYD_MOVE                           0x0530
-#define T2T_INFINEON_MYD_NFC_1K                         0x0520
-#define T2T_INFINEON_MYD_NFC_2K                         0x0520
 
 #define T2T_BRCM_VERSION_BLOCK                          0x00
 #define T2T_BRCM_STATIC_MEM                             0x2E01
@@ -327,6 +326,7 @@ typedef struct
     UINT16              ndef_header_offset;
     UINT16              ndef_msg_offset;                    /* Offset on Tag where first NDEF message is present            */
     UINT16              ndef_msg_len;                       /* Lenght of NDEF Message                                       */
+    UINT16              max_ndef_msg_len;                   /* Maximum size of NDEF that can be written on the tag          */
     UINT16              new_ndef_msg_len;                   /* Lenght of new updating NDEF Message                          */
     UINT16              ndef_write_block;
     UINT16              prop_msg_len;                       /* Proprietary tlv length                                       */
@@ -566,8 +566,8 @@ NFC_API extern tRW_CB *rw_cb_ptr;
 extern tRW_EVENT rw_t1t_handle_rsp (const tT1T_CMD_RSP_INFO * p_info, BOOLEAN *p_notify, UINT8 *p_data, tNFC_STATUS *p_status);
 extern tRW_EVENT rw_t1t_info_to_event (const tT1T_CMD_RSP_INFO * p_info);
 #else
-#define rw_t1t_handle_rsp (p, a, b, c)       t1t_info_to_evt (p)
-#define rw_t1t_info_to_event (p)             t1t_info_to_evt (p)
+#define rw_t1t_handle_rsp(p, a, b, c)       t1t_info_to_evt (p)
+#define rw_t1t_info_to_event(p)             t1t_info_to_evt (p)
 #endif
 
 extern void rw_init (void);
@@ -581,8 +581,8 @@ extern void rw_t1t_handle_op_complete (void);
 extern tRW_EVENT rw_t2t_info_to_event (const tT2T_CMD_RSP_INFO *p_info);
 extern void rw_t2t_handle_rsp (UINT8 *p_data);
 #else
-#define rw_t2t_info_to_event (p)             t2t_info_to_evt (p)
-#define rw_t2t_handle_rsp (p)
+#define rw_t2t_info_to_event(p)             t2t_info_to_evt (p)
+#define rw_t2t_handle_rsp(p)
 #endif
 
 extern tNFC_STATUS rw_t2t_sector_change (UINT8 sector);

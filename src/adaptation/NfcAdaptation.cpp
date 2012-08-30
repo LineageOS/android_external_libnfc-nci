@@ -249,7 +249,7 @@ UINT32 NfcAdaptation::Thread (UINT32 arg)
     {
         ThreadCondVar    CondVar;
         AutoThreadMutex  guard(CondVar);
-        GKI_create_task ((TASKPTR)nci_task, NCI_TASK, (INT8*)"NCI_TASK", 0, 0, (pthread_cond_t*)CondVar, (pthread_mutex_t*)CondVar);
+        GKI_create_task ((TASKPTR)ncit_task, NCIT_TASK, (INT8*)"NCIT_TASK", 0, 0, (pthread_cond_t*)CondVar, (pthread_mutex_t*)CondVar);
         CondVar.wait();
     }
     {

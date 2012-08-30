@@ -5,7 +5,7 @@
 **  Description:    This is the public interface file for NFA Connection Handover,
 **                  Broadcom's NFC application layer for mobile phones.
 **
-**  Copyright (c) 2010-2011, Broadcom Corp., All Rights Reserved.
+**  Copyright (c) 2010-2012, Broadcom Corp., All Rights Reserved.
 **  Broadcom Bluetooth Core. Proprietary and confidential.
 **
 *****************************************************************************/
@@ -270,7 +270,7 @@ NFC_API extern tNFA_STATUS NFA_ChoDisconnect (void);
 **                  or equal to NFA_CHO_MAX_REF_NAME_LEN.
 **
 **                  The alternative carrier information of Handover Select record
-**                  will be sent to application by NFA_HO_SELECT_EVT. Application
+**                  will be sent to application by NFA_CHO_SELECT_EVT. Application
 **                  may receive NFA_CHO_REQUEST_EVT because of handover collision.
 **
 ** Returns          NFA_STATUS_OK if successfully initiated

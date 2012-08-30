@@ -55,8 +55,8 @@
 #define HCISU_TASK              1
 #endif
 
-#ifndef NCI_TASK
-#define NCI_TASK                2
+#ifndef NCIT_TASK
+#define NCIT_TASK                2
 #endif
 
 #ifndef NFC_TASK

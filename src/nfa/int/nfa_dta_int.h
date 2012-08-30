@@ -21,7 +21,8 @@
 /*****************************************************************************
 **  DTA definitions
 *****************************************************************************/
-#define PATTERN_NUMBER_INVALID          0xFFFF
+#define NFA_DTA_PATTERN_NUMBER_INVALID              0xFFFF
+
 #define NFA_DTA_DISCOVER_PARAMS_MAX     6
 
 #define NDEF_WKT_TEXT_HDR_LEN   7               /* Header length for long NDEF text message */
@@ -31,6 +32,10 @@
 #define NFA_PROTOCOL_RANK_INVALID       0xFF    /* Maximum protocol preference rank */
 
 #define NFA_DTA_SCRATCH_BUF_SIZE        T3T_MSG_BLOCKSIZE
+
+#ifndef NFA_DTA_DEFAULT_CO_OUT_DSAP
+#define NFA_DTA_DEFAULT_CO_OUT_DSAP     0x10    /* Default SAP[LT,CO-OUT-DEST] if SDP was not performed to get SAP from the LT */
+#endif
 
 /*****************************************************************************
 * DTA state machine definitions
@@ -44,6 +49,7 @@ typedef struct {
     UINT16  total_duration;                 /* NFA_DTA_CFG_TOTAL_DURATION */
     BOOLEAN enable_dta_llcp;                /* NFA_DTA_CFG_LLCP */
     tNFA_DTA_SNEP_MODE dta_snep_mode;       /* NFA_DTA_CFG_SNEP */
+    tNFA_DTA_EMVCO_PCD_MODE emvco_pcd_mode; /* NFA_DTA_CFG_EMVCO_PCD */
 } tNFA_DTA_CONFIG;
 
 /*****************************************************************************
@@ -377,6 +383,10 @@ void nfa_dta_llcp_disconnect_co_echo_out (void);
 void nfa_dta_snep_register (void);
 void nfa_dta_snep_deregister (void);
 void nfa_dta_snep_mode (tNFA_DTA_SNEP_MODE mode);
+
+void nfa_dta_emvco_pcd_config_nfcc (BOOLEAN enable);
+void nfa_dta_emvco_pcd_start (void);
+void nfa_dta_emvco_pcd_cback (UINT8 event, tRW_DATA *p_data);
 
 #endif /* NFA_DTA_INT_H */
 

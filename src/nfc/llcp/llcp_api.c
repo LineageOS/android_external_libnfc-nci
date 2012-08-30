@@ -38,7 +38,7 @@ tLLCP_TEST_PARAMS llcp_test_params =
 *******************************************************************************/
 void LLCP_SetTestParams (UINT8 version, UINT16 wks)
 {
-    LLCP_TRACE_API2 ("LLCP_SetTestParams() version:0x%02X, wks:0x%04X",
+    LLCP_TRACE_API2 ("LLCP_SetTestParams () version:0x%02X, wks:0x%04X",
                      version, wks);
 
     if (version != 0xFF)
@@ -61,7 +61,7 @@ void LLCP_SetTestParams (UINT8 version, UINT16 wks)
 *******************************************************************************/
 void LLCP_RegisterDtaCback (tLLCP_DTA_CBACK *p_dta_cback)
 {
-    LLCP_TRACE_API0 ("LLCP_RegisterDtaCback()");
+    LLCP_TRACE_API0 ("LLCP_RegisterDtaCback ()");
 
     llcp_cb.p_dta_cback = p_dta_cback;
 }
@@ -94,21 +94,21 @@ void LLCP_SetConfig (UINT16 link_miu,
                      UINT16 data_link_timeout,
                      UINT16 delay_first_pdu_timeout)
 {
-    LLCP_TRACE_API4 ("LLCP_SetConfig() link_miu:%d, opt:0x%02X, wt:%d, link_timeout:%d",
+    LLCP_TRACE_API4 ("LLCP_SetConfig () link_miu:%d, opt:0x%02X, wt:%d, link_timeout:%d",
                      link_miu, opt, wt, link_timeout);
-    LLCP_TRACE_API4 ("                 inact_timeout(init:%d,target:%d), symm_delay:%d, data_link_timeout:%d",
+    LLCP_TRACE_API4 ("                 inact_timeout (init:%d,target:%d), symm_delay:%d, data_link_timeout:%d",
                      inact_timeout_init, inact_timeout_target, symm_delay, data_link_timeout);
     LLCP_TRACE_API1 ("                 delay_first_pdu_timeout:%d", delay_first_pdu_timeout);
 
     if (link_miu < LLCP_DEFAULT_MIU)
     {
-        LLCP_TRACE_ERROR1 ("LLCP_SetConfig(): link_miu shall not be smaller than LLCP_DEFAULT_MIU(%d)",
+        LLCP_TRACE_ERROR1 ("LLCP_SetConfig (): link_miu shall not be smaller than LLCP_DEFAULT_MIU (%d)",
                             LLCP_DEFAULT_MIU);
         link_miu = LLCP_DEFAULT_MIU;
     }
     else if (link_miu > LLCP_MAX_MIU)
     {
-        LLCP_TRACE_ERROR1 ("LLCP_SetConfig(): link_miu shall not be bigger than LLCP_MAX_MIU(%d)",
+        LLCP_TRACE_ERROR1 ("LLCP_SetConfig (): link_miu shall not be bigger than LLCP_MAX_MIU (%d)",
                             LLCP_MAX_MIU);
         link_miu = LLCP_MAX_MIU;
     }
@@ -116,7 +116,7 @@ void LLCP_SetConfig (UINT16 link_miu,
     /* if Link MIU is bigger than GKI buffer */
     if (link_miu > LLCP_MIU)
     {
-        LLCP_TRACE_ERROR1 ("LLCP_SetConfig(): link_miu shall not be bigger than LLCP_MIU(%d)",
+        LLCP_TRACE_ERROR1 ("LLCP_SetConfig (): link_miu shall not be bigger than LLCP_MIU (%d)",
                             LLCP_MIU);
         llcp_cb.lcb.local_link_miu = LLCP_MIU;
     }
@@ -128,13 +128,13 @@ void LLCP_SetConfig (UINT16 link_miu,
 
     if (link_timeout < LLCP_LTO_UNIT)
     {
-        LLCP_TRACE_ERROR1 ("LLCP_SetConfig(): link_timeout shall not be smaller than LLCP_LTO_UNIT(%d ms)",
+        LLCP_TRACE_ERROR1 ("LLCP_SetConfig (): link_timeout shall not be smaller than LLCP_LTO_UNIT (%d ms)",
                             LLCP_LTO_UNIT);
         llcp_cb.lcb.local_lto = LLCP_DEFAULT_LTO_IN_MS;
     }
     else if (link_timeout > LLCP_MAX_LTO_IN_MS)
     {
-        LLCP_TRACE_ERROR1 ("LLCP_SetConfig(): link_timeout shall not be bigger than LLCP_MAX_LTO_IN_MS(%d ms)",
+        LLCP_TRACE_ERROR1 ("LLCP_SetConfig (): link_timeout shall not be bigger than LLCP_MAX_LTO_IN_MS (%d ms)",
                             LLCP_MAX_LTO_IN_MS);
         llcp_cb.lcb.local_lto = LLCP_MAX_LTO_IN_MS;
     }
@@ -186,9 +186,9 @@ void LLCP_GetConfig (UINT16 *p_link_miu,
     *p_data_link_timeout    = llcp_cb.lcb.data_link_timeout;
     *p_delay_first_pdu_timeout = llcp_cb.lcb.delay_first_pdu_timeout;
 
-    LLCP_TRACE_API4 ("LLCP_GetConfig() link_miu:%d, opt:0x%02X, wt:%d, link_timeout:%d",
+    LLCP_TRACE_API4 ("LLCP_GetConfig () link_miu:%d, opt:0x%02X, wt:%d, link_timeout:%d",
                      *p_link_miu, *p_opt, *p_wt, *p_link_timeout);
-    LLCP_TRACE_API4 ("                 inact_timeout(init:%d, target:%d), symm_delay:%d, data_link_timeout:%d",
+    LLCP_TRACE_API4 ("                 inact_timeout (init:%d, target:%d), symm_delay:%d, data_link_timeout:%d",
                      *p_inact_timeout_init, *p_inact_timeout_target, *p_symm_delay, *p_data_link_timeout);
     LLCP_TRACE_API1 ("                 delay_first_pdu_timeout:%d", *p_delay_first_pdu_timeout);
 }
@@ -221,11 +221,11 @@ void LLCP_GetDiscoveryConfig (UINT8 *p_wt,
 {
     UINT8      *p = p_gen_bytes;
 
-    LLCP_TRACE_API0 ("LLCP_GetDiscoveryConfig()");
+    LLCP_TRACE_API0 ("LLCP_GetDiscoveryConfig ()");
 
     if (*p_gen_bytes_len < LLCP_MIN_GEN_BYTES)
     {
-        LLCP_TRACE_ERROR1 ("LLCP_GetDiscoveryConfig(): GenBytes length shall not be smaller than LLCP_MIN_GEN_BYTES(%d)",
+        LLCP_TRACE_ERROR1 ("LLCP_GetDiscoveryConfig (): GenBytes length shall not be smaller than LLCP_MIN_GEN_BYTES (%d)",
                             LLCP_MIN_GEN_BYTES);
         *p_gen_bytes_len = 0;
         return;
@@ -233,52 +233,52 @@ void LLCP_GetDiscoveryConfig (UINT8 *p_wt,
 
     *p_wt = llcp_cb.lcb.local_wt;
 
-    UINT8_TO_BE_STREAM(p,  LLCP_MAGIC_NUMBER_BYTE0);
-    UINT8_TO_BE_STREAM(p,  LLCP_MAGIC_NUMBER_BYTE1);
-    UINT8_TO_BE_STREAM(p,  LLCP_MAGIC_NUMBER_BYTE2);
+    UINT8_TO_BE_STREAM (p, LLCP_MAGIC_NUMBER_BYTE0);
+    UINT8_TO_BE_STREAM (p, LLCP_MAGIC_NUMBER_BYTE1);
+    UINT8_TO_BE_STREAM (p, LLCP_MAGIC_NUMBER_BYTE2);
 
 #if (LLCP_TEST_INCLUDED == TRUE) /* this is for LLCP testing */
-    UINT8_TO_BE_STREAM(p,  LLCP_VERSION_TYPE);
-    UINT8_TO_BE_STREAM(p,  LLCP_VERSION_LEN);
-    UINT8_TO_BE_STREAM(p,  llcp_test_params.version);
+    UINT8_TO_BE_STREAM (p, LLCP_VERSION_TYPE);
+    UINT8_TO_BE_STREAM (p, LLCP_VERSION_LEN);
+    UINT8_TO_BE_STREAM (p, llcp_test_params.version);
 
-    UINT8_TO_BE_STREAM(p,  LLCP_MIUX_TYPE);
-    UINT8_TO_BE_STREAM(p,  LLCP_MIUX_LEN);
-    UINT16_TO_BE_STREAM(p, (llcp_cb.lcb.local_link_miu - LLCP_DEFAULT_MIU));
+    UINT8_TO_BE_STREAM (p, LLCP_MIUX_TYPE);
+    UINT8_TO_BE_STREAM (p, LLCP_MIUX_LEN);
+    UINT16_TO_BE_STREAM (p, (llcp_cb.lcb.local_link_miu - LLCP_DEFAULT_MIU));
 
-    UINT8_TO_BE_STREAM(p,  LLCP_WKS_TYPE);
-    UINT8_TO_BE_STREAM(p,  LLCP_WKS_LEN);
+    UINT8_TO_BE_STREAM (p, LLCP_WKS_TYPE);
+    UINT8_TO_BE_STREAM (p, LLCP_WKS_LEN);
     if (llcp_test_params.wks == 0)  /* not override */
     {
-        UINT16_TO_BE_STREAM(p, llcp_cb.lcb.wks);
+        UINT16_TO_BE_STREAM (p, llcp_cb.lcb.wks);
     }
     else
     {
-        UINT16_TO_BE_STREAM(p, llcp_test_params.wks);
+        UINT16_TO_BE_STREAM (p, llcp_test_params.wks);
     }
 #else
-    UINT8_TO_BE_STREAM(p,  LLCP_VERSION_TYPE);
-    UINT8_TO_BE_STREAM(p,  LLCP_VERSION_LEN);
-    UINT8_TO_BE_STREAM(p,  LLCP_VERSION_VALUE);
+    UINT8_TO_BE_STREAM (p, LLCP_VERSION_TYPE);
+    UINT8_TO_BE_STREAM (p, LLCP_VERSION_LEN);
+    UINT8_TO_BE_STREAM (p, LLCP_VERSION_VALUE);
 
-    UINT8_TO_BE_STREAM(p,  LLCP_MIUX_TYPE);
-    UINT8_TO_BE_STREAM(p,  LLCP_MIUX_LEN);
-    UINT16_TO_BE_STREAM(p, (llcp_cb.lcb.local_link_miu - LLCP_DEFAULT_MIU));
+    UINT8_TO_BE_STREAM (p, LLCP_MIUX_TYPE);
+    UINT8_TO_BE_STREAM (p, LLCP_MIUX_LEN);
+    UINT16_TO_BE_STREAM (p, (llcp_cb.lcb.local_link_miu - LLCP_DEFAULT_MIU));
 
-    UINT8_TO_BE_STREAM(p,  LLCP_WKS_TYPE);
-    UINT8_TO_BE_STREAM(p,  LLCP_WKS_LEN);
-    UINT16_TO_BE_STREAM(p, llcp_cb.lcb.wks);
+    UINT8_TO_BE_STREAM (p, LLCP_WKS_TYPE);
+    UINT8_TO_BE_STREAM (p, LLCP_WKS_LEN);
+    UINT16_TO_BE_STREAM (p, llcp_cb.lcb.wks);
 #endif
 
-    UINT8_TO_BE_STREAM(p,  LLCP_LTO_TYPE);
-    UINT8_TO_BE_STREAM(p,  LLCP_LTO_LEN);
-    UINT8_TO_BE_STREAM(p,  (llcp_cb.lcb.local_lto/LLCP_LTO_UNIT));
+    UINT8_TO_BE_STREAM (p, LLCP_LTO_TYPE);
+    UINT8_TO_BE_STREAM (p, LLCP_LTO_LEN);
+    UINT8_TO_BE_STREAM (p, (llcp_cb.lcb.local_lto/LLCP_LTO_UNIT));
 
-    UINT8_TO_BE_STREAM(p,  LLCP_OPT_TYPE);
-    UINT8_TO_BE_STREAM(p,  LLCP_OPT_LEN);
-    UINT8_TO_BE_STREAM(p,  llcp_cb.lcb.local_opt);
+    UINT8_TO_BE_STREAM (p, LLCP_OPT_TYPE);
+    UINT8_TO_BE_STREAM (p, LLCP_OPT_LEN);
+    UINT8_TO_BE_STREAM (p, llcp_cb.lcb.local_opt);
 
-    *p_gen_bytes_len = (UINT8)(p - p_gen_bytes);
+    *p_gen_bytes_len = (UINT8) (p - p_gen_bytes);
 }
 
 /*******************************************************************************
@@ -298,10 +298,10 @@ void LLCP_GetDiscoveryConfig (UINT8 *p_wt,
 tLLCP_STATUS LLCP_ActivateLink (tLLCP_ACTIVATE_CONFIG config,
                                 tLLCP_LINK_CBACK     *p_link_cback)
 {
-    LLCP_TRACE_API1 ("LLCP_ActivateLink() link_state = %d", llcp_cb.lcb.link_state);
+    LLCP_TRACE_API1 ("LLCP_ActivateLink () link_state = %d", llcp_cb.lcb.link_state);
 
-    if ((llcp_cb.lcb.link_state == LLCP_LINK_STATE_DEACTIVATED)
-      &&(p_link_cback))
+    if (  (llcp_cb.lcb.link_state == LLCP_LINK_STATE_DEACTIVATED)
+        &&(p_link_cback)  )
     {
         llcp_cb.lcb.p_link_cback = p_link_cback;
         return (llcp_link_activate (&config));
@@ -324,7 +324,7 @@ tLLCP_STATUS LLCP_ActivateLink (tLLCP_ACTIVATE_CONFIG config,
 *******************************************************************************/
 tLLCP_STATUS LLCP_DeactivateLink (void)
 {
-    LLCP_TRACE_API1 ("LLCP_DeactivateLink() link_state = %d", llcp_cb.lcb.link_state);
+    LLCP_TRACE_API1 ("LLCP_DeactivateLink () link_state = %d", llcp_cb.lcb.link_state);
 
     if (llcp_cb.lcb.link_state != LLCP_LINK_STATE_DEACTIVATED)
     {
@@ -361,18 +361,18 @@ UINT8 LLCP_RegisterServer (UINT8           reg_sap,
     UINT16 length;
     tLLCP_APP_CB *p_app_cb;
 
-    LLCP_TRACE_API3 ("LLCP_RegisterServer(): SAP:0x%x, link_type:0x%x, ServiceName:<%s>",
-                     reg_sap, link_type, (p_service_name == NULL? "" : p_service_name));
+    LLCP_TRACE_API3 ("LLCP_RegisterServer (): SAP:0x%x, link_type:0x%x, ServiceName:<%s>",
+                     reg_sap, link_type, ((p_service_name == NULL) ? "" : p_service_name));
 
     if (!p_app_cback)
     {
-        LLCP_TRACE_ERROR0 ("LLCP_RegisterServer(): Callback must be provided");
+        LLCP_TRACE_ERROR0 ("LLCP_RegisterServer (): Callback must be provided");
         return LLCP_INVALID_SAP;
     }
-    else if (((link_type & LLCP_LINK_TYPE_LOGICAL_DATA_LINK) == 0x00)
-           &&((link_type & LLCP_LINK_TYPE_DATA_LINK_CONNECTION) == 0x00))
+    else if (  ((link_type & LLCP_LINK_TYPE_LOGICAL_DATA_LINK) == 0x00)
+             &&((link_type & LLCP_LINK_TYPE_DATA_LINK_CONNECTION) == 0x00)  )
     {
-        LLCP_TRACE_ERROR1 ("LLCP_RegisterServer(): link type (0x%x) must be specified", link_type);
+        LLCP_TRACE_ERROR1 ("LLCP_RegisterServer (): link type (0x%x) must be specified", link_type);
         return LLCP_INVALID_SAP;
     }
 
@@ -391,25 +391,25 @@ UINT8 LLCP_RegisterServer (UINT8           reg_sap,
 
         if (reg_sap == LLCP_INVALID_SAP)
         {
-            LLCP_TRACE_ERROR0 ("LLCP_RegisterServer(): out of resource");
+            LLCP_TRACE_ERROR0 ("LLCP_RegisterServer (): out of resource");
             return LLCP_INVALID_SAP;
         }
     }
     else if (reg_sap == LLCP_SAP_LM)
     {
-        LLCP_TRACE_ERROR1 ("LLCP_RegisterServer(): SAP(0x%x) is for link manager", reg_sap);
+        LLCP_TRACE_ERROR1 ("LLCP_RegisterServer (): SAP (0x%x) is for link manager", reg_sap);
         return LLCP_INVALID_SAP;
     }
     else if (reg_sap <= LLCP_UPPER_BOUND_WK_SAP)
     {
         if (reg_sap >= LLCP_MAX_WKS)
         {
-            LLCP_TRACE_ERROR1 ("LLCP_RegisterServer(): out of resource for SAP(0x%x)", reg_sap);
+            LLCP_TRACE_ERROR1 ("LLCP_RegisterServer (): out of resource for SAP (0x%x)", reg_sap);
             return LLCP_INVALID_SAP;
         }
         else if (llcp_cb.wks_cb[reg_sap].p_app_cback)
         {
-            LLCP_TRACE_ERROR1 ("LLCP_RegisterServer(): SAP(0x%x) is already registered", reg_sap);
+            LLCP_TRACE_ERROR1 ("LLCP_RegisterServer (): SAP (0x%x) is already registered", reg_sap);
             return LLCP_INVALID_SAP;
         }
         else
@@ -421,12 +421,12 @@ UINT8 LLCP_RegisterServer (UINT8           reg_sap,
     {
         if (reg_sap - LLCP_LOWER_BOUND_SDP_SAP >= LLCP_MAX_SERVER)
         {
-            LLCP_TRACE_ERROR1 ("LLCP_RegisterServer(): out of resource for SAP(0x%x)", reg_sap);
+            LLCP_TRACE_ERROR1 ("LLCP_RegisterServer (): out of resource for SAP (0x%x)", reg_sap);
             return LLCP_INVALID_SAP;
         }
         else if (llcp_cb.server_cb[reg_sap - LLCP_LOWER_BOUND_SDP_SAP].p_app_cback)
         {
-            LLCP_TRACE_ERROR1 ("LLCP_RegisterServer(): SAP(0x%x) is already registered", reg_sap);
+            LLCP_TRACE_ERROR1 ("LLCP_RegisterServer (): SAP (0x%x) is already registered", reg_sap);
             return LLCP_INVALID_SAP;
         }
         else
@@ -436,30 +436,30 @@ UINT8 LLCP_RegisterServer (UINT8           reg_sap,
     }
     else if (reg_sap >= LLCP_LOWER_BOUND_LOCAL_SAP)
     {
-        LLCP_TRACE_ERROR2 ("LLCP_RegisterServer(): SAP(0x%x) must be less than 0x%x",
+        LLCP_TRACE_ERROR2 ("LLCP_RegisterServer (): SAP (0x%x) must be less than 0x%x",
                             reg_sap, LLCP_LOWER_BOUND_LOCAL_SAP);
         return LLCP_INVALID_SAP;
     }
 
-    memset (p_app_cb, 0x00, sizeof(tLLCP_APP_CB));
+    memset (p_app_cb, 0x00, sizeof (tLLCP_APP_CB));
 
     if (p_service_name)
     {
-        length = (UINT8)strlen(p_service_name);
+        length = (UINT8) strlen (p_service_name);
         if (length > LLCP_MAX_SN_LEN)
         {
-            LLCP_TRACE_ERROR1 ("LLCP_RegisterServer(): Service Name (%d bytes) is too long", length);
+            LLCP_TRACE_ERROR1 ("LLCP_RegisterServer (): Service Name (%d bytes) is too long", length);
             return LLCP_INVALID_SAP;
         }
 
-        p_app_cb->p_service_name = (UINT8 *)GKI_getbuf((UINT16)(length + 1));
+        p_app_cb->p_service_name = (UINT8 *) GKI_getbuf ((UINT16) (length + 1));
         if (p_app_cb->p_service_name == NULL)
         {
-            LLCP_TRACE_ERROR0 ("LLCP_RegisterServer(): Out of resource");
+            LLCP_TRACE_ERROR0 ("LLCP_RegisterServer (): Out of resource");
             return LLCP_INVALID_SAP;
         }
 
-        BCM_STRNCPY_S((char *)p_app_cb->p_service_name, length + 1, (char *)p_service_name, length + 1);
+        BCM_STRNCPY_S ((char *) p_app_cb->p_service_name, length + 1, (char *) p_service_name, length + 1);
         p_app_cb->p_service_name[length] = 0;
     }
     else
@@ -473,7 +473,7 @@ UINT8 LLCP_RegisterServer (UINT8           reg_sap,
         llcp_cb.lcb.wks |= (1 << reg_sap);
     }
 
-    LLCP_TRACE_DEBUG1 ("LLCP_RegisterServer(): Registered SAP = 0x%02X", reg_sap);
+    LLCP_TRACE_DEBUG1 ("LLCP_RegisterServer (): Registered SAP = 0x%02X", reg_sap);
 
     if (link_type & LLCP_LINK_TYPE_LOGICAL_DATA_LINK)
     {
@@ -504,17 +504,17 @@ UINT8 LLCP_RegisterClient (UINT8           link_type,
     UINT8 sap;
     tLLCP_APP_CB *p_app_cb;
 
-    LLCP_TRACE_API1 ("LLCP_RegisterClient(): link_type = 0x%x", link_type);
+    LLCP_TRACE_API1 ("LLCP_RegisterClient (): link_type = 0x%x", link_type);
 
     if (!p_app_cback)
     {
-        LLCP_TRACE_ERROR0 ("LLCP_RegisterClient(): Callback must be provided");
+        LLCP_TRACE_ERROR0 ("LLCP_RegisterClient (): Callback must be provided");
         return LLCP_INVALID_SAP;
     }
-    else if (((link_type & LLCP_LINK_TYPE_LOGICAL_DATA_LINK) == 0x00)
-           &&((link_type & LLCP_LINK_TYPE_DATA_LINK_CONNECTION) == 0x00))
+    else if (  ((link_type & LLCP_LINK_TYPE_LOGICAL_DATA_LINK) == 0x00)
+             &&((link_type & LLCP_LINK_TYPE_DATA_LINK_CONNECTION) == 0x00)  )
     {
-        LLCP_TRACE_ERROR1 ("LLCP_RegisterClient(): link type (0x%x) must be specified", link_type);
+        LLCP_TRACE_ERROR1 ("LLCP_RegisterClient (): link type (0x%x) must be specified", link_type);
         return LLCP_INVALID_SAP;
     }
 
@@ -524,7 +524,7 @@ UINT8 LLCP_RegisterClient (UINT8           link_type,
         if (llcp_cb.client_cb[sap].p_app_cback == NULL)
         {
             p_app_cb = &llcp_cb.client_cb[sap];
-            memset (p_app_cb, 0x00, sizeof(tLLCP_APP_CB));
+            memset (p_app_cb, 0x00, sizeof (tLLCP_APP_CB));
             reg_sap = LLCP_LOWER_BOUND_LOCAL_SAP + sap;
             break;
         }
@@ -532,7 +532,7 @@ UINT8 LLCP_RegisterClient (UINT8           link_type,
 
     if (reg_sap == LLCP_INVALID_SAP)
     {
-        LLCP_TRACE_ERROR0 ("LLCP_RegisterClient(): out of resource");
+        LLCP_TRACE_ERROR0 ("LLCP_RegisterClient (): out of resource");
         return LLCP_INVALID_SAP;
     }
 
@@ -540,7 +540,7 @@ UINT8 LLCP_RegisterClient (UINT8           link_type,
     p_app_cb->p_service_name = NULL;
     p_app_cb->link_type      = link_type;
 
-    LLCP_TRACE_DEBUG1 ("LLCP_RegisterClient(): Registered SAP = 0x%02X", reg_sap);
+    LLCP_TRACE_DEBUG1 ("LLCP_RegisterClient (): Registered SAP = 0x%02X", reg_sap);
 
     if (link_type & LLCP_LINK_TYPE_LOGICAL_DATA_LINK)
     {
@@ -566,23 +566,23 @@ tLLCP_STATUS LLCP_Deregister (UINT8 local_sap)
     UINT8 idx;
     tLLCP_APP_CB *p_app_cb;
 
-    LLCP_TRACE_API1 ("LLCP_Deregister() SAP:0x%x", local_sap);
+    LLCP_TRACE_API1 ("LLCP_Deregister () SAP:0x%x", local_sap);
 
     p_app_cb = llcp_util_get_app_cb (local_sap);
 
-    if ((!p_app_cb)||(p_app_cb->p_app_cback == NULL))
+    if ((!p_app_cb) || (p_app_cb->p_app_cback == NULL))
     {
-        LLCP_TRACE_ERROR1 ("LLCP_Deregister(): SAP(0x%x) is not registered", local_sap);
+        LLCP_TRACE_ERROR1 ("LLCP_Deregister (): SAP (0x%x) is not registered", local_sap);
         return LLCP_STATUS_FAIL;
     }
 
     if (p_app_cb->p_service_name)
-        GKI_freebuf(p_app_cb->p_service_name);
+        GKI_freebuf (p_app_cb->p_service_name);
 
     /* update WKS bit map */
     if (local_sap <= LLCP_UPPER_BOUND_WK_SAP)
     {
-        llcp_cb.lcb.wks &= ~(1 << local_sap);
+        llcp_cb.lcb.wks &= ~ (1 << local_sap);
     }
 
     /* discard any received UI PDU on this SAP */
@@ -592,8 +592,8 @@ tLLCP_STATUS LLCP_Deregister (UINT8 local_sap)
     /* deallocate any data link connection on this SAP */
     for (idx = 0; idx < LLCP_MAX_DATA_LINK; idx++)
     {
-        if ((llcp_cb.dlcb[idx].state != LLCP_DLC_STATE_IDLE)
-          &&(llcp_cb.dlcb[idx].local_sap == local_sap))
+        if (  (llcp_cb.dlcb[idx].state != LLCP_DLC_STATE_IDLE)
+            &&(llcp_cb.dlcb[idx].local_sap == local_sap)  )
         {
             llcp_util_deallocate_data_link (&llcp_cb.dlcb[idx]);
         }
@@ -637,22 +637,22 @@ BOOLEAN LLCP_IsLogicalLinkCongested (UINT8 local_sap,
 {
     tLLCP_APP_CB *p_app_cb;
 
-    LLCP_TRACE_API4 ("LLCP_IsLogicalLinkCongested() Local SAP:0x%x, pending = (%d, %d, %d)",
+    LLCP_TRACE_API4 ("LLCP_IsLogicalLinkCongested () Local SAP:0x%x, pending = (%d, %d, %d)",
                      local_sap, num_pending_ui_pdu, total_pending_ui_pdu, total_pending_i_pdu);
 
     p_app_cb = llcp_util_get_app_cb (local_sap);
 
-    if ((llcp_cb.lcb.link_state != LLCP_LINK_STATE_ACTIVATED)
-      ||(p_app_cb == NULL)
-      ||(p_app_cb->p_app_cback == NULL)
-      ||((p_app_cb->link_type & LLCP_LINK_TYPE_LOGICAL_DATA_LINK) == 0)
-      ||(p_app_cb->is_ui_tx_congested))
+    if (  (llcp_cb.lcb.link_state != LLCP_LINK_STATE_ACTIVATED)
+        ||(p_app_cb == NULL)
+        ||(p_app_cb->p_app_cback == NULL)
+        ||((p_app_cb->link_type & LLCP_LINK_TYPE_LOGICAL_DATA_LINK) == 0)
+        ||(p_app_cb->is_ui_tx_congested)  )
     {
         return (TRUE);
     }
-    else if ((num_pending_ui_pdu + p_app_cb->ui_xmit_q.count >= llcp_cb.ll_tx_congest_start)
-           ||(total_pending_ui_pdu + llcp_cb.total_tx_ui_pdu >= llcp_cb.max_num_ll_tx_buff)
-           ||(total_pending_ui_pdu + total_pending_i_pdu + llcp_cb.total_tx_ui_pdu + llcp_cb.total_tx_i_pdu >= llcp_cb.max_num_tx_buff))
+    else if (  (num_pending_ui_pdu + p_app_cb->ui_xmit_q.count >= llcp_cb.ll_tx_congest_start)
+             ||(total_pending_ui_pdu + llcp_cb.total_tx_ui_pdu >= llcp_cb.max_num_ll_tx_buff)
+             ||(total_pending_ui_pdu + total_pending_i_pdu + llcp_cb.total_tx_ui_pdu + llcp_cb.total_tx_i_pdu >= llcp_cb.max_num_tx_buff)  )
     {
         /* set flag so LLCP can notify uncongested status later */
         p_app_cb->is_ui_tx_congested = TRUE;
@@ -681,25 +681,25 @@ tLLCP_STATUS LLCP_SendUI (UINT8   ssap,
     tLLCP_STATUS status = LLCP_STATUS_FAIL;
     tLLCP_APP_CB *p_app_cb;
 
-    LLCP_TRACE_API2 ("LLCP_SendUI() SSAP=0x%x, DSAP=0x%x", ssap, dsap);
+    LLCP_TRACE_API2 ("LLCP_SendUI () SSAP=0x%x, DSAP=0x%x", ssap, dsap);
 
     p_app_cb = llcp_util_get_app_cb (ssap);
 
-    if ((p_app_cb == NULL)
-      ||(p_app_cb->p_app_cback == NULL))
+    if (  (p_app_cb == NULL)
+        ||(p_app_cb->p_app_cback == NULL)  )
     {
-        LLCP_TRACE_ERROR1 ("LLCP_SendUI(): SSAP(0x%x) is not registered", ssap);
+        LLCP_TRACE_ERROR1 ("LLCP_SendUI (): SSAP (0x%x) is not registered", ssap);
     }
     else if ((p_app_cb->link_type & LLCP_LINK_TYPE_LOGICAL_DATA_LINK) == 0)
     {
-        LLCP_TRACE_ERROR1 ("LLCP_SendUI(): Logical link on SSAP(0x%x) is not enabled", ssap);
+        LLCP_TRACE_ERROR1 ("LLCP_SendUI (): Logical link on SSAP (0x%x) is not enabled", ssap);
     }
     else if (llcp_cb.lcb.link_state != LLCP_LINK_STATE_ACTIVATED)
     {
-        LLCP_TRACE_ERROR0 ("LLCP_SendUI(): LLCP link is not activated");
+        LLCP_TRACE_ERROR0 ("LLCP_SendUI (): LLCP link is not activated");
     }
-    else if ((llcp_cb.lcb.peer_opt == LLCP_LSC_UNKNOWN)
-           ||(llcp_cb.lcb.peer_opt & LLCP_LSC_1))
+    else if (  (llcp_cb.lcb.peer_opt == LLCP_LSC_UNKNOWN)
+             ||(llcp_cb.lcb.peer_opt & LLCP_LSC_1)  )
     {
         if (p_buf->len <= llcp_cb.lcb.peer_miu)
         {
@@ -709,18 +709,18 @@ tLLCP_STATUS LLCP_SendUI (UINT8   ssap,
             }
             else
             {
-                LLCP_TRACE_ERROR2 ("LLCP_SendUI(): offset(%d) must be %d at least",
+                LLCP_TRACE_ERROR2 ("LLCP_SendUI (): offset (%d) must be %d at least",
                                     p_buf->offset, LLCP_MIN_OFFSET );
             }
         }
         else
         {
-            LLCP_TRACE_ERROR0 ("LLCP_SendUI(): Data length shall not be bigger than peer's link MIU");
+            LLCP_TRACE_ERROR0 ("LLCP_SendUI (): Data length shall not be bigger than peer's link MIU");
         }
     }
     else
     {
-        LLCP_TRACE_ERROR0 ("LLCP_SendUI(): Peer doesn't support connectionless link");
+        LLCP_TRACE_ERROR0 ("LLCP_SendUI (): Peer doesn't support connectionless link");
     }
 
     if (status == LLCP_STATUS_FAIL)
@@ -756,36 +756,36 @@ BOOLEAN LLCP_ReadLogicalLinkData (UINT8  local_sap,
     UINT8        *p_ui_pdu;
     UINT16       pdu_hdr, ui_pdu_length;
 
-    LLCP_TRACE_API1 ("LLCP_ReadLogicalLinkData() Local SAP:0x%x", local_sap);
+    LLCP_TRACE_API1 ("LLCP_ReadLogicalLinkData () Local SAP:0x%x", local_sap);
 
     *p_data_len = 0;
 
     p_app_cb = llcp_util_get_app_cb (local_sap);
 
     /* if application is registered */
-    if ((p_app_cb)&&(p_app_cb->p_app_cback))
+    if ((p_app_cb) && (p_app_cb->p_app_cback))
     {
         /* if any UI PDU in rx queue */
         if (p_app_cb->ui_rx_q.p_first)
         {
-            p_buf    = (BT_HDR *)p_app_cb->ui_rx_q.p_first;
-            p_ui_pdu = (UINT8*)(p_buf + 1) + p_buf->offset;
+            p_buf    = (BT_HDR *) p_app_cb->ui_rx_q.p_first;
+            p_ui_pdu = (UINT8*) (p_buf + 1) + p_buf->offset;
 
             /* get length of UI PDU */
             BE_STREAM_TO_UINT16 (ui_pdu_length, p_ui_pdu);
 
             /* get remote SAP from LLCP header */
             BE_STREAM_TO_UINT16 (pdu_hdr, p_ui_pdu);
-            *p_remote_sap = LLCP_GET_SSAP(pdu_hdr);
+            *p_remote_sap = LLCP_GET_SSAP (pdu_hdr);
 
             /* layer_specific has the offset to read within UI PDU */
             p_ui_pdu += p_buf->layer_specific;
 
             /* copy data up to max_data_len */
-            if (max_data_len >= (UINT32)(ui_pdu_length - LLCP_PDU_HEADER_SIZE - p_buf->layer_specific))
+            if (max_data_len >= (UINT32) (ui_pdu_length - LLCP_PDU_HEADER_SIZE - p_buf->layer_specific))
             {
                 /* copy information without LLCP header */
-                *p_data_len = (UINT32)(ui_pdu_length - LLCP_PDU_HEADER_SIZE - p_buf->layer_specific);
+                *p_data_len = (UINT32) (ui_pdu_length - LLCP_PDU_HEADER_SIZE - p_buf->layer_specific);
 
                 /* move to next UI PDU if any */
                 p_buf->layer_specific = 0;  /* reset offset to read from the first byte of next UI PDU */
@@ -826,7 +826,7 @@ BOOLEAN LLCP_ReadLogicalLinkData (UINT8  local_sap,
     }
     else
     {
-        LLCP_TRACE_ERROR1 ("LLCP_ReadLogicalLinkData(): Unregistered SAP:0x%x", local_sap);
+        LLCP_TRACE_ERROR1 ("LLCP_ReadLogicalLinkData (): Unregistered SAP:0x%x", local_sap);
 
         return (FALSE);
     }
@@ -850,23 +850,23 @@ UINT32 LLCP_FlushLogicalLinkRxData (UINT8 local_sap)
     UINT8        *p_ui_pdu;
     UINT16       ui_pdu_length;
 
-    LLCP_TRACE_API1 ("LLCP_FlushLogicalLinkRxData() Local SAP:0x%x", local_sap);
+    LLCP_TRACE_API1 ("LLCP_FlushLogicalLinkRxData () Local SAP:0x%x", local_sap);
 
     p_app_cb = llcp_util_get_app_cb (local_sap);
 
     /* if application is registered */
-    if ((p_app_cb)&&(p_app_cb->p_app_cback))
+    if ((p_app_cb) && (p_app_cb->p_app_cback))
     {
         /* if any UI PDU in rx queue */
         while (p_app_cb->ui_rx_q.p_first)
         {
-            p_buf    = (BT_HDR *)p_app_cb->ui_rx_q.p_first;
-            p_ui_pdu = (UINT8*)(p_buf + 1) + p_buf->offset;
+            p_buf    = (BT_HDR *) p_app_cb->ui_rx_q.p_first;
+            p_ui_pdu = (UINT8*) (p_buf + 1) + p_buf->offset;
 
             /* get length of UI PDU */
             BE_STREAM_TO_UINT16 (ui_pdu_length, p_ui_pdu);
 
-            flushed_length += (UINT32)(ui_pdu_length - LLCP_PDU_HEADER_SIZE - p_buf->layer_specific);
+            flushed_length += (UINT32) (ui_pdu_length - LLCP_PDU_HEADER_SIZE - p_buf->layer_specific);
 
             /* move to next UI PDU if any */
             p_buf->layer_specific = 0;  /* offset */
@@ -887,7 +887,7 @@ UINT32 LLCP_FlushLogicalLinkRxData (UINT8 local_sap)
     }
     else
     {
-        LLCP_TRACE_ERROR1 ("LLCP_FlushLogicalLinkRxData(): Unregistered SAP:0x%x", local_sap);
+        LLCP_TRACE_ERROR1 ("LLCP_FlushLogicalLinkRxData (): Unregistered SAP:0x%x", local_sap);
     }
 
     return (flushed_length);
@@ -913,44 +913,44 @@ tLLCP_STATUS LLCP_ConnectReq (UINT8                    reg_sap,
     tLLCP_STATUS status;
     tLLCP_APP_CB *p_app_cb;
 
-    LLCP_TRACE_API2 ("LLCP_ConnectReq() reg_sap=0x%x, DSAP=0x%x", reg_sap, dsap);
+    LLCP_TRACE_API2 ("LLCP_ConnectReq () reg_sap=0x%x, DSAP=0x%x", reg_sap, dsap);
 
-    if ((llcp_cb.lcb.peer_opt != LLCP_LSC_UNKNOWN)
-     &&((llcp_cb.lcb.peer_opt & LLCP_LSC_2) == 0))
+    if (  (llcp_cb.lcb.peer_opt != LLCP_LSC_UNKNOWN)
+        &&((llcp_cb.lcb.peer_opt & LLCP_LSC_2) == 0)  )
     {
-        LLCP_TRACE_ERROR0 ("LLCP_ConnectReq(): Peer doesn't support connection-oriented link");
+        LLCP_TRACE_ERROR0 ("LLCP_ConnectReq (): Peer doesn't support connection-oriented link");
         return LLCP_STATUS_FAIL;
     }
 
     p_app_cb = llcp_util_get_app_cb (reg_sap);
 
     /* if application is registered */
-    if ((p_app_cb == NULL)
-      ||(p_app_cb->p_app_cback == NULL))
+    if (  (p_app_cb == NULL)
+        ||(p_app_cb->p_app_cback == NULL)  )
     {
-        LLCP_TRACE_ERROR1 ("LLCP_ConnectReq(): SSAP(0x%x) is not registered", reg_sap);
+        LLCP_TRACE_ERROR1 ("LLCP_ConnectReq (): SSAP (0x%x) is not registered", reg_sap);
         return LLCP_STATUS_FAIL;
     }
 
     if (dsap == LLCP_SAP_LM)
     {
-        LLCP_TRACE_ERROR1 ("LLCP_ConnectReq(): DSAP(0x%x) must not be link manager SAP", dsap);
+        LLCP_TRACE_ERROR1 ("LLCP_ConnectReq (): DSAP (0x%x) must not be link manager SAP", dsap);
         return LLCP_STATUS_FAIL;
     }
 
     if (dsap == LLCP_SAP_SDP)
     {
-        if (strlen(p_params->sn) > LLCP_MAX_SN_LEN)
+        if (strlen (p_params->sn) > LLCP_MAX_SN_LEN)
         {
-            LLCP_TRACE_ERROR1 ("LLCP_ConnectReq(): Service Name (%d bytes) is too long",
-                               strlen(p_params->sn));
+            LLCP_TRACE_ERROR1 ("LLCP_ConnectReq (): Service Name (%d bytes) is too long",
+                               strlen (p_params->sn));
             return LLCP_STATUS_FAIL;
         }
     }
 
-    if ((p_params)&&(p_params->miu > llcp_cb.lcb.local_link_miu))
+    if ((p_params) && (p_params->miu > llcp_cb.lcb.local_link_miu))
     {
-        LLCP_TRACE_ERROR0 ("LLCP_ConnectReq(): Data link MIU shall not be bigger than local link MIU");
+        LLCP_TRACE_ERROR0 ("LLCP_ConnectReq (): Data link MIU shall not be bigger than local link MIU");
         return LLCP_STATUS_FAIL;
     }
 
@@ -962,7 +962,7 @@ tLLCP_STATUS LLCP_ConnectReq (UINT8                    reg_sap,
         ** Accepting LLCP may change SAP in CC, so we cannot find right data link connection
         ** if there is multiple pending connection request on the same local SAP.
         */
-        LLCP_TRACE_ERROR0 ("LLCP_ConnectReq(): There is pending connect request on this reg_sap");
+        LLCP_TRACE_ERROR0 ("LLCP_ConnectReq (): There is pending connect request on this reg_sap");
         return LLCP_STATUS_FAIL;
     }
 
@@ -973,8 +973,8 @@ tLLCP_STATUS LLCP_ConnectReq (UINT8                    reg_sap,
         status = llcp_dlsm_execute (p_dlcb, LLCP_DLC_EVENT_API_CONNECT_REQ, p_params);
         if (status != LLCP_STATUS_SUCCESS)
         {
-            LLCP_TRACE_ERROR0 ("LLCP_ConnectReq(): Error in state machine");
-            llcp_util_deallocate_data_link(p_dlcb);
+            LLCP_TRACE_ERROR0 ("LLCP_ConnectReq (): Error in state machine");
+            llcp_util_deallocate_data_link (p_dlcb);
             return LLCP_STATUS_FAIL;
         }
     }
@@ -1004,12 +1004,12 @@ tLLCP_STATUS LLCP_ConnectCfm (UINT8                    local_sap,
     tLLCP_STATUS  status;
     tLLCP_DLCB   *p_dlcb;
 
-    LLCP_TRACE_API2 ("LLCP_ConnectCfm() Local SAP:0x%x, Remote SAP:0x%x)",
+    LLCP_TRACE_API2 ("LLCP_ConnectCfm () Local SAP:0x%x, Remote SAP:0x%x)",
                      local_sap, remote_sap);
 
-    if ((p_params)&&(p_params->miu > llcp_cb.lcb.local_link_miu))
+    if ((p_params) && (p_params->miu > llcp_cb.lcb.local_link_miu))
     {
-        LLCP_TRACE_ERROR0 ("LLCP_ConnectCfm(): Data link MIU shall not be bigger than local link MIU");
+        LLCP_TRACE_ERROR0 ("LLCP_ConnectCfm (): Data link MIU shall not be bigger than local link MIU");
         return LLCP_STATUS_FAIL;
     }
 
@@ -1021,7 +1021,7 @@ tLLCP_STATUS LLCP_ConnectCfm (UINT8                    local_sap,
     }
     else
     {
-        LLCP_TRACE_ERROR0 ("LLCP_ConnectCfm(): No data link");
+        LLCP_TRACE_ERROR0 ("LLCP_ConnectCfm (): No data link");
         status = LLCP_STATUS_FAIL;
     }
 
@@ -1051,7 +1051,7 @@ tLLCP_STATUS LLCP_ConnectReject (UINT8 local_sap,
     tLLCP_STATUS  status;
     tLLCP_DLCB   *p_dlcb;
 
-    LLCP_TRACE_API3 ("LLCP_ConnectReject() Local SAP:0x%x, Remote SAP:0x%x, reason:0x%x",
+    LLCP_TRACE_API3 ("LLCP_ConnectReject () Local SAP:0x%x, Remote SAP:0x%x, reason:0x%x",
                      local_sap, remote_sap, reason);
 
     p_dlcb = llcp_dlc_find_dlcb_by_sap (local_sap, remote_sap);
@@ -1059,11 +1059,11 @@ tLLCP_STATUS LLCP_ConnectReject (UINT8 local_sap,
     if (p_dlcb)
     {
         status = llcp_dlsm_execute (p_dlcb, LLCP_DLC_EVENT_API_CONNECT_REJECT, &reason);
-        llcp_util_deallocate_data_link(p_dlcb);
+        llcp_util_deallocate_data_link (p_dlcb);
     }
     else
     {
-        LLCP_TRACE_ERROR0 ("LLCP_ConnectReject(): No data link");
+        LLCP_TRACE_ERROR0 ("LLCP_ConnectReject (): No data link");
         status = LLCP_STATUS_FAIL;
     }
 
@@ -1088,20 +1088,20 @@ BOOLEAN LLCP_IsDataLinkCongested (UINT8 local_sap,
 {
     tLLCP_DLCB   *p_dlcb;
 
-    LLCP_TRACE_API5 ("LLCP_IsDataLinkCongested() Local SAP:0x%x, Remote SAP:0x%x, pending = (%d, %d, %d)",
+    LLCP_TRACE_API5 ("LLCP_IsDataLinkCongested () Local SAP:0x%x, Remote SAP:0x%x, pending = (%d, %d, %d)",
                      local_sap, remote_sap, num_pending_i_pdu, total_pending_ui_pdu, total_pending_i_pdu);
 
     p_dlcb = llcp_dlc_find_dlcb_by_sap (local_sap, remote_sap);
 
     if (p_dlcb)
     {
-        if ((p_dlcb->is_tx_congested)
-          ||(p_dlcb->remote_busy))
+        if (  (p_dlcb->is_tx_congested)
+            ||(p_dlcb->remote_busy)  )
         {
             return (TRUE);
         }
-        else if ((num_pending_i_pdu + p_dlcb->i_xmit_q.count >= p_dlcb->remote_rw)
-               ||(total_pending_ui_pdu + total_pending_i_pdu + llcp_cb.total_tx_ui_pdu + llcp_cb.total_tx_i_pdu >= llcp_cb.max_num_tx_buff))
+        else if (  (num_pending_i_pdu + p_dlcb->i_xmit_q.count >= p_dlcb->remote_rw)
+                 ||(total_pending_ui_pdu + total_pending_i_pdu + llcp_cb.total_tx_ui_pdu + llcp_cb.total_tx_i_pdu >= llcp_cb.max_num_tx_buff)  )
         {
             /* set flag so LLCP can notify uncongested status later */
             p_dlcb->is_tx_congested = TRUE;
@@ -1130,7 +1130,7 @@ tLLCP_STATUS LLCP_SendData (UINT8   local_sap,
     tLLCP_STATUS  status = LLCP_STATUS_FAIL;
     tLLCP_DLCB   *p_dlcb;
 
-    LLCP_TRACE_API2 ("LLCP_SendData() Local SAP:0x%x, Remote SAP:0x%x",
+    LLCP_TRACE_API2 ("LLCP_SendData () Local SAP:0x%x, Remote SAP:0x%x",
                      local_sap, remote_sap);
 
     p_dlcb = llcp_dlc_find_dlcb_by_sap (local_sap, remote_sap);
@@ -1145,19 +1145,19 @@ tLLCP_STATUS LLCP_SendData (UINT8   local_sap,
             }
             else
             {
-                LLCP_TRACE_ERROR2 ("LLCP_SendData(): offset(%d) must be %d at least",
+                LLCP_TRACE_ERROR2 ("LLCP_SendData (): offset (%d) must be %d at least",
                                     p_buf->offset, LLCP_MIN_OFFSET );
             }
         }
         else
         {
-            LLCP_TRACE_ERROR2 ("LLCP_SendData(): Information(%d bytes) cannot be more than peer MIU(%d bytes)",
+            LLCP_TRACE_ERROR2 ("LLCP_SendData (): Information (%d bytes) cannot be more than peer MIU (%d bytes)",
                                 p_buf->len, p_dlcb->remote_miu);
         }
     }
     else
     {
-        LLCP_TRACE_ERROR0 ("LLCP_SendData(): No data link");
+        LLCP_TRACE_ERROR0 ("LLCP_SendData (): No data link");
     }
 
     if (status == LLCP_STATUS_FAIL)
@@ -1193,7 +1193,7 @@ BOOLEAN LLCP_ReadDataLinkData (UINT8  local_sap,
     UINT8      *p_i_pdu;
     UINT16     i_pdu_length;
 
-    LLCP_TRACE_API2 ("LLCP_ReadDataLinkData() Local SAP:0x%x, Remote SAP:0x%x",
+    LLCP_TRACE_API2 ("LLCP_ReadDataLinkData () Local SAP:0x%x, Remote SAP:0x%x",
                       local_sap, remote_sap);
 
     p_dlcb = llcp_dlc_find_dlcb_by_sap (local_sap, remote_sap);
@@ -1204,8 +1204,8 @@ BOOLEAN LLCP_ReadDataLinkData (UINT8  local_sap,
         /* if any I PDU in rx queue */
         if (p_dlcb->i_rx_q.p_first)
         {
-            p_buf   = (BT_HDR *)p_dlcb->i_rx_q.p_first;
-            p_i_pdu = (UINT8*)(p_buf + 1) + p_buf->offset;
+            p_buf   = (BT_HDR *) p_dlcb->i_rx_q.p_first;
+            p_i_pdu = (UINT8*) (p_buf + 1) + p_buf->offset;
 
             /* get length of I PDU */
             BE_STREAM_TO_UINT16 (i_pdu_length, p_i_pdu);
@@ -1214,10 +1214,10 @@ BOOLEAN LLCP_ReadDataLinkData (UINT8  local_sap,
             p_i_pdu += p_buf->layer_specific;
 
             /* copy data up to max_data_len */
-            if (max_data_len >= (UINT32)(i_pdu_length - p_buf->layer_specific))
+            if (max_data_len >= (UINT32) (i_pdu_length - p_buf->layer_specific))
             {
                 /* copy information */
-                *p_data_len = (UINT32)(i_pdu_length - p_buf->layer_specific);
+                *p_data_len = (UINT32) (i_pdu_length - p_buf->layer_specific);
 
                 /* move to next I PDU if any */
                 p_buf->layer_specific = 0;  /* reset offset to read from the first byte of next I PDU */
@@ -1252,9 +1252,9 @@ BOOLEAN LLCP_ReadDataLinkData (UINT8  local_sap,
         }
 
         /* if getting out of rx congestion */
-        if ((!p_dlcb->local_busy)
-          &&(p_dlcb->is_rx_congested)
-          &&(p_dlcb->num_rx_i_pdu <= p_dlcb->rx_congest_threshold / 2))
+        if (  (!p_dlcb->local_busy)
+            &&(p_dlcb->is_rx_congested)
+            &&(p_dlcb->num_rx_i_pdu <= p_dlcb->rx_congest_threshold / 2)  )
         {
             /* send RR */
             p_dlcb->is_rx_congested = FALSE;
@@ -1273,7 +1273,7 @@ BOOLEAN LLCP_ReadDataLinkData (UINT8  local_sap,
     }
     else
     {
-        LLCP_TRACE_ERROR0 ("LLCP_ReadDataLinkData(): No data link connection");
+        LLCP_TRACE_ERROR0 ("LLCP_ReadDataLinkData (): No data link connection");
 
         return (FALSE);
     }
@@ -1298,7 +1298,7 @@ UINT32 LLCP_FlushDataLinkRxData (UINT8  local_sap,
     UINT8      *p_i_pdu;
     UINT16     i_pdu_length;
 
-    LLCP_TRACE_API2 ("LLCP_FlushDataLinkRxData() Local SAP:0x%x, Remote SAP:0x%x",
+    LLCP_TRACE_API2 ("LLCP_FlushDataLinkRxData () Local SAP:0x%x, Remote SAP:0x%x",
                       local_sap, remote_sap);
 
     p_dlcb = llcp_dlc_find_dlcb_by_sap (local_sap, remote_sap);
@@ -1308,13 +1308,13 @@ UINT32 LLCP_FlushDataLinkRxData (UINT8  local_sap,
         /* if any I PDU in rx queue */
         while (p_dlcb->i_rx_q.p_first)
         {
-            p_buf   = (BT_HDR *)p_dlcb->i_rx_q.p_first;
-            p_i_pdu = (UINT8*)(p_buf + 1) + p_buf->offset;
+            p_buf   = (BT_HDR *) p_dlcb->i_rx_q.p_first;
+            p_i_pdu = (UINT8*) (p_buf + 1) + p_buf->offset;
 
             /* get length of I PDU */
             BE_STREAM_TO_UINT16 (i_pdu_length, p_i_pdu);
 
-            flushed_length += (UINT32)(i_pdu_length - p_buf->layer_specific);
+            flushed_length += (UINT32) (i_pdu_length - p_buf->layer_specific);
 
             /* move to next I PDU if any */
             p_buf->layer_specific = 0;  /* offset */
@@ -1333,8 +1333,8 @@ UINT32 LLCP_FlushDataLinkRxData (UINT8  local_sap,
         p_dlcb->num_rx_i_pdu = 0;
 
         /* if getting out of rx congestion */
-        if ((!p_dlcb->local_busy)
-          &&(p_dlcb->is_rx_congested))
+        if (  (!p_dlcb->local_busy)
+            &&(p_dlcb->is_rx_congested)  )
         {
             /* send RR */
             p_dlcb->is_rx_congested = FALSE;
@@ -1346,7 +1346,7 @@ UINT32 LLCP_FlushDataLinkRxData (UINT8  local_sap,
     }
     else
     {
-        LLCP_TRACE_ERROR0 ("LLCP_FlushDataLinkRxData(): No data link connection");
+        LLCP_TRACE_ERROR0 ("LLCP_FlushDataLinkRxData (): No data link connection");
     }
 
     return (flushed_length);
@@ -1369,7 +1369,7 @@ tLLCP_STATUS LLCP_DisconnectReq (UINT8 local_sap,
     tLLCP_STATUS  status;
     tLLCP_DLCB   *p_dlcb;
 
-    LLCP_TRACE_API3 ("LLCP_DisconnectReq() Local SAP:0x%x, Remote SAP:0x%x, flush=%d",
+    LLCP_TRACE_API3 ("LLCP_DisconnectReq () Local SAP:0x%x, Remote SAP:0x%x, flush=%d",
                      local_sap, remote_sap, flush);
 
     p_dlcb = llcp_dlc_find_dlcb_by_sap (local_sap, remote_sap);
@@ -1380,7 +1380,7 @@ tLLCP_STATUS LLCP_DisconnectReq (UINT8 local_sap,
     }
     else
     {
-        LLCP_TRACE_ERROR0 ("LLCP_DisconnectReq(): No data link");
+        LLCP_TRACE_ERROR0 ("LLCP_DisconnectReq (): No data link");
         status = LLCP_STATUS_FAIL;
     }
 
@@ -1405,7 +1405,7 @@ tLLCP_STATUS LLCP_SetTxCompleteNtf (UINT8   local_sap,
     tLLCP_STATUS  status;
     tLLCP_DLCB   *p_dlcb;
 
-    LLCP_TRACE_API2 ("LLCP_SetTxCompleteNtf() Local SAP:0x%x, Remote SAP:0x%x",
+    LLCP_TRACE_API2 ("LLCP_SetTxCompleteNtf () Local SAP:0x%x, Remote SAP:0x%x",
                       local_sap, remote_sap);
 
     p_dlcb = llcp_dlc_find_dlcb_by_sap (local_sap, remote_sap);
@@ -1418,7 +1418,7 @@ tLLCP_STATUS LLCP_SetTxCompleteNtf (UINT8   local_sap,
     }
     else
     {
-        LLCP_TRACE_ERROR0 ("LLCP_SetTxCompleteNtf(): No data link");
+        LLCP_TRACE_ERROR0 ("LLCP_SetTxCompleteNtf (): No data link");
         status = LLCP_STATUS_FAIL;
     }
 
@@ -1442,7 +1442,7 @@ tLLCP_STATUS LLCP_SetLocalBusyStatus (UINT8   local_sap,
     tLLCP_STATUS  status;
     tLLCP_DLCB   *p_dlcb;
 
-    LLCP_TRACE_API2 ("LLCP_SetLocalBusyStatus() Local SAP:0x%x, is_busy=%d",
+    LLCP_TRACE_API2 ("LLCP_SetLocalBusyStatus () Local SAP:0x%x, is_busy=%d",
                       local_sap, is_busy);
 
     p_dlcb = llcp_dlc_find_dlcb_by_sap (local_sap, remote_sap);
@@ -1468,7 +1468,7 @@ tLLCP_STATUS LLCP_SetLocalBusyStatus (UINT8   local_sap,
     }
     else
     {
-        LLCP_TRACE_ERROR0 ("LLCP_SetLocalBusyStatus(): No data link");
+        LLCP_TRACE_ERROR0 ("LLCP_SetLocalBusyStatus (): No data link");
         status = LLCP_STATUS_FAIL;
     }
 
@@ -1487,7 +1487,7 @@ tLLCP_STATUS LLCP_SetLocalBusyStatus (UINT8   local_sap,
 *******************************************************************************/
 UINT16 LLCP_GetRemoteWKS (void)
 {
-    LLCP_TRACE_API1 ("LLCP_GetRemoteWKS() WKS:0x%04x",
+    LLCP_TRACE_API1 ("LLCP_GetRemoteWKS () WKS:0x%04x",
                      (llcp_cb.lcb.link_state == LLCP_LINK_STATE_ACTIVATED) ? llcp_cb.lcb.peer_wks :0);
 
     if (llcp_cb.lcb.link_state == LLCP_LINK_STATE_ACTIVATED)
@@ -1508,7 +1508,7 @@ UINT16 LLCP_GetRemoteWKS (void)
 *******************************************************************************/
 UINT8 LLCP_GetRemoteLSC (void)
 {
-    LLCP_TRACE_API1 ("LLCP_GetRemoteLSC() LSC:0x%x",
+    LLCP_TRACE_API1 ("LLCP_GetRemoteLSC () LSC:0x%x",
                      (llcp_cb.lcb.link_state == LLCP_LINK_STATE_ACTIVATED)
                      ? llcp_cb.lcb.peer_opt & (LLCP_LSC_1 | LLCP_LSC_2) :0);
 
@@ -1531,7 +1531,7 @@ UINT8 LLCP_GetRemoteLSC (void)
 LLCP_API void LLCP_GetLinkMIU (UINT16 *p_local_link_miu,
                                UINT16 *p_remote_link_miu)
 {
-    LLCP_TRACE_API0 ("LLCP_GetLinkMIU()");
+    LLCP_TRACE_API0 ("LLCP_GetLinkMIU ()");
 
     if (llcp_cb.lcb.link_state == LLCP_LINK_STATE_ACTIVATED)
     {
@@ -1544,7 +1544,7 @@ LLCP_API void LLCP_GetLinkMIU (UINT16 *p_local_link_miu,
         *p_remote_link_miu = 0;
     }
 
-    LLCP_TRACE_DEBUG2 ("LLCP_GetLinkMIU(): local_link_miu = %d, remote_link_miu = %d",
+    LLCP_TRACE_DEBUG2 ("LLCP_GetLinkMIU (): local_link_miu = %d, remote_link_miu = %d",
                        *p_local_link_miu, *p_remote_link_miu);
 }
 
@@ -1565,25 +1565,25 @@ tLLCP_STATUS LLCP_DiscoverService (char            *p_name,
     tLLCP_STATUS  status;
     UINT8         i;
 
-    LLCP_TRACE_API1 ("LLCP_DiscoverService() Service Name:%s",
+    LLCP_TRACE_API1 ("LLCP_DiscoverService () Service Name:%s",
                       p_name);
 
     if (llcp_cb.lcb.link_state != LLCP_LINK_STATE_ACTIVATED)
     {
-        LLCP_TRACE_ERROR0 ("LLCP_DiscoverService(): Link is not activated");
+        LLCP_TRACE_ERROR0 ("LLCP_DiscoverService (): Link is not activated");
         return LLCP_STATUS_FAIL;
     }
 
     if (!p_cback)
     {
-        LLCP_TRACE_ERROR0 ("LLCP_DiscoverService(): Callback must be provided.");
+        LLCP_TRACE_ERROR0 ("LLCP_DiscoverService (): Callback must be provided.");
         return LLCP_STATUS_FAIL;
     }
 
     /* if peer version is less than V1.1 then SNL is not supported */
-    if ((llcp_cb.lcb.agreed_major_version == 0x01)&&(llcp_cb.lcb.agreed_minor_version < 0x01))
+    if ((llcp_cb.lcb.agreed_major_version == 0x01) && (llcp_cb.lcb.agreed_minor_version < 0x01))
     {
-        LLCP_TRACE_ERROR0 ("LLCP_DiscoverService(): Peer doesn't support SNL");
+        LLCP_TRACE_ERROR0 ("LLCP_DiscoverService (): Peer doesn't support SNL");
         return LLCP_STATUS_FAIL;
     }
 
@@ -1607,7 +1607,7 @@ tLLCP_STATUS LLCP_DiscoverService (char            *p_name,
         }
     }
 
-    LLCP_TRACE_ERROR0 ("LLCP_DiscoverService(): Out of resource");
+    LLCP_TRACE_ERROR0 ("LLCP_DiscoverService (): Out of resource");
 
     return LLCP_STATUS_FAIL;
 }

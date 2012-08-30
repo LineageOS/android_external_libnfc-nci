@@ -103,7 +103,7 @@ static tLLCP_STATUS llcp_dlsm_idle (tLLCP_DLCB *p_dlcb, tLLCP_DLC_EVENT event, v
         /* upper layer requests to create data link connection */
         p_params = (tLLCP_CONNECTION_PARAMS *)p_data;
 
-        status = llcp_util_send_connect(p_dlcb, p_params);
+        status = llcp_util_send_connect (p_dlcb, p_params);
 
         if (status == LLCP_STATUS_SUCCESS)
         {
@@ -114,18 +114,18 @@ static tLLCP_STATUS llcp_dlsm_idle (tLLCP_DLCB *p_dlcb, tLLCP_DLC_EVENT event, v
             p_dlcb->state     = LLCP_DLC_STATE_W4_REMOTE_RESP;
 
             nfc_start_quick_timer (&p_dlcb->timer, NFC_TTYPE_LLCP_DATA_LINK,
-                                   (UINT32)(llcp_cb.lcb.data_link_timeout*QUICK_TIMER_TICKS_PER_SEC)/1000);
+                                   (UINT32) (llcp_cb.lcb.data_link_timeout * QUICK_TIMER_TICKS_PER_SEC) / 1000);
         }
         break;
 
     case LLCP_DLC_EVENT_PEER_CONNECT_IND:
 
         /* peer device requests to create data link connection */
-        p_params = (tLLCP_CONNECTION_PARAMS *)p_data;
+        p_params = (tLLCP_CONNECTION_PARAMS *) p_data;
 
         if (p_params->miu > llcp_cb.lcb.peer_miu)
         {
-            LLCP_TRACE_WARNING0 ("llcp_dlsm_idle(): Peer sent data link MIU bigger than peer's link MIU");
+            LLCP_TRACE_WARNING0 ("llcp_dlsm_idle (): Peer sent data link MIU bigger than peer's link MIU");
             p_params->miu = llcp_cb.lcb.peer_miu;
         }
 
@@ -140,20 +140,20 @@ static tLLCP_STATUS llcp_dlsm_idle (tLLCP_DLCB *p_dlcb, tLLCP_DLC_EVENT event, v
         p_dlcb->remote_miu = p_params->miu;
         p_dlcb->remote_rw  = p_params->rw;
 
-        LLCP_TRACE_DEBUG2 ("llcp_dlsm_idle(): Remote MIU:%d, RW:%d", p_dlcb->remote_miu, p_dlcb->remote_rw);
+        LLCP_TRACE_DEBUG2 ("llcp_dlsm_idle (): Remote MIU:%d, RW:%d", p_dlcb->remote_miu, p_dlcb->remote_rw);
 
         /* wait for response from upper layer */
         p_dlcb->state = LLCP_DLC_STATE_W4_LOCAL_RESP;
 
         nfc_start_quick_timer (&p_dlcb->timer, NFC_TTYPE_LLCP_DATA_LINK,
-                               (UINT32)(llcp_cb.lcb.data_link_timeout*QUICK_TIMER_TICKS_PER_SEC)/1000);
+                               (UINT32) (llcp_cb.lcb.data_link_timeout * QUICK_TIMER_TICKS_PER_SEC) / 1000);
 
-        (*p_dlcb->p_app_cb->p_app_cback)(&data);
+        (*p_dlcb->p_app_cb->p_app_cback) (&data);
 
         break;
 
     default:
-        LLCP_TRACE_ERROR0 ("llcp_dlsm_idle(): Unexpected event");
+        LLCP_TRACE_ERROR0 ("llcp_dlsm_idle (): Unexpected event");
         status = LLCP_STATUS_FAIL;
         break;
     }
@@ -183,19 +183,19 @@ static tLLCP_STATUS llcp_dlsm_w4_remote_resp (tLLCP_DLCB *p_dlcb, tLLCP_DLC_EVEN
         /* peer device accepted data link connection */
         nfc_stop_quick_timer (&p_dlcb->timer);
 
-        p_params = (tLLCP_CONNECTION_PARAMS *)p_data;
+        p_params = (tLLCP_CONNECTION_PARAMS *) p_data;
 
         /* data link MIU must be up to link MIU */
         if (p_params->miu > llcp_cb.lcb.peer_miu)
         {
-            LLCP_TRACE_WARNING0 ("llcp_dlsm_w4_remote_resp(): Peer sent data link MIU bigger than peer's link MIU");
+            LLCP_TRACE_WARNING0 ("llcp_dlsm_w4_remote_resp (): Peer sent data link MIU bigger than peer's link MIU");
             p_params->miu = llcp_cb.lcb.peer_miu;
         }
 
         p_dlcb->remote_miu = p_params->miu;
         p_dlcb->remote_rw  = p_params->rw;
 
-        LLCP_TRACE_DEBUG2 ("llcp_dlsm_w4_remote_resp(): Remote MIU:%d, RW:%d", p_dlcb->remote_miu, p_dlcb->remote_rw);
+        LLCP_TRACE_DEBUG2 ("llcp_dlsm_w4_remote_resp (): Remote MIU:%d, RW:%d", p_dlcb->remote_miu, p_dlcb->remote_rw);
 
         p_dlcb->state = LLCP_DLC_STATE_CONNECTED;
         llcp_util_adjust_dl_rx_congestion ();
@@ -206,7 +206,7 @@ static tLLCP_STATUS llcp_dlsm_w4_remote_resp (tLLCP_DLCB *p_dlcb, tLLCP_DLC_EVEN
         data.connect_resp.miu            = p_params->miu;
         data.connect_resp.rw             = p_params->rw;
 
-        (*p_dlcb->p_app_cb->p_app_cback)(&data);
+        (*p_dlcb->p_app_cb->p_app_cback) (&data);
 
         if (llcp_cb.overall_rx_congested)
         {
@@ -221,8 +221,8 @@ static tLLCP_STATUS llcp_dlsm_w4_remote_resp (tLLCP_DLCB *p_dlcb, tLLCP_DLC_EVEN
         data.disconnect_resp.event       = LLCP_SAP_EVT_DISCONNECT_RESP;
         data.disconnect_resp.local_sap   = p_dlcb->local_sap;
         data.disconnect_resp.remote_sap  = p_dlcb->remote_sap;
-        data.disconnect_resp.reason      = *((UINT8*)p_data);
-        (*p_dlcb->p_app_cb->p_app_cback)(&data);
+        data.disconnect_resp.reason      = *((UINT8*) p_data);
+        (*p_dlcb->p_app_cb->p_app_cback) (&data);
 
         /* stop timer, flush any pending data in queue and deallocate control block */
         llcp_util_deallocate_data_link (p_dlcb);
@@ -237,14 +237,14 @@ static tLLCP_STATUS llcp_dlsm_w4_remote_resp (tLLCP_DLCB *p_dlcb, tLLCP_DLC_EVEN
         data.disconnect_ind.event       = LLCP_SAP_EVT_DISCONNECT_IND;
         data.disconnect_ind.local_sap   = p_dlcb->local_sap;
         data.disconnect_ind.remote_sap  = p_dlcb->remote_sap;
-        (*p_dlcb->p_app_cb->p_app_cback)(&data);
+        (*p_dlcb->p_app_cb->p_app_cback) (&data);
 
         llcp_util_deallocate_data_link (p_dlcb);
         llcp_util_adjust_dl_rx_congestion ();
         break;
 
     default:
-        LLCP_TRACE_ERROR0 ("llcp_dlsm_w4_remote_resp(): Unexpected event");
+        LLCP_TRACE_ERROR0 ("llcp_dlsm_w4_remote_resp (): Unexpected event");
         status = LLCP_STATUS_FAIL;
         break;
     }
@@ -275,7 +275,7 @@ static tLLCP_STATUS llcp_dlsm_w4_local_resp (tLLCP_DLCB *p_dlcb, tLLCP_DLC_EVENT
         /* upper layer accepted data link connection */
         nfc_stop_quick_timer (&p_dlcb->timer);
 
-        p_params = (tLLCP_CONNECTION_PARAMS *)p_data;
+        p_params = (tLLCP_CONNECTION_PARAMS *) p_data;
 
         p_dlcb->local_miu = p_params->miu;
         p_dlcb->local_rw  = p_params->rw;
@@ -287,7 +287,7 @@ static tLLCP_STATUS llcp_dlsm_w4_local_resp (tLLCP_DLCB *p_dlcb, tLLCP_DLC_EVENT
             p_dlcb->flags |= LLCP_DATA_LINK_FLAG_PENDING_RR_RNR;
         }
 
-        status = llcp_util_send_cc(p_dlcb, p_params);
+        status = llcp_util_send_cc (p_dlcb, p_params);
 
         if (status == LLCP_STATUS_SUCCESS)
         {
@@ -298,7 +298,7 @@ static tLLCP_STATUS llcp_dlsm_w4_local_resp (tLLCP_DLCB *p_dlcb, tLLCP_DLC_EVENT
             data.disconnect_ind.event       = LLCP_SAP_EVT_DISCONNECT_IND;
             data.disconnect_ind.local_sap   = p_dlcb->local_sap;
             data.disconnect_ind.remote_sap  = p_dlcb->remote_sap;
-            (*p_dlcb->p_app_cb->p_app_cback)(&data);
+            (*p_dlcb->p_app_cb->p_app_cback) (&data);
 
             llcp_util_deallocate_data_link (p_dlcb);
         }
@@ -310,7 +310,7 @@ static tLLCP_STATUS llcp_dlsm_w4_local_resp (tLLCP_DLCB *p_dlcb, tLLCP_DLC_EVENT
         if (event == LLCP_DLC_EVENT_TIMEOUT)
             reason = LLCP_SAP_DM_REASON_TEMP_REJECT_THIS;
         else
-            reason = *((UINT8*)p_data);
+            reason = *((UINT8*) p_data);
 
         /* upper layer rejected connection or didn't respond */
         llcp_util_send_dm (p_dlcb->remote_sap, p_dlcb->local_sap, reason);
@@ -327,14 +327,14 @@ static tLLCP_STATUS llcp_dlsm_w4_local_resp (tLLCP_DLCB *p_dlcb, tLLCP_DLC_EVENT
         data.disconnect_ind.event       = LLCP_SAP_EVT_DISCONNECT_IND;
         data.disconnect_ind.local_sap   = p_dlcb->local_sap;
         data.disconnect_ind.remote_sap  = p_dlcb->remote_sap;
-        (*p_dlcb->p_app_cb->p_app_cback)(&data);
+        (*p_dlcb->p_app_cb->p_app_cback) (&data);
 
         llcp_util_deallocate_data_link (p_dlcb);
         llcp_util_adjust_dl_rx_congestion ();
         break;
 
     default:
-        LLCP_TRACE_ERROR0 ("llcp_dlsm_w4_local_resp(): Unexpected event");
+        LLCP_TRACE_ERROR0 ("llcp_dlsm_w4_local_resp (): Unexpected event");
         status = LLCP_STATUS_FAIL;
         break;
     }
@@ -362,15 +362,16 @@ static tLLCP_STATUS llcp_dlsm_connected (tLLCP_DLCB *p_dlcb, tLLCP_DLC_EVENT eve
     case LLCP_DLC_EVENT_API_DISCONNECT_REQ:
 
         /* upper layer requests to disconnect */
-        flush = *(BOOLEAN*)(p_data);
+        flush = *(BOOLEAN*) (p_data);
 
         /*
         ** if upper layer asks to discard any pending data
         ** or there is no pending data/ack to send and it is not waiting for ack
         */
-        if ((flush)||((p_dlcb->i_xmit_q.count == 0)
-                    &&(p_dlcb->next_rx_seq == p_dlcb->sent_ack_seq)
-                    &&(p_dlcb->next_tx_seq == p_dlcb->rcvd_ack_seq)))
+        if (  (flush)
+            ||(  (p_dlcb->i_xmit_q.count == 0)
+               &&(p_dlcb->next_rx_seq == p_dlcb->sent_ack_seq)
+               &&(p_dlcb->next_tx_seq == p_dlcb->rcvd_ack_seq)  )  )
         {
             /* wait for disconnect response */
             p_dlcb->state = LLCP_DLC_STATE_W4_REMOTE_DM;
@@ -378,7 +379,7 @@ static tLLCP_STATUS llcp_dlsm_connected (tLLCP_DLCB *p_dlcb, tLLCP_DLC_EVENT eve
             llcp_util_send_disc (p_dlcb->remote_sap, p_dlcb->local_sap );
 
             nfc_start_quick_timer (&p_dlcb->timer, NFC_TTYPE_LLCP_DATA_LINK,
-                                   (UINT32)(llcp_cb.lcb.data_link_timeout*QUICK_TIMER_TICKS_PER_SEC)/1000);
+                                   (UINT32) (llcp_cb.lcb.data_link_timeout * QUICK_TIMER_TICKS_PER_SEC) / 1000);
         }
         else
         {
@@ -392,12 +393,12 @@ static tLLCP_STATUS llcp_dlsm_connected (tLLCP_DLCB *p_dlcb, tLLCP_DLC_EVENT eve
         /* peer device requests to disconnect */
 
         /* send disconnect response and notify upper layer */
-        llcp_util_send_dm(p_dlcb->remote_sap, p_dlcb->local_sap, LLCP_SAP_DM_REASON_RESP_DISC );
+        llcp_util_send_dm (p_dlcb->remote_sap, p_dlcb->local_sap, LLCP_SAP_DM_REASON_RESP_DISC );
 
         data.disconnect_ind.event       = LLCP_SAP_EVT_DISCONNECT_IND;
         data.disconnect_ind.local_sap   = p_dlcb->local_sap;
         data.disconnect_ind.remote_sap  = p_dlcb->remote_sap;
-        (*p_dlcb->p_app_cb->p_app_cback)(&data);
+        (*p_dlcb->p_app_cb->p_app_cback) (&data);
 
         llcp_util_deallocate_data_link (p_dlcb);
         llcp_util_adjust_dl_rx_congestion ();
@@ -416,12 +417,12 @@ static tLLCP_STATUS llcp_dlsm_connected (tLLCP_DLCB *p_dlcb, tLLCP_DLC_EVENT eve
 
             llcp_link_check_send_data ();
 
-            if ((p_dlcb->is_tx_congested)
-              ||(llcp_cb.overall_tx_congested)
-              ||(p_dlcb->remote_busy)
-              ||(p_dlcb->i_xmit_q.count >= p_dlcb->remote_rw)) /*if enough data to send next round */
+            if (  (p_dlcb->is_tx_congested)
+                ||(llcp_cb.overall_tx_congested)
+                ||(p_dlcb->remote_busy)
+                ||(p_dlcb->i_xmit_q.count >= p_dlcb->remote_rw)  ) /*if enough data to send next round */
             {
-                LLCP_TRACE_DEBUG3 ("llcp_dlsm_connected(): Data link (SSAP:DSAP=0x%X:0x%X) congested: xmit_q.count=%d",
+                LLCP_TRACE_DEBUG3 ("llcp_dlsm_connected (): Data link (SSAP:DSAP=0x%X:0x%X) congested: xmit_q.count=%d",
                                     p_dlcb->local_sap, p_dlcb->remote_sap, p_dlcb->i_xmit_q.count);
 
                 /* set congested here so overall congestion check routine will not report event again */
@@ -431,7 +432,7 @@ static tLLCP_STATUS llcp_dlsm_connected (tLLCP_DLCB *p_dlcb, tLLCP_DLC_EVENT eve
         }
         else
         {
-            LLCP_TRACE_ERROR0 ("llcp_dlsm_connected(): Remote RW is zero: discard data");
+            LLCP_TRACE_ERROR0 ("llcp_dlsm_connected (): Remote RW is zero: discard data");
             /* buffer will be freed when returned to API function */
             status = LLCP_STATUS_FAIL;
         }
@@ -445,7 +446,7 @@ static tLLCP_STATUS llcp_dlsm_connected (tLLCP_DLCB *p_dlcb, tLLCP_DLC_EVENT eve
         data.data_ind.link_type     = LLCP_LINK_TYPE_DATA_LINK_CONNECTION;
         data.data_ind.remote_sap    = p_dlcb->remote_sap;
 
-        (*p_dlcb->p_app_cb->p_app_cback)(&data);
+        (*p_dlcb->p_app_cb->p_app_cback) (&data);
         break;
 
     case LLCP_DLC_EVENT_FRAME_ERROR:
@@ -455,14 +456,14 @@ static tLLCP_STATUS llcp_dlsm_connected (tLLCP_DLCB *p_dlcb, tLLCP_DLC_EVENT eve
         data.disconnect_ind.event       = LLCP_SAP_EVT_DISCONNECT_IND;
         data.disconnect_ind.local_sap   = p_dlcb->local_sap;
         data.disconnect_ind.remote_sap  = p_dlcb->remote_sap;
-        (*p_dlcb->p_app_cb->p_app_cback)(&data);
+        (*p_dlcb->p_app_cb->p_app_cback) (&data);
 
         llcp_util_deallocate_data_link (p_dlcb);
         llcp_util_adjust_dl_rx_congestion ();
         break;
 
     default:
-        LLCP_TRACE_ERROR0 ("llcp_dlsm_connected(): Unexpected event");
+        LLCP_TRACE_ERROR0 ("llcp_dlsm_connected (): Unexpected event");
         status = LLCP_STATUS_FAIL;
         break;
     }
@@ -493,8 +494,8 @@ static tLLCP_STATUS llcp_dlsm_w4_remote_dm (tLLCP_DLCB *p_dlcb, tLLCP_DLC_EVENT 
         data.disconnect_resp.event       = LLCP_SAP_EVT_DISCONNECT_RESP;
         data.disconnect_resp.local_sap   = p_dlcb->local_sap;
         data.disconnect_resp.remote_sap  = p_dlcb->remote_sap;
-        data.disconnect_resp.reason      = *((UINT8*)p_data);
-        (*p_dlcb->p_app_cb->p_app_cback)(&data);
+        data.disconnect_resp.reason      = *((UINT8*) p_data);
+        (*p_dlcb->p_app_cb->p_app_cback) (&data);
 
         llcp_util_deallocate_data_link (p_dlcb);
         llcp_util_adjust_dl_rx_congestion ();
@@ -507,7 +508,7 @@ static tLLCP_STATUS llcp_dlsm_w4_remote_dm (tLLCP_DLCB *p_dlcb, tLLCP_DLC_EVENT 
         data.disconnect_ind.event       = LLCP_SAP_EVT_DISCONNECT_IND;
         data.disconnect_ind.local_sap   = p_dlcb->local_sap;
         data.disconnect_ind.remote_sap  = p_dlcb->remote_sap;
-        (*p_dlcb->p_app_cb->p_app_cback)(&data);
+        (*p_dlcb->p_app_cb->p_app_cback) (&data);
 
         llcp_util_deallocate_data_link (p_dlcb);
         llcp_util_adjust_dl_rx_congestion ();
@@ -517,7 +518,7 @@ static tLLCP_STATUS llcp_dlsm_w4_remote_dm (tLLCP_DLCB *p_dlcb, tLLCP_DLC_EVENT 
         break;
 
     default:
-        LLCP_TRACE_ERROR0 ("llcp_dlsm_w4_remote_dm(): Unexpected event");
+        LLCP_TRACE_ERROR0 ("llcp_dlsm_w4_remote_dm (): Unexpected event");
         status = LLCP_STATUS_FAIL;
         break;
     }
@@ -542,10 +543,10 @@ tLLCP_DLCB *llcp_dlc_find_dlcb_by_sap (UINT8 local_sap, UINT8 remote_sap)
 
     for (i = 0; i < LLCP_MAX_DATA_LINK; i++)
     {
-        if ((llcp_cb.dlcb[i].state != LLCP_DLC_STATE_IDLE)
-          &&(llcp_cb.dlcb[i].local_sap == local_sap))
+        if (  (llcp_cb.dlcb[i].state != LLCP_DLC_STATE_IDLE)
+            &&(llcp_cb.dlcb[i].local_sap == local_sap)  )
         {
-            if ((remote_sap == LLCP_INVALID_SAP)&&(llcp_cb.dlcb[i].state == LLCP_DLC_STATE_W4_REMOTE_RESP))
+            if ((remote_sap == LLCP_INVALID_SAP) && (llcp_cb.dlcb[i].state == LLCP_DLC_STATE_W4_REMOTE_RESP))
             {
                 /* Remote SAP has not been finalized because we are watiing for CC */
                 return (&llcp_cb.dlcb[i]);
@@ -572,7 +573,7 @@ void llcp_dlc_flush_q (tLLCP_DLCB *p_dlcb)
 {
     if (p_dlcb)
     {
-        LLCP_TRACE_DEBUG1 ("llcp_dlc_flush_q(): local SAP:0x%02X", p_dlcb->local_sap);
+        LLCP_TRACE_DEBUG1 ("llcp_dlc_flush_q (): local SAP:0x%02X", p_dlcb->local_sap);
 
         /* Release any held buffers */
         while (p_dlcb->i_xmit_q.p_first)
@@ -586,7 +587,7 @@ void llcp_dlc_flush_q (tLLCP_DLCB *p_dlcb)
     }
     else
     {
-        LLCP_TRACE_ERROR0 ("llcp_dlc_flush_q(): p_dlcb is NULL");
+        LLCP_TRACE_ERROR0 ("llcp_dlc_flush_q (): p_dlcb is NULL");
     }
 }
 
@@ -607,15 +608,15 @@ static void llcp_dlc_proc_connect_pdu (UINT8 dsap, UINT8 ssap, UINT16 length, UI
 
     tLLCP_CONNECTION_PARAMS  params;
 
-    LLCP_TRACE_DEBUG0 ("llcp_dlc_proc_connect_pdu()");
+    LLCP_TRACE_DEBUG0 ("llcp_dlc_proc_connect_pdu ()");
 
     p_app_cb = llcp_util_get_app_cb (dsap);
 
-    if ((p_app_cb == NULL)
-      ||(p_app_cb->p_app_cback == NULL)
-      ||((p_app_cb->link_type & LLCP_LINK_TYPE_DATA_LINK_CONNECTION) == 0))
+    if (  (p_app_cb == NULL)
+        ||(p_app_cb->p_app_cback == NULL)
+        ||((p_app_cb->link_type & LLCP_LINK_TYPE_DATA_LINK_CONNECTION) == 0)  )
     {
-        LLCP_TRACE_ERROR1 ("llcp_dlc_proc_connect_pdu(): Unregistered SAP:0x%x", dsap);
+        LLCP_TRACE_ERROR1 ("llcp_dlc_proc_connect_pdu (): Unregistered SAP:0x%x", dsap);
         llcp_util_send_dm (ssap, dsap, LLCP_SAP_DM_REASON_NO_SERVICE );
         return;
     }
@@ -623,7 +624,7 @@ static void llcp_dlc_proc_connect_pdu (UINT8 dsap, UINT8 ssap, UINT16 length, UI
     /* parse CONNECT PDU and get connection parameters */
     if (llcp_util_parse_connect (p_data, length, &params) != LLCP_STATUS_SUCCESS)
     {
-        LLCP_TRACE_ERROR0 ("llcp_dlc_proc_connect_pdu(): Bad format CONNECT");
+        LLCP_TRACE_ERROR0 ("llcp_dlc_proc_connect_pdu (): Bad format CONNECT");
         llcp_util_send_dm (ssap, dsap, LLCP_SAP_DM_REASON_TEMP_REJECT_THIS );
         return;
     }
@@ -633,20 +634,20 @@ static void llcp_dlc_proc_connect_pdu (UINT8 dsap, UINT8 ssap, UINT16 length, UI
     {
         /* find registered SAP with service name */
         if (strlen (params.sn))
-            dsap = llcp_sdp_get_sap_by_name (params.sn, (UINT8)strlen(params.sn));
+            dsap = llcp_sdp_get_sap_by_name (params.sn, (UINT8) strlen (params.sn));
         else
             dsap = 0;
 
         if (dsap == LLCP_SAP_SDP)
         {
-            LLCP_TRACE_ERROR0 ("llcp_dlc_proc_connect_pdu(): SDP doesn't accept connection");
+            LLCP_TRACE_ERROR0 ("llcp_dlc_proc_connect_pdu (): SDP doesn't accept connection");
 
             llcp_util_send_dm (ssap, LLCP_SAP_SDP, LLCP_SAP_DM_REASON_PERM_REJECT_THIS );
             return;
         }
         else if (dsap == 0)
         {
-            LLCP_TRACE_ERROR1 ("llcp_dlc_proc_connect_pdu(): Unregistered Service:%s", params.sn);
+            LLCP_TRACE_ERROR1 ("llcp_dlc_proc_connect_pdu (): Unregistered Service:%s", params.sn);
 
             llcp_util_send_dm (ssap, LLCP_SAP_SDP, LLCP_SAP_DM_REASON_NO_SERVICE );
             return;
@@ -657,7 +658,7 @@ static void llcp_dlc_proc_connect_pdu (UINT8 dsap, UINT8 ssap, UINT16 length, UI
     p_dlcb = llcp_dlc_find_dlcb_by_sap (dsap, ssap);
     if (p_dlcb)
     {
-        LLCP_TRACE_ERROR0 ("llcp_dlc_proc_connect_pdu(): Data link is aleady established");
+        LLCP_TRACE_ERROR0 ("llcp_dlc_proc_connect_pdu (): Data link is aleady established");
         llcp_util_send_dm (ssap, dsap, LLCP_SAP_DM_REASON_TEMP_REJECT_THIS );
     }
     else
@@ -670,13 +671,13 @@ static void llcp_dlc_proc_connect_pdu (UINT8 dsap, UINT8 ssap, UINT16 length, UI
             status = llcp_dlsm_execute (p_dlcb, LLCP_DLC_EVENT_PEER_CONNECT_IND, &params);
             if (status != LLCP_STATUS_SUCCESS)
             {
-                LLCP_TRACE_ERROR0 ("llcp_dlc_proc_connect_pdu(): Error in state machine");
+                LLCP_TRACE_ERROR0 ("llcp_dlc_proc_connect_pdu (): Error in state machine");
                 llcp_util_deallocate_data_link (p_dlcb);
             }
         }
         else
         {
-            LLCP_TRACE_ERROR0 ("llcp_dlc_proc_connect_pdu(): Out of resource");
+            LLCP_TRACE_ERROR0 ("llcp_dlc_proc_connect_pdu (): Out of resource");
             llcp_util_send_dm (ssap, dsap, LLCP_SAP_DM_REASON_TEMP_REJECT_ANY );
         }
     }
@@ -695,14 +696,14 @@ static void llcp_dlc_proc_disc_pdu (UINT8 dsap, UINT8 ssap, UINT16 length, UINT8
 {
     tLLCP_DLCB *p_dlcb;
 
-    LLCP_TRACE_DEBUG0 ("llcp_dlc_proc_disc_pdu()");
+    LLCP_TRACE_DEBUG0 ("llcp_dlc_proc_disc_pdu ()");
 
     p_dlcb = llcp_dlc_find_dlcb_by_sap (dsap, ssap);
     if (p_dlcb)
     {
         if (length > 0)
         {
-            LLCP_TRACE_ERROR1 ("llcp_dlc_proc_disc_pdu(): Received extra data(%d bytes) in DISC PDU", length);
+            LLCP_TRACE_ERROR1 ("llcp_dlc_proc_disc_pdu (): Received extra data (%d bytes) in DISC PDU", length);
 
             llcp_util_send_frmr (p_dlcb, LLCP_FRMR_W_ERROR_FLAG|LLCP_FRMR_I_ERROR_FLAG, LLCP_PDU_DISC_TYPE, 0);
             llcp_dlsm_execute (p_dlcb, LLCP_DLC_EVENT_FRAME_ERROR, NULL);
@@ -714,7 +715,7 @@ static void llcp_dlc_proc_disc_pdu (UINT8 dsap, UINT8 ssap, UINT16 length, UINT8
     }
     else
     {
-        LLCP_TRACE_ERROR2 ("llcp_dlc_proc_disc_pdu(): No data link for SAP(0x%x,0x%x)", dsap, ssap);
+        LLCP_TRACE_ERROR2 ("llcp_dlc_proc_disc_pdu (): No data link for SAP (0x%x,0x%x)", dsap, ssap);
     }
 }
 
@@ -733,7 +734,7 @@ static void llcp_dlc_proc_cc_pdu (UINT8 dsap, UINT8 ssap, UINT16 length, UINT8 *
     tLLCP_CONNECTION_PARAMS  params;
     tLLCP_STATUS             status;
 
-    LLCP_TRACE_DEBUG0 ("llcp_dlc_proc_cc_pdu()");
+    LLCP_TRACE_DEBUG0 ("llcp_dlc_proc_cc_pdu ()");
 
     /* find a DLCB waiting for CC on this local SAP */
     p_dlcb = llcp_dlc_find_dlcb_by_sap (dsap, LLCP_INVALID_SAP);
@@ -747,7 +748,7 @@ static void llcp_dlc_proc_cc_pdu (UINT8 dsap, UINT8 ssap, UINT16 length, UINT8 *
             status = llcp_dlsm_execute (p_dlcb, LLCP_DLC_EVENT_PEER_CONNECT_CFM, &params);
             if (status != LLCP_STATUS_SUCCESS)
             {
-                LLCP_TRACE_ERROR0 ("llcp_dlc_proc_cc_pdu(): Error in state machine");
+                LLCP_TRACE_ERROR0 ("llcp_dlc_proc_cc_pdu (): Error in state machine");
                 llcp_util_deallocate_data_link (p_dlcb);
             }
         }
@@ -759,7 +760,7 @@ static void llcp_dlc_proc_cc_pdu (UINT8 dsap, UINT8 ssap, UINT16 length, UINT8 *
     }
     else
     {
-        LLCP_TRACE_ERROR2 ("llcp_dlc_proc_cc_pdu(): No data link for SAP(0x%x,0x%x)", dsap, ssap);
+        LLCP_TRACE_ERROR2 ("llcp_dlc_proc_cc_pdu (): No data link for SAP (0x%x,0x%x)", dsap, ssap);
     }
 }
 
@@ -776,11 +777,11 @@ static void llcp_dlc_proc_dm_pdu (UINT8 dsap, UINT8 ssap, UINT16 length, UINT8 *
 {
     tLLCP_DLCB *p_dlcb;
 
-    LLCP_TRACE_DEBUG0 ("llcp_dlc_proc_dm_pdu()");
+    LLCP_TRACE_DEBUG0 ("llcp_dlc_proc_dm_pdu ()");
 
     if (length != LLCP_PDU_DM_SIZE - LLCP_PDU_HEADER_SIZE)
     {
-        LLCP_TRACE_ERROR0 ("llcp_dlc_proc_dm_pdu(): Received invalid DM PDU");
+        LLCP_TRACE_ERROR0 ("llcp_dlc_proc_dm_pdu (): Received invalid DM PDU");
     }
     else
     {
@@ -802,7 +803,7 @@ static void llcp_dlc_proc_dm_pdu (UINT8 dsap, UINT8 ssap, UINT16 length, UINT8 *
         }
         else
         {
-            LLCP_TRACE_ERROR2 ("llcp_dlc_proc_dm_pdu(): No data link for SAP(0x%x,0x%x)", dsap, ssap);
+            LLCP_TRACE_ERROR2 ("llcp_dlc_proc_dm_pdu (): No data link for SAP (0x%x,0x%x)", dsap, ssap);
         }
     }
 }
@@ -824,7 +825,7 @@ void llcp_dlc_proc_i_pdu (UINT8 dsap, UINT8 ssap, UINT16 i_pdu_length, UINT8 *p_
     BOOLEAN     appended;
     BT_HDR     *p_last_buf;
 
-    LLCP_TRACE_DEBUG0 ("llcp_dlc_proc_i_pdu()");
+    LLCP_TRACE_DEBUG0 ("llcp_dlc_proc_i_pdu ()");
 
     p_dlcb = llcp_dlc_find_dlcb_by_sap (dsap, ssap);
 
@@ -835,14 +836,14 @@ void llcp_dlc_proc_i_pdu (UINT8 dsap, UINT8 ssap, UINT16 i_pdu_length, UINT8 *p_
         if (p_msg)
         {
             i_pdu_length = p_msg->len;
-            p_i_pdu = (UINT8 *)(p_msg + 1) + p_msg->offset;
+            p_i_pdu = (UINT8 *) (p_msg + 1) + p_msg->offset;
         }
 
         info_len = i_pdu_length - LLCP_PDU_HEADER_SIZE - LLCP_SEQUENCE_SIZE;
 
         if (info_len > p_dlcb->local_miu)
         {
-            LLCP_TRACE_ERROR2 ("llcp_dlc_proc_i_pdu(): exceeding local MIU(%d bytes): got %d bytes SDU",
+            LLCP_TRACE_ERROR2 ("llcp_dlc_proc_i_pdu (): exceeding local MIU (%d bytes): got %d bytes SDU",
                                 p_dlcb->local_miu, info_len);
 
             error_flags |= LLCP_FRMR_I_ERROR_FLAG;
@@ -851,8 +852,8 @@ void llcp_dlc_proc_i_pdu (UINT8 dsap, UINT8 ssap, UINT16 i_pdu_length, UINT8 *p_
         /* get sequence numbers */
         p = p_i_pdu + LLCP_PDU_HEADER_SIZE;
 
-        send_seq = LLCP_GET_NS(*p);
-        rcv_seq  = LLCP_GET_NR(*p);
+        send_seq = LLCP_GET_NS (*p);
+        rcv_seq  = LLCP_GET_NR (*p);
 
 #if (BT_TRACE_VERBOSE == TRUE)
         LLCP_TRACE_DEBUG6 ("LLCP RX I PDU - N(S,R):(%d,%d) V(S,SA,R,RA):(%d,%d,%d,%d)",
@@ -864,7 +865,7 @@ void llcp_dlc_proc_i_pdu (UINT8 dsap, UINT8 ssap, UINT16 i_pdu_length, UINT8 *p_
         /* if send sequence number, N(S) is not expected one, V(R) */
         if (p_dlcb->next_rx_seq != send_seq)
         {
-            LLCP_TRACE_ERROR2 ("llcp_dlc_proc_i_pdu(): Bad N(S) got:%d, expected:%d",
+            LLCP_TRACE_ERROR2 ("llcp_dlc_proc_i_pdu (): Bad N(S) got:%d, expected:%d",
                                 send_seq, p_dlcb->next_rx_seq);
 
             error_flags |= LLCP_FRMR_S_ERROR_FLAG;
@@ -872,9 +873,9 @@ void llcp_dlc_proc_i_pdu (UINT8 dsap, UINT8 ssap, UINT16 i_pdu_length, UINT8 *p_
         else
         {
             /* if peer device sends more than our receiving window size */
-            if ((UINT8)(send_seq - p_dlcb->sent_ack_seq) % LLCP_SEQ_MODULO >= p_dlcb->local_rw)
+            if ((UINT8) (send_seq - p_dlcb->sent_ack_seq) % LLCP_SEQ_MODULO >= p_dlcb->local_rw)
             {
-                LLCP_TRACE_ERROR3 ("llcp_dlc_proc_i_pdu(): Bad N(S):%d >= V(RA):%d + RW(L):%d",
+                LLCP_TRACE_ERROR3 ("llcp_dlc_proc_i_pdu (): Bad N(S):%d >= V(RA):%d + RW(L):%d",
                                     send_seq, p_dlcb->sent_ack_seq, p_dlcb->local_rw);
 
                 error_flags |= LLCP_FRMR_S_ERROR_FLAG;
@@ -882,11 +883,11 @@ void llcp_dlc_proc_i_pdu (UINT8 dsap, UINT8 ssap, UINT16 i_pdu_length, UINT8 *p_
         }
 
         /* check N(R) is in valid range; V(SA) <= N(R) <= V(S) */
-        if ((UINT8)(rcv_seq - p_dlcb->rcvd_ack_seq) % LLCP_SEQ_MODULO + (UINT8)(p_dlcb->next_tx_seq - rcv_seq) % LLCP_SEQ_MODULO
-            != (UINT8)(p_dlcb->next_tx_seq - p_dlcb->rcvd_ack_seq) % LLCP_SEQ_MODULO )
+        if ((UINT8) (rcv_seq - p_dlcb->rcvd_ack_seq) % LLCP_SEQ_MODULO + (UINT8) (p_dlcb->next_tx_seq - rcv_seq) % LLCP_SEQ_MODULO
+            != (UINT8) (p_dlcb->next_tx_seq - p_dlcb->rcvd_ack_seq) % LLCP_SEQ_MODULO)
         {
             error_flags |= LLCP_FRMR_R_ERROR_FLAG;
-            LLCP_TRACE_ERROR3 ("llcp_dlc_proc_i_pdu(): Bad N(R):%d valid range [V(SA):%d, V(S):%d]",
+            LLCP_TRACE_ERROR3 ("llcp_dlc_proc_i_pdu (): Bad N(R):%d valid range [V(SA):%d, V(S):%d]",
                                 rcv_seq, p_dlcb->rcvd_ack_seq, p_dlcb->next_tx_seq);
         }
 
@@ -905,7 +906,7 @@ void llcp_dlc_proc_i_pdu (UINT8 dsap, UINT8 ssap, UINT16 i_pdu_length, UINT8 *p_
             appended = FALSE;
 
             /* get last buffer in rx queue */
-            p_last_buf = (BT_HDR *)GKI_getlast (&p_dlcb->i_rx_q);
+            p_last_buf = (BT_HDR *) GKI_getlast (&p_dlcb->i_rx_q);
 
             if (p_last_buf)
             {
@@ -915,7 +916,7 @@ void llcp_dlc_proc_i_pdu (UINT8 dsap, UINT8 ssap, UINT16 i_pdu_length, UINT8 *p_
                 /* if new UI PDU with length can be attached at the end of buffer */
                 if (available_bytes >= LLCP_PDU_AGF_LEN_SIZE + info_len)
                 {
-                    p_dst = (UINT8*)(p_last_buf + 1) + p_last_buf->offset + p_last_buf->len;
+                    p_dst = (UINT8*) (p_last_buf + 1) + p_last_buf->offset + p_last_buf->len;
 
                     /* add length of information in I PDU */
                     UINT16_TO_BE_STREAM (p_dst, info_len);
@@ -953,11 +954,11 @@ void llcp_dlc_proc_i_pdu (UINT8 dsap, UINT8 ssap, UINT16 i_pdu_length, UINT8 *p_
                 }
                 else
                 {
-                    p_msg = (BT_HDR *)GKI_getpoolbuf (LLCP_POOL_ID);
+                    p_msg = (BT_HDR *) GKI_getpoolbuf (LLCP_POOL_ID);
 
                     if (p_msg)
                     {
-                        p_dst = (UINT8*)(p_msg + 1);
+                        p_dst = (UINT8*) (p_msg + 1);
 
                         /* add length of information in front of information */
                         UINT16_TO_BE_STREAM (p_dst, info_len);
@@ -971,7 +972,7 @@ void llcp_dlc_proc_i_pdu (UINT8 dsap, UINT8 ssap, UINT16 i_pdu_length, UINT8 *p_
                     }
                     else
                     {
-                        LLCP_TRACE_ERROR0 ("llcp_dlc_proc_i_pdu(): out of buffer");
+                        LLCP_TRACE_ERROR0 ("llcp_dlc_proc_i_pdu (): out of buffer");
                     }
                 }
 
@@ -988,17 +989,17 @@ void llcp_dlc_proc_i_pdu (UINT8 dsap, UINT8 ssap, UINT16 i_pdu_length, UINT8 *p_
 
             p_dlcb->num_rx_i_pdu++;
 
-            if ((!p_dlcb->local_busy)
-              &&(p_dlcb->num_rx_i_pdu == 1))
+            if (  (!p_dlcb->local_busy)
+                &&(p_dlcb->num_rx_i_pdu == 1)  )
             {
                 /* notify rx data is available so upper layer reads data until queue is empty */
                 llcp_dlsm_execute (p_dlcb, LLCP_DLC_EVENT_PEER_DATA_IND, NULL);
             }
 
-            if ((!p_dlcb->is_rx_congested)
-              &&(p_dlcb->num_rx_i_pdu >= p_dlcb->rx_congest_threshold))
+            if (  (!p_dlcb->is_rx_congested)
+                &&(p_dlcb->num_rx_i_pdu >= p_dlcb->rx_congest_threshold)  )
             {
-                LLCP_TRACE_DEBUG2 ("llcp_dlc_proc_i_pdu(): congested num_rx_i_pdu=%d, rx_congest_threshold=%d",
+                LLCP_TRACE_DEBUG2 ("llcp_dlc_proc_i_pdu (): congested num_rx_i_pdu=%d, rx_congest_threshold=%d",
                                     p_dlcb->num_rx_i_pdu, p_dlcb->rx_congest_threshold);
 
                 /* send RNR */
@@ -1009,7 +1010,7 @@ void llcp_dlc_proc_i_pdu (UINT8 dsap, UINT8 ssap, UINT16 i_pdu_length, UINT8 *p_
     }
     else
     {
-        LLCP_TRACE_ERROR2 ("llcp_dlc_proc_i_pdu(): No data link for SAP(0x%x,0x%x)", dsap, ssap);
+        LLCP_TRACE_ERROR2 ("llcp_dlc_proc_i_pdu (): No data link for SAP (0x%x,0x%x)", dsap, ssap);
         llcp_util_send_dm (ssap, dsap, LLCP_SAP_DM_REASON_NO_ACTIVE_CONNECTION );
     }
 
@@ -1035,14 +1036,14 @@ static void llcp_dlc_proc_rr_rnr_pdu (UINT8 dsap, UINT8 ptype, UINT8 ssap, UINT1
     BOOLEAN     flush = TRUE;
     tLLCP_SAP_CBACK_DATA cback_data;
 
-    LLCP_TRACE_DEBUG0 ("llcp_dlc_proc_rr_rnr_pdu()");
+    LLCP_TRACE_DEBUG0 ("llcp_dlc_proc_rr_rnr_pdu ()");
 
     p_dlcb = llcp_dlc_find_dlcb_by_sap (dsap, ssap);
     if (p_dlcb != NULL)
     {
         error_flags = 0;
 
-        rcv_seq = LLCP_GET_NR(*p_data);
+        rcv_seq = LLCP_GET_NR (*p_data);
 
         if (length != LLCP_PDU_RR_SIZE - LLCP_PDU_HEADER_SIZE)
         {
@@ -1050,11 +1051,11 @@ static void llcp_dlc_proc_rr_rnr_pdu (UINT8 dsap, UINT8 ptype, UINT8 ssap, UINT1
         }
 
         /* check N(R) is in valid range; V(SA) <= N(R) <= V(S) */
-        if ((UINT8)(rcv_seq - p_dlcb->rcvd_ack_seq) % LLCP_SEQ_MODULO + (UINT8)(p_dlcb->next_tx_seq - rcv_seq) % LLCP_SEQ_MODULO
-            != (UINT8)(p_dlcb->next_tx_seq - p_dlcb->rcvd_ack_seq) % LLCP_SEQ_MODULO )
+        if ((UINT8) (rcv_seq - p_dlcb->rcvd_ack_seq) % LLCP_SEQ_MODULO + (UINT8) (p_dlcb->next_tx_seq - rcv_seq) % LLCP_SEQ_MODULO
+            != (UINT8) (p_dlcb->next_tx_seq - p_dlcb->rcvd_ack_seq) % LLCP_SEQ_MODULO )
         {
             error_flags |= LLCP_FRMR_R_ERROR_FLAG;
-            LLCP_TRACE_ERROR3 ("llcp_dlc_proc_rr_rnr_pdu(): Bad N(R):%d valid range [V(SA):%d, V(S):%d]",
+            LLCP_TRACE_ERROR3 ("llcp_dlc_proc_rr_rnr_pdu (): Bad N(R):%d valid range [V(SA):%d, V(S):%d]",
                                 rcv_seq, p_dlcb->rcvd_ack_seq, p_dlcb->next_tx_seq);
         }
 
@@ -1077,10 +1078,10 @@ static void llcp_dlc_proc_rr_rnr_pdu (UINT8 dsap, UINT8 ptype, UINT8 ssap, UINT1
             if (ptype == LLCP_PDU_RNR_TYPE)
             {
                 /* if upper layer hasn't get congestion started notification */
-                if ((!p_dlcb->remote_busy)
-                  &&(!p_dlcb->is_tx_congested))
+                if (  (!p_dlcb->remote_busy)
+                    &&(!p_dlcb->is_tx_congested)  )
                 {
-                    LLCP_TRACE_WARNING3 ("llcp_dlc_proc_rr_rnr_pdu(): Data link (SSAP:DSAP=0x%X:0x%X) congestion start: i_xmit_q.count=%d",
+                    LLCP_TRACE_WARNING3 ("llcp_dlc_proc_rr_rnr_pdu (): Data link (SSAP:DSAP=0x%X:0x%X) congestion start: i_xmit_q.count=%d",
                                           p_dlcb->local_sap, p_dlcb->remote_sap,
                                           p_dlcb->i_xmit_q.count);
 
@@ -1090,17 +1091,17 @@ static void llcp_dlc_proc_rr_rnr_pdu (UINT8 dsap, UINT8 ptype, UINT8 ssap, UINT1
                     cback_data.congest.is_congested = TRUE;
                     cback_data.congest.link_type    = LLCP_LINK_TYPE_DATA_LINK_CONNECTION;
 
-                    (*p_dlcb->p_app_cb->p_app_cback)(&cback_data);
+                    (*p_dlcb->p_app_cb->p_app_cback) (&cback_data);
                 }
                 p_dlcb->remote_busy = TRUE;
             }
             else
             {
                 /* if upper layer hasn't get congestion ended notification and data link is not congested */
-                if ((p_dlcb->remote_busy)
-                  &&(!p_dlcb->is_tx_congested))
+                if (  (p_dlcb->remote_busy)
+                    &&(!p_dlcb->is_tx_congested)  )
                 {
-                    LLCP_TRACE_WARNING3 ("llcp_dlc_proc_rr_rnr_pdu(): Data link (SSAP:DSAP=0x%X:0x%X) congestion end: i_xmit_q.count=%d",
+                    LLCP_TRACE_WARNING3 ("llcp_dlc_proc_rr_rnr_pdu (): Data link (SSAP:DSAP=0x%X:0x%X) congestion end: i_xmit_q.count=%d",
                                           p_dlcb->local_sap, p_dlcb->remote_sap,
                                           p_dlcb->i_xmit_q.count);
 
@@ -1110,7 +1111,7 @@ static void llcp_dlc_proc_rr_rnr_pdu (UINT8 dsap, UINT8 ptype, UINT8 ssap, UINT1
                     cback_data.congest.is_congested = FALSE;
                     cback_data.congest.link_type    = LLCP_LINK_TYPE_DATA_LINK_CONNECTION;
 
-                    (*p_dlcb->p_app_cb->p_app_cback)(&cback_data);
+                    (*p_dlcb->p_app_cb->p_app_cback) (&cback_data);
                 }
                 p_dlcb->remote_busy = FALSE;
             }
@@ -1119,9 +1120,9 @@ static void llcp_dlc_proc_rr_rnr_pdu (UINT8 dsap, UINT8 ptype, UINT8 ssap, UINT1
             if (p_dlcb->flags & LLCP_DATA_LINK_FLAG_PENDING_DISC)
             {
                 /* if no pending data and all PDU is acked */
-                if ((p_dlcb->i_xmit_q.count == 0)
-                  &&(p_dlcb->next_rx_seq == p_dlcb->sent_ack_seq)
-                  &&(p_dlcb->next_tx_seq == p_dlcb->rcvd_ack_seq))
+                if (  (p_dlcb->i_xmit_q.count == 0)
+                    &&(p_dlcb->next_rx_seq == p_dlcb->sent_ack_seq)
+                    &&(p_dlcb->next_tx_seq == p_dlcb->rcvd_ack_seq)  )
                 {
                     p_dlcb->flags &= ~LLCP_DATA_LINK_FLAG_PENDING_DISC;
                     llcp_dlsm_execute (p_dlcb, LLCP_DLC_EVENT_API_DISCONNECT_REQ, &flush);
@@ -1131,7 +1132,7 @@ static void llcp_dlc_proc_rr_rnr_pdu (UINT8 dsap, UINT8 ptype, UINT8 ssap, UINT1
     }
     else
     {
-        LLCP_TRACE_ERROR2 ("llcp_dlc_proc_rr_rnr_pdu(): No data link for SAP(0x%x,0x%x)", dsap, ssap);
+        LLCP_TRACE_ERROR2 ("llcp_dlc_proc_rr_rnr_pdu (): No data link for SAP (0x%x,0x%x)", dsap, ssap);
     }
 }
 
@@ -1148,16 +1149,16 @@ void llcp_dlc_proc_rx_pdu (UINT8 dsap, UINT8 ptype, UINT8 ssap, UINT16 length, U
 {
     tLLCP_DLCB *p_dlcb;
 
-    LLCP_TRACE_DEBUG3 ("llcp_dlc_proc_rx_pdu(): DSAP:0x%x, PTYPE:0x%x, SSAP:0x%x",
+    LLCP_TRACE_DEBUG3 ("llcp_dlc_proc_rx_pdu (): DSAP:0x%x, PTYPE:0x%x, SSAP:0x%x",
                         dsap, ptype, ssap);
 
     if (dsap == LLCP_SAP_LM)
     {
-        LLCP_TRACE_ERROR2 ("llcp_dlc_proc_rx_pdu(): Invalid SAP:0x%x for PTYPE:0x%x", dsap, ptype);
+        LLCP_TRACE_ERROR2 ("llcp_dlc_proc_rx_pdu (): Invalid SAP:0x%x for PTYPE:0x%x", dsap, ptype);
         return;
     }
 
-    switch(ptype)
+    switch (ptype)
     {
     case LLCP_PDU_CONNECT_TYPE:
         llcp_dlc_proc_connect_pdu (dsap, ssap, length, p_data);
@@ -1189,7 +1190,7 @@ void llcp_dlc_proc_rx_pdu (UINT8 dsap, UINT8 ptype, UINT8 ssap, UINT16 length, U
         break;
 
     default:
-        LLCP_TRACE_ERROR1 ("llcp_dlc_proc_rx_pdu(): Unexpected PDU type (0x%x)", ptype);
+        LLCP_TRACE_ERROR1 ("llcp_dlc_proc_rx_pdu (): Unexpected PDU type (0x%x)", ptype);
 
         p_dlcb = llcp_dlc_find_dlcb_by_sap (dsap, ssap);
         if (p_dlcb)
@@ -1215,7 +1216,7 @@ void llcp_dlc_check_to_send_rr_rnr (void)
     UINT8   idx;
     BOOLEAN flush = TRUE;
 
-    LLCP_TRACE_DEBUG0 ("llcp_dlc_check_to_send_rr_rnr()");
+    LLCP_TRACE_DEBUG0 ("llcp_dlc_check_to_send_rr_rnr ()");
 
     /*
     ** DLC doesn't send RR PDU for each received I PDU because multiple I PDUs can be aggregated
@@ -1235,9 +1236,9 @@ void llcp_dlc_check_to_send_rr_rnr (void)
             if (llcp_cb.dlcb[idx].flags & LLCP_DATA_LINK_FLAG_PENDING_DISC)
             {
                 /* if no pending data and all PDU is acked */
-                if ((llcp_cb.dlcb[idx].i_xmit_q.count == 0)
-                  &&(llcp_cb.dlcb[idx].next_rx_seq == llcp_cb.dlcb[idx].sent_ack_seq)
-                  &&(llcp_cb.dlcb[idx].next_tx_seq == llcp_cb.dlcb[idx].rcvd_ack_seq))
+                if (  (llcp_cb.dlcb[idx].i_xmit_q.count == 0)
+                    &&(llcp_cb.dlcb[idx].next_rx_seq == llcp_cb.dlcb[idx].sent_ack_seq)
+                    &&(llcp_cb.dlcb[idx].next_tx_seq == llcp_cb.dlcb[idx].rcvd_ack_seq)  )
                 {
                     llcp_cb.dlcb[idx].flags &= ~LLCP_DATA_LINK_FLAG_PENDING_DISC;
                     llcp_dlsm_execute (&(llcp_cb.dlcb[idx]), LLCP_DLC_EVENT_API_DISCONNECT_REQ, &flush);
@@ -1256,15 +1257,15 @@ void llcp_dlc_check_to_send_rr_rnr (void)
 ** Returns          TRUE if remote can receive more data
 **
 *******************************************************************************/
-BOOLEAN llcp_dlc_is_rw_open(tLLCP_DLCB *p_dlcb)
+BOOLEAN llcp_dlc_is_rw_open (tLLCP_DLCB *p_dlcb)
 {
-    if ((UINT8)(p_dlcb->next_tx_seq - p_dlcb->rcvd_ack_seq) % LLCP_SEQ_MODULO < p_dlcb->remote_rw)
+    if ((UINT8) (p_dlcb->next_tx_seq - p_dlcb->rcvd_ack_seq) % LLCP_SEQ_MODULO < p_dlcb->remote_rw)
     {
         return TRUE;
     }
     else
     {
-        LLCP_TRACE_DEBUG3 ("llcp_dlc_is_rw_open():Flow Off, V(S):%d, V(SA):%d, RW(R):%d",
+        LLCP_TRACE_DEBUG3 ("llcp_dlc_is_rw_open ():Flow Off, V(S):%d, V(SA):%d, RW(R):%d",
                            p_dlcb->next_tx_seq, p_dlcb->rcvd_ack_seq, p_dlcb->remote_rw);
         return FALSE;
     }
@@ -1290,11 +1291,11 @@ BT_HDR* llcp_dlc_get_next_pdu (tLLCP_DLCB *p_dlcb)
 #endif
 
     /* if there is data to send and remote device can receive it */
-    if ((p_dlcb->i_xmit_q.count)
-      &&(!p_dlcb->remote_busy)
-      &&(llcp_dlc_is_rw_open(p_dlcb)))
+    if (  (p_dlcb->i_xmit_q.count)
+        &&(!p_dlcb->remote_busy)
+        &&(llcp_dlc_is_rw_open (p_dlcb))  )
     {
-        p_msg = (BT_HDR *)GKI_dequeue (&p_dlcb->i_xmit_q);
+        p_msg = (BT_HDR *) GKI_dequeue (&p_dlcb->i_xmit_q);
         llcp_cb.total_tx_i_pdu--;
 
         if (p_msg->offset >= LLCP_MIN_OFFSET)
@@ -1313,7 +1314,7 @@ BT_HDR* llcp_dlc_get_next_pdu (tLLCP_DLCB *p_dlcb)
         }
         else
         {
-            LLCP_TRACE_ERROR2 ("LLCP - llcp_dlc_get_next_pdu(): offset(%d) must be %d at least",
+            LLCP_TRACE_ERROR2 ("LLCP - llcp_dlc_get_next_pdu (): offset (%d) must be %d at least",
                                 p_msg->offset, LLCP_MIN_OFFSET );
             GKI_freebuf (p_msg);
             p_msg = NULL;
@@ -1321,9 +1322,9 @@ BT_HDR* llcp_dlc_get_next_pdu (tLLCP_DLCB *p_dlcb)
     }
 
     /* if tx queue is empty and all PDU is acknowledged */
-    if ((p_dlcb->i_xmit_q.count == 0)
-      &&(p_dlcb->next_rx_seq == p_dlcb->sent_ack_seq)
-      &&(p_dlcb->next_tx_seq == p_dlcb->rcvd_ack_seq))
+    if (  (p_dlcb->i_xmit_q.count == 0)
+        &&(p_dlcb->next_rx_seq == p_dlcb->sent_ack_seq)
+        &&(p_dlcb->next_tx_seq == p_dlcb->rcvd_ack_seq)  )
     {
         /* check flag to send DISC */
         if (p_dlcb->flags & LLCP_DATA_LINK_FLAG_PENDING_DISC)
@@ -1341,7 +1342,7 @@ BT_HDR* llcp_dlc_get_next_pdu (tLLCP_DLCB *p_dlcb)
             data.tx_complete.local_sap  = p_dlcb->local_sap;
             data.tx_complete.remote_sap = p_dlcb->remote_sap;
 
-            (*p_dlcb->p_app_cb->p_app_cback)(&data);
+            (*p_dlcb->p_app_cb->p_app_cback) (&data);
         }
     }
 
@@ -1362,11 +1363,11 @@ UINT16 llcp_dlc_get_next_pdu_length (tLLCP_DLCB *p_dlcb)
     BT_HDR *p_msg;
 
     /* if there is data to send and remote device can receive it */
-    if ((p_dlcb->i_xmit_q.count)
-      &&(!p_dlcb->remote_busy)
-      &&(llcp_dlc_is_rw_open(p_dlcb)))
+    if (  (p_dlcb->i_xmit_q.count)
+        &&(!p_dlcb->remote_busy)
+        &&(llcp_dlc_is_rw_open (p_dlcb))  )
     {
-        p_msg = (BT_HDR *)p_dlcb->i_xmit_q.p_first;
+        p_msg = (BT_HDR *) p_dlcb->i_xmit_q.p_first;
 
         return (p_msg->len + LLCP_PDU_HEADER_SIZE + LLCP_SEQUENCE_SIZE);
     }

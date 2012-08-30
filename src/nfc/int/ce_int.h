@@ -143,10 +143,10 @@ NFC_API extern tCE_CB *ce_cb_ptr;
 #define ce_cb (*ce_cb_ptr)
 #endif
 
-extern void ce_init(void);
+extern void ce_init (void);
 
 /* ce_t3t internal functions */
-void ce_t3t_init(void);
+void ce_t3t_init (void);
 tNFC_STATUS ce_select_t3t (UINT16 system_code, UINT8 nfcid2[NCI_RF_F_UID_LEN]);
 
 /* ce_t4t internal functions */

@@ -512,7 +512,7 @@ BOOLEAN nfa_ce_restart_listen_check (void)
 **
 ** Function         nfa_ce_remove_listen_info_entry
 **
-** Description      Remove entry from listen_info table. (when NFA_Stop is called or listen_start failed)
+** Description      Remove entry from listen_info table. (when API deregister is called or listen_start failed)
 **
 **
 ** Returns          Nothing
@@ -525,7 +525,7 @@ void nfa_ce_remove_listen_info_entry (UINT8 listen_info_idx, BOOLEAN notify_app)
 
     NFA_TRACE_DEBUG1 ("NFA_CE: removing listen_info entry %i", listen_info_idx);
 
-    /* Notify app that listening has stopped  if requested (for NFA_Stop) */
+    /* Notify app that listening has stopped  if requested (for API deregister) */
     /* For LISTEN_START failures, app has already notified of NFA_LISTEN_START_EVT failure */
     if (notify_app)
     {
@@ -897,7 +897,7 @@ BOOLEAN nfa_ce_activate_ntf (tNFA_CE_MSG *p_ce_msg)
 **
 ** Description      Action when deactivate occurs. (NFA_CE_DEACTIVATE_NTF_EVT)
 **
-**                  - If deactivate due to NFA_Stop, then remove its entry from
+**                  - If deactivate due to API deregister, then remove its entry from
 **                      listen_info table
 **
 **                  - If NDEF was modified while activated, then restore
@@ -986,7 +986,7 @@ BOOLEAN nfa_ce_deactivate_ntf (tNFA_CE_MSG *p_ce_msg)
         }
     }
 
-    /* Check if app initiated the deactivation (due to API Stop). If so, remove entry from listen_info table. */
+    /* Check if app initiated the deactivation (due to API deregister). If so, remove entry from listen_info table. */
     if (p_cb->flags & NFA_CE_FLAGS_APP_INIT_DEACTIVATION)
     {
         p_cb->flags &= ~NFA_CE_FLAGS_APP_INIT_DEACTIVATION;

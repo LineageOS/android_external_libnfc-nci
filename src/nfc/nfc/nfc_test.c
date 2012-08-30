@@ -39,17 +39,17 @@
 ** Returns          tNFC_STATUS
 **
 *******************************************************************************/
-tNFC_STATUS NFC_TestLoopback(BT_HDR *p_data)
+tNFC_STATUS NFC_TestLoopback (BT_HDR *p_data)
 {
     tNFC_STATUS     status  = NFC_STATUS_FAILED;
-    tNFC_CONN_CB    *p_cb   = nfc_find_conn_cb_by_handle(NCI_TEST_ID);
+    tNFC_CONN_CB    *p_cb   = nfc_find_conn_cb_by_handle (NCI_TEST_ID);
 
     if (p_data && p_cb && (p_data->offset >= (NCI_MSG_OFFSET_SIZE + NCI_DATA_HDR_SIZE)))
     {
         status = nfc_ncif_send_data (p_cb, p_data);
     }
 
-    if(status != NFC_STATUS_OK)
+    if (status != NFC_STATUS_OK)
         GKI_freebuf (p_data);
 
     return status;

@@ -31,7 +31,7 @@ void llcp_sdp_proc_data (tLLCP_SAP_CBACK_DATA *p_data)
 {
     /*
     ** Do nothing
-    ** llcp_sdp_proc_SNL() is called by link layer
+    ** llcp_sdp_proc_SNL () is called by link layer
     */
 }
 
@@ -51,13 +51,13 @@ void llcp_sdp_check_send_snl (void)
 
     if (llcp_cb.sdp_cb.p_snl)
     {
-        LLCP_TRACE_DEBUG0 ("SDP: llcp_sdp_check_send_snl()");
+        LLCP_TRACE_DEBUG0 ("SDP: llcp_sdp_check_send_snl ()");
 
         llcp_cb.sdp_cb.p_snl->len     += LLCP_PDU_HEADER_SIZE;
         llcp_cb.sdp_cb.p_snl->offset  -= LLCP_PDU_HEADER_SIZE;
 
-        p = (UINT8 *)(llcp_cb.sdp_cb.p_snl + 1) + llcp_cb.sdp_cb.p_snl->offset;
-        UINT16_TO_BE_STREAM (p, LLCP_GET_PDU_HEADER( LLCP_SAP_SDP, LLCP_PDU_SNL_TYPE, LLCP_SAP_SDP ));
+        p = (UINT8 *) (llcp_cb.sdp_cb.p_snl + 1) + llcp_cb.sdp_cb.p_snl->offset;
+        UINT16_TO_BE_STREAM (p, LLCP_GET_PDU_HEADER (LLCP_SAP_SDP, LLCP_PDU_SNL_TYPE, LLCP_SAP_SDP ));
 
         GKI_enqueue (&llcp_cb.lcb.sig_xmit_q, llcp_cb.sdp_cb.p_snl);
         llcp_cb.sdp_cb.p_snl = NULL;
@@ -65,7 +65,7 @@ void llcp_sdp_check_send_snl (void)
     else
     {
         /* Notify DTA after sending out SNL with SDRES not to send SNLs in AGF PDU */
-        if ((llcp_cb.p_dta_cback)&&(llcp_cb.dta_snl_resp))
+        if ((llcp_cb.p_dta_cback) && (llcp_cb.dta_snl_resp))
         {
             llcp_cb.dta_snl_resp = FALSE;
             (*llcp_cb.p_dta_cback) ();
@@ -86,14 +86,14 @@ void llcp_sdp_check_send_snl (void)
 static void llcp_sdp_add_sdreq (UINT8 tid, char *p_name)
 {
     UINT8  *p;
-    UINT16 name_len = (UINT16)strlen(p_name);
+    UINT16 name_len = (UINT16) strlen (p_name);
 
-    p = (UINT8 *)(llcp_cb.sdp_cb.p_snl + 1) + llcp_cb.sdp_cb.p_snl->offset + llcp_cb.sdp_cb.p_snl->len;
+    p = (UINT8 *) (llcp_cb.sdp_cb.p_snl + 1) + llcp_cb.sdp_cb.p_snl->offset + llcp_cb.sdp_cb.p_snl->len;
 
-    UINT8_TO_BE_STREAM  (p, LLCP_SDREQ_TYPE);
-    UINT8_TO_BE_STREAM  (p, (1 + name_len));
-    UINT8_TO_BE_STREAM  (p, tid);
-    ARRAY_TO_BE_STREAM  (p, p_name, name_len);
+    UINT8_TO_BE_STREAM (p, LLCP_SDREQ_TYPE);
+    UINT8_TO_BE_STREAM (p, (1 + name_len));
+    UINT8_TO_BE_STREAM (p, tid);
+    ARRAY_TO_BE_STREAM (p, p_name, name_len);
 
     llcp_cb.sdp_cb.p_snl->len += LLCP_SDREQ_MIN_LEN + name_len;
 }
@@ -114,12 +114,12 @@ tLLCP_STATUS llcp_sdp_send_sdreq (UINT8 tid, char *p_name)
     UINT16       name_len;
     UINT16       available_bytes;
 
-    LLCP_TRACE_DEBUG2 ("llcp_sdp_send_sdreq(): tid=0x%x, ServiceName=%s", tid, p_name);
+    LLCP_TRACE_DEBUG2 ("llcp_sdp_send_sdreq (): tid=0x%x, ServiceName=%s", tid, p_name);
 
     /* if there is no pending SNL */
     if (!llcp_cb.sdp_cb.p_snl)
     {
-        llcp_cb.sdp_cb.p_snl = (BT_HDR*)GKI_getpoolbuf (LLCP_POOL_ID);
+        llcp_cb.sdp_cb.p_snl = (BT_HDR*) GKI_getpoolbuf (LLCP_POOL_ID);
 
         if (llcp_cb.sdp_cb.p_snl)
         {
@@ -134,11 +134,11 @@ tLLCP_STATUS llcp_sdp_send_sdreq (UINT8 tid, char *p_name)
                           - BT_HDR_SIZE - llcp_cb.sdp_cb.p_snl->offset
                           - llcp_cb.sdp_cb.p_snl->len;
 
-        name_len = (UINT16)strlen(p_name);
+        name_len = (UINT16) strlen (p_name);
 
         /* if SDREQ parameter can be added in SNL */
-        if ((available_bytes >= LLCP_SDREQ_MIN_LEN + name_len)
-          &&(llcp_cb.sdp_cb.p_snl->len + LLCP_SDREQ_MIN_LEN + name_len <= llcp_cb.lcb.effective_miu))
+        if (  (available_bytes >= LLCP_SDREQ_MIN_LEN + name_len)
+            &&(llcp_cb.sdp_cb.p_snl->len + LLCP_SDREQ_MIN_LEN + name_len <= llcp_cb.lcb.effective_miu)  )
         {
             llcp_sdp_add_sdreq (tid, p_name);
             status = LLCP_STATUS_SUCCESS;
@@ -148,7 +148,7 @@ tLLCP_STATUS llcp_sdp_send_sdreq (UINT8 tid, char *p_name)
             /* send pending SNL PDU to LM */
             llcp_sdp_check_send_snl ();
 
-            llcp_cb.sdp_cb.p_snl = (BT_HDR*)GKI_getpoolbuf (LLCP_POOL_ID);
+            llcp_cb.sdp_cb.p_snl = (BT_HDR*) GKI_getpoolbuf (LLCP_POOL_ID);
 
             if (llcp_cb.sdp_cb.p_snl)
             {
@@ -171,8 +171,8 @@ tLLCP_STATUS llcp_sdp_send_sdreq (UINT8 tid, char *p_name)
     }
 
     /* if LM is waiting for PDUs from upper layer */
-    if ((status == LLCP_STATUS_SUCCESS)
-      &&(llcp_cb.lcb.symm_state == LLCP_LINK_SYMM_LOCAL_XMIT_NEXT))
+    if (  (status == LLCP_STATUS_SUCCESS)
+        &&(llcp_cb.lcb.symm_state == LLCP_LINK_SYMM_LOCAL_XMIT_NEXT)  )
     {
         llcp_link_check_send_data ();
     }
@@ -194,12 +194,12 @@ static void llcp_sdp_add_sdres (UINT8 tid, UINT8 sap)
 {
     UINT8  *p;
 
-    p = (UINT8 *)(llcp_cb.sdp_cb.p_snl + 1) + llcp_cb.sdp_cb.p_snl->offset + llcp_cb.sdp_cb.p_snl->len;
+    p = (UINT8 *) (llcp_cb.sdp_cb.p_snl + 1) + llcp_cb.sdp_cb.p_snl->offset + llcp_cb.sdp_cb.p_snl->len;
 
-    UINT8_TO_BE_STREAM  (p, LLCP_SDRES_TYPE);
-    UINT8_TO_BE_STREAM  (p, LLCP_SDRES_LEN);
-    UINT8_TO_BE_STREAM  (p, tid);
-    UINT8_TO_BE_STREAM  (p, sap);
+    UINT8_TO_BE_STREAM (p, LLCP_SDRES_TYPE);
+    UINT8_TO_BE_STREAM (p, LLCP_SDRES_LEN);
+    UINT8_TO_BE_STREAM (p, tid);
+    UINT8_TO_BE_STREAM (p, sap);
 
     llcp_cb.sdp_cb.p_snl->len += 2 + LLCP_SDRES_LEN;   /* type and length */
 }
@@ -219,12 +219,12 @@ static tLLCP_STATUS llcp_sdp_send_sdres (UINT8 tid, UINT8 sap)
     tLLCP_STATUS status;
     UINT16       available_bytes;
 
-    LLCP_TRACE_DEBUG2 ("llcp_sdp_send_sdres(): tid=0x%x, SAP=0x%x", tid, sap);
+    LLCP_TRACE_DEBUG2 ("llcp_sdp_send_sdres (): tid=0x%x, SAP=0x%x", tid, sap);
 
     /* if there is no pending SNL */
     if (!llcp_cb.sdp_cb.p_snl)
     {
-        llcp_cb.sdp_cb.p_snl = (BT_HDR*)GKI_getpoolbuf (LLCP_POOL_ID);
+        llcp_cb.sdp_cb.p_snl = (BT_HDR*) GKI_getpoolbuf (LLCP_POOL_ID);
 
         if (llcp_cb.sdp_cb.p_snl)
         {
@@ -240,8 +240,8 @@ static tLLCP_STATUS llcp_sdp_send_sdres (UINT8 tid, UINT8 sap)
                           - llcp_cb.sdp_cb.p_snl->len;
 
         /* if SDRES parameter can be added in SNL */
-        if ((available_bytes >= 2 + LLCP_SDRES_LEN)
-          &&(llcp_cb.sdp_cb.p_snl->len + 2 + LLCP_SDRES_LEN <= llcp_cb.lcb.effective_miu))
+        if (  (available_bytes >= 2 + LLCP_SDRES_LEN)
+            &&(llcp_cb.sdp_cb.p_snl->len + 2 + LLCP_SDRES_LEN <= llcp_cb.lcb.effective_miu)  )
         {
             llcp_sdp_add_sdres (tid, sap);
             status = LLCP_STATUS_SUCCESS;
@@ -251,7 +251,7 @@ static tLLCP_STATUS llcp_sdp_send_sdres (UINT8 tid, UINT8 sap)
             /* send pending SNL PDU to LM */
             llcp_sdp_check_send_snl ();
 
-            llcp_cb.sdp_cb.p_snl = (BT_HDR*)GKI_getpoolbuf (LLCP_POOL_ID);
+            llcp_cb.sdp_cb.p_snl = (BT_HDR*) GKI_getpoolbuf (LLCP_POOL_ID);
 
             if (llcp_cb.sdp_cb.p_snl)
             {
@@ -274,8 +274,8 @@ static tLLCP_STATUS llcp_sdp_send_sdres (UINT8 tid, UINT8 sap)
     }
 
     /* if LM is waiting for PDUs from upper layer */
-    if ((status == LLCP_STATUS_SUCCESS)
-      &&(llcp_cb.lcb.symm_state == LLCP_LINK_SYMM_LOCAL_XMIT_NEXT))
+    if (  (status == LLCP_STATUS_SUCCESS)
+        &&(llcp_cb.lcb.symm_state == LLCP_LINK_SYMM_LOCAL_XMIT_NEXT)  )
     {
         llcp_link_check_send_data ();
     }
@@ -302,14 +302,14 @@ UINT8 llcp_sdp_get_sap_by_name (char *p_name, UINT8 length)
     {
         p_app_cb = llcp_util_get_app_cb (sap);
 
-        if ((p_app_cb)
-          &&(p_app_cb->p_app_cback)
-          &&(strlen((char*)p_app_cb->p_service_name) == length)
-          &&(!strncmp((char*)p_app_cb->p_service_name, p_name, length)))
+        if (  (p_app_cb)
+            &&(p_app_cb->p_app_cback)
+            &&(strlen((char*)p_app_cb->p_service_name) == length)
+            &&(!strncmp((char*)p_app_cb->p_service_name, p_name, length))  )
         {
             /* if device is under LLCP DTA testing */
-            if ((llcp_cb.p_dta_cback)
-              &&(!strncmp((char*)p_app_cb->p_service_name, "urn:nfc:sn:cl-echo-in", length)))
+            if (  (llcp_cb.p_dta_cback)
+                &&(!strncmp((char*)p_app_cb->p_service_name, "urn:nfc:sn:cl-echo-in", length))  )
             {
                 llcp_cb.dta_snl_resp = TRUE;
             }
@@ -333,14 +333,14 @@ static void llcp_sdp_return_sap (UINT8 tid, UINT8 sap)
 {
     UINT8 i;
 
-    LLCP_TRACE_DEBUG2 ("llcp_sdp_return_sap(): tid=0x%x, SAP=0x%x", tid, sap);
+    LLCP_TRACE_DEBUG2 ("llcp_sdp_return_sap (): tid=0x%x, SAP=0x%x", tid, sap);
 
     for (i = 0; i < LLCP_MAX_SDP_TRANSAC; i++)
     {
-        if ((llcp_cb.sdp_cb.transac[i].p_cback)
-          &&(llcp_cb.sdp_cb.transac[i].tid == tid))
+        if (  (llcp_cb.sdp_cb.transac[i].p_cback)
+            &&(llcp_cb.sdp_cb.transac[i].tid == tid)  )
         {
-            (*llcp_cb.sdp_cb.transac[i].p_cback)(tid, sap);
+            (*llcp_cb.sdp_cb.transac[i].p_cback) (tid, sap);
 
             llcp_cb.sdp_cb.transac[i].p_cback = NULL;
         }
@@ -361,13 +361,13 @@ void llcp_sdp_proc_deactivation (void)
 {
     UINT8 i;
 
-    LLCP_TRACE_DEBUG0 ("llcp_sdp_proc_deactivation()");
+    LLCP_TRACE_DEBUG0 ("llcp_sdp_proc_deactivation ()");
 
     for (i = 0; i < LLCP_MAX_SDP_TRANSAC; i++)
     {
         if (llcp_cb.sdp_cb.transac[i].p_cback)
         {
-            (*llcp_cb.sdp_cb.transac[i].p_cback)(llcp_cb.sdp_cb.transac[i].tid, 0x00);
+            (*llcp_cb.sdp_cb.transac[i].p_cback) (llcp_cb.sdp_cb.transac[i].tid, 0x00);
 
             llcp_cb.sdp_cb.transac[i].p_cback = NULL;
         }
@@ -398,33 +398,39 @@ tLLCP_STATUS llcp_sdp_proc_snl (UINT16 sdu_length, UINT8 *p)
 {
     UINT8  type, length, tid, sap, *p_value;
 
-    LLCP_TRACE_DEBUG0 ("llcp_sdp_proc_snl()");
+    LLCP_TRACE_DEBUG0 ("llcp_sdp_proc_snl ()");
 
+    if ((llcp_cb.lcb.agreed_major_version < LLCP_MIN_SNL_MAJOR_VERSION)||
+       ((llcp_cb.lcb.agreed_major_version == LLCP_MIN_SNL_MAJOR_VERSION)&&(llcp_cb.lcb.agreed_minor_version < LLCP_MIN_SNL_MINOR_VERSION)))
+    {
+        LLCP_TRACE_DEBUG0 ("llcp_sdp_proc_snl(): version number less than 1.1, SNL not supported.");
+        return LLCP_STATUS_FAIL;
+    }
     while (sdu_length >= 2) /* at least type and length */
     {
-        BE_STREAM_TO_UINT8 (type,   p);
+        BE_STREAM_TO_UINT8 (type, p);
         BE_STREAM_TO_UINT8 (length, p);
 
         switch (type)
         {
         case LLCP_SDREQ_TYPE:
-            if ((length > 1)                /* TID and sevice name */
-              &&(sdu_length >= 2 + length)) /* type, length, TID and service name */
+            if (  (length > 1)                /* TID and sevice name */
+                &&(sdu_length >= 2 + length)  ) /* type, length, TID and service name */
             {
                 p_value = p;
                 BE_STREAM_TO_UINT8 (tid, p_value);
-                sap = llcp_sdp_get_sap_by_name ((char*)p_value, (UINT8)(length - 1));
+                sap = llcp_sdp_get_sap_by_name ((char*) p_value, (UINT8) (length - 1));
                 llcp_sdp_send_sdres (tid, sap);
             }
             else
             {
-                LLCP_TRACE_ERROR1 ("llcp_sdp_proc_snl(): bad length (%d) in LLCP_SDREQ_TYPE", length);
+                LLCP_TRACE_ERROR1 ("llcp_sdp_proc_snl (): bad length (%d) in LLCP_SDREQ_TYPE", length);
             }
             break;
 
         case LLCP_SDRES_TYPE:
-            if ((length == LLCP_SDRES_LEN)  /* TID and SAP */
-              &&(sdu_length >= 2 + length)) /* type, length, TID and SAP */
+            if (  (length == LLCP_SDRES_LEN)  /* TID and SAP */
+                &&(sdu_length >= 2 + length)  ) /* type, length, TID and SAP */
             {
                 p_value = p;
                 BE_STREAM_TO_UINT8 (tid, p_value);
@@ -433,12 +439,12 @@ tLLCP_STATUS llcp_sdp_proc_snl (UINT16 sdu_length, UINT8 *p)
             }
             else
             {
-                LLCP_TRACE_ERROR1 ("llcp_sdp_proc_snl(): bad length (%d) in LLCP_SDRES_TYPE", length);
+                LLCP_TRACE_ERROR1 ("llcp_sdp_proc_snl (): bad length (%d) in LLCP_SDRES_TYPE", length);
             }
             break;
 
         default:
-            LLCP_TRACE_WARNING1 ("llcp_sdp_proc_snl(): Unknown type(0x%x) is ignored", type);
+            LLCP_TRACE_WARNING1 ("llcp_sdp_proc_snl (): Unknown type (0x%x) is ignored", type);
             break;
         }
 
@@ -455,7 +461,7 @@ tLLCP_STATUS llcp_sdp_proc_snl (UINT16 sdu_length, UINT8 *p)
 
     if (sdu_length)
     {
-        LLCP_TRACE_ERROR0 ("llcp_sdp_proc_snl(): Bad format of SNL");
+        LLCP_TRACE_ERROR0 ("llcp_sdp_proc_snl (): Bad format of SNL");
         return LLCP_STATUS_FAIL;
     }
     else

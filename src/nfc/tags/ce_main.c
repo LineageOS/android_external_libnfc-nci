@@ -27,13 +27,13 @@ tCE_CB  ce_cb;
 
 /*******************************************************************************
 *******************************************************************************/
-void ce_init(void)
+void ce_init (void)
 {
-    memset (&ce_cb, 0, sizeof(tCE_CB));
+    memset (&ce_cb, 0, sizeof (tCE_CB));
     ce_cb.trace_level = NFC_INITIAL_TRACE_LEVEL;
 
     /* Initialize tag-specific fields of ce control block */
-    ce_t3t_init();
+    ce_t3t_init ();
 }
 
 /*******************************************************************************
@@ -54,14 +54,14 @@ tNFC_STATUS CE_SendRawFrame (UINT8 *p_raw_data, UINT16 data_len)
     if (ce_cb.p_cback)
     {
         /* a valid opcode for RW */
-        p_data = (BT_HDR *)GKI_getpoolbuf(NFC_RW_POOL_ID);
+        p_data = (BT_HDR *) GKI_getpoolbuf (NFC_RW_POOL_ID);
         if (p_data)
         {
             p_data->offset = NCI_MSG_OFFSET_SIZE + NCI_DATA_HDR_SIZE;
-            p = (UINT8 *)(p_data + 1) + p_data->offset;
-            memcpy(p, p_raw_data, data_len);
+            p = (UINT8 *) (p_data + 1) + p_data->offset;
+            memcpy (p, p_raw_data, data_len);
             p_data->len = data_len;
-            CE_TRACE_EVENT1 ("CE SENT raw frame(0x%x)", data_len);
+            CE_TRACE_EVENT1 ("CE SENT raw frame (0x%x)", data_len);
             status = NFC_SendData (NFC_RF_CONN_ID, p_data);
         }
 
@@ -92,13 +92,13 @@ tNFC_STATUS CE_SetActivatedTagType (tNFC_ACTIVATE_DEVT *p_activate_params, UINT1
         return NFC_STATUS_FAILED;
 
     case NFC_PROTOCOL_T3T:   /* Type3Tag    - NFC-F */
-        /* store callback function before NFC_SetStaticRfCback() */
+        /* store callback function before NFC_SetStaticRfCback () */
         ce_cb.p_cback  = p_cback;
         status = ce_select_t3t (t3t_system_code, p_activate_params->rf_tech_param.param.lf.nfcid2);
         break;
 
     case NFC_PROTOCOL_ISO_DEP:     /* ISODEP/4A,4B- NFC-A or NFC-B */
-        /* store callback function before NFC_SetStaticRfCback() */
+        /* store callback function before NFC_SetStaticRfCback () */
         ce_cb.p_cback  = p_cback;
         status = ce_select_t4t ();
         break;

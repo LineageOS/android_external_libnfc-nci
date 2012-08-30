@@ -53,8 +53,17 @@ int isLowSpeedTransport = 0;
 int nfc_wake_delay = 0;
 int nfc_write_delay = 0;
 int gPowerOnDelay = 300;
+int gPrePowerOffDelay = 100;
+int gPostPowerOffDelay = 0;
 char userial_dev[BTE_APPL_MAX_USERIAL_DEV_NAME+1];
 char power_control_dev[BTE_APPL_MAX_USERIAL_DEV_NAME+1];
+tSNOOZE_MODE_CONFIG gSnoozeModeCfg = {
+    NFC_LP_SNOOZE_MODE_SPI_I2C,     /* Sleep Mode (0=Disabled 1=UART 8=SPI/I2C) */
+    NFC_LP_IDLE_THRESHOLD_HOST,     /* Idle Threshold Host */
+    NFC_LP_IDLE_THRESHOLD_HC,       /* Idle Threshold HC */
+    NFC_LP_ACTIVE_LOW,              /* NFC Wake active mode (0=ActiveLow 1=ActiveHigh) */
+    NFC_LP_ACTIVE_HIGH              /* Host Wake active mode (0=ActiveLow 1=ActiveHigh) */
+};
 
 UINT8 bcmi2cnfc_client_addr = 0;
 UINT8 bcmi2cnfc_read_multi_packets = 0;
@@ -265,7 +274,7 @@ static UINT32 userial_baud_tbl[] =
 *******************************************************************************/
 static inline int wake_state()
 {
-    return ((p_nfa_dm_lp_cfg->nfc_wake_active_mode == NFC_LP_ACTIVE_HIGH) ? UPIO_ON : UPIO_OFF);
+    return ((gSnoozeModeCfg.nfc_wake_active_mode == NFC_LP_ACTIVE_HIGH) ? UPIO_ON : UPIO_OFF);
 }
 
 /*******************************************************************************
@@ -279,7 +288,7 @@ static inline int wake_state()
 *******************************************************************************/
 static inline int sleep_state()
 {
-    return ((p_nfa_dm_lp_cfg->nfc_wake_active_mode == NFC_LP_ACTIVE_HIGH) ? UPIO_OFF : UPIO_ON);
+    return ((gSnoozeModeCfg.nfc_wake_active_mode == NFC_LP_ACTIVE_HIGH) ? UPIO_OFF : UPIO_ON);
 }
 
 /*******************************************************************************
@@ -293,7 +302,7 @@ static inline int sleep_state()
 *******************************************************************************/
 static inline int isWake(int state)
 {
-    int     asserted_state = ((p_nfa_dm_lp_cfg->nfc_wake_active_mode == NFC_LP_ACTIVE_HIGH) ? UPIO_ON : UPIO_OFF);
+    int     asserted_state = ((gSnoozeModeCfg.nfc_wake_active_mode == NFC_LP_ACTIVE_HIGH) ? UPIO_ON : UPIO_OFF);
     return (state != -1) ?
         state == asserted_state :
         current_nfc_wake_state == asserted_state;
@@ -884,8 +893,14 @@ UDRV_API void USERIAL_Open(tUSERIAL_PORT port, tUSERIAL_OPEN_CFG *p_cfg, tUSERIA
         perf_log_every_count = num;
     if ( GetNumValue ( NAME_POWER_ON_DELAY, &num, sizeof ( num ) ) )
         gPowerOnDelay = num;
-    ALOGI("USERIAL_Open() device: %s port=%d, uart_port=%d WAKE_DELAY(%d) WRITE_DELAY(%d) POWER_ON_DELAY(%d)",
-            (char*)userial_dev, port, uart_port, nfc_wake_delay, nfc_write_delay, gPowerOnDelay);
+    if ( GetNumValue ( NAME_PRE_POWER_OFF_DELAY, &num, sizeof ( num ) ) )
+        gPrePowerOffDelay = num;
+    if ( GetNumValue ( NAME_POST_POWER_OFF_DELAY, &num, sizeof ( num ) ) )
+        gPostPowerOffDelay = num;
+    ALOGI("USERIAL_Open() device: %s port=%d, uart_port=%d WAKE_DELAY(%d) WRITE_DELAY(%d) POWER_ON_DELAY(%d) PRE_POWER_OFF_DELAY(%d) POST_POWER_OFF_DELAY(%d)",
+            (char*)userial_dev, port, uart_port, nfc_wake_delay, nfc_write_delay, gPowerOnDelay, gPrePowerOffDelay,
+            gPostPowerOffDelay);
+    GetStrValue( NAME_SNOOZE_MODE_CFG, (char*)&gSnoozeModeCfg, sizeof(gSnoozeModeCfg) );
 
     strcpy((char*)device_name, (char*)userial_dev);
     sRxLength = 0;
@@ -1347,7 +1362,11 @@ UDRV_API void    USERIAL_Close(tUSERIAL_PORT port)
     if (linux_cb.sock_power_control > 0)
     {
         result = ioctl(linux_cb.sock_power_control, BCMNFC_WAKE_CTL, sleep_state());
+        ALOGD("Delay %dms before turning off the chip", gPrePowerOffDelay);
+        GKI_delay(gPrePowerOffDelay);
         result = ioctl(linux_cb.sock_power_control, BCMNFC_POWER_CTL, 0);
+        ALOGD("Delay %dms after turning off the chip", gPostPowerOffDelay);
+        GKI_delay(gPostPowerOffDelay);
     }
     result = close(linux_cb.sock);
     if (result<0)

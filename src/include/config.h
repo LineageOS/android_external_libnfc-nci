@@ -17,7 +17,6 @@ extern "C"
 {
 #endif
 
-void readDefaultConfig();
 int GetStrValue(const char* name, char* p_value, unsigned long len);
 int GetNumValue(const char* name, void* p_value, unsigned long len);
 
@@ -35,8 +34,6 @@ int GetNumValue(const char* name, void* p_value, unsigned long len);
 #define NAME_APPL_TRACE_LEVEL           "APPL_TRACE_LEVEL"
 #define NAME_LPTD_CFG                   "LPTD_CFG"
 #define NAME_SCREEN_OFF_POWER_STATE     "SCREEN_OFF_POWER_STATE"
-#define NAME_USE_VBAT_MONITOR_API       "SEND_VBAT_MONITOR_CMD"
-#define NAME_VBAT_MONITOR_API_PARAM     "VBAT_MONITOR_THRESHOLD"
 #define NAME_UICC_IDLE_TIMEOUT          "UICC_IDLE_TIMEOUT"
 #define NAME_PREINIT_DSP_CFG            "PREINIT_DSP_CFG"
 #define NAME_DTA_START_CFG              "DTA_START_CFG"
@@ -58,9 +55,13 @@ int GetNumValue(const char* name, void* p_value, unsigned long len);
 #define NAME_PERF_MEASURE_FREQ          "REPORT_PERFORMANCE_MEASURE"
 #define NAME_READ_MULTI_PACKETS         "READ_MULTIPLE_PACKETS"
 #define NAME_POWER_ON_DELAY             "POWER_ON_DELAY"
+#define NAME_PRE_POWER_OFF_DELAY        "PRE_POWER_OFF_DELAY"
+#define NAME_POST_POWER_OFF_DELAY       "POST_POWER_OFF_DELAY"
 #define NAME_NFA_STORAGE                "NFA_STORAGE"
 #define NAME_NFA_DM_START_UP_VSC_CFG    "NFA_DM_START_UP_VSC_CFG"
 #define NAME_UICC_LISTEN_TECH_MASK      "UICC_LISTEN_TECH_MASK"
+#define NAME_SNOOZE_MODE_CFG            "SNOOZE_MODE_CFG"
+#define NAME_XTAL_FREQUENCY             "XTAL_FREQUENCY"
 
 #define                     LPTD_PARAM_LEN (40)
 
@@ -79,4 +80,13 @@ extern struct tUART_CONFIG  uartConfig;
 #define MAX_CHIPID_LEN  (16)
 void    readOptionalConfig(const char* option);
 
+/* Snooze mode configuration structure */
+typedef struct
+{
+    unsigned char   snooze_mode;            /* Snooze Mode */
+    unsigned char   idle_threshold_dh;      /* Idle Threshold Host */
+    unsigned char   idle_threshold_nfcc;    /* Idle Threshold NFCC   */
+    unsigned char   nfc_wake_active_mode;   /* NFC_LP_ACTIVE_LOW or NFC_LP_ACTIVE_HIGH */
+    unsigned char   dh_wake_active_mode;    /* NFC_LP_ACTIVE_LOW or NFC_LP_ACTIVE_HIGH */
+} tSNOOZE_MODE_CONFIG;
 #endif

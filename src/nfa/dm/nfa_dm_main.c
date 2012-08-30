@@ -203,7 +203,7 @@ BOOLEAN nfa_dm_is_protocol_supported (tNFC_PROTOCOL protocol, UINT8 sel_res)
 ** Description      check if all modules of NFA is done with enable process and
 **                  NFA is not restoring NFCC.
 **
-** Returns          TRUE, if NFA_ENABLE_EVT is reported and it is not restoring NFCC
+** Returns          TRUE, if NFA_DM_ENABLE_EVT is reported and it is not restoring NFCC
 **
 *******************************************************************************/
 BOOLEAN nfa_dm_is_active (void)

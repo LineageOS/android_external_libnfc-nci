@@ -19,7 +19,6 @@ extern "C" {
 #endif
 
 #define NCI_BRCM_CO_ID              0x2E
-#define NFC_SAVED_CMD_SIZE          2
 
 /* Define the message header size for all NCI Commands and Notifications.
 */
@@ -126,10 +125,10 @@ extern "C" {
 
 /* builds 3-byte message header of NCI Data packet */
 #define NCI_DATA_BLD_HDR(p, cid, len) \
-    *(p)++ = (UINT8) (cid); *(p)++ = 0; *(p)++ = (UINT8)(len);
+    *(p)++ = (UINT8) (cid); *(p)++ = 0; *(p)++ = (UINT8) (len);
 
 #define NCI_DATA_PBLD_HDR(p, pbf, cid, len) \
-    *(p)++ = (UINT8) (((pbf) << NCI_PBF_SHIFT)|(cid)); *(p)++=0; *(p)++ = (len);
+    *(p)++ = (UINT8) (((pbf) << NCI_PBF_SHIFT) | (cid)); *(p)++=0; *(p)++ = (len);
 
 #define NCI_DATA_PRS_HDR(p, pbf, cid, len) \
     (pbf) = (*(p) & NCI_PBF_MASK) >> NCI_PBF_SHIFT; (cid) = (*(p) & NCI_CID_MASK); p++; p++; (len) = *(p)++;
@@ -588,12 +587,12 @@ typedef struct
 
 
 #ifndef NCI_GET_CMD_BUF
-#if (!defined(HCI_USE_VARIABLE_SIZE_CMD_BUF) || (HCI_USE_VARIABLE_SIZE_CMD_BUF == FALSE))
+#if (!defined (HCI_USE_VARIABLE_SIZE_CMD_BUF) || (HCI_USE_VARIABLE_SIZE_CMD_BUF == FALSE))
 /* Allocate fixed-size buffer from HCI_CMD_POOL (default case) */
-#define NCI_GET_CMD_BUF(paramlen)    ((BT_HDR *)GKI_getpoolbuf (NFC_NCI_POOL_ID))
+#define NCI_GET_CMD_BUF(paramlen)    ((BT_HDR *) GKI_getpoolbuf (NFC_NCI_POOL_ID))
 #else
 /* Allocate smallest possible buffer (for platforms with limited RAM) */
-#define NCI_GET_CMD_BUF(paramlen)    ((BT_HDR *)GKI_getbuf ((UINT16)(BT_HDR_SIZE + NCI_MSG_HDR_SIZE + NCI_MSG_OFFSET_SIZE + (paramlen))))
+#define NCI_GET_CMD_BUF(paramlen)    ((BT_HDR *) GKI_getbuf ((UINT16) (BT_HDR_SIZE + NCI_MSG_HDR_SIZE + NCI_MSG_OFFSET_SIZE + (paramlen))))
 #endif
 #endif  /* NCI_GET_CMD_BUF */
 

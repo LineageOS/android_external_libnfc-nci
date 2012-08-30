@@ -61,23 +61,6 @@ NFC_API extern void nfa_mem_co_free(void *pBuffer)
     free(pBuffer);
 }
 
-/*******************************************************************************
-**
-** Function         nfa_nv_co_init
-**
-** Description      This function is executed as a part of the start up sequence
-**                  to make sure the control block is initialized.
-**
-** Parameters       void.
-**
-** Returns          void
-**
-**
-*******************************************************************************/
-NFC_API extern void nfa_nv_co_init(void)
-{
-    ALOGD ("%s: enter/exit ", __FUNCTION__);
-}
 
 /*******************************************************************************
 **

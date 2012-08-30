@@ -88,11 +88,6 @@ const tNCI_DISCOVER_MAPS nfa_dm_brcm_interface_mapping[NFA_DM_NUM_INTERFACE_MAP]
 
 const tNFA_DM_LP_CFG nfa_dm_lp_cfg =
 {
-    NFC_LP_SNOOZE_MODE,         /* Snooze Mode          */
-    NFC_LP_IDLE_THRESHOLD_HOST, /* Idle Threshold Host  */
-    NFC_LP_IDLE_THRESHOLD_HC,   /* Idle Threshold HC    */
-    NFC_LP_ACTIVE_LOW,          /* NFC_WAKE Active Mode */
-    NFC_LP_ACTIVE_HIGH,         /* DH_WAKE Active Mode  */
     NFC_LP_POWER_CYCLE_TO_FULL, /* Power cycle to full power mode from CEx */
     NFC_LP_COMMAND_PARAMS,      /* parameter for low power mode command    */
     NFC_LP_PRIMARY_THRESHOLD,   /* Primary Threshold for battery monitor   */
@@ -149,28 +144,4 @@ const UINT8 nfa_dm_pll_325_cfg[BRCM_XTAL_INDEX_MAX][NFA_DM_BRCM_PLL_325_SETCONFI
 
 UINT8 *p_nfa_dm_pll_325_cfg = (UINT8 *) nfa_dm_pll_325_cfg;
 
-/* the SetConfig for full power mode */
-const UINT8 nfa_power_bitmap_full[] =
-{
-    /* TLV len */   5,
-    /* B0 */        NCI_PARAM_ID_PWR_SETTING_BITMAP,
-    /* B1 */        NCI_PARAM_LEN_PWR_SETTING_BITMAP,
-    /* B2 */        0x00,
-    /* B3 */        0x00,
-    /* B4 */        0x00
-};
 
-UINT8 *p_nfa_power_bitmap_full = (UINT8 *) nfa_power_bitmap_full;
-
-/* the SetConfig for CE low power mode */
-const UINT8 nfa_power_bitmap_ce_lp[] =
-{
-    /* TLV len */   5,
-    /* B0 */        NCI_PARAM_ID_PWR_SETTING_BITMAP,
-    /* B1 */        NCI_PARAM_LEN_PWR_SETTING_BITMAP,
-    /* B2 */        0x00,
-    /* B3 */        0x02, /* 0x02: 2.5V VDDIO CAP for CE4 */
-    /* B4 */        0x00
-};
-
-UINT8 *p_nfa_power_bitmap_ce_lp = (UINT8 *) nfa_power_bitmap_ce_lp;

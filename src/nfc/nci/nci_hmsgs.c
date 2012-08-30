@@ -33,17 +33,17 @@ UINT8 nci_snd_core_reset (UINT8 reset_type)
     BT_HDR *p;
     UINT8 *pp;
 
-    if ((p = NCI_GET_CMD_BUF(NCI_CORE_PARAM_SIZE_RESET)) == NULL)
+    if ((p = NCI_GET_CMD_BUF (NCI_CORE_PARAM_SIZE_RESET)) == NULL)
         return (NCI_STATUS_FAILED);
 
     p->event            = BT_EVT_TO_NFC_NCI;
     p->len              = NCI_MSG_HDR_SIZE + NCI_CORE_PARAM_SIZE_RESET;
     p->offset           = NCI_MSG_OFFSET_SIZE;
     p->layer_specific   = 0;
-    pp                  = (UINT8 *)(p + 1) + p->offset;
+    pp                  = (UINT8 *) (p + 1) + p->offset;
 
-    NCI_MSG_BLD_HDR0(pp, NCI_MT_CMD, NCI_GID_CORE);
-    NCI_MSG_BLD_HDR1(pp, NCI_MSG_CORE_RESET);
+    NCI_MSG_BLD_HDR0 (pp, NCI_MT_CMD, NCI_GID_CORE);
+    NCI_MSG_BLD_HDR1 (pp, NCI_MSG_CORE_RESET);
     UINT8_TO_STREAM (pp, NCI_CORE_PARAM_SIZE_RESET);
     UINT8_TO_STREAM (pp, reset_type);
 
@@ -65,17 +65,17 @@ UINT8 nci_snd_core_init (void)
     BT_HDR *p;
     UINT8 *pp;
 
-    if ((p = NCI_GET_CMD_BUF(NCI_CORE_PARAM_SIZE_INIT)) == NULL)
+    if ((p = NCI_GET_CMD_BUF (NCI_CORE_PARAM_SIZE_INIT)) == NULL)
         return (NCI_STATUS_FAILED);
 
     p->event            = BT_EVT_TO_NFC_NCI;
     p->len              = NCI_MSG_HDR_SIZE + NCI_CORE_PARAM_SIZE_INIT;
     p->offset           = NCI_MSG_OFFSET_SIZE;
     p->layer_specific   = 0;
-    pp                  = (UINT8 *)(p + 1) + p->offset;
+    pp                  = (UINT8 *) (p + 1) + p->offset;
 
-    NCI_MSG_BLD_HDR0(pp, NCI_MT_CMD, NCI_GID_CORE);
-    NCI_MSG_BLD_HDR1(pp, NCI_MSG_CORE_INIT);
+    NCI_MSG_BLD_HDR0 (pp, NCI_MT_CMD, NCI_GID_CORE);
+    NCI_MSG_BLD_HDR1 (pp, NCI_MSG_CORE_INIT);
     UINT8_TO_STREAM (pp, NCI_CORE_PARAM_SIZE_INIT);
 
     nfc_ncif_send_cmd (p);
@@ -96,18 +96,18 @@ UINT8 nci_snd_core_get_config (UINT8 *param_ids, UINT8 num_ids)
     BT_HDR *p;
     UINT8 *pp;
 
-    if ((p = NCI_GET_CMD_BUF(num_ids)) == NULL)
+    if ((p = NCI_GET_CMD_BUF (num_ids)) == NULL)
         return (NCI_STATUS_FAILED);
 
     p->event            = BT_EVT_TO_NFC_NCI;
     p->len              = NCI_MSG_HDR_SIZE + num_ids + 1;
     p->offset           = NCI_MSG_OFFSET_SIZE;
     p->layer_specific   = 0;
-    pp                  = (UINT8 *)(p + 1) + p->offset;
+    pp                  = (UINT8 *) (p + 1) + p->offset;
 
-    NCI_MSG_BLD_HDR0(pp, NCI_MT_CMD, NCI_GID_CORE);
-    NCI_MSG_BLD_HDR1(pp, NCI_MSG_CORE_GET_CONFIG);
-    UINT8_TO_STREAM (pp, (UINT8)(num_ids + 1));
+    NCI_MSG_BLD_HDR0 (pp, NCI_MT_CMD, NCI_GID_CORE);
+    NCI_MSG_BLD_HDR1 (pp, NCI_MSG_CORE_GET_CONFIG);
+    UINT8_TO_STREAM (pp, (UINT8) (num_ids + 1));
     UINT8_TO_STREAM (pp, num_ids);
     ARRAY_TO_STREAM (pp, param_ids, num_ids);
 
@@ -130,17 +130,17 @@ UINT8 nci_snd_core_set_config (UINT8 *p_param_tlvs, UINT8 tlv_size)
     UINT8 *pp;
     UINT8  num = 0, ulen, len, *pt;
 
-    if ((p = NCI_GET_CMD_BUF(tlv_size + 1)) == NULL)
+    if ((p = NCI_GET_CMD_BUF (tlv_size + 1)) == NULL)
         return (NCI_STATUS_FAILED);
 
     p->event    = BT_EVT_TO_NFC_NCI;
     p->len      = NCI_MSG_HDR_SIZE + tlv_size + 1;
     p->offset   = NCI_MSG_OFFSET_SIZE;
-    pp          = (UINT8 *)(p + 1) + p->offset;
+    pp          = (UINT8 *) (p + 1) + p->offset;
 
-    NCI_MSG_BLD_HDR0(pp, NCI_MT_CMD, NCI_GID_CORE);
-    NCI_MSG_BLD_HDR1(pp, NCI_MSG_CORE_SET_CONFIG);
-    UINT8_TO_STREAM (pp, (UINT8)(tlv_size + 1));
+    NCI_MSG_BLD_HDR0 (pp, NCI_MT_CMD, NCI_GID_CORE);
+    NCI_MSG_BLD_HDR1 (pp, NCI_MSG_CORE_SET_CONFIG);
+    UINT8_TO_STREAM (pp, (UINT8) (tlv_size + 1));
     len         = tlv_size;
     pt          = p_param_tlvs;
     while (len > 1)
@@ -183,17 +183,17 @@ UINT8 nci_snd_core_conn_create (UINT8 dest_type, UINT8 num_tlv, UINT8 tlv_size, 
     UINT8 *pp;
     UINT8 size = NCI_CORE_PARAM_SIZE_CON_CREATE+tlv_size;
 
-    if ((p = NCI_GET_CMD_BUF(size)) == NULL)
+    if ((p = NCI_GET_CMD_BUF (size)) == NULL)
         return (NCI_STATUS_FAILED);
 
     p->event            = BT_EVT_TO_NFC_NCI;
     p->len              = NCI_MSG_HDR_SIZE + NCI_CORE_PARAM_SIZE_CON_CREATE;
     p->offset           = NCI_MSG_OFFSET_SIZE;
     p->layer_specific   = 0;
-    pp                  = (UINT8 *)(p + 1) + p->offset;
+    pp                  = (UINT8 *) (p + 1) + p->offset;
 
-    NCI_MSG_BLD_HDR0(pp, NCI_MT_CMD, NCI_GID_CORE);
-    NCI_MSG_BLD_HDR1(pp, NCI_MSG_CORE_CONN_CREATE);
+    NCI_MSG_BLD_HDR0 (pp, NCI_MT_CMD, NCI_GID_CORE);
+    NCI_MSG_BLD_HDR1 (pp, NCI_MSG_CORE_CONN_CREATE);
     UINT8_TO_STREAM (pp, size);
     UINT8_TO_STREAM (pp, dest_type);
     UINT8_TO_STREAM (pp, num_tlv);
@@ -221,17 +221,17 @@ UINT8 nci_snd_core_conn_close (UINT8 conn_id)
     BT_HDR *p;
     UINT8 *pp;
 
-    if ((p = NCI_GET_CMD_BUF(NCI_CORE_PARAM_SIZE_CON_CLOSE)) == NULL)
+    if ((p = NCI_GET_CMD_BUF (NCI_CORE_PARAM_SIZE_CON_CLOSE)) == NULL)
         return (NCI_STATUS_FAILED);
 
     p->event            = BT_EVT_TO_NFC_NCI;
     p->len              = NCI_MSG_HDR_SIZE + NCI_CORE_PARAM_SIZE_CON_CLOSE;
     p->offset           = NCI_MSG_OFFSET_SIZE;
     p->layer_specific   = 0;
-    pp                  = (UINT8 *)(p + 1) + p->offset;
+    pp                  = (UINT8 *) (p + 1) + p->offset;
 
-    NCI_MSG_BLD_HDR0(pp, NCI_MT_CMD, NCI_GID_CORE);
-    NCI_MSG_BLD_HDR1(pp, NCI_MSG_CORE_CONN_CLOSE);
+    NCI_MSG_BLD_HDR0 (pp, NCI_MT_CMD, NCI_GID_CORE);
+    NCI_MSG_BLD_HDR1 (pp, NCI_MSG_CORE_CONN_CLOSE);
     UINT8_TO_STREAM (pp, NCI_CORE_PARAM_SIZE_CON_CLOSE);
     UINT8_TO_STREAM (pp, conn_id);
 
@@ -257,17 +257,17 @@ UINT8 nci_snd_nfcee_discover (UINT8 discover_action)
     BT_HDR *p;
     UINT8 *pp;
 
-    if ((p = NCI_GET_CMD_BUF(NCI_PARAM_SIZE_DISCOVER_NFCEE)) == NULL)
+    if ((p = NCI_GET_CMD_BUF (NCI_PARAM_SIZE_DISCOVER_NFCEE)) == NULL)
         return (NCI_STATUS_FAILED);
 
     p->event            = BT_EVT_TO_NFC_NCI;
     p->len              = NCI_MSG_HDR_SIZE + NCI_PARAM_SIZE_DISCOVER_NFCEE;
     p->offset           = NCI_MSG_OFFSET_SIZE;
     p->layer_specific   = 0;
-    pp                  = (UINT8 *)(p + 1) + p->offset;
+    pp                  = (UINT8 *) (p + 1) + p->offset;
 
-    NCI_MSG_BLD_HDR0(pp, NCI_MT_CMD, NCI_GID_EE_MANAGE);
-    NCI_MSG_BLD_HDR1(pp, NCI_MSG_NFCEE_DISCOVER);
+    NCI_MSG_BLD_HDR0 (pp, NCI_MT_CMD, NCI_GID_EE_MANAGE);
+    NCI_MSG_BLD_HDR1 (pp, NCI_MSG_NFCEE_DISCOVER);
     UINT8_TO_STREAM (pp, NCI_PARAM_SIZE_DISCOVER_NFCEE);
     UINT8_TO_STREAM (pp, discover_action);
 
@@ -290,17 +290,17 @@ UINT8 nci_snd_nfcee_mode_set (UINT8 nfcee_id, UINT8 nfcee_mode)
     BT_HDR *p;
     UINT8 *pp;
 
-    if ((p = NCI_GET_CMD_BUF(NCI_CORE_PARAM_SIZE_NFCEE_MODE_SET)) == NULL)
+    if ((p = NCI_GET_CMD_BUF (NCI_CORE_PARAM_SIZE_NFCEE_MODE_SET)) == NULL)
         return (NCI_STATUS_FAILED);
 
     p->event            = BT_EVT_TO_NFC_NCI;
     p->len              = NCI_MSG_HDR_SIZE + NCI_CORE_PARAM_SIZE_NFCEE_MODE_SET;
     p->offset           = NCI_MSG_OFFSET_SIZE;
     p->layer_specific   = 0;
-    pp                  = (UINT8 *)(p + 1) + p->offset;
+    pp                  = (UINT8 *) (p + 1) + p->offset;
 
-    NCI_MSG_BLD_HDR0(pp, NCI_MT_CMD, NCI_GID_EE_MANAGE);
-    NCI_MSG_BLD_HDR1(pp, NCI_MSG_NFCEE_MODE_SET);
+    NCI_MSG_BLD_HDR0 (pp, NCI_MT_CMD, NCI_GID_EE_MANAGE);
+    NCI_MSG_BLD_HDR1 (pp, NCI_MSG_NFCEE_MODE_SET);
     UINT8_TO_STREAM (pp, NCI_CORE_PARAM_SIZE_NFCEE_MODE_SET);
     UINT8_TO_STREAM (pp, nfcee_id);
     UINT8_TO_STREAM (pp, nfcee_mode);
@@ -327,17 +327,17 @@ UINT8 nci_snd_discover_cmd (UINT8 num, tNCI_DISCOVER_PARAMS *p_param)
     int xx;
     int size;
 
-    size   = num * sizeof(tNCI_DISCOVER_PARAMS) + 1;
-    if ((p = NCI_GET_CMD_BUF(size)) == NULL)
+    size   = num * sizeof (tNCI_DISCOVER_PARAMS) + 1;
+    if ((p = NCI_GET_CMD_BUF (size)) == NULL)
         return (NCI_STATUS_FAILED);
 
     p->event            = BT_EVT_TO_NFC_NCI;
     p->offset           = NCI_MSG_OFFSET_SIZE;
     p->layer_specific   = 0;
-    pp                  = (UINT8 *)(p + 1) + p->offset;
+    pp                  = (UINT8 *) (p + 1) + p->offset;
 
-    NCI_MSG_BLD_HDR0(pp, NCI_MT_CMD, NCI_GID_RF_MANAGE);
-    NCI_MSG_BLD_HDR1(pp, NCI_MSG_RF_DISCOVER);
+    NCI_MSG_BLD_HDR0 (pp, NCI_MT_CMD, NCI_GID_RF_MANAGE);
+    NCI_MSG_BLD_HDR1 (pp, NCI_MSG_RF_DISCOVER);
     p_size  = pp;
     pp++;
     p_start = pp;
@@ -347,7 +347,7 @@ UINT8 nci_snd_discover_cmd (UINT8 num, tNCI_DISCOVER_PARAMS *p_param)
         UINT8_TO_STREAM (pp, p_param[xx].type);
         UINT8_TO_STREAM (pp, p_param[xx].frequency);
     }
-    *p_size = (UINT8)(pp - p_start);
+    *p_size = (UINT8) (pp - p_start);
     p->len  = NCI_MSG_HDR_SIZE + *p_size;
 
     nfc_ncif_send_cmd (p);
@@ -369,17 +369,17 @@ UINT8 nci_snd_discover_select_cmd (UINT8 rf_disc_id, UINT8 protocol, UINT8 rf_in
     BT_HDR *p;
     UINT8 *pp;
 
-    if ((p = NCI_GET_CMD_BUF(NCI_DISCOVER_PARAM_SIZE_SELECT)) == NULL)
+    if ((p = NCI_GET_CMD_BUF (NCI_DISCOVER_PARAM_SIZE_SELECT)) == NULL)
         return (NCI_STATUS_FAILED);
 
     p->event            = BT_EVT_TO_NFC_NCI;
     p->len              = NCI_MSG_HDR_SIZE + NCI_DISCOVER_PARAM_SIZE_SELECT;
     p->offset           = NCI_MSG_OFFSET_SIZE;
     p->layer_specific   = 0;
-    pp                  = (UINT8 *)(p + 1) + p->offset;
+    pp                  = (UINT8 *) (p + 1) + p->offset;
 
-    NCI_MSG_BLD_HDR0(pp, NCI_MT_CMD, NCI_GID_RF_MANAGE);
-    NCI_MSG_BLD_HDR1(pp, NCI_MSG_RF_DISCOVER_SELECT);
+    NCI_MSG_BLD_HDR0 (pp, NCI_MT_CMD, NCI_GID_RF_MANAGE);
+    NCI_MSG_BLD_HDR1 (pp, NCI_MSG_RF_DISCOVER_SELECT);
     UINT8_TO_STREAM (pp, NCI_DISCOVER_PARAM_SIZE_SELECT);
     UINT8_TO_STREAM (pp, rf_disc_id);
     UINT8_TO_STREAM (pp, protocol);
@@ -404,17 +404,17 @@ UINT8 nci_snd_deactivate_cmd (UINT8 de_act_type )
     BT_HDR *p;
     UINT8 *pp;
 
-    if ((p = NCI_GET_CMD_BUF(NCI_DISCOVER_PARAM_SIZE_DEACT)) == NULL)
+    if ((p = NCI_GET_CMD_BUF (NCI_DISCOVER_PARAM_SIZE_DEACT)) == NULL)
         return (NCI_STATUS_FAILED);
 
     p->event            = BT_EVT_TO_NFC_NCI;
     p->len              = NCI_MSG_HDR_SIZE + NCI_DISCOVER_PARAM_SIZE_DEACT;
     p->offset           = NCI_MSG_OFFSET_SIZE;
     p->layer_specific   = 0;
-    pp                  = (UINT8 *)(p + 1) + p->offset;
+    pp                  = (UINT8 *) (p + 1) + p->offset;
 
-    NCI_MSG_BLD_HDR0(pp, NCI_MT_CMD, NCI_GID_RF_MANAGE);
-    NCI_MSG_BLD_HDR1(pp, NCI_MSG_RF_DEACTIVATE);
+    NCI_MSG_BLD_HDR0 (pp, NCI_MT_CMD, NCI_GID_RF_MANAGE);
+    NCI_MSG_BLD_HDR1 (pp, NCI_MSG_RF_DEACTIVATE);
     UINT8_TO_STREAM (pp, NCI_DISCOVER_PARAM_SIZE_DEACT);
     UINT8_TO_STREAM (pp, de_act_type);
 
@@ -439,29 +439,29 @@ UINT8 nci_snd_discover_map_cmd (UINT8 num, tNCI_DISCOVER_MAPS *p_maps)
     int xx;
     int size;
 
-    size = num * sizeof(tNCI_DISCOVER_MAPS) + 1;
+    size = num * sizeof (tNCI_DISCOVER_MAPS) + 1;
 
-    if ((p = NCI_GET_CMD_BUF(size)) == NULL)
+    if ((p = NCI_GET_CMD_BUF (size)) == NULL)
         return (NCI_STATUS_FAILED);
 
     p->event            = BT_EVT_TO_NFC_NCI;
     p->offset           = NCI_MSG_OFFSET_SIZE;
     p->layer_specific   = 0;
-    pp                  = (UINT8 *)(p + 1) + p->offset;
+    pp                  = (UINT8 *) (p + 1) + p->offset;
 
-    NCI_MSG_BLD_HDR0(pp, NCI_MT_CMD, NCI_GID_RF_MANAGE);
-    NCI_MSG_BLD_HDR1(pp, NCI_MSG_RF_DISCOVER_MAP);
+    NCI_MSG_BLD_HDR0 (pp, NCI_MT_CMD, NCI_GID_RF_MANAGE);
+    NCI_MSG_BLD_HDR1 (pp, NCI_MSG_RF_DISCOVER_MAP);
     p_size  = pp;
     pp++;
     p_start = pp;
     UINT8_TO_STREAM (pp, num);
-    for (xx=0; xx<num; xx++)
+    for (xx = 0; xx < num; xx++)
     {
         UINT8_TO_STREAM (pp, p_maps[xx].protocol);
         UINT8_TO_STREAM (pp, p_maps[xx].mode);
         UINT8_TO_STREAM (pp, p_maps[xx].intf_type);
     }
-    *p_size = (UINT8)(pp - p_start);
+    *p_size = (UINT8) (pp - p_start);
     p->len  = NCI_MSG_HDR_SIZE + *p_size;
     nfc_ncif_send_cmd (p);
     return (NCI_STATUS_OK);
@@ -481,17 +481,17 @@ UINT8 nci_snd_t3t_polling (UINT16 system_code, UINT8 rc, UINT8 tsn)
     BT_HDR *p;
     UINT8 *pp;
 
-    if ((p = NCI_GET_CMD_BUF(NCI_RF_PARAM_SIZE_T3T_POLLING)) == NULL)
+    if ((p = NCI_GET_CMD_BUF (NCI_RF_PARAM_SIZE_T3T_POLLING)) == NULL)
         return (NCI_STATUS_FAILED);
 
     p->event            = BT_EVT_TO_NFC_NCI;
     p->len              = NCI_MSG_HDR_SIZE + NCI_RF_PARAM_SIZE_T3T_POLLING;
     p->offset           = NCI_MSG_OFFSET_SIZE;
     p->layer_specific   = 0;
-    pp                  = (UINT8 *)(p + 1) + p->offset;
+    pp                  = (UINT8 *) (p + 1) + p->offset;
 
-    NCI_MSG_BLD_HDR0(pp, NCI_MT_CMD, NCI_GID_RF_MANAGE);
-    NCI_MSG_BLD_HDR1(pp, NCI_MSG_RF_T3T_POLLING);
+    NCI_MSG_BLD_HDR0 (pp, NCI_MT_CMD, NCI_GID_RF_MANAGE);
+    NCI_MSG_BLD_HDR1 (pp, NCI_MSG_RF_T3T_POLLING);
     UINT8_TO_STREAM (pp, NCI_RF_PARAM_SIZE_T3T_POLLING);
     UINT16_TO_BE_STREAM (pp, system_code);
     UINT8_TO_STREAM (pp, rc);
@@ -517,17 +517,17 @@ UINT8 nci_snd_parameter_update_cmd (UINT8 *p_param_tlvs, UINT8 tlv_size)
     UINT8 *pp;
     UINT8  num = 0, ulen, len, *pt;
 
-    if ((p = NCI_GET_CMD_BUF(tlv_size + 1)) == NULL)
+    if ((p = NCI_GET_CMD_BUF (tlv_size + 1)) == NULL)
         return (NCI_STATUS_FAILED);
 
     p->event    = BT_EVT_TO_NFC_NCI;
     p->len      = NCI_MSG_HDR_SIZE + tlv_size + 1;
     p->offset   = NCI_MSG_OFFSET_SIZE;
-    pp          = (UINT8 *)(p + 1) + p->offset;
+    pp          = (UINT8 *) (p + 1) + p->offset;
 
-    NCI_MSG_BLD_HDR0(pp, NCI_MT_CMD, NCI_GID_RF_MANAGE);
-    NCI_MSG_BLD_HDR1(pp, NCI_MSG_RF_PARAMETER_UPDATE);
-    UINT8_TO_STREAM (pp, (UINT8)(tlv_size + 1));
+    NCI_MSG_BLD_HDR0 (pp, NCI_MT_CMD, NCI_GID_RF_MANAGE);
+    NCI_MSG_BLD_HDR1 (pp, NCI_MSG_RF_PARAMETER_UPDATE);
+    UINT8_TO_STREAM (pp, (UINT8) (tlv_size + 1));
     len         = tlv_size;
     pt          = p_param_tlvs;
     while (len > 1)
@@ -587,10 +587,10 @@ UINT8 nci_snd_set_routing_cmd (BOOLEAN more, UINT8 target_handle, UINT8 num_tlv,
     p->offset           = NCI_MSG_OFFSET_SIZE;
     p->len              = NCI_MSG_HDR_SIZE + size;
     p->layer_specific   = 0;
-    pp                  = (UINT8 *)(p + 1) + p->offset;
+    pp                  = (UINT8 *) (p + 1) + p->offset;
 
-    NCI_MSG_BLD_HDR0(pp, NCI_MT_CMD, NCI_GID_RF_MANAGE);
-    NCI_MSG_BLD_HDR1(pp, NCI_MSG_RF_SET_ROUTING);
+    NCI_MSG_BLD_HDR0 (pp, NCI_MT_CMD, NCI_GID_RF_MANAGE);
+    NCI_MSG_BLD_HDR1 (pp, NCI_MSG_RF_SET_ROUTING);
     UINT8_TO_STREAM (pp, size);
     UINT8_TO_STREAM (pp, more);
     if (size == 2)
@@ -617,23 +617,23 @@ UINT8 nci_snd_set_routing_cmd (BOOLEAN more, UINT8 target_handle, UINT8 num_tlv,
 ** Returns          status
 **
 *******************************************************************************/
-UINT8 nci_snd_get_routing_cmd(void)
+UINT8 nci_snd_get_routing_cmd (void)
 {
     BT_HDR *p;
     UINT8 *pp;
     UINT8   param_size = 0;
 
-    if ((p = NCI_GET_CMD_BUF(param_size)) == NULL)
+    if ((p = NCI_GET_CMD_BUF (param_size)) == NULL)
         return (NCI_STATUS_FAILED);
 
     p->event            = BT_EVT_TO_NFC_NCI;
     p->len              = NCI_MSG_HDR_SIZE + param_size;
     p->offset           = NCI_MSG_OFFSET_SIZE;
     p->layer_specific   = 0;
-    pp                  = (UINT8 *)(p + 1) + p->offset;
+    pp                  = (UINT8 *) (p + 1) + p->offset;
 
-    NCI_MSG_BLD_HDR0(pp, NCI_MT_CMD, NCI_GID_RF_MANAGE);
-    NCI_MSG_BLD_HDR1(pp, NCI_MSG_RF_GET_ROUTING);
+    NCI_MSG_BLD_HDR0 (pp, NCI_MT_CMD, NCI_GID_RF_MANAGE);
+    NCI_MSG_BLD_HDR1 (pp, NCI_MSG_RF_GET_ROUTING);
     UINT8_TO_STREAM (pp, param_size);
 
     nfc_ncif_send_cmd (p);

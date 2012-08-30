@@ -65,10 +65,8 @@ const tT2T_INIT_TAG t2t_init_content[] =
     {TAG_MIFARE_MID,    TRUE,   T2T_MIFARE_VERSION_BLOCK,   T2T_MIFARE_ULTRALIGHT_VER_NO,        0xFFFF,    FALSE,     0x06,    FALSE,  T2T_DEFAULT_LOCK_BLPB},
     {TAG_MIFARE_MID,    TRUE,   T2T_MIFARE_VERSION_BLOCK,   T2T_MIFARE_ULTRALIGHT_FAMILY_VER_NO, 0xFFFF,    TRUE,      0x00,    FALSE,  T2T_DEFAULT_LOCK_BLPB},
     {TAG_KOVIO_MID,     FALSE,  0x00,                       0x00,                                0x0000,    FALSE,     0x1D,    TRUE,   0x04},
-/*    {TAG_INFINEON_MID,  TRUE,   T2T_INFINEON_VERSION_BLOCK, T2T_INFINEON_MYD_MOVE_LEAN,          0xFFF0,    FALSE,     0x06,    FALSE,  T2T_DEFAULT_LOCK_BLPB}, */
+    {TAG_INFINEON_MID,  TRUE,   T2T_INFINEON_VERSION_BLOCK, T2T_INFINEON_MYD_MOVE_LEAN,          0xFFF0,    FALSE,     0x06,    FALSE,  T2T_DEFAULT_LOCK_BLPB},
     {TAG_INFINEON_MID,  TRUE,   T2T_INFINEON_VERSION_BLOCK, T2T_INFINEON_MYD_MOVE,               0xFFF0,    FALSE,     0x10,    FALSE,  T2T_DEFAULT_LOCK_BLPB},
-/*    {TAG_INFINEON_MID,  TRUE,   T2T_INFINEON_VERSION_BLOCK, T2T_INFINEON_MYD_NFC_1K,             0xFFF0,    FALSE,     0x7E,    FALSE,  T2T_DEFAULT_LOCK_BLPB}, */
-    {TAG_INFINEON_MID,  TRUE,   T2T_INFINEON_VERSION_BLOCK, T2T_INFINEON_MYD_NFC_2K,             0xFFF0,    FALSE,     0xFE,    FALSE,  T2T_DEFAULT_LOCK_BLPB},
     {TAG_BRCM_MID,      TRUE,   T2T_BRCM_VERSION_BLOCK,     T2T_BRCM_STATIC_MEM,                 0xFFFF,    FALSE,     0x06,    FALSE,  T2T_DEFAULT_LOCK_BLPB},
     {TAG_BRCM_MID,      TRUE,   T2T_BRCM_VERSION_BLOCK,     T2T_BRCM_DYNAMIC_MEM,                0xFFFF,    FALSE,     0x3C,    FALSE,  T2T_DEFAULT_LOCK_BLPB}
 
@@ -97,7 +95,7 @@ const char * const t2t_cmd_str[] = {
 };
 #endif
 
-static unsigned int tags_ones32(register unsigned int x);
+static unsigned int tags_ones32 (register unsigned int x);
 
 /*******************************************************************************
 **
@@ -113,11 +111,11 @@ const tT1T_CMD_RSP_INFO * t1t_cmd_to_rsp_info (UINT8 opcode)
     const tT1T_CMD_RSP_INFO *p_ret = NULL, *p;
     int xx;
 
-    for (xx=0, p=&t1t_cmd_rsp_infos[0]; xx<T1T_MAX_NUM_OPCODES; xx++, p++)
+    for (xx = 0, p=&t1t_cmd_rsp_infos[0]; xx<T1T_MAX_NUM_OPCODES; xx++, p++)
     {
         if (opcode == p->opcode)
         {
-            if ((xx<T1T_STATIC_OPCODES) || (rw_cb.tcb.t1t.hr[0] != T1T_STATIC_HR0))
+            if ((xx < T1T_STATIC_OPCODES) || (rw_cb.tcb.t1t.hr[0] != T1T_STATIC_HR0))
                 p_ret = p;
             break;
         }
@@ -141,7 +139,7 @@ const tT1T_INIT_TAG * t1t_tag_init_data (UINT8 tag_model)
     const tT1T_INIT_TAG *p_ret = NULL, *p;
     int xx;
 
-    for (xx=0, p=&t1t_init_content[0]; xx<T1T_MAX_TAG_MODELS; xx++, p++)
+    for (xx = 0, p = &t1t_init_content[0]; xx < T1T_MAX_TAG_MODELS; xx++, p++)
     {
         if (tag_model == p->tag_model)
         {
@@ -168,7 +166,7 @@ const tT2T_INIT_TAG * t2t_tag_init_data (UINT8 manufacturer_id, BOOLEAN b_valid_
     const tT2T_INIT_TAG *p_ret = NULL, *p;
     int xx;
 
-    for (xx=0, p=&t2t_init_content[0]; xx<T2T_MAX_TAG_MODELS; xx++, p++)
+    for (xx = 0, p = &t2t_init_content[0]; xx < T2T_MAX_TAG_MODELS; xx++, p++)
     {
         if (manufacturer_id == p->manufacturer_id)
         {
@@ -199,7 +197,7 @@ const tT2T_CMD_RSP_INFO * t2t_cmd_to_rsp_info (UINT8 opcode)
     const tT2T_CMD_RSP_INFO *p_ret = NULL, *p;
     int xx;
 
-    for (xx=0, p=&t2t_cmd_rsp_infos[0]; xx<T2T_MAX_NUM_OPCODES; xx++, p++)
+    for (xx = 0, p = &t2t_cmd_rsp_infos[0]; xx < T2T_MAX_NUM_OPCODES; xx++, p++)
     {
         if (opcode == p->opcode)
         {
@@ -222,7 +220,7 @@ const tT2T_CMD_RSP_INFO * t2t_cmd_to_rsp_info (UINT8 opcode)
 *******************************************************************************/
 UINT8 t1t_info_to_evt (const tT1T_CMD_RSP_INFO * p_info)
 {
-    return ((UINT8)(p_info - t1t_cmd_rsp_infos) + RW_T1T_FIRST_EVT);
+    return ((UINT8) (p_info - t1t_cmd_rsp_infos) + RW_T1T_FIRST_EVT);
 }
 
 /*******************************************************************************
@@ -236,7 +234,7 @@ UINT8 t1t_info_to_evt (const tT1T_CMD_RSP_INFO * p_info)
 *******************************************************************************/
 UINT8 t2t_info_to_evt (const tT2T_CMD_RSP_INFO * p_info)
 {
-    return ((UINT8)(p_info - t2t_cmd_rsp_infos) + RW_T2T_FIRST_EVT);
+    return ((UINT8) (p_info - t2t_cmd_rsp_infos) + RW_T2T_FIRST_EVT);
 }
 
 #if (BT_TRACE_PROTOCOL == TRUE)
@@ -251,7 +249,7 @@ UINT8 t2t_info_to_evt (const tT2T_CMD_RSP_INFO * p_info)
 *******************************************************************************/
 const char * t1t_info_to_str (const tT1T_CMD_RSP_INFO * p_info)
 {
-    int ind = (int)(p_info - t1t_cmd_rsp_infos);
+    int ind = (int) (p_info - t1t_cmd_rsp_infos);
     if (ind < T1T_MAX_NUM_OPCODES)
         return (const char *) t1t_cmd_str[ind];
     else
@@ -269,7 +267,7 @@ const char * t1t_info_to_str (const tT1T_CMD_RSP_INFO * p_info)
 *******************************************************************************/
 const char * t2t_info_to_str (const tT2T_CMD_RSP_INFO * p_info)
 {
-    int ind = (int)(p_info - t2t_cmd_rsp_infos);
+    int ind = (int) (p_info - t2t_cmd_rsp_infos);
     if (ind < T2T_MAX_NUM_OPCODES)
         return (const char *) t2t_cmd_str[ind];
     else
@@ -288,8 +286,8 @@ const char * t2t_info_to_str (const tT2T_CMD_RSP_INFO * p_info)
 *******************************************************************************/
 int tags_pow (int x, int y)
 {
-    int i, ret=1;
-    for (i=0; i<y; i++)
+    int i, ret = 1;
+    for (i = 0; i < y; i++)
     {
         ret *= x;
     }
@@ -306,7 +304,7 @@ int tags_pow (int x, int y)
 ** Returns          int
 **
 *******************************************************************************/
-static unsigned int tags_ones32(register unsigned int x)
+static unsigned int tags_ones32 (register unsigned int x)
 {
         /* 32-bit recursive reduction using SWAR...
 	   but first step is mapping 2-bit values
@@ -317,7 +315,7 @@ static unsigned int tags_ones32(register unsigned int x)
         x = (((x >> 4) + x) & 0x0f0f0f0f);
         x += (x >> 8);
         x += (x >> 16);
-        return(x & 0x0000003f);
+        return (x & 0x0000003f);
 }
 
 /*******************************************************************************
@@ -329,7 +327,7 @@ static unsigned int tags_ones32(register unsigned int x)
 ** Returns          int
 **
 *******************************************************************************/
-unsigned int tags_log2(register unsigned int x)
+unsigned int tags_log2 (register unsigned int x)
 {
         x |= (x >> 1);
         x |= (x >> 2);
@@ -337,7 +335,7 @@ unsigned int tags_log2(register unsigned int x)
         x |= (x >> 8);
         x |= (x >> 16);
 
-        return(tags_ones32(x) - 1);
+        return (tags_ones32 (x) - 1);
 }
 
 #endif /* NFC_INCLUDED == TRUE*/

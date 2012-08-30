@@ -1796,6 +1796,8 @@ static void nfa_dm_disc_sm_poll_active (tNFA_DM_RF_DISC_SM_EVENT event,
         break;
     case NFA_DM_RF_DEACTIVATE_RSP:
         nfa_dm_cb.disc_cb.disc_flags &= ~NFA_DM_DISC_FLAGS_W4_RSP;
+        /* register callback to get interface error NTF */
+        NFC_SetStaticRfCback (nfa_dm_disc_data_cback);
         break;
     case NFA_DM_RF_DEACTIVATE_NTF:
         pres_check_event    = TRUE;

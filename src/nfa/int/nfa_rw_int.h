@@ -253,12 +253,11 @@ typedef UINT8 tNFA_RW_NDEF_ST;
 
 /* flags for RW control block */
 #define NFA_RW_FL_NOT_EXCL_RF_MODE              0x01    /* Activation while not in exclusive RF mode                                */
-#define NFA_RW_FL_AUTO_PRESENCE_CHECK_ENABLED   0x02    /* Automatic presence check enabled (only when not in exclusive RF mode)    */
-#define NFA_RW_FL_AUTO_PRESENCE_CHECK_SUCCESS   0x04    /* Tag was present in last automatic presence check                         */
-#define NFA_RW_FL_TAG_IS_READONLY               0x08    /* Read only tag                                                            */
-#define NFA_RW_FL_ACTIVATION_NTF_PENDING        0x10    /* Busy retrieving additional tag information                               */
-#define NFA_RW_FL_BUSY                          0x20    /* Tag operation is in progress                                             */
-#define NFA_RW_FL_ACTIVATED                     0x40    /* Tag is been activated                                                    */
+#define NFA_RW_FL_AUTO_PRESENCE_CHECK_BUSY      0x02    /* Waiting for response from tag for auto-presence check                    */
+#define NFA_RW_FL_TAG_IS_READONLY               0x04    /* Read only tag                                                            */
+#define NFA_RW_FL_ACTIVATION_NTF_PENDING        0x08    /* Busy retrieving additional tag information                               */
+#define NFA_RW_FL_API_BUSY                      0x10    /* Tag operation is in progress                                             */
+#define NFA_RW_FL_ACTIVATED                     0x20    /* Tag is been activated                                                    */
 
 /* NFA RW control block */
 typedef struct

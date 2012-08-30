@@ -498,8 +498,8 @@ LLCP_API extern BOOLEAN LLCP_IsDataLinkCongested (UINT8 local_sap,
 **                  LLCP_STATUS_CONGESTED if data link is congested
 **
 *******************************************************************************/
-LLCP_API extern tLLCP_STATUS LLCP_SendData (UINT8 local_sap,
-                                            UINT8 remote_sap,
+LLCP_API extern tLLCP_STATUS LLCP_SendData (UINT8  local_sap,
+                                            UINT8  remote_sap,
                                             BT_HDR *p_buf);
 
 /*******************************************************************************
@@ -545,8 +545,8 @@ LLCP_API extern UINT32 LLCP_FlushDataLinkRxData (UINT8  local_sap,
 ** Returns          LLCP_STATUS_SUCCESS if success
 **
 *******************************************************************************/
-LLCP_API extern tLLCP_STATUS LLCP_DisconnectReq (UINT8 local_sap,
-                                                 UINT8 remote_sap,
+LLCP_API extern tLLCP_STATUS LLCP_DisconnectReq (UINT8   local_sap,
+                                                 UINT8   remote_sap,
                                                  BOOLEAN flush);
 
 /*******************************************************************************
@@ -561,8 +561,8 @@ LLCP_API extern tLLCP_STATUS LLCP_DisconnectReq (UINT8 local_sap,
 ** Returns          LLCP_STATUS_SUCCESS if success
 **
 *******************************************************************************/
-LLCP_API extern tLLCP_STATUS LLCP_SetTxCompleteNtf (UINT8   local_sap,
-                                                    UINT8   remote_sap);
+LLCP_API extern tLLCP_STATUS LLCP_SetTxCompleteNtf (UINT8 local_sap,
+                                                    UINT8 remote_sap);
 
 /*******************************************************************************
 **
@@ -574,8 +574,8 @@ LLCP_API extern tLLCP_STATUS LLCP_SetTxCompleteNtf (UINT8   local_sap,
 ** Returns          LLCP_STATUS_SUCCESS if success
 **
 *******************************************************************************/
-LLCP_API extern tLLCP_STATUS LLCP_SetLocalBusyStatus (UINT8 local_sap,
-                                                      UINT8 remote_sap,
+LLCP_API extern tLLCP_STATUS LLCP_SetLocalBusyStatus (UINT8   local_sap,
+                                                      UINT8   remote_sap,
                                                       BOOLEAN is_busy);
 
 /*******************************************************************************
@@ -624,9 +624,9 @@ LLCP_API extern void LLCP_GetLinkMIU (UINT16 *p_local_link_miu, UINT16 *p_remote
 ** Returns          LLCP_STATUS_SUCCESS if success
 **
 *******************************************************************************/
-LLCP_API extern tLLCP_STATUS LLCP_DiscoverService (char *p_name,
+LLCP_API extern tLLCP_STATUS LLCP_DiscoverService (char            *p_name,
                                                    tLLCP_SDP_CBACK *p_cback,
-                                                   UINT8 *p_tid);
+                                                   UINT8           *p_tid);
 
 /*******************************************************************************
 **
