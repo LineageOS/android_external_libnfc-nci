@@ -86,7 +86,7 @@ extern UINT8 *scru_dump_hex (UINT8 *p, char *p_title, UINT32 len, UINT32 trace_l
 extern void ScrLog(UINT32 trace_set_mask, const char *fmt_str, ...);
 extern void DispNci (UINT8 *p, UINT16 len, BOOLEAN is_recv);
 
-extern void nfa_app_post_nci_reset (UINT32 brcm_hw_id);
+extern void downloadFirmwarePatchFile (UINT32 brcm_hw_id);
 
 #define DISP_NCI	(DispNciDump)
 extern void DispNciDump(UINT8 *p, UINT16 len, BOOLEAN is_recv);

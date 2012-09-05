@@ -416,16 +416,16 @@ extern "C" void postBaudUpdate(tNFC_STATUS status)
 
 /*******************************************************************************
 **
-** Function:    nfa_app_post_nci_reset
+** Function:    downloadFirmwarePatchFile
 **
-** Description: Perform any post-NCI reset routines
+** Description: Download firmware patch file
 **
 ** Returns:     none
 **
 *******************************************************************************/
-extern "C" void nfa_app_post_nci_reset (UINT32 brcm_hw_id)
+extern "C" void downloadFirmwarePatchFile (UINT32 brcm_hw_id)
 {
-    ALOGD("nfa_app_post_nci_reset");
+    ALOGD("downloadFirmwarePatchFile");
 
 #if (defined(NFA_APP_RECONFIG_BAUD) && (NFA_APP_RECONFIG_BAUD != 0))
     NFC_UpdateBaudRate (NFA_APP_RECONFIG_BAUD, postBaudUpdate);
