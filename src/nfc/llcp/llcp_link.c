@@ -257,6 +257,35 @@ tLLCP_STATUS llcp_link_activate (tLLCP_ACTIVATE_CONFIG *p_config)
 
 /*******************************************************************************
 **
+** Function         llcp_deactivate_cleanup
+**
+** Description      Clean up for link deactivation
+**
+** Returns          void
+**
+*******************************************************************************/
+static void llcp_deactivate_cleanup  (UINT8 reason)
+{
+    /* report SDP failure for any pending request */
+    llcp_sdp_proc_deactivation ();
+
+    /* Update link status to service layer */
+    llcp_link_update_status (FALSE);
+
+    /* We had sent out DISC */
+    llcp_cb.lcb.link_state = LLCP_LINK_STATE_DEACTIVATED;
+
+    llcp_link_stop_link_timer ();
+
+    /* stop inactivity timer */
+    llcp_link_stop_inactivity_timer ();
+
+    /* Let upper layer deactivate local link */
+    (*llcp_cb.lcb.p_link_cback) (LLCP_LINK_DEACTIVATED_EVT, reason);
+}
+
+/*******************************************************************************
+**
 ** Function         llcp_link_process_link_timeout
 **
 ** Description      Process timeout events for LTO, SYMM and deactivating
@@ -291,22 +320,7 @@ void llcp_link_process_link_timeout (void)
     }
     else if (llcp_cb.lcb.link_state == LLCP_LINK_STATE_DEACTIVATING)
     {
-        /* report SDP failure for any pending request */
-        llcp_sdp_proc_deactivation ();
-
-        /* Update link status to service layer */
-        llcp_link_update_status (FALSE);
-
-        /* We had sent out DISC */
-        llcp_cb.lcb.link_state = LLCP_LINK_STATE_DEACTIVATED;
-
-        llcp_link_stop_link_timer ();
-
-        /* stop inactivity timer */
-        llcp_link_stop_inactivity_timer ();
-
-        /* Let upper layer deactivate local link */
-        (*llcp_cb.lcb.p_link_cback) (LLCP_LINK_DEACTIVATED_EVT, llcp_cb.lcb.link_deact_reason);
+        llcp_deactivate_cleanup (llcp_cb.lcb.link_deact_reason);
 
         NFC_SetStaticRfCback (NULL);
     }
@@ -373,6 +387,9 @@ void llcp_link_deactivate (UINT8 reason)
     if (  (reason == LLCP_LINK_FRAME_ERROR)
         ||(reason == LLCP_LINK_LOCAL_INITIATED)  )
     {
+        /* get rid of the data pending in NFC tx queue, so DISC PDU can be sent ASAP */
+        NFC_FlushData (NFC_RF_CONN_ID);
+
         llcp_util_send_disc (LLCP_SAP_LM, LLCP_SAP_LM);
 
         /* Wait until DISC is sent to peer */
@@ -396,21 +413,12 @@ void llcp_link_deactivate (UINT8 reason)
         /* if received DISC to deactivate LLCP link as target role, send SYMM PDU */
         llcp_link_send_SYMM ();
     }
+    else /*  for link timeout and interface error */
+    {
+        NFC_FlushData (NFC_RF_CONN_ID);
+    }
 
-    /* report SDP failure for any pending request */
-    llcp_sdp_proc_deactivation ();
-
-    /* Update link status to service layer */
-    llcp_link_update_status (FALSE);
-
-    llcp_link_stop_link_timer ();
-
-    /* stop inactivity timer */
-    llcp_link_stop_inactivity_timer ();
-
-    llcp_cb.lcb.link_state = LLCP_LINK_STATE_DEACTIVATED;
-
-    (*llcp_cb.lcb.p_link_cback) (LLCP_LINK_DEACTIVATED_EVT, reason);
+    llcp_deactivate_cleanup (reason);
 }
 
 /*******************************************************************************
