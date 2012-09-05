@@ -1,4 +1,5 @@
 This file contains version information for the NFC stack code.
+set BRCM_PRM_POST_I2C_FIX_DELAY to 500
 main_sherrys_1650236  # flush tx data queue when timed out
 main_darinlee_1647545  # download prei2c patch
 element * NFA_MI_1.03.36

@@ -79,7 +79,7 @@ void nfc_brcm_prm_nci_command_complete_cback (tNFC_VS_EVT event, UINT16 data_len
 #endif
 
 #ifndef BRCM_PRM_POST_I2C_FIX_DELAY
-#define BRCM_PRM_POST_I2C_FIX_DELAY         (200)   /* amount of time to wait after downloading preI2C patch before downloading LPM/FPM patch */
+#define BRCM_PRM_POST_I2C_FIX_DELAY         (500)   /* amount of time to wait after downloading preI2C patch before downloading LPM/FPM patch */
 #endif
 
 /* command to get currently downloaded patch version */
