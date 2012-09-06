@@ -1073,6 +1073,20 @@ NFC_API extern tNFC_STATUS NFC_SendData(UINT8       conn_id,
 
 /*******************************************************************************
 **
+** Function         NFC_FlushData
+**
+** Description      This function is called to discard the tx data queue of
+**                  the given connection id.
+**
+** Parameters       conn_id - the connection id.
+**
+** Returns          tNFC_STATUS
+**
+*******************************************************************************/
+NFC_API extern tNFC_STATUS NFC_FlushData (UINT8       conn_id);
+
+/*******************************************************************************
+**
 ** Function         NFC_Deactivate
 **
 ** Description      This function is called to stop the discovery process or

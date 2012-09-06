@@ -926,6 +926,11 @@ void nfc_ncif_proc_deactivate (UINT8 status, UINT8 deact_type, BOOLEAN is_ntf)
         GKI_freebuf (p_data);
     }
 
+    while ((p_data = GKI_dequeue (&p_cb->tx_q)) != NULL)
+    {
+        GKI_freebuf (p_data);
+    }
+
     if (p_cb->p_cback)
         (*p_cb->p_cback) (NFC_RF_CONN_ID, NFC_DEACTIVATE_CEVT, (tNFC_CONN *) p_deact);
 

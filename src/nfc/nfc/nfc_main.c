@@ -769,6 +769,34 @@ tNFC_STATUS NFC_SendData (UINT8       conn_id,
 
 /*******************************************************************************
 **
+** Function         NFC_FlushData
+**
+** Description      This function is called to discard the tx data queue of
+**                  the given connection id.
+**
+** Parameters       conn_id - the connection id.
+**
+** Returns          tNFC_STATUS
+**
+*******************************************************************************/
+tNFC_STATUS NFC_FlushData (UINT8       conn_id)
+{
+    tNFC_STATUS     status = NFC_STATUS_FAILED;
+    tNFC_CONN_CB    *p_cb = nfc_find_conn_cb_by_conn_id (conn_id);
+    void            *p_buf;
+
+    if (p_cb)
+    {
+        status  = NFC_STATUS_OK;
+        while ((p_buf = GKI_dequeue (&p_cb->tx_q)) != NULL)
+            GKI_freebuf (p_buf);
+    }
+
+    return status;
+}
+
+/*******************************************************************************
+**
 ** Function         NFC_Deactivate
 **
 ** Description      This function is called to stop the discovery process or
