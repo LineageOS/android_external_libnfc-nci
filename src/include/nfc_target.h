@@ -140,11 +140,6 @@
 #define NFC_RESTORE_BAUD_ON_SHUTDOWN    TRUE
 #endif
 
-/* Default NFCC power-up baud rate */
-#ifndef NFC_DEFAULT_BAUD
-#define NFC_DEFAULT_BAUD                USERIAL_BAUD_115200
-#endif
-
 /******************************************************************************
 **
 ** NCI
@@ -214,10 +209,16 @@
 #define NCI_MAX_CONN_CBS        4
 #endif
 
+/* Maximum number of NCI commands that the NFCC accepts without needing to wait for response */
+#ifndef NCI_MAX_CMD_WINDOW
+#define NCI_MAX_CMD_WINDOW      1
+#endif
+
 /* the maximum number of buffers for the static RF connection. 1-5 */
 #ifndef NCI_MAX_RF_DATA_CREDITS
 #define NCI_MAX_RF_DATA_CREDITS     3
 #endif
+
 /* Define to TRUE to include the NFCEE related functionalities */
 #ifndef NFC_NFCEE_INCLUDED
 #define NFC_NFCEE_INCLUDED          TRUE
@@ -329,35 +330,18 @@
 #ifndef RW_I93_FLAG_SUB_CARRIER
 #define RW_I93_FLAG_SUB_CARRIER     I93_FLAG_SUB_CARRIER_SINGLE
 #endif
+
 /* Data rate for 15693 command/response */
 #ifndef RW_I93_FLAG_DATA_RATE
 #define RW_I93_FLAG_DATA_RATE       I93_FLAG_DATA_RATE_HIGH
 #endif
+
 /* TRUE, to include Card Emulation related test commands */
 #ifndef CE_TEST_INCLUDED
 #define CE_TEST_INCLUDED            FALSE
 #endif
 
-/* Map NFC serial port to USERIAL_PORT_6 by default */
-#ifndef USERIAL_NFC_PORT
-#define USERIAL_NFC_PORT            (USERIAL_PORT_6)
-#endif
-
-/* NFC snooze mode */
-#ifndef NFC_LP_SNOOZE_MODE
-#define NFC_LP_SNOOZE_MODE          NFC_LP_SNOOZE_MODE_SPI_I2C  /* NFC-Android will use I2C by default */
-#endif
-
-/* Idle Threshold Host in 100ms unit */
-#ifndef NFC_LP_IDLE_THRESHOLD_HOST
-#define NFC_LP_IDLE_THRESHOLD_HOST  0
-#endif
-
-/* Idle Threshold HC in 100ms unit */
-#ifndef NFC_LP_IDLE_THRESHOLD_HC
-#define NFC_LP_IDLE_THRESHOLD_HC    0
-#endif
-
+#if (NFC_BRCM_NOT_OPEN_INCLUDED == TRUE)
 /* Power cycle NFCC to move full power mode from CE low power mode */
 #ifndef NFC_LP_POWER_CYCLE_TO_FULL
 #define NFC_LP_POWER_CYCLE_TO_FULL  TRUE
@@ -377,46 +361,13 @@
 #ifndef NFC_LP_SECONDARY_THRESHOLD
 #define NFC_LP_SECONDARY_THRESHOLD  8
 #endif
-
-/* time (in ms) between power off and on NFCC */
-#ifndef NCI_POWER_CYCLE_DELAY
-#define NCI_POWER_CYCLE_DELAY       100
-#endif
-
-/* NFCC snooze mode idle timeout before deassert NFC_WAKE in ms */
-#ifndef NCI_LP_IDLE_TIMEOUT
-#define NCI_LP_IDLE_TIMEOUT         100
-#endif
-
-/* NFCC boot-up delay before sending command in CE low power mode in ms */
-#ifndef NCI_LP_BOOTUP_DEALY
-#define NCI_LP_BOOTUP_DEALY         50
-#endif
-
-/* NFC-WAKE */
-#ifndef NCILP_NFC_WAKE_GPIO
-#define NCILP_NFC_WAKE_GPIO         UPIO_GENERAL3
 #endif
 
 /* Quick Timer */
 #ifndef QUICK_TIMER_TICKS_PER_SEC
 #define QUICK_TIMER_TICKS_PER_SEC   100       /* 10ms timer */
 #endif
-/* Send to lower layer */
-#ifndef NCI_TO_LOWER
-#ifdef TESTER
-/* For BTE Insight, NCI_TO_LOWER is runtime configurable (depends on whether */
-/*                     user selected 'shared' or 'dedicated' nci transport). */
-/*                     Call Insight's btstk_nfc_send to forward NCI messages.*/
-extern void btstk_nfc_send(BT_HDR *p_msg);
-#define NCI_TO_LOWER(p)         btstk_nfc_send ((BT_HDR *)(p));
-#else
-/* For embedded platforms, configured for Dedicated Transport:              */
-/*                      NCI_TO_LOWER calls nci_send to send NCI messages    */
-/*                      to the NCIT_TASK                                     */
-#define NCI_TO_LOWER(p)         ncit_send_msg((BT_HDR *)(p));
-#endif
-#endif /* NCI_TO_LOWER */
+
 
 /******************************************************************************
 **
@@ -591,8 +542,6 @@ extern void btstk_nfc_send(BT_HDR *p_msg);
 #define NFA_HCI_MAX_HOST_IN_NETWORK 0x06
 #endif
 
-
-
 /* Max number of Application that can be registered to NFA-HCI */
 #ifndef NFA_HCI_MAX_APP_CB
 #define NFA_HCI_MAX_APP_CB          0x05
@@ -611,11 +560,6 @@ extern void btstk_nfc_send(BT_HDR *p_msg);
 /* Timeout for waiting for the response to HCP Command packet */
 #ifndef NFA_HCI_CMD_RSP_TIMEOUT
 #define NFA_HCI_CMD_RSP_TIMEOUT    1000
-#endif
-
-/* NFCC will respond to more than one technology during listen discovery  */
-#ifndef NFA_DM_MULTI_TECH_RESP
-#define NFA_DM_MULTI_TECH_RESP      FALSE    /* NFC-Android will enable/disable this by .conf file on startup */
 #endif
 
 /* Default poll duration (may be over-ridden using NFA_SetRfDiscoveryDuration) */
@@ -718,7 +662,7 @@ extern void btstk_nfc_send(BT_HDR *p_msg);
 
 /* Max number of NFCEE supported */
 #ifndef NFA_EE_MAX_EE_SUPPORTED
-#define NFA_EE_MAX_EE_SUPPORTED         4
+#define NFA_EE_MAX_EE_SUPPORTED         3
 #endif
 
 /* Maximum number of AID entries per target_handle  */
@@ -729,6 +673,10 @@ extern void btstk_nfc_send(BT_HDR *p_msg);
 /* Maximum number of callback functions can be registered through NFA_EeRegister() */
 #ifndef NFA_EE_MAX_CBACKS
 #define NFA_EE_MAX_CBACKS           (3)
+#endif
+
+#ifndef NFA_DTA_INCLUDED
+#define NFA_DTA_INCLUDED            TRUE
 #endif
 
 #endif /* NFC_TARGET_H */

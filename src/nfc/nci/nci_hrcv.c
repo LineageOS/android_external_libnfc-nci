@@ -422,7 +422,7 @@ void nci_proc_prop_rsp (BT_HDR *p_msg)
     UINT8   *p;
     UINT8   *p_evt;
     UINT8   *pp, len, op_code;
-    tNFC_VS_CBACK   *p_cback = nfc_cb.p_vsc_cback;
+    tNFC_VS_CBACK   *p_cback = (tNFC_VS_CBACK *)nfc_cb.p_vsc_cback;
 
     /* find the start of the NCI message and parse the NCI header */
     p   = p_evt = (UINT8 *) (p_msg + 1) + p_msg->offset;

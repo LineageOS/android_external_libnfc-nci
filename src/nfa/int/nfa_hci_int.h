@@ -18,6 +18,15 @@ extern BOOLEAN HCI_LOOPBACK_DEBUG;
 /*****************************************************************************
 **  Constants and data types
 *****************************************************************************/
+
+
+#define NFA_HCI_STATIC_PIPE_UICC0       0x70
+#define NFA_HCI_STATIC_PIPE_UICC1       0x71
+#define NFA_HCI_HOST_ID_UICC0           0x02
+#define NFA_HCI_HOST_ID_UICC1           0x03
+#define NFA_HCI_PROPRIETARY_GATE0       0xF0
+#define NFA_HCI_PROPRIETARY_GATE1       0xF1
+
 #define NFA_HCI_SESSION_ID_LEN          8           /* HCI Session ID length */
 #define NFA_MAX_PIPES_IN_GENERIC_GATE   0x0F        /* Maximum pipes that can be created on a generic pipe  */
 
@@ -65,17 +74,14 @@ enum
     NFA_HCI_API_OPEN_PIPE_EVT,                                    /* Open a pipe */
     NFA_HCI_API_CLOSE_PIPE_EVT,                                   /* Close a pipe */
     NFA_HCI_API_DELETE_PIPE_EVT,                                  /* Delete a pipe */
+    NFA_HCI_API_ADD_STATIC_PIPE_EVT,                              /* Add a static pipe */
     NFA_HCI_API_SEND_CMD_EVT,                                     /* Send command via pipe */
     NFA_HCI_API_SEND_RSP_EVT,                                     /* Application Response to a command */
     NFA_HCI_API_SEND_EVENT_EVT,                                   /* Send event via pipe */
 
     NFA_HCI_RSP_NV_READ_EVT,                                      /* Non volatile read complete event */
     NFA_HCI_RSP_NV_WRITE_EVT,                                     /* Non volatile write complete event */
-    NFA_HCI_VSC_INIT_EVT,                                         /* Vendor specific initialization is completed */
-    NFA_HCI_EE_DISC_CMPLT_EVT,
     NFA_HCI_RSP_TIMEOUT_EVT,
-    NFA_HCI_HCP_CONN_CREATE_EVT,
-    NFA_HCI_VSC_TIMEOUT_EVT,                                      /* Timeout to Vendor specific operation */
     NFA_HCI_CHECK_QUEUE_EVT
 };
 
@@ -196,6 +202,15 @@ typedef struct
     UINT8               pipe;
 } tNFA_HCI_API_DELETE_PIPE_EVT;
 
+/* data type for NFA_HCI_API_ADD_STATIC_PIPE_EVT */
+typedef struct
+{
+    BT_HDR              hdr;
+    tNFA_HANDLE         hci_handle;
+    tNFA_STATUS         status;
+    UINT8               pipe;
+} tNFA_HCI_API_ADD_STATIC_PIPE_EVT;
+
 /* data type for NFA_HCI_API_SEND_EVENT_EVT */
 typedef struct
 {
@@ -237,28 +252,6 @@ typedef struct
     tNFA_STATUS         status;
 } tNFA_HCI_RSP_NV_WRITE_EVT;
 
-/* data type for NFA_HCI_VSC_INIT_EVT */
-typedef struct
-{
-    BT_HDR              hdr;
-    tNFA_STATUS         status;
-} tNFA_HCI_VSC_INIT_EVT;
-
-/* data type for NFA_HCI_EE_DISC_CMPLT_EVT */
-typedef struct
-{
-    BT_HDR              hdr;
-    BOOLEAN             b_disc_cmplt;
-    tNFA_STATUS         status;
-} tNFA_HCI_EE_DISC_CMPLT_EVT;
-
-/* data type for NFA_HCI_HCP_CONN_CREATE_EVT */
-typedef struct
-{
-    BT_HDR              hdr;
-    tNFA_STATUS         status;
-} tNFA_HCI_HCP_CONN_CREATE_EVT;
-
 /* data type for NFA_HCI_API_SEND_RSP_EVT */
 typedef struct
 {
@@ -292,6 +285,7 @@ typedef union
     tNFA_HCI_API_OPEN_PIPE_EVT          open_pipe;                      /* Open a pipe */
     tNFA_HCI_API_CLOSE_PIPE_EVT         close_pipe;                     /* Close a pipe */
     tNFA_HCI_API_DELETE_PIPE_EVT        delete_pipe;                    /* Delete a pipe */
+    tNFA_HCI_API_ADD_STATIC_PIPE_EVT    add_static_pipe;                /* Add a static pipe */
     tNFA_HCI_API_GET_HOST_LIST          get_host_list;                  /* Get the list of Host in the network */
     tNFA_HCI_API_GET_REGISTRY           get_registry;                   /* Get a registry entry on a host */
     tNFA_HCI_API_SET_REGISTRY           set_registry;                   /* Set a registry entry on a host */
@@ -302,13 +296,8 @@ typedef union
     /* Internal events */
     tNFA_HCI_RSP_NV_READ_EVT            nv_read;
     tNFA_HCI_RSP_NV_WRITE_EVT           nv_write;
-    tNFA_HCI_VSC_INIT_EVT               vsc_init;
-    tNFA_HCI_EE_DISC_CMPLT_EVT          ee_disc_cmplt;
-    tNFA_HCI_HCP_CONN_CREATE_EVT        conn_create;
 } tNFA_HCI_EVENT_DATA;
 
-/* type for State Machine (SM) action functions */
-typedef void (*tNFA_HCI_SM_ACT) (tNFA_HCI_EVENT_DATA *p_data);
 /*****************************************************************************
 **  control block
 *****************************************************************************/
@@ -334,8 +323,8 @@ typedef struct
 /* Admin gate control block */
 typedef struct
 {
-    tNFA_HCI_PIPE_STATE pipe01_state;               /* State of Pipe '01' */
-    UINT64              session_id;                 /* Session ID of the host network */
+    tNFA_HCI_PIPE_STATE pipe01_state;                       /* State of Pipe '01' */
+    UINT8               session_id[NFA_HCI_SESSION_ID_LEN]; /* Session ID of the host network */
 } tNFA_ADMIN_GATE_INFO;
 
 /* Link management gate control block */
@@ -374,7 +363,6 @@ typedef struct
     UINT8                           conn_id;                            /* Connection ID */
     UINT8                           buff_size;                          /* Connection buffer size */
     BOOLEAN                         nv_read_cmplt;                      /* NV Read completed */
-    BOOLEAN                         w4_vsc_init;                        /* Wait for VSC initialization */
     BOOLEAN                         nv_write_needed;                    /* Something changed - NV write is needed */
     BOOLEAN                         assembling;                         /* Set true if in process of assembling a message  */
     BOOLEAN                         assembly_failed;                    /* Set true if Insufficient buffer to Reassemble incoming message */
@@ -395,7 +383,6 @@ typedef struct
     UINT8                           inst;                               /* Instruction of incoming message */
 
     BUFFER_Q                        hci_api_q;                          /* Buffer Q to hold incoming API commands */
-    tNFA_HCI_SM_ACT                 p_vs_evt_hdlr;                      /* vendor specific event handler    */
     tNFA_HCI_CBACK                  *p_app_cback[NFA_HCI_MAX_APP_CB];   /* Callback functions registered by the applications */
     UINT16                          rsp_buf_size;                       /* Maximum size of APDU buffer */
     UINT8                           *p_rsp_buf;                         /* Buffer to hold response to sent event */
@@ -439,7 +426,7 @@ extern void nfa_hci_proc_nfcc_power_mode (UINT8 nfcc_power_mode);
 extern void nfa_hci_dh_startup_complete (void);
 extern void nfa_hci_startup_complete (tNFA_STATUS status);
 extern void nfa_hci_startup (void);
-extern void nfa_hci_restore_default_config (UINT64 session_id);
+extern void nfa_hci_restore_default_config (UINT8 *p_session_id);
 extern void nfa_hci_vsc_cback (tNFC_VS_EVT event, UINT16 data_len, UINT8 *p_data);
 
 /* Action functions in nfa_hci_act.c

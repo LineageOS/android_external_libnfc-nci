@@ -19,9 +19,9 @@
 #include "hcidefs.h"
 
 #if (NFC_INCLUDED == TRUE)
+#include "nfc_hal_api.h"
 #include "nfc_api.h"
 #include "nfc_int.h"
-#include "nci_int.h"
 #include "nci_hmsgs.h"
 #include "rw_int.h"
 #include "ce_int.h"
@@ -36,6 +36,10 @@
 #include "ce_int.h"
 #include "llcp_int.h"
 
+/* NFC mandates support for at least one logical connection;
+ * Update max_conn to the NFCC capability on InitRsp */
+#define NFC_SET_MAX_CONN_DEFAULT()    {nfc_cb.max_conn = 1;}
+
 #else /* NFC_RW_ONLY */
 #define ce_init()
 #define llcp_init()
@@ -49,10 +53,6 @@
 #if NFC_DYNAMIC_MEMORY == FALSE
 tNFC_CB nfc_cb;
 #endif
-
-/* NFC mandates support for at least one logical connection;
- * Update max_conn to the NFCC capability on InitRsp */
-#define NFC_SET_MAX_CONN_DEFAULT()    {nfc_cb.max_conn = 1;}
 
 #if (NFC_RW_ONLY == FALSE)
 #define NFC_NUM_INTERFACE_MAP   2
@@ -112,6 +112,50 @@ static char *nfc_state_name (UINT8 state)
         return ("???? UNKNOWN STATE");
     }
 }
+
+/*******************************************************************************
+**
+** Function         nfc_hal_event_name
+**
+** Description      This function returns the HAL event name.
+**
+** NOTE             conditionally compiled to save memory.
+**
+** Returns          pointer to the name
+**
+*******************************************************************************/
+static char *nfc_hal_event_name (UINT8 event)
+{
+    switch (event)
+    {
+    case HAL_NFC_OPEN_CPLT_EVT:
+        return ("HAL_NFC_OPEN_CPLT_EVT");
+
+    case HAL_NFC_CLOSE_CPLT_EVT:
+        return ("HAL_NFC_CLOSE_CPLT_EVT");
+
+    case HAL_NFC_POST_INIT_CPLT_EVT:
+        return ("HAL_NFC_POST_INIT_CPLT_EVT");
+
+    case HAL_NFC_NCI_RX_EVT:
+        return ("HAL_NFC_NCI_RX_EVT");
+
+    case HAL_NFC_PRE_DISCOVER_CPLT_EVT:
+        return ("HAL_NFC_PRE_DISCOVER_CPLT_EVT");
+
+    case HAL_NFC_REQUEST_CONTROL_EVT:
+        return ("HAL_NFC_REQUEST_CONTROL_EVT");
+
+    case HAL_NFC_RELEASE_CONTROL_EVT:
+        return ("HAL_NFC_RELEASE_CONTROL_EVT");
+
+    case HAL_NFC_ERROR_EVT:
+        return ("HAL_NFC_ERROR_EVT");
+
+    default:
+        return ("???? UNKNOWN EVENT");
+    }
+}
 #endif /* BT_TRACE_VERBOSE == TRUE */
 
 /*******************************************************************************
@@ -130,6 +174,7 @@ void nfc_enabled (tNFC_STATUS nfc_status, BT_HDR *p_init_rsp_msg)
     tNFC_CONN_CB *p_cb = &nfc_cb.conn_cb[NFC_RF_CONN_ID];
     BOOLEAN is_restarting_nfcc;
     UINT8   num_interfaces = 0, xx;
+    int     yy = 0;
 
     if (nfc_cb.nfc_state == NFC_STATE_RESTARTING)
         is_restarting_nfcc = TRUE;
@@ -151,9 +196,12 @@ void nfc_enabled (tNFC_STATUS nfc_status, BT_HDR *p_init_rsp_msg)
        for (xx = 0; xx < num_interfaces; xx++)
        {
            if ((*p) <= NCI_INTERFACE_MAX)
-           evt_data.enable.nci_interfaces |= (1 << (*p));
-           /* else must be VS interface.
-            * nfc_cb.vs_interface[] is filled by VS code processing NFC_INT_ENABLE_END_EVT */
+               evt_data.enable.nci_interfaces |= (1 << (*p));
+           else if (((*p) > NCI_INTERFACE_FIRST_VS) && (yy < NFC_NFCC_MAX_NUM_VS_INTERFACE))
+           {
+               /* save the VS RF interface in control block, if there's still room */
+               nfc_cb.vs_interface[yy++] = *p;
+           }
            p++;
        }
        nfc_cb.nci_interfaces    = evt_data.enable.nci_interfaces;
@@ -190,12 +238,6 @@ void nfc_enabled (tNFC_STATUS nfc_status, BT_HDR *p_init_rsp_msg)
         {
             nfc_cb.flags &= ~NFC_FL_ENABLE_PENDING;
             (*nfc_cb.p_resp_cback) (NFC_ENABLE_REVT, &evt_data);
-
-            /* Close the NCI transport, if using dedicated NCI transport and NFC_Enable was unsuccessful */
-            if ((!ncit_cfg.shared_transport) && (nfc_status != NCI_STATUS_OK))
-            {
-                GKI_send_event (NCIT_TASK, NCIT_TASK_EVT_TERMINATE);
-            }
         }
     }
 }
@@ -229,12 +271,27 @@ void nfc_set_state (tNFC_STATE nfc_state)
 void nfc_gen_cleanup (void)
 {
     nfc_cb.flags  &= ~NFC_FL_DEACTIVATING;
+
+    /* the HAL pre-discover is still active - clear the pending flag/free the buffer */
+    if (nfc_cb.flags & NFC_FL_DISCOVER_PENDING)
+    {
+        nfc_cb.flags &= ~NFC_FL_DISCOVER_PENDING;
+        GKI_freebuf (nfc_cb.p_disc_pending);
+        nfc_cb.p_disc_pending = NULL;
+    }
+
+    nfc_cb.flags &= ~(NFC_FL_CONTROL_REQUESTED|NFC_FL_CONTROL_GRANTED);
+
     nfc_stop_timer (&nfc_cb.deactivate_timer);
 
     /* Reset the connection control blocks */
     nfc_reset_all_conn_cbs ();
 
-
+    if (nfc_cb.p_nci_init_rsp)
+    {
+        GKI_freebuf (nfc_cb.p_nci_init_rsp);
+        nfc_cb.p_nci_init_rsp = NULL;
+    }
 
 }
 
@@ -249,10 +306,10 @@ void nfc_main_disable_complete (tNFC_STATUS status)
 {
     NFC_TRACE_DEBUG1 ("nfc_main_disable_complete (status = %i)", status);
 
-    /* If using dedicated transport, then send terminate signal to nci transport task */
-    if (!ncit_cfg.shared_transport)
+    /* If using dedicated transport, then close transport */
+    if (!nfc_cb.shared_transport)
     {
-        GKI_send_event (NCIT_TASK, NCIT_TASK_EVT_TERMINATE);
+        nfc_cb.p_hal->close();
     }
 
     /* Indicate that NFC subsystem is disabled */
@@ -261,11 +318,14 @@ void nfc_main_disable_complete (tNFC_STATUS status)
 
     nfc_gen_cleanup ();
 
-    /* Notify app of shutdown */
-    if (nfc_cb.p_resp_cback)
+    /* Notify app of shutdown if shared transport */
+    if (nfc_cb.shared_transport)
     {
-        (*nfc_cb.p_resp_cback) (NFC_DISABLE_REVT, NULL);
-        nfc_cb.p_resp_cback = NULL;
+        if (nfc_cb.p_resp_cback)
+        {
+            (*nfc_cb.p_resp_cback) (NFC_DISABLE_REVT, NULL);
+            nfc_cb.p_resp_cback = NULL;
+        }
     }
 
 }
@@ -279,10 +339,7 @@ void nfc_main_disable_complete (tNFC_STATUS status)
 *******************************************************************************/
 void nfc_main_cleanup (void)
 {
-    BOOLEAN wait = FALSE;
     llcp_cleanup ();
-    if (nfc_cb.p_vs_evt_hdlr)
-        wait = (*nfc_cb.p_vs_evt_hdlr) (NFC_INT_DISABLE_EVT, NULL);
 
     nfc_main_disable_complete (NFC_STATUS_OK);
 }
@@ -290,49 +347,121 @@ void nfc_main_cleanup (void)
 
 /*******************************************************************************
 **
-** Function         nfc_main_handle_err
+** Function         nfc_main_handle_hal_evt
 **
-** Description      Handle BT_EVT_TO_NFC_ERR
-**                  layer_specific field contains error code:
+** Description      Handle BT_EVT_TO_NFC_MSGS
 **
 *******************************************************************************/
-void nfc_main_handle_err (BT_HDR *p_err_msg)
+void nfc_main_handle_hal_evt (tNFC_HAL_EVT_MSG *p_msg)
 {
-    NFC_TRACE_ERROR1 ("nfc_main_handle_err (error code=0x%x)", p_err_msg->layer_specific);
+    UINT8  *ps;
+    NFC_TRACE_DEBUG1 ("nfc_main_handle_hal_evt(): HAL event=0x%x", p_msg->hal_evt);
 
-    switch (p_err_msg->layer_specific)
+    switch (p_msg->hal_evt)
     {
-    case NFC_ERR_TRANSPORT:
-        /* Notify app of transport error */
+    case HAL_NFC_OPEN_CPLT_EVT: /* only for failure case */
+        /* if enabling NFC, notify upper layer of failure */
+        if (nfc_cb.flags & NFC_FL_ENABLE_PENDING)
+        {
+            if (p_msg->status != HAL_NFC_STATUS_OK)
+                nfc_enabled (NFC_STATUS_FAILED, NULL);
+        }
+        break;
+
+    case HAL_NFC_CLOSE_CPLT_EVT:
         if (nfc_cb.p_resp_cback)
         {
-            (*nfc_cb.p_resp_cback) (NFC_NFCC_TRANSPORT_ERR_REVT, NULL);
+            if (nfc_cb.nfc_state == NFC_STATE_NFCC_POWER_OFF_SLEEP)
+            {
+                (*nfc_cb.p_resp_cback) (NFC_NFCC_POWER_OFF_REVT, NULL);
+            }
+            else
+            {
+                (*nfc_cb.p_resp_cback) (NFC_DISABLE_REVT, NULL);
+                nfc_cb.p_resp_cback = NULL;
+            }
+        }
+        break;
+
+    case HAL_NFC_POST_INIT_CPLT_EVT:
+        if (nfc_cb.p_nci_init_rsp)
+        {
+            nfc_enabled (NCI_STATUS_OK, nfc_cb.p_nci_init_rsp);
+            GKI_freebuf (nfc_cb.p_nci_init_rsp);
+            nfc_cb.p_nci_init_rsp = NULL;
+        }
+        break;
+
+    case HAL_NFC_PRE_DISCOVER_CPLT_EVT:
+        /* restore the command window, no matter if the discover command is still pending */
+        nfc_cb.nci_cmd_window = NCI_MAX_CMD_WINDOW;
+        nfc_cb.flags         &= ~NFC_FL_CONTROL_GRANTED;
+        if (nfc_cb.flags & NFC_FL_DISCOVER_PENDING)
+        {
+            /* issue the discovery command now, if it is still pending */
+            nfc_cb.flags &= ~NFC_FL_DISCOVER_PENDING;
+            ps            = (UINT8 *)nfc_cb.p_disc_pending;
+            nci_snd_discover_cmd (*ps, (tNFC_DISCOVER_PARAMS *)(ps + 1));
+            GKI_freebuf (nfc_cb.p_disc_pending);
+            nfc_cb.p_disc_pending = NULL;
+        }
+        else
+        {
+            /* check if there's other pending commands */
+            nfc_ncif_check_cmd_queue (NULL);
+        }
+        break;
+
+    case HAL_NFC_REQUEST_CONTROL_EVT:
+        nfc_cb.flags    |= NFC_FL_CONTROL_REQUESTED;
+        nfc_ncif_check_cmd_queue (NULL);
+        break;
+
+    case HAL_NFC_RELEASE_CONTROL_EVT:
+        if (nfc_cb.flags & NFC_FL_CONTROL_GRANTED)
+        {
+            nfc_cb.flags &= ~NFC_FL_CONTROL_GRANTED;
+            nfc_cb.nci_cmd_window = NCI_MAX_CMD_WINDOW;
+            nfc_ncif_check_cmd_queue (NULL);
+        }
+        break;
+
+    case HAL_NFC_ERROR_EVT:
+        switch (p_msg->status)
+        {
+        case HAL_NFC_STATUS_ERR_TRANSPORT:
+            /* Notify app of transport error */
+            if (nfc_cb.p_resp_cback)
+            {
+                (*nfc_cb.p_resp_cback) (NFC_NFCC_TRANSPORT_ERR_REVT, NULL);
+
+                /* if enabling NFC, notify upper layer of failure */
+                if (nfc_cb.flags & NFC_FL_ENABLE_PENDING)
+                {
+                    nfc_enabled (NFC_STATUS_FAILED, NULL);
+                }
+            }
+            break;
+
+        case HAL_NFC_STATUS_ERR_CMD_TIMEOUT:
+            nfc_ncif_event_status (NFC_NFCC_TIMEOUT_REVT, NFC_STATUS_HW_TIMEOUT);
 
             /* if enabling NFC, notify upper layer of failure */
             if (nfc_cb.flags & NFC_FL_ENABLE_PENDING)
             {
                 nfc_enabled (NFC_STATUS_FAILED, NULL);
+                return;
             }
-        }
-        break;
-
-    case NFC_ERR_CMD_TIMEOUT:
-        nfc_ncif_event_status (NFC_NFCC_TIMEOUT_REVT, NFC_STATUS_HW_TIMEOUT);
-
-        /* if enabling NFC, notify upper layer of failure */
-        if (nfc_cb.flags & NFC_FL_ENABLE_PENDING)
-        {
-            nfc_enabled (NFC_STATUS_FAILED, NULL);
-            return;
+            break;
+        default:
+            break;
         }
         break;
 
     default:
-        NFC_TRACE_ERROR1 ("nfc_main_handle_err unhandled error code (0x%x).", p_err_msg->layer_specific);
+        NFC_TRACE_ERROR1 ("nfc_main_handle_hal_evt (): unhandled event (0x%x).", p_msg->hal_evt);
         break;
     }
-
-    GKI_freebuf (p_err_msg);
 }
 
 
@@ -359,6 +488,114 @@ void nfc_main_flush_cmd_queue (void)
     while ((p_msg = (BT_HDR *)GKI_dequeue (&nfc_cb.nci_cmd_xmit_q)) != NULL)
     {
         GKI_freebuf (p_msg);
+    }
+}
+
+/*******************************************************************************
+**
+** Function         nfc_main_post_hal_evt
+**
+** Description      This function posts HAL event to NFC_TASK
+**
+** Returns          void
+**
+*******************************************************************************/
+void nfc_main_post_hal_evt (UINT8 hal_evt, tHAL_NFC_STATUS status)
+{
+    tNFC_HAL_EVT_MSG *p_msg;
+
+    if ((p_msg = (tNFC_HAL_EVT_MSG *) GKI_getbuf (sizeof(tNFC_HAL_EVT_MSG))) != NULL)
+    {
+        /* Initialize BT_HDR */
+        p_msg->hdr.len    = 0;
+        p_msg->hdr.event  = BT_EVT_TO_NFC_MSGS;
+        p_msg->hdr.offset = 0;
+        p_msg->hdr.layer_specific = 0;
+        p_msg->hal_evt = hal_evt;
+        p_msg->status  = status;
+        GKI_send_msg (NFC_TASK, NFC_MBOX_ID, p_msg);
+    }
+    else
+    {
+        NFC_TRACE_ERROR0 ("nfc_main_post_hal_evt (): No buffer");
+    }
+}
+/*******************************************************************************
+**
+** Function         nfc_main_hal_cback
+**
+** Description      HAL event handler
+**
+** Returns          void
+**
+*******************************************************************************/
+void nfc_main_hal_cback(UINT8 event, tHAL_NFC_CBACK_DATA *p_data)
+{
+    BT_HDR *p_msg;
+    tHAL_NFC_STATUS status;
+
+#if (BT_TRACE_VERBOSE == TRUE)
+    NFC_TRACE_DEBUG2 ("nfc_main_hal_cback event: %s (%x)", nfc_hal_event_name (event), event);
+#else
+    NFC_TRACE_DEBUG1 ("nfc_main_hal_cback event: %x", event);
+#endif
+
+    switch (event)
+    {
+    case HAL_NFC_OPEN_CPLT_EVT:
+        if (p_data)
+            status = p_data->status;
+        else
+            status = HAL_NFC_STATUS_FAILED;
+
+        if (status == HAL_NFC_STATUS_OK)
+        {
+            /* Notify NFC_TASK that NCI tranport is initialized */
+            GKI_send_event (NFC_TASK, NFC_TASK_EVT_TRANSPORT_READY);
+        }
+        else
+        {
+            nfc_main_post_hal_evt (HAL_NFC_OPEN_CPLT_EVT, status);
+        }
+        break;
+
+    case HAL_NFC_CLOSE_CPLT_EVT:
+    case HAL_NFC_POST_INIT_CPLT_EVT:
+    case HAL_NFC_PRE_DISCOVER_CPLT_EVT:
+    case HAL_NFC_REQUEST_CONTROL_EVT:
+    case HAL_NFC_RELEASE_CONTROL_EVT:
+        nfc_main_post_hal_evt (event, 0);
+        break;
+
+    case HAL_NFC_NCI_RX_EVT:
+        if (p_data)
+        {
+            if ((p_msg = (BT_HDR *) GKI_getpoolbuf (NFC_NCI_POOL_ID)) != NULL)
+            {
+                /* Initialize BT_HDR */
+                p_msg->len    = p_data->nci_rx.len;
+                p_msg->event  = BT_EVT_TO_NFC_NCI;
+                p_msg->offset = NFC_RECEIVE_MSGS_OFFSET;
+
+                /* no need to check length, it always less than pool size */
+                memcpy ((UINT8 *)(p_msg + 1) + p_msg->offset, p_data->nci_rx.p_data, p_msg->len);
+
+                GKI_send_msg (NFC_TASK, NFC_MBOX_ID, p_msg);
+            }
+            else
+            {
+                NFC_TRACE_ERROR0 ("nfc_main_hal_cback (): No buffer");
+            }
+        }
+        break;
+
+    case HAL_NFC_ERROR_EVT:
+        nfc_main_post_hal_evt (HAL_NFC_ERROR_EVT, p_data->status);
+        break;
+
+    default:
+        NFC_TRACE_DEBUG1 ("nfc_main_hal_cback unhandled event %x", event);
+        break;
     }
 }
 
@@ -393,8 +630,8 @@ tNFC_STATUS NFC_Enable (tNFC_RESPONSE_CBACK *p_cback)
     }
     nfc_cb.p_resp_cback = p_cback;
 
-    /* Notify NCIT task to intialize the transport. */
-    GKI_send_event (NCIT_TASK, NCIT_TASK_EVT_INITIALIZE);
+    /* Open HAL transport. */
+    nfc_cb.p_hal->open (nfc_main_hal_cback);
 
     /* Notify NFC_TASK to start NFC once NCI tranport is initialized */
     GKI_send_event (NFC_TASK, NFC_TASK_EVT_ENABLE);
@@ -420,8 +657,8 @@ tNFC_STATUS NFC_Enable (tNFC_RESPONSE_CBACK *p_cback)
 *******************************************************************************/
 void NFC_Disable (void)
 {
-    /* Send terminate signal to nfc task */
-    GKI_send_event (NFC_TASK, NFC_TASK_EVT_TERMINATE);
+    /* Close transport and clean up */
+    nfc_task_terminate ();
 }
 
 /*******************************************************************************
@@ -433,7 +670,7 @@ void NFC_Disable (void)
 ** Returns          nothing
 **
 *******************************************************************************/
-void NFC_Init (void)
+void NFC_Init (tHAL_NFC_ENTRY *p_hal_entry_tbl)
 {
     int xx;
 
@@ -447,6 +684,7 @@ void NFC_Init (void)
     }
 
     /* NCI init */
+    nfc_cb.p_hal            = p_hal_entry_tbl;
     nfc_cb.nfc_state        = NFC_STATE_NONE;
     nfc_cb.nci_cmd_window   = NCI_MAX_CMD_WINDOW;
     nfc_cb.nci_wait_rsp_tout= NFC_CMD_CMPL_TIMEOUT;
@@ -459,8 +697,6 @@ void NFC_Init (void)
     ce_init ();
     llcp_init ();
     NFC_SET_MAX_CONN_DEFAULT ();
-
-    ncit_init ();
 }
 
 /*******************************************************************************
@@ -601,8 +837,35 @@ tNFC_STATUS NFC_DiscoveryStart (UINT8                 num_params,
                                 tNFC_DISCOVER_PARAMS *p_params,
                                 tNFC_DISCOVER_CBACK  *p_cback)
 {
-    nfc_cb.p_discv_cback = p_cback;
-    return nci_snd_discover_cmd (num_params, p_params);
+    UINT8   *p;
+    int     params_size;
+    tNFC_STATUS status = NFC_STATUS_NO_BUFFERS;
+
+    NFC_TRACE_API0 ("NFC_DiscoveryStart");
+    if (nfc_cb.p_disc_pending)
+    {
+        NFC_TRACE_ERROR0 ("There's pending NFC_DiscoveryStart");
+        status = NFC_STATUS_BUSY;
+    }
+    else
+    {
+        nfc_cb.p_discv_cback = p_cback;
+        nfc_cb.flags        |= NFC_FL_DISCOVER_PENDING;
+        nfc_cb.flags        |= NFC_FL_CONTROL_REQUESTED;
+        params_size          = sizeof (tNFC_DISCOVER_PARAMS) * num_params;
+        nfc_cb.p_disc_pending = GKI_getbuf ((UINT16)(BT_HDR_SIZE + 1 + params_size));
+        if (nfc_cb.p_disc_pending)
+        {
+            p       = (UINT8 *)nfc_cb.p_disc_pending;
+            *p++    = num_params;
+            memcpy (p, p_params, params_size);
+            status = NFC_STATUS_CMD_STARTED;
+            nfc_ncif_check_cmd_queue (NULL);
+        }
+    }
+
+    NFC_TRACE_API1 ("NFC_DiscoveryStart status: 0x%x", status);
+    return status;
 }
 
 /*******************************************************************************
@@ -822,6 +1085,16 @@ tNFC_STATUS NFC_Deactivate (tNFC_DEACT_TYPE deactivate_type)
 #else
     NFC_TRACE_API2 ("NFC_Deactivate %d deactivate_type:%d", nfc_cb.nfc_state, deactivate_type);
 #endif
+
+    if (nfc_cb.flags & NFC_FL_DISCOVER_PENDING)
+    {
+        /* the HAL pre-discover is still active - clear the pending flag */
+        nfc_cb.flags &= ~NFC_FL_DISCOVER_PENDING;
+        GKI_freebuf (nfc_cb.p_disc_pending);
+        nfc_cb.p_disc_pending = NULL;
+        return NFC_STATUS_OK;
+    }
+
     if (nfc_cb.nfc_state == NFC_STATE_OPEN)
     {
         nfc_set_state (NFC_STATE_CLOSING);
@@ -835,6 +1108,7 @@ tNFC_STATUS NFC_Deactivate (tNFC_DEACT_TYPE deactivate_type)
             return status;
         }
     }
+
     status = nci_snd_deactivate_cmd (deactivate_type);
     return status;
 }
@@ -916,13 +1190,13 @@ tNFC_STATUS NFC_SetPowerOffSleep (BOOLEAN enable)
     if (  (enable == FALSE)
         &&(nfc_cb.nfc_state == NFC_STATE_NFCC_POWER_OFF_SLEEP)  )
     {
-        if (!ncit_cfg.shared_transport)
+        if (!nfc_cb.shared_transport)
         {
             /* prevent to initialize memory */
             nfc_cb.flags |= NFC_FL_W4_TRANSPORT_READY;
 
-            /* open port */
-            GKI_send_event (NCIT_TASK, NCIT_TASK_EVT_INITIALIZE);
+            /* open transport */
+            nfc_cb.p_hal->open (nfc_main_hal_cback);
 
             return NFC_STATUS_OK;
         }
@@ -942,8 +1216,8 @@ tNFC_STATUS NFC_SetPowerOffSleep (BOOLEAN enable)
 
         nfc_cb.nfc_state = NFC_STATE_NFCC_POWER_OFF_SLEEP;
 
-        /* Send terminate signal to nfc task */
-        GKI_send_event (NFC_TASK, NFC_TASK_EVT_TERMINATE);
+        /* close transport to turn off NFCC and clean up */
+        nfc_task_terminate ();
 
         return NFC_STATUS_OK;
     }
@@ -965,7 +1239,7 @@ tNFC_STATUS NFC_PowerCycleNFCC (void)
     NFC_TRACE_API0 ("NFC_PowerCycleNFCC ()");
 
     if (  (nfc_cb.nfc_state == NFC_STATE_IDLE)
-        &&(!ncit_cfg.shared_transport)  )
+        &&(!nfc_cb.shared_transport)  )
     {
         /* clear any pending CMD/RSP */
         nfc_main_flush_cmd_queue ();
@@ -975,11 +1249,10 @@ tNFC_STATUS NFC_PowerCycleNFCC (void)
         nfc_cb.flags |= NFC_FL_POWER_CYCLE_NFCC;
 
         /* Send terminate signal to nfc task */
-        GKI_send_event (NFC_TASK, NFC_TASK_EVT_TERMINATE);
+        nfc_task_terminate ();
 
         return NFC_STATUS_OK;
     }
-
     return NFC_STATUS_FAILED;
 }
 

@@ -369,8 +369,16 @@ void nfa_rw_handle_presence_check_rsp (tNFC_STATUS status)
 {
     BT_HDR *p_pending_msg;
 
-    /* Clear the BUSY flag and restart the presence-check timer */
-    nfa_rw_command_complete();
+    if (status == NFA_STATUS_OK)
+    {
+        /* Clear the BUSY flag and restart the presence-check timer */
+        nfa_rw_command_complete();
+    }
+    else
+    {
+        /* If presence check failed just clear the BUSY flag */
+        nfa_rw_cb.flags &= ~NFA_RW_FL_API_BUSY;
+    }
 
     /* Handle presence check due to auto-presence-check  */
     if (nfa_rw_cb.flags & NFA_RW_FL_AUTO_PRESENCE_CHECK_BUSY)

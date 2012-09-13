@@ -28,7 +28,7 @@ static const tNFA_SYS_REG nfa_ce_sys_reg =
     NULL,
     nfa_ce_hdl_event,
     nfa_ce_sys_disable,
-    nfa_ce_proc_nfcc_power_mode
+    NULL
 };
 
 /* NFA_CE actions */
@@ -74,22 +74,6 @@ void nfa_ce_init (void)
 
     /* register message handler on NFA SYS */
     nfa_sys_register ( NFA_ID_CE,  &nfa_ce_sys_reg);
-}
-
-/*******************************************************************************
-**
-** Function         nfa_ce_proc_nfcc_power_mode
-**
-** Description      Restore NFA CE sub-module
-**
-** Returns          None
-**
-*******************************************************************************/
-void nfa_ce_proc_nfcc_power_mode (UINT8 nfcc_power_mode)
-{
-    NFA_TRACE_DEBUG0 ("nfa_ce_proc_nfcc_power_mode ()");
-
-    nfa_sys_cback_notify_nfcc_power_mode_proc_complete (NFA_ID_CE);
 }
 
 /*******************************************************************************

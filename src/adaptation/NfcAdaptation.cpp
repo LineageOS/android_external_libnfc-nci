@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-**  Name:       patchram.c
+**  Name:       NfcAdaptation.cpp
 **
 **  Function:   this file contains functions related to NfcAdaptation
 **
@@ -15,9 +15,7 @@ extern "C"
 {
     #include "gki.h"
     #include "nfa_api.h"
-    #include "nci_int.h"
     #include "nfc_int.h"
-    #include "userial.h"
 }
 #include "config.h"
 
@@ -28,6 +26,8 @@ extern void resetConfig();
 
 NfcAdaptation* NfcAdaptation::mpInstance = NULL;
 ThreadMutex NfcAdaptation::sLock;
+nfc_nci_device_t* NfcAdaptation::mHalDeviceContext = NULL;
+tHAL_NFC_CBACK* NfcAdaptation::mHalCallback = NULL;
 
 UINT32 ScrProtocolTraceFlag = SCR_PROTO_TRACE_ALL; //0x017F00;
 UINT8 appl_trace_level = 0xff;
@@ -107,6 +107,11 @@ void NfcAdaptation::Initialize ()
         GKI_create_task ((TASKPTR)Thread, MMI_TASK, (INT8*)"NFCA_THREAD", 0, 0, (pthread_cond_t*)NULL, NULL);
         mCondVar.wait();
     }
+
+    mHalDeviceContext = NULL;
+    mHalCallback =  NULL;
+    memset (&mHalEntryFuncs, 0, sizeof(mHalEntryFuncs));
+    InitializeHalDeviceContext ();
     ALOGD ("%s: exit", func);
 }
 
@@ -121,13 +126,20 @@ void NfcAdaptation::Initialize ()
 *******************************************************************************/
 void NfcAdaptation::Finalize()
 {
+    const char* func = "NfcAdaptation::Finalize";
     AutoThreadMutex  a(sLock);
 
-    ALOGD ("%s: enter", __func__);
+    ALOGD ("%s: enter", func);
     GKI_shutdown ();
 
     resetConfig();
-    ALOGD ("%s: exit", __func__);
+
+    nfc_nci_close(mHalDeviceContext); //close the HAL's device context
+    mHalDeviceContext = NULL;
+    mHalCallback = NULL;
+    memset (&mHalEntryFuncs, 0, sizeof(mHalEntryFuncs));
+
+    ALOGD ("%s: exit", func);
     delete this;
 }
 
@@ -156,9 +168,10 @@ void NfcAdaptation::signal ()
 *******************************************************************************/
 UINT32 NfcAdaptation::NFCA_TASK (UINT32 arg)
 {
-    ALOGD ("%s: enter", __func__);
+    const char* func = "NfcAdaptation::NFCA_TASK";
+    ALOGD ("%s: enter", func);
     GKI_run (0);
-    ALOGD ("%s: exit", __func__);
+    ALOGD ("%s: exit", func);
     return NULL;
 }
 
@@ -173,85 +186,11 @@ UINT32 NfcAdaptation::NFCA_TASK (UINT32 arg)
 *******************************************************************************/
 UINT32 NfcAdaptation::Thread (UINT32 arg)
 {
+    const char* func = "NfcAdaptation::Thread";
     unsigned long num;
     char temp[120];
-    ALOGD ("%s: enter", __func__);
-    tUSERIAL_OPEN_CFG cfg;
-    struct tUART_CONFIG  uart;
+    ALOGD ("%s: enter", func);
 
-    if ( GetStrValue ( NAME_UART_PARITY, temp, sizeof ( temp ) ) )
-    {
-        if ( strcmp ( temp, "even" ) == 0 )
-            uart.m_iParity = USERIAL_PARITY_EVEN;
-        else if ( strcmp ( temp, "odd" ) == 0 )
-            uart.m_iParity = USERIAL_PARITY_ODD;
-        else if ( strcmp ( temp, "none" ) == 0 )
-            uart.m_iParity = USERIAL_PARITY_NONE;
-    }
-    else
-        uart.m_iParity = USERIAL_PARITY_NONE;
-
-    if ( GetStrValue ( NAME_UART_STOPBITS, temp, sizeof ( temp ) ) )
-    {
-        if ( strcmp ( temp, "1" ) == 0 )
-            uart.m_iStopbits = USERIAL_STOPBITS_1;
-        else if ( strcmp ( temp, "2" ) == 0 )
-            uart.m_iStopbits = USERIAL_STOPBITS_2;
-        else if ( strcmp ( temp, "1.5" ) == 0 )
-            uart.m_iStopbits = USERIAL_STOPBITS_1_5;
-    }
-    else if ( GetNumValue ( NAME_UART_STOPBITS, &num, sizeof ( num ) ) )
-    {
-        if ( num == 1 )
-            uart.m_iStopbits = USERIAL_STOPBITS_1;
-        else if ( num == 2 )
-            uart.m_iStopbits = USERIAL_STOPBITS_2;
-    }
-    else
-        uart.m_iStopbits = USERIAL_STOPBITS_1;
-
-    if ( GetNumValue ( NAME_UART_DATABITS, &num, sizeof ( num ) ) )
-    {
-        if ( 5 <= num && num <= 8 )
-            uart.m_iDatabits = ( 1 << ( num + 1 ) );
-    }
-    else
-        uart.m_iDatabits = USERIAL_DATABITS_8;
-
-    if ( GetNumValue ( NAME_UART_BAUD, &num, sizeof ( num ) ) )
-    {
-        if ( num == 300 ) uart.m_iBaudrate = USERIAL_BAUD_300;
-        else if ( num == 600 ) uart.m_iBaudrate = USERIAL_BAUD_600;
-        else if ( num == 1200 ) uart.m_iBaudrate = USERIAL_BAUD_1200;
-        else if ( num == 2400 ) uart.m_iBaudrate = USERIAL_BAUD_2400;
-        else if ( num == 9600 ) uart.m_iBaudrate = USERIAL_BAUD_9600;
-        else if ( num == 19200 ) uart.m_iBaudrate = USERIAL_BAUD_19200;
-        else if ( num == 57600 ) uart.m_iBaudrate = USERIAL_BAUD_57600;
-        else if ( num == 115200 ) uart.m_iBaudrate = USERIAL_BAUD_115200;
-        else if ( num == 230400 ) uart.m_iBaudrate = USERIAL_BAUD_230400;
-        else if ( num == 460800 ) uart.m_iBaudrate = USERIAL_BAUD_460800;
-        else if ( num == 921600 ) uart.m_iBaudrate = USERIAL_BAUD_921600;
-    }
-    else if ( GetStrValue ( NAME_UART_BAUD, temp, sizeof ( temp ) ) )
-    {
-        if ( strcmp ( temp, "auto" ) == 0 )
-            uart.m_iBaudrate = USERIAL_BAUD_AUTO;
-    }
-    else
-        uart.m_iBaudrate = USERIAL_BAUD_115200;
-
-    memset (&cfg, 0, sizeof(tUSERIAL_OPEN_CFG));
-    cfg.fmt = uart.m_iDatabits | uart.m_iParity | uart.m_iStopbits;
-    cfg.baud = uart.m_iBaudrate;
-
-    ALOGD ("%s: uart config=0x%04x, %d\n", __func__, cfg.fmt, cfg.baud);
-    USERIAL_Init(&cfg);
-    {
-        ThreadCondVar    CondVar;
-        AutoThreadMutex  guard(CondVar);
-        GKI_create_task ((TASKPTR)ncit_task, NCIT_TASK, (INT8*)"NCIT_TASK", 0, 0, (pthread_cond_t*)CondVar, (pthread_mutex_t*)CondVar);
-        CondVar.wait();
-    }
     {
         ThreadCondVar    CondVar;
         AutoThreadMutex  guard(CondVar);
@@ -261,8 +200,256 @@ UINT32 NfcAdaptation::Thread (UINT32 arg)
 
     NfcAdaptation::GetInstance().signal();
 
-    ALOGD ("%s: exit", __func__);
+    GKI_exit_task (GKI_get_taskid ());
+    ALOGD ("%s: exit", func);
     return NULL;
+}
+
+/*******************************************************************************
+**
+** Function:    NfcAdaptation::GetHalEntryFuncs()
+**
+** Description: Get the set of HAL entry points.
+**
+** Returns:     Functions pointers for HAL entry points.
+**
+*******************************************************************************/
+tHAL_NFC_ENTRY* NfcAdaptation::GetHalEntryFuncs ()
+{
+    return &mHalEntryFuncs;
+}
+
+/*******************************************************************************
+**
+** Function:    NfcAdaptation::InitializeHalDeviceContext
+**
+** Description: Ask the generic Android HAL to find the Broadcom-specific HAL.
+**
+** Returns:     None.
+**
+*******************************************************************************/
+void NfcAdaptation::InitializeHalDeviceContext ()
+{
+    const char* func = "NfcAdaptation::InitializeHalDeviceContext";
+    ALOGD ("%s: enter", func);
+    int ret = 0; //0 means success
+    const hw_module_t* hw_module = NULL;
+
+    mHalEntryFuncs.initialize = HalInitialize;
+    mHalEntryFuncs.terminate = HalTerminate;
+    mHalEntryFuncs.open = HalOpen;
+    mHalEntryFuncs.close = HalClose;
+    mHalEntryFuncs.core_initialized = HalCoreInitialized;
+    mHalEntryFuncs.write = HalWrite;
+    mHalEntryFuncs.prediscover = HalPrediscover;
+    mHalEntryFuncs.control_granted = HalControlGranted;
+    mHalEntryFuncs.power_cycle = HalPowerCycle;
+
+    ret = hw_get_module (NFC_NCI_HARDWARE_MODULE_ID, &hw_module);
+    if (ret == 0)
+    {
+        ret = nfc_nci_open (hw_module, &mHalDeviceContext);
+        if (ret != 0)
+            ALOGE ("%s: nfc_nci_open fail", func);
+    }
+    else
+        ALOGE ("%s: fail hw_get_module", func);
+    ALOGD ("%s: exit", func);
+}
+
+/*******************************************************************************
+**
+** Function:    NfcAdaptation::HalInitialize
+**
+** Description: Not implemented because this function is only needed
+**              within the HAL.
+**
+** Returns:     None.
+**
+*******************************************************************************/
+void NfcAdaptation::HalInitialize ()
+{
+    const char* func = "NfcAdaptation::HalInitialize";
+    ALOGD ("%s", func);
+}
+
+/*******************************************************************************
+**
+** Function:    NfcAdaptation::HalTerminate
+**
+** Description: Not implemented because this function is only needed
+**              within the HAL.
+**
+** Returns:     None.
+**
+*******************************************************************************/
+void NfcAdaptation::HalTerminate ()
+{
+    const char* func = "NfcAdaptation::HalTerminate";
+    ALOGD ("%s", func);
+}
+
+/*******************************************************************************
+**
+** Function:    NfcAdaptation::HalOpen
+**
+** Description: Turn on controller, download firmware.
+**
+** Returns:     None.
+**
+*******************************************************************************/
+void NfcAdaptation::HalOpen (tHAL_NFC_CBACK *p_hal_cback)
+{
+    const char* func = "NfcAdaptation::HalOpen";
+    ALOGD ("%s", func);
+    if (mHalDeviceContext)
+    {
+        mHalCallback = p_hal_cback;
+        mHalDeviceContext->open (mHalDeviceContext, HalDeviceContextCallback);
+    }
+}
+
+/*******************************************************************************
+**
+** Function:    NfcAdaptation::HalClose
+**
+** Description: Turn off controller.
+**
+** Returns:     None.
+**
+*******************************************************************************/
+void NfcAdaptation::HalClose ()
+{
+    const char* func = "NfcAdaptation::HalClose";
+    ALOGD ("%s", func);
+    if (mHalDeviceContext)
+    {
+        mHalDeviceContext->close (mHalDeviceContext);
+    }
+}
+
+/*******************************************************************************
+**
+** Function:    NfcAdaptation::HalDeviceContextCallback
+**
+** Description: Translate generic Android HAL's callback into Broadcom-specific
+**              callback function.
+**
+** Returns:     None.
+**
+*******************************************************************************/
+void NfcAdaptation::HalDeviceContextCallback (nfc_event_t event, nfc_event_data_t* p_data)
+{
+    const char* func = "NfcAdaptation::HalDeviceContextCallback";
+    ALOGD ("%s: event=%u", func, event);
+    if (mHalCallback)
+        mHalCallback (event, (tHAL_NFC_CBACK_DATA*) p_data);
+}
+
+/*******************************************************************************
+**
+** Function:    NfcAdaptation::HalWrite
+**
+** Description: Write NCI message to the controller.
+**
+** Returns:     None.
+**
+*******************************************************************************/
+void NfcAdaptation::HalWrite (UINT16 data_len, UINT8* p_data)
+{
+    const char* func = "NfcAdaptation::HalWrite";
+    ALOGD ("%s", func);
+    if (mHalDeviceContext)
+    {
+        mHalDeviceContext->write (mHalDeviceContext, data_len, p_data);
+    }
+}
+
+/*******************************************************************************
+**
+** Function:    NfcAdaptation::HalCoreInitialized
+**
+** Description: Adjust the configurable parameters in the controller.
+**
+** Returns:     None.
+**
+*******************************************************************************/
+void NfcAdaptation::HalCoreInitialized (UINT8* p_core_init_rsp_params)
+{
+    const char* func = "NfcAdaptation::HalCoreInitialized";
+    ALOGD ("%s", func);
+    if (mHalDeviceContext)
+    {
+        mHalDeviceContext->core_initialized (mHalDeviceContext, p_core_init_rsp_params);
+    }
+}
+
+/*******************************************************************************
+**
+** Function:    NfcAdaptation::HalPrediscover
+**
+** Description:     Perform any vendor-specific pre-discovery actions (if needed)
+**                  If any actions were performed TRUE will be returned, and
+**                  HAL_PRE_DISCOVER_CPLT_EVT will notify when actions are
+**                  completed.
+**
+** Returns:          TRUE if vendor-specific pre-discovery actions initialized
+**                  FALSE if no vendor-specific pre-discovery actions are needed.
+**
+*******************************************************************************/
+BOOLEAN NfcAdaptation::HalPrediscover ()
+{
+    const char* func = "NfcAdaptation::HalPrediscover";
+    ALOGD ("%s", func);
+    BOOLEAN retval = FALSE;
+
+    if (mHalDeviceContext)
+    {
+        mHalDeviceContext->pre_discover (mHalDeviceContext);
+    }
+    return retval;
+}
+
+/*******************************************************************************
+**
+** Function:        HAL_NfcControlGranted
+**
+** Description:     Grant control to HAL control for sending NCI commands.
+**                  Call in response to HAL_REQUEST_CONTROL_EVT.
+**                  Must only be called when there are no NCI commands pending.
+**                  HAL_RELEASE_CONTROL_EVT will notify when HAL no longer
+**                  needs control of NCI.
+**
+** Returns:         void
+**
+*******************************************************************************/
+void NfcAdaptation::HalControlGranted ()
+{
+    const char* func = "NfcAdaptation::HalControlGranted";
+    ALOGD ("%s", func);
+    if (mHalDeviceContext)
+    {
+        mHalDeviceContext->control_granted (mHalDeviceContext);
+    }
+}
+
+/*******************************************************************************
+**
+** Function:    NfcAdaptation::HalPowerCycle
+**
+** Description: Turn off and turn on the controller.
+**
+** Returns:     None.
+**
+*******************************************************************************/
+void NfcAdaptation::HalPowerCycle ()
+{
+    const char* func = "NfcAdaptation::HalPowerCycle";
+    ALOGD ("%s", func);
+    if (mHalDeviceContext)
+    {
+        mHalDeviceContext->power_cycle (mHalDeviceContext);
+    }
 }
 
 /*******************************************************************************

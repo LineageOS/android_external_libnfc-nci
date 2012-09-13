@@ -19,7 +19,6 @@
 
 #if (NFC_INCLUDED == TRUE)
 #include "nfc_int.h"
-#include "nci_int.h"
 
 /****************************************************************************
 ** Declarations
@@ -117,7 +116,7 @@ tNFC_STATUS NFC_SendVsCommand (UINT8          oid,
     }
 
     p_data->event           = BT_EVT_TO_NFC_NCI;
-    p_data->layer_specific  = NCI_WAIT_RSP_VSC;
+    p_data->layer_specific  = NFC_WAIT_RSP_VSC;
     /* save the callback function in the BT_HDR, to receive the response */
     ((tNFC_NCI_VS_MSG *) p_data)->p_cback = p_cback;
 

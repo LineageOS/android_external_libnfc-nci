@@ -21,23 +21,23 @@
 *****************************************************************************/
 
 /* SW sub-systems */
-#define NFA_ID_SYS          0            /* system manager                      */
-
-#define NFA_ID_VS_PRE       1            /* Vendor Specific before standard NFA */
-#define NFA_ID_DM           2            /* device manager                      */
-#define NFA_ID_EE           3            /* NFCEE sub-system                    */
-#define NFA_ID_P2P          4            /* Peer-to-Peer sub-system             */
-#define NFA_ID_CHO          5            /* Connection Handover sub-system      */
-#define NFA_ID_SNEP         6            /* SNEP sub-system                     */
-#define NFA_ID_RW           7            /* Reader/writer sub-system            */
-#define NFA_ID_CE           8            /* Card-emulation sub-system           */
-#define NFA_ID_HCI          9            /* Host controller interface sub-system*/
-#define NFA_ID_DTA          10           /* Device Test Application sub-system  */
-#define NFA_ID_VS_POST      11           /* Vendor Specific after standard NFA  */
-
-#define NFA_ID_MAX          12
-
+enum {
+    NFA_ID_SYS,         /* system manager                      */
+    NFA_ID_DM,          /* device manager                      */
+    NFA_ID_EE,          /* NFCEE sub-system                    */
+    NFA_ID_P2P,         /* Peer-to-Peer sub-system             */
+    NFA_ID_CHO,         /* Connection Handover sub-system      */
+    NFA_ID_SNEP,        /* SNEP sub-system                     */
+    NFA_ID_RW,          /* Reader/writer sub-system            */
+    NFA_ID_CE,          /* Card-emulation sub-system           */
+    NFA_ID_HCI,         /* Host controller interface sub-system*/
+#if (NFA_DTA_INCLUDED == TRUE)
+    NFA_ID_DTA,         /* Device Test Application sub-system  */
+#endif
+    NFA_ID_MAX
+};
 typedef UINT8 tNFA_SYS_ID;
+
 /* enable function type */
 typedef void (tNFA_SYS_ENABLE) (void);
 
@@ -101,6 +101,7 @@ NFC_API extern void nfa_sys_set_trace_level (UINT8 level);
 
 extern void nfa_sys_register (UINT8 id, const tNFA_SYS_REG *p_reg);
 extern void nfa_sys_deregister (UINT8 id);
+extern void nfa_sys_check_disabled (void);
 extern BOOLEAN nfa_sys_is_register (UINT8 id);
 extern void nfa_sys_disable_subsystems (BOOLEAN graceful);
 extern void nfa_sys_enable_subsystems (void);

@@ -15,11 +15,6 @@ UDRV:=src/udrv
 GKI_FILES:=$(call all-c-files-under, src/gki)
 
 #
-# libnfc-ntal
-#
-NTAL_FILES:= src/ntal/userial_linux.c
-
-#
 # libnfc-nci
 #
 #nfa
@@ -61,6 +56,7 @@ NFA_CFLAGS += -I$(LOCAL_PATH)/$(NFC)/brcm
 NFA_CFLAGS += -I$(LOCAL_PATH)/$(NFC)/include
 NFA_CFLAGS += -I$(LOCAL_PATH)/$(NFC)/int
 NFA_CFLAGS += -I$(LOCAL_PATH)/$(UDRV)/include
+NFA_CFLAGS += -I$(LOCAL_PATH)/src/hal/include
 
 ifneq ($(NCI_VERSION),)
 NFA_CFLAGS += -DNCI_VERSION=$(NCI_VERSION)
@@ -71,9 +67,10 @@ LOCAL_PRELINK_MODULE := false
 LOCAL_ARM_MODE := arm
 LOCAL_MODULE:= libnfc-nci
 LOCAL_MODULE_TAGS := optional
-LOCAL_SHARED_LIBRARIES := libhardware_legacy libcutils libdl libstlport
+LOCAL_SHARED_LIBRARIES := libhardware_legacy libcutils libdl libstlport libhardware
 LOCAL_CFLAGS := $(COMMON_CFLAGS) $(D_CFLAGS) $(NFA_CFLAGS)
 LOCAL_C_INCLUDES := external/stlport/stlport bionic/ bionic/libstdc++/include
-LOCAL_SRC_FILES := $(NFA_ADAP_FILES) $(GKI_FILES) $(NFA_FILES) $(NFC_FILES) $(NTAL_FILES) $(LOG_FILES)
+LOCAL_SRC_FILES := $(NFA_ADAP_FILES) $(GKI_FILES) $(NFA_FILES) $(NFC_FILES) $(LOG_FILES)
 include $(BUILD_SHARED_LIBRARY)
 
+include $(call all-makefiles-under,$(LOCAL_PATH))

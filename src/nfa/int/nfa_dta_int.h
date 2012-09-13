@@ -18,6 +18,8 @@
 #include "rw_api.h"
 #include "ce_api.h"
 
+#if (NFA_DTA_INCLUDED == TRUE)
+
 /*****************************************************************************
 **  DTA definitions
 *****************************************************************************/
@@ -388,5 +390,10 @@ void nfa_dta_emvco_pcd_config_nfcc (BOOLEAN enable);
 void nfa_dta_emvco_pcd_start (void);
 void nfa_dta_emvco_pcd_cback (UINT8 event, tRW_DATA *p_data);
 
+extern UINT8 *p_nfa_dta_brcm_start_up_cfg;
+extern UINT8 nfa_dta_brcm_start_up_cfg_len;
+extern UINT8 *p_nfa_dta_start_up_vsc_cfg;
+
+#endif /* (NFA_DTA_INCLUDED == TRUE) */
 #endif /* NFA_DTA_INT_H */
 

@@ -42,7 +42,7 @@ static const tNFA_SYS_REG nfa_ee_sys_reg =
 };
 
 
-#define NFA_EE_NUM_ACTIONS  (NFA_EE_FIRST_VS_SM_EVT & 0x00ff)
+#define NFA_EE_NUM_ACTIONS  (NFA_EE_MAX_EVT & 0x00ff)
 
 
 const tNFA_EE_SM_ACT nfa_ee_actions[] =
@@ -567,13 +567,8 @@ static char *nfa_ee_sm_evt_2_str (UINT16 event)
         return "NFA_EE_DISCV_TIMEOUT_EVT";
     case NFA_EE_CFG_TO_NFCC_EVT:
         return "CFG_TO_NFCC";
-
     default:
-        if (event >= NFA_EE_FIRST_VS_SM_EVT)
-        {
-            return "VS";
-        }
-        else return "Unknown";
+        return "Unknown";
     }
 }
 #endif /* BT_TRACE_VERBOSE */
@@ -622,10 +617,6 @@ BOOLEAN nfa_ee_evt_hdlr (BT_HDR *p_msg)
         if (event < NFA_EE_NUM_ACTIONS)
         {
             (*nfa_ee_actions[event]) (p_evt_data);
-        }
-        if (nfa_ee_cb.p_vs_evt_hdlr)
-        {
-            (*(nfa_ee_cb.p_vs_evt_hdlr)) (p_evt_data);
         }
     }
     else

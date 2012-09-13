@@ -1419,7 +1419,7 @@ void nfa_dm_disc_new_state (tNFA_DM_RF_DISC_STATE new_state)
         if (nfa_dm_cb.disc_cb.disc_flags & NFA_DM_DISC_FLAGS_DISABLING)
         {
             nfa_dm_cb.disc_cb.disc_flags &= ~NFA_DM_DISC_FLAGS_DISABLING;
-            nfa_dm_disable_complete ();
+            nfa_sys_check_disabled ();
         }
     }
 }
@@ -1452,7 +1452,7 @@ static void nfa_dm_disc_sm_idle (tNFA_DM_RF_DISC_SM_EVENT event,
             nfa_dm_disc_new_state (NFA_DM_RFST_DISCOVERY);
 
             /* if RF discovery was stopped while waiting for response */
-            if (nfa_dm_cb.disc_cb.disc_flags & NFA_DM_DISC_FLAGS_STOPPING)
+            if (nfa_dm_cb.disc_cb.disc_flags & (NFA_DM_DISC_FLAGS_STOPPING|NFA_DM_DISC_FLAGS_DISABLING))
             {
                 /* stop discovery */
                 nfa_dm_cb.disc_cb.disc_flags |= NFA_DM_DISC_FLAGS_W4_RSP;
@@ -1502,7 +1502,13 @@ static void nfa_dm_disc_sm_idle (tNFA_DM_RF_DISC_SM_EVENT event,
     case NFA_DM_RF_DEACTIVATE_RSP:
         /* restart discovery */
         nfa_dm_cb.disc_cb.disc_flags &= ~NFA_DM_DISC_FLAGS_W4_RSP;
-        nfa_dm_start_rf_discover ();
+        if (nfa_dm_cb.disc_cb.disc_flags & NFA_DM_DISC_FLAGS_DISABLING)
+        {
+            nfa_dm_cb.disc_cb.disc_flags &= ~NFA_DM_DISC_FLAGS_DISABLING;
+            nfa_sys_check_disabled ();
+        }
+        else
+            nfa_dm_start_rf_discover ();
         break;
 
     case NFA_DM_LP_LISTEN_CMD:

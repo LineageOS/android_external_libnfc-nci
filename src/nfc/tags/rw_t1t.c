@@ -660,7 +660,9 @@ void rw_t1t_handle_op_complete (void)
     tRW_T1T_CB      *p_t1t  = &rw_cb.tcb.t1t;
 
     p_t1t->state    = RW_T1T_STATE_IDLE;
+#if (defined (RW_NDEF_INCLUDED) && (RW_NDEF_INCLUDED == TRUE))
     p_t1t->substate = RW_T1T_SUBSTATE_NONE;
+#endif
     return;
 }
 

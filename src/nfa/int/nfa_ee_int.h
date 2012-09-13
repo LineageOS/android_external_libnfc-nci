@@ -54,20 +54,15 @@ enum
     NFA_EE_ROUT_TIMEOUT_EVT,
     NFA_EE_DISCV_TIMEOUT_EVT,
     NFA_EE_CFG_TO_NFCC_EVT,
-
-    NFA_EE_FIRST_VS_SM_EVT
+    NFA_EE_MAX_EVT
 
 };
 
-#ifndef NFA_EE_NUM_VS_SM_EVT
-#define NFA_EE_NUM_VS_SM_EVT    0
-#endif
-
-#define NFA_EE_MAX_EVT          (NFA_EE_FIRST_VS_SM_EVT + NFA_EE_NUM_VS_SM_EVT)
 
 typedef UINT16 tNFA_EE_INT_EVT;
 #define NFA_EE_AE_ROUTE             0x80        /* for listen mode routing table*/
-#define NFA_EE_AE_VS                0x40        /* for vendor specific */
+#define NFA_EE_AE_VS                0x40
+
 
 /* NFA EE Management state */
 enum
@@ -370,7 +365,6 @@ typedef struct
     TIMER_LIST_ENT       discv_timer;            /* timer to end NFCEE discovery     */
     tNFA_EE_CBACK        *p_ee_cback[NFA_EE_MAX_CBACKS];/* to report EE events       */
     tNFA_EE_CBACK        *p_ee_disc_cback;       /* to report EE discovery result    */
-    tNFA_EE_SM_ACT       p_vs_evt_hdlr;          /* vendor specific event handler    */
     tNFA_EE_ENABLE_DONE_CBACK *p_enable_cback;   /* callback to notify on enable done*/
     tNFA_EE_EM_STATE     em_state;               /* NFA-EE state initialized or not  */
     UINT8                num_ee_expecting;       /* number of ee_info still expecting*/
@@ -401,9 +395,10 @@ void nfa_ee_sys_disable (void);
 
 /* event handler function type */
 BOOLEAN nfa_ee_evt_hdlr (BT_HDR *p_msg);
-void nfa_ee_init (void);
 void nfa_ee_proc_nfcc_power_mode (UINT8 nfcc_power_mode);
+#if (NFC_NFCEE_INCLUDED == TRUE)
 void nfa_ee_get_tech_route (UINT8 power_state, UINT8 *p_handles);
+#endif
 void nfa_ee_proc_evt(tNFC_RESPONSE_EVT event, void *p_data);
 tNFA_EE_ECB * nfa_ee_find_ecb (UINT8 nfcee_id);
 tNFA_EE_ECB * nfa_ee_find_ecb_by_conn_id (UINT8 conn_id);
@@ -443,5 +438,6 @@ void nfa_ee_start_timer(void);
 void nfa_ee_reg_cback_enable_done (tNFA_EE_ENABLE_DONE_CBACK *p_cback);
 
 extern void nfa_ee_proc_hci_info_cback (void);
+
 
 #endif /* NFA_P2P_INT_H */

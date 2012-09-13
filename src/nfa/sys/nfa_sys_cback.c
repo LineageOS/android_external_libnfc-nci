@@ -46,7 +46,7 @@ void nfa_sys_cback_notify_enable_complete (UINT8 id)
     NFA_TRACE_DEBUG2 ("nfa_sys_cback_notify_enable_complete () enable_cplt_flags=0x%x, enable_cplt_mask=0x%x",
                        nfa_sys_cb.enable_cplt_flags, nfa_sys_cb.enable_cplt_mask);
 
-    if (  (nfa_sys_cb.enable_cplt_flags == nfa_sys_cb.enable_cplt_mask) /* except SYS, DM and DTA */
+    if (  (nfa_sys_cb.enable_cplt_flags == nfa_sys_cb.enable_cplt_mask)
         &&(nfa_sys_cb.p_enable_cback)  )
     {
         nfa_sys_cb.p_enable_cback ();

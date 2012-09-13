@@ -16,14 +16,15 @@
 #include "nfc_target.h"
 
 #if NFC_INCLUDED == TRUE
+#include "nfc_hal_api.h"
 #include "nfc_api.h"
 #include "nci_defs.h"
-#include "nci_int.h"
 #include "nci_hmsgs.h"
 #include "nfc_int.h"
 #include "rw_api.h"
 #include "rw_int.h"
 #include "hcidefs.h"
+#include "nfc_hal_api.h"
 
 #if (NFC_RW_ONLY == FALSE)
 static const UINT8 nfc_mpl_code_to_size[] =
@@ -169,7 +170,7 @@ UINT8 nfc_ncif_send_data (tNFC_CONN_CB *p_cb, BT_HDR *p_data)
     }
 
     /* try to send the first data packet in the tx queue  */
-    p_data = GKI_getfirst (&p_cb->tx_q);
+    p_data = (BT_HDR *)GKI_getfirst (&p_cb->tx_q);
 
     /* post data fragment to NCIT task as credits are available */
     while (p_data && (p_data->len > 0) && (p_cb->num_buff > 0))
@@ -190,7 +191,7 @@ UINT8 nfc_ncif_send_data (tNFC_CONN_CB *p_cb, BT_HDR *p_data)
         {
             /* if data packet is not fragmented, use the original buffer */
             p         = p_data;
-            p_data    = GKI_dequeue (&p_cb->tx_q);
+            p_data    = (BT_HDR *)GKI_dequeue (&p_cb->tx_q);
         }
         else
         {
@@ -220,12 +221,14 @@ UINT8 nfc_ncif_send_data (tNFC_CONN_CB *p_cb, BT_HDR *p_data)
         if (p_cb->num_buff != NFC_CONN_NO_FC)
             p_cb->num_buff--;
 
-        NCI_TO_LOWER (p);
+        /* send to HAL */
+        nfc_cb.p_hal->write(p->len, (UINT8 *)(p+1) + p->offset);
+        GKI_freebuf(p);
 
         if (!fragmented)
         {
             /* check if there are more data to send */
-            p_data = GKI_getfirst (&p_cb->tx_q);
+            p_data = (BT_HDR *)GKI_getfirst (&p_cb->tx_q);
         }
     }
 
@@ -268,19 +271,57 @@ void nfc_ncif_check_cmd_queue (BT_HDR *p_buf)
             ps   = (UINT8 *)(p_buf + 1) + p_buf->offset;
             memcpy(nfc_cb.last_hdr, ps, NFC_SAVED_HDR_SIZE);
             memcpy(nfc_cb.last_cmd, ps + NCI_MSG_HDR_SIZE, NFC_SAVED_CMD_SIZE);
-            if (p_buf->layer_specific == NCI_WAIT_RSP_VSC)
+            if (p_buf->layer_specific == NFC_WAIT_RSP_VSC)
             {
                 /* save the callback for NCI VSCs)  */
-                nfc_cb.p_vsc_cback = ((tNFC_NCI_VS_MSG *)p_buf)->p_cback;
+                nfc_cb.p_vsc_cback = (void *)((tNFC_NCI_VS_MSG *)p_buf)->p_cback;
             }
-            /* send to NCIT_TASK   */
-            GKI_send_msg (NCIT_TASK, NCIT_TASK_MBOX, p_buf);
+
+            /* send to HAL */
+            nfc_cb.p_hal->write(p_buf->len, (UINT8 *)(p_buf+1) + p_buf->offset);
+            GKI_freebuf(p_buf);
 
             /* Indicate command is pending */
             nfc_cb.nci_cmd_window--;
 
             /* start NFC command-timeout timer */
             nfc_start_timer (&nfc_cb.nci_wait_rsp_timer, (UINT16)(NFC_TTYPE_NCI_WAIT_RSP), nfc_cb.nci_wait_rsp_tout);
+        }
+    }
+
+    if (nfc_cb.nci_cmd_window == NCI_MAX_CMD_WINDOW)
+    {
+        /* the command queue must be empty now */
+        if (nfc_cb.flags & NFC_FL_CONTROL_REQUESTED)
+        {
+            /* HAL requested control or stack needs to handle pre-discover */
+            nfc_cb.flags &= ~NFC_FL_CONTROL_REQUESTED;
+            if (nfc_cb.flags & NFC_FL_DISCOVER_PENDING)
+            {
+                if (nfc_cb.p_hal->prediscover ())
+                {
+                    /* HAL has the command window now */
+                    nfc_cb.flags         |= NFC_FL_CONTROL_GRANTED;
+                    nfc_cb.nci_cmd_window = 0;
+                }
+                else
+                {
+                    /* HAL does not need to send command,
+                     * - restore the command window and issue the discovery command now */
+                    nfc_cb.flags         &= ~NFC_FL_DISCOVER_PENDING;
+                    ps                    = (UINT8 *)nfc_cb.p_disc_pending;
+                    nci_snd_discover_cmd (*ps, (tNFC_DISCOVER_PARAMS *)(ps + 1));
+                    GKI_freebuf (nfc_cb.p_disc_pending);
+                    nfc_cb.p_disc_pending = NULL;
+                }
+            }
+            else
+            {
+                /* grant the control to HAL */
+                nfc_cb.flags         |= NFC_FL_CONTROL_GRANTED;
+                nfc_cb.nci_cmd_window = 0;
+                nfc_cb.p_hal->control_granted ();
+            }
         }
     }
 }
@@ -299,7 +340,7 @@ void nfc_ncif_send_cmd (BT_HDR *p_buf)
 {
     /* post the p_buf to NCIT task */
     p_buf->event            = BT_EVT_TO_NFC_NCI;
-    p_buf->layer_specific   = NCI_WAIT_RSP_CMD;
+    p_buf->layer_specific   = 0;
     nfc_ncif_check_cmd_queue (p_buf);
 }
 
@@ -363,9 +404,6 @@ BOOLEAN nfc_ncif_process_event (BT_HDR *p_msg)
 #endif
 #endif
         case NCI_GID_PROP:      /* 1111b Proprietary */
-            if (nfc_cb.p_vs_evt_hdlr)
-                (*nfc_cb.p_vs_evt_hdlr) (NFC_INT_NCI_VS_RSP_EVT, p_msg);
-            else
                 nci_proc_prop_rsp (p_msg);
             break;
         default:
@@ -394,9 +432,6 @@ BOOLEAN nfc_ncif_process_event (BT_HDR *p_msg)
 #endif
 #endif
         case NCI_GID_PROP:      /* 1111b Proprietary */
-            if (nfc_cb.p_vs_evt_hdlr)
-                (*nfc_cb.p_vs_evt_hdlr) (NFC_INT_NCI_VS_NTF_EVT, p_msg);
-            else
                 nci_proc_prop_ntf (p_msg);
             break;
         default:
@@ -1250,20 +1285,23 @@ void nfc_ncif_proc_init_rsp (BT_HDR *p_msg)
     UINT8 *p, status;
     tNFC_CONN_CB * p_cb = &nfc_cb.conn_cb[NFC_RF_CONN_ID];
 
-    p        = (UINT8 *) (p_msg + 1) + p_msg->offset + NCI_MSG_HDR_SIZE;
+    p        = (UINT8 *) (p_msg + 1) + p_msg->offset;
 
     /* handle init params in nfc_enabled */
-    status   = *p;
+    status   = *(p + NCI_MSG_HDR_SIZE);
     if (status == NCI_STATUS_OK)
     {
-        if (nfc_cb.p_vs_evt_hdlr)
-            (*nfc_cb.p_vs_evt_hdlr) (NFC_INT_ENABLE_END_EVT, p_msg);
         p_cb->id            = NFC_RF_CONN_ID;
         p_cb->act_protocol  = NCI_PROTOCOL_UNKNOWN;
-    }
 
-    nfc_enabled (status, p_msg);
-    GKI_freebuf (p_msg);
+        nfc_cb.p_hal->core_initialized(p);
+        nfc_cb.p_nci_init_rsp = p_msg;
+    }
+    else
+    {
+        nfc_enabled (status, NULL);
+        GKI_freebuf (p_msg);
+    }
 }
 
 /*******************************************************************************
@@ -1331,7 +1369,7 @@ void nfc_data_event (tNFC_CONN_CB * p_cb)
 
     if (p_cb->p_cback)
     {
-        while ((p_evt = GKI_getfirst (&p_cb->rx_q)) != NULL)
+        while ((p_evt = (BT_HDR *)GKI_getfirst (&p_cb->rx_q)) != NULL)
         {
             if (p_evt->layer_specific & NFC_RAS_FRAGMENTED)
             {
@@ -1399,7 +1437,7 @@ void nfc_ncif_proc_data (BT_HDR *p_msg)
             p_msg->layer_specific       = 0;
             if (pbf)
                 p_msg->layer_specific   = NFC_RAS_FRAGMENTED;
-            p_last = GKI_getlast (&p_cb->rx_q);
+            p_last = (BT_HDR *)GKI_getlast (&p_cb->rx_q);
             if (p_last && (p_last->layer_specific & NFC_RAS_FRAGMENTED))
             {
                 /* last data buffer is not last fragment, append this new packet to the last */
@@ -1451,8 +1489,8 @@ void nfc_ncif_proc_data (BT_HDR *p_msg)
 #ifdef DISP_NCI
                 if ((p_last->layer_specific & NFC_RAS_FRAGMENTED) == 0)
                 {
-                    /* this command needs to be fragmented. display the complete packet first */
-                    DISP_NCI ((UINT8 *)(p_last + 1) + p_last->offset, p_last->len, FALSE);
+                    /* this packet was reassembled. display the complete packet */
+                    DISP_NCI ((UINT8 *)(p_last + 1) + p_last->offset, p_last->len, TRUE);
                 }
 #endif
             }

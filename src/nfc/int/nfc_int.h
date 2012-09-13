@@ -12,7 +12,6 @@
 #ifndef NFC_INT_H_
 #define NFC_INT_H_
 
-
 #include "nfc_target.h"
 #include "gki.h"
 #include "nci_defs.h"
@@ -34,11 +33,6 @@ extern "C" {
 /* NFC_TASK event masks */
 #define NFC_TASK_EVT_TRANSPORT_READY        EVENT_MASK (APPL_EVT_0)
 #define NFC_TASK_EVT_ENABLE                 EVENT_MASK (APPL_EVT_1)
-#define NFC_TASK_EVT_TERMINATE              EVENT_MASK (APPL_EVT_7)
-
-/* Error codes (in layer_specific) for BT_EVT_TO_NFC_ERR event */
-#define NFC_ERR_TRANSPORT                   0   /* fatal error in NCI transport */
-#define NFC_ERR_CMD_TIMEOUT                 1   /* NCI command timeout */
 
 /* NFC Timer events */
 #define NFC_TTYPE_NCI_WAIT_RSP              0
@@ -77,6 +71,9 @@ typedef UINT8 tNFC_STATE;
 #define NFC_FL_DEACTIVATING             0x0008  /* NFC_Deactivate () is called and the NCI cmd is not sent   */
 #define NFC_FL_W4_TRANSPORT_READY       0x0010  /* Waiting for NCI transport to be ready before enabling NFC*/
 #define NFC_FL_POWER_CYCLE_NFCC         0x0020  /* Power cycle NFCC                             */
+#define NFC_FL_CONTROL_REQUESTED        0x0100  /* HAL requested control on NCI command window  */
+#define NFC_FL_CONTROL_GRANTED          0x0200  /* NCI command window is on the HAL side        */
+#define NFC_FL_DISCOVER_PENDING         0x0400  /* NCI command window is on the HAL side        */
 
 #define NFC_PEND_CONN_ID               0xFE
 #define NFC_CONN_ID_INT_MASK           0xF0
@@ -111,20 +108,15 @@ typedef struct
     tNFC_VS_CBACK   *p_cback;   /* the callback function to receive RSP   */
 } tNFC_NCI_VS_MSG;
 
+/* This data type is for HAL event */
+typedef struct
+{
+    BT_HDR          hdr;
+    UINT8           hal_evt;    /* HAL event code */
+    UINT8           status;     /* tHAL_NFC_STATUS */
+} tNFC_HAL_EVT_MSG;
 
 #define NFC_RECEIVE_MSGS_OFFSET     (10) /* callback function pointer(8; use 8 to be safe + NFC_SAVED_CMD_SIZE(2) */
-
-enum
-{
-    NFC_INT_ENABLE_END_EVT,     /* Right before reporting NFC_ENABLE_EVT */
-    NFC_INT_MBOX_EVT,           /* Received mailbox event */
-    NFC_INT_NCI_VS_RSP_EVT,     /* Received NCI VS response */
-    NFC_INT_NCI_VS_NTF_EVT,     /* Received NCI VS notification */
-    NFC_INT_TIMEOUT_EVT,        /* timeout event */
-    NFC_INT_DISABLE_EVT         /* Disabling the stack */
-};
-typedef UINT16   tNFC_INT_EVT;
-typedef BOOLEAN (tNFC_VS_EVT_HDLR) (tNFC_INT_EVT event, void *p);
 
 /* NFCC power state change pending callback */
 typedef void (tNFC_PWR_ST_CBACK) (void);
@@ -133,10 +125,14 @@ typedef void (tNFC_PWR_ST_CBACK) (void);
 #define NFC_RAS_TOO_BIG             0x08
 #define NFC_RAS_FRAGMENTED          0x01
 
+/* NCI command buffer contains a VSC (in BT_HDR.layer_specific) */
+#define NFC_WAIT_RSP_VSC            0x01
+
 /* NFC control blocks */
 typedef struct
 {
     UINT16              flags;                      /* NFC control block flags - NFC_FL_* */
+    BOOLEAN             shared_transport;           /* TRUE if using shared BT/NFC transport */
     tNFC_CONN_CB        conn_cb[NCI_MAX_CONN_CBS];
     UINT8               conn_id[NFC_MAX_CONN_ID+1]; /* index: conn_id; conn_id[]: index(1 based) to conn_cb[] */
     tNFC_DISCOVER_CBACK *p_discv_cback;
@@ -152,12 +148,11 @@ typedef struct
 #endif
     UINT8               nci_ctrl_size;              /* Max Control Packet Payload Size */
 
-    /* the data members in this section may be changed by NFC_<VendorSpecific>Init() */
-    tNFC_VS_EVT_HDLR    *p_vs_evt_hdlr;             /* VS processing for internal events */
     const tNCI_DISCOVER_MAPS  *p_disc_maps;         /* NCI RF Discovery interface mapping */
     UINT8               vs_interface[NFC_NFCC_MAX_NUM_VS_INTERFACE];  /* the NCI VS interfaces of NFCC    */
     UINT16              nci_interfaces;             /* the NCI interfaces of NFCC       */
     UINT8               num_disc_maps;              /* number of RF Discovery interface mappings */
+    void               *p_disc_pending;            /* the parameters associated with pending NFC_DiscoveryStart */
 
     /* NFC_TASK timer management */
     TIMER_LIST_Q        timer_queue;                /* 1-sec timer event queue */
@@ -177,6 +172,8 @@ typedef struct
 
     UINT8               nci_cmd_window;     /* Number of commands the controller can accecpt without waiting for response */
 
+    BT_HDR              *p_nci_init_rsp;    /* holding INIT_RSP until receiving HAL_NFC_POST_INIT_CPLT_EVT */
+    tHAL_NFC_ENTRY      *p_hal;
 } tNFC_CB;
 
 
@@ -243,15 +240,17 @@ NFC_API extern void nfc_ncif_proc_rf_field_ntf (UINT8 rf_status);
 #define nfc_ncif_proc_rf_field_ntf(rf_status)
 #endif
 
-/* From nci_main.c */
+/* From nfc_task.c */
+NFC_API extern UINT32 nfc_task (UINT32 param);
 NFC_API extern void nfc_notify_shared_transport_ready (void);
+void nfc_task_terminate (void);
 
 /* From nfc_main.c */
 void nfc_enabled (tNFC_STATUS nfc_status, BT_HDR *p_init_rsp_msg);
 void nfc_set_state (tNFC_STATE nfc_state);
 void nfc_gen_cleanup (void);
 void nfc_main_cleanup (void);
-void nfc_main_handle_err (BT_HDR *p_err_msg);
+void nfc_main_handle_hal_evt (tNFC_HAL_EVT_MSG *p_msg);
 
 /* Timer functions */
 void nfc_start_timer (TIMER_LIST_ENT *p_tle, UINT16 type, UINT32 timeout);

@@ -242,8 +242,8 @@ void nfa_sys_enable_subsystems (void)
 
     NFA_TRACE_DEBUG0 ("nfa_sys: enabling subsystems");
 
-    /* Disable all subsystems above NFA_DM. (NFA_DM and NFA_SYS will be disabled last) */
-    for (id = NFA_ID_VS_PRE; id < NFA_ID_MAX; id++)
+    /* Enable all subsystems except SYS */
+    for (id = NFA_ID_DM; id < NFA_ID_MAX; id++)
     {
         if (nfa_sys_cb.is_reg[id])
         {
@@ -320,7 +320,7 @@ void nfa_sys_notify_nfcc_power_mode (UINT8 nfcc_power_mode)
     NFA_TRACE_DEBUG1 ("nfa_sys: notify NFCC power mode(%d) to subsystems", nfcc_power_mode);
 
     /* Notify NFCC power state to all subsystems except NFA_SYS */
-    for (id = NFA_ID_VS_PRE; id < NFA_ID_MAX; id++)
+    for (id = NFA_ID_DM; id < NFA_ID_MAX; id++)
     {
         if ((nfa_sys_cb.is_reg[id]) && (nfa_sys_cb.reg[id]->proc_nfcc_pwr_mode))
         {

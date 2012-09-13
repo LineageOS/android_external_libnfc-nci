@@ -24,9 +24,7 @@ int GetNumValue(const char* name, void* p_value, unsigned long len);
 };
 #endif
 
-#define NAME_NFA_DM_MULTI_TECH_RESP     "NFA_DM_MULTI_TECH_RESP"
 #define NAME_USE_NXP_P2P_RC_WORKAROUND  "USE_NXP_P2P_RC_WORKAROUND"
-#define NAME_JNI_VERSION                "JNI_VERSION"
 #define NAME_NFA_DM_ENABLE_SLEEP        "NFA_DM_ENABLE_SLEEP"
 #define NAME_ENABLE_BRCM_EXTRAS_API     "ENABLE_BRCM_EXTRAS_API"
 #define NAME_POLLING_TECH_MASK          "POLLING_TECH_MASK"

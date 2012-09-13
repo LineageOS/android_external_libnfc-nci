@@ -18,7 +18,9 @@
 #ifndef NFC_API_H
 #define NFC_API_H
 
+#include "nfc_target.h"
 #include "nci_defs.h"
+#include "nfc_hal_api.h"
 #include "gki.h"
 
 /* NFC application return status codes */
@@ -160,18 +162,17 @@ enum
     NFC_NFCEE_DISCOVER_REVT,                /* 4  Discover NFCEE response       */
     NFC_NFCEE_INFO_REVT,                    /* 5  Discover NFCEE Notification   */
     NFC_NFCEE_MODE_SET_REVT,                /* 6  NFCEE Mode Set response       */
-    NFC_CONN_REQUEST_REVT,                  /* 7  NFCC Requests Conn Create     */
-    NFC_RF_FIELD_REVT,                      /* 8  RF Field information          */
-    NFC_EE_ACTION_REVT,                     /* 9  EE Action notification        */
-    NFC_EE_DISCOVER_REQ_REVT,               /* 10 EE Discover Req notification  */
-    NFC_SET_ROUTING_REVT,                   /* 11 Configure Routing response    */
-    NFC_GET_ROUTING_REVT,                   /* 12 Retrieve Routing response     */
-    NFC_RF_COMM_PARAMS_UPDATE_REVT,         /* 13 RF Communication Param Update */
-    NFC_GEN_ERROR_REVT,                     /* 14 generic error notification    */
-    NFC_NFCC_RESTART_REVT,                  /* 15 NFCC has been re-initialized  */
-    NFC_NFCC_TIMEOUT_REVT,                  /* 16 NFCC is not responding        */
-    NFC_NFCC_TRANSPORT_ERR_REVT,            /* 17 NCI Tranport error            */
-    NFC_NFCC_POWER_OFF_REVT,                /* 18 NFCC turned off               */
+    NFC_RF_FIELD_REVT,                      /* 7  RF Field information          */
+    NFC_EE_ACTION_REVT,                     /* 8  EE Action notification        */
+    NFC_EE_DISCOVER_REQ_REVT,               /* 9  EE Discover Req notification  */
+    NFC_SET_ROUTING_REVT,                   /* 10 Configure Routing response    */
+    NFC_GET_ROUTING_REVT,                   /* 11 Retrieve Routing response     */
+    NFC_RF_COMM_PARAMS_UPDATE_REVT,         /* 12 RF Communication Param Update */
+    NFC_GEN_ERROR_REVT,                     /* 13 generic error notification    */
+    NFC_NFCC_RESTART_REVT,                  /* 14 NFCC has been re-initialized  */
+    NFC_NFCC_TIMEOUT_REVT,                  /* 15 NFCC is not responding        */
+    NFC_NFCC_TRANSPORT_ERR_REVT,            /* 16 NCI Tranport error            */
+    NFC_NFCC_POWER_OFF_REVT,                /* 17 NFCC turned off               */
 
     NFC_FIRST_VS_REVT                       /* First vendor-specific rsp event  */
 };
@@ -863,7 +864,7 @@ NFC_API extern void NFC_Disable (void);
 ** Returns          nothing
 **
 *******************************************************************************/
-NFC_API extern void NFC_Init(void);
+NFC_API extern void NFC_Init(tHAL_NFC_ENTRY *p_hal_entry_tbl);
 
 /*******************************************************************************
 **
@@ -1233,18 +1234,6 @@ NFC_API extern tNFC_STATUS NFC_TestLoopback(BT_HDR *p_data);
 **
 *******************************************************************************/
 NFC_API extern UINT8 NFC_SetTraceLevel (UINT8 new_level);
-
-/*******************************************************************************
-**
-** Function         NCI_SetTraceLevel
-**
-** Description      This function sets the trace level for NCI.  If called with
-**                  a value of 0xFF, it simply returns the current trace level.
-**
-** Returns          The new or current trace level
-**
-*******************************************************************************/
-NFC_API extern UINT8 NCI_SetTraceLevel (UINT8 new_level);
 
 #ifdef __cplusplus
 }
