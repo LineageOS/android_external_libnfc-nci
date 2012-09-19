@@ -158,9 +158,15 @@ static void nfa_dm_set_init_nci_params (void)
         nfa_dm_check_set_config (p_nfa_dm_ce_cfg[0], &p_nfa_dm_ce_cfg[1], FALSE);
     }
 
-    if (p_nfa_dm_interface_mapping)
+    /* Set optional general default configuration */
+    if (p_nfa_dm_gen_cfg && p_nfa_dm_gen_cfg[0])
     {
-        nci_snd_discover_map_cmd (NFA_DM_NUM_INTERFACE_MAP, p_nfa_dm_interface_mapping);
+        nfa_dm_check_set_config (p_nfa_dm_gen_cfg[0], &p_nfa_dm_gen_cfg[1], FALSE);
+    }
+
+    if (p_nfa_dm_interface_mapping && nfa_dm_num_dm_interface_mapping)
+    {
+        NFC_DiscoveryMap (nfa_dm_num_dm_interface_mapping, p_nfa_dm_interface_mapping, NULL);
     }
 }
 
@@ -204,7 +210,7 @@ static void nfa_dm_disable_event (void)
     nfa_sys_deregister (NFA_ID_DM);
 
     /* Notify app */
-    nfa_dm_cb.flags &= ~NFA_DM_FLAGS_DM_IS_ACTIVE;
+    nfa_dm_cb.flags &= ~(NFA_DM_FLAGS_DM_IS_ACTIVE|NFA_DM_FLAGS_DM_DISABLING_NFC);
     (*nfa_dm_cb.p_dm_cback) (NFA_DM_DISABLE_EVT, NULL);
 }
 
@@ -321,31 +327,31 @@ BOOLEAN nfa_dm_act_nfc_cback_data (tNFA_DM_MSG *p_msg)
         break;
 
 #if (NFC_NFCEE_INCLUDED == TRUE)
-    case NFC_NFCEE_DISCOVER_REVT:                /* 4  NFCEE Discover response */
-    case NFC_NFCEE_INFO_REVT:                    /* 5  NFCEE Discover Notification */
-    case NFC_EE_ACTION_REVT:                     /* 9  EE Action notification */
-    case NFC_NFCEE_MODE_SET_REVT:                /* 6  NFCEE Mode Set response */
-    case NFC_EE_DISCOVER_REQ_REVT:               /* 10 EE Discover Req notification */
+    case NFC_NFCEE_DISCOVER_REVT:                /* NFCEE Discover response */
+    case NFC_NFCEE_INFO_REVT:                    /* NFCEE Discover Notification */
+    case NFC_EE_ACTION_REVT:                     /* EE Action notification */
+    case NFC_NFCEE_MODE_SET_REVT:                /* NFCEE Mode Set response */
+    case NFC_EE_DISCOVER_REQ_REVT:               /* EE Discover Req notification */
         nfa_ee_proc_evt (event, p_data);
         break;
 #endif
 
-    case NFC_RF_FIELD_REVT:                      /* 8  RF Field information            */
+    case NFC_RF_FIELD_REVT:                      /* RF Field information            */
         dm_cback_data.rf_field.status          = NFA_STATUS_OK;
         dm_cback_data.rf_field.rf_field_status = p_data->rf_field.rf_field;
         (*nfa_dm_cb.p_dm_cback) (NFA_DM_RF_FIELD_EVT, &dm_cback_data);
         break;
 
-    case NFC_SET_ROUTING_REVT:                   /* 11 Configure Routing response */
+    case NFC_SET_ROUTING_REVT:                   /* Configure Routing response */
         break;
 
-    case NFC_GET_ROUTING_REVT:                   /* 12 Retrieve Routing response */
+    case NFC_GET_ROUTING_REVT:                   /* Retrieve Routing response */
         break;
 
-    case NFC_GEN_ERROR_REVT:                     /* 13 generic error command or notification */
+    case NFC_GEN_ERROR_REVT:                     /* generic error command or notification */
         break;
 
-    case NFC_NFCC_RESTART_REVT:                  /* 14 NFCC has been re-initialized */
+    case NFC_NFCC_RESTART_REVT:                  /* NFCC has been re-initialized */
 
         nfa_dm_cb.nfcc_pwr_mode = NFA_DM_PWR_MODE_FULL;
         nfa_dm_cb.flags |= NFA_DM_FLAGS_NFCC_IS_RESTORING;
@@ -450,14 +456,32 @@ BOOLEAN nfa_dm_disable (tNFA_DM_MSG *p_data)
     tNFC_DEACT_TYPE deactivate_type = NFA_DEACTIVATE_TYPE_IDLE;
 
     NFA_TRACE_DEBUG1 ("nfa_dm_disable (): graceful:%d", p_data->disable.graceful);
+
     if (p_data->disable.graceful)
     {
+        /* if RF discovery is enabled */
+        if (nfa_dm_cb.disc_cb.disc_flags & NFA_DM_DISC_FLAGS_ENABLED)
+        {
+            nfa_dm_cb.disc_cb.disc_flags &= ~NFA_DM_DISC_FLAGS_ENABLED;
+
+            if (nfa_dm_cb.disc_cb.disc_state == NFA_DM_RFST_IDLE)
+            {
+                /* if waiting RSP in idle state */
+                if (nfa_dm_cb.disc_cb.disc_flags & NFA_DM_DISC_FLAGS_W4_RSP)
+                {
+                    nfa_dm_cb.disc_cb.disc_flags |= NFA_DM_DISC_FLAGS_DISABLING;
+                }
+            }
+            else
+            {
         nfa_dm_cb.disc_cb.disc_flags |= NFA_DM_DISC_FLAGS_DISABLING;
         nfa_dm_disc_sm_execute (NFA_DM_RF_DEACTIVATE_CMD, (tNFA_DM_RF_DISC_DATA *) &deactivate_type);
         if ((nfa_dm_cb.disc_cb.disc_flags & (NFA_DM_DISC_FLAGS_W4_RSP|NFA_DM_DISC_FLAGS_W4_NTF)) == 0)
         {
             /* not waiting to deactivate, clear the flag now */
             nfa_dm_cb.disc_cb.disc_flags &= ~NFA_DM_DISC_FLAGS_DISABLING;
+        }
+            }
         }
         /* Start timeout for graceful shutdown. If timer expires, then force an ungraceful shutdown */
         nfa_sys_start_timer (&nfa_dm_cb.tle, NFA_DM_TIMEOUT_DISABLE_EVT, NFA_DM_DISABLE_TIMEOUT_VAL);
@@ -483,7 +507,14 @@ BOOLEAN nfa_dm_disable (tNFA_DM_MSG *p_data)
 *******************************************************************************/
 void nfa_dm_disable_complete (void)
 {
-    NFA_TRACE_DEBUG0 ("nfa_dm_disable_complete: proceeding with nfc core shutdown.");
+    NFA_TRACE_DEBUG0 ("nfa_dm_disable_complete ()");
+
+    if ((nfa_dm_cb.flags & NFA_DM_FLAGS_DM_DISABLING_NFC) == 0)
+    {
+        NFA_TRACE_DEBUG0 ("nfa_dm_disable_complete (): proceeding with nfc core shutdown.");
+
+        nfa_dm_cb.flags |= NFA_DM_FLAGS_DM_DISABLING_NFC;
+
     nfa_sys_stop_timer (&nfa_dm_cb.tle);
 
     /* Free all buffers for NDEF handlers */
@@ -491,6 +522,7 @@ void nfa_dm_disable_complete (void)
 
     /* Disable nfc core stack */
     NFC_Disable ();
+}
 }
 
 /*******************************************************************************
@@ -1547,6 +1579,11 @@ static void nfa_dm_poll_disc_cback (tNFA_DM_RF_DISC_EVT event, tNFC_DISCOVER *p_
         /* DH initiated deactivation in NFA_DM_RFST_W4_HOST_SELECT */
         /* No need to notify NFA RW sub-systems                    */
 
+        /* clear stored NFCID/UID */
+        nfa_dm_cb.activated_nfcid_len = 0;
+        /* clean up SEL_RES response */
+        nfa_dm_cb.disc_cb.activated_sel_res = 0;
+
         evt_data.deactivated.type = NFA_DEACTIVATE_TYPE_IDLE;
         /* notify deactivation to application */
         nfa_dm_conn_cback_event_notify (NFA_DEACTIVATED_EVT, &evt_data);
@@ -1738,9 +1775,6 @@ char *nfa_dm_nfc_revt_2_str (tNFC_RESPONSE_EVT event)
 
     case NFC_NFCEE_MODE_SET_REVT:
         return "NFC_NFCEE_MODE_SET_REVT";
-
-    case NFC_CONN_REQUEST_REVT:
-        return "NFC_CONN_REQUEST_REVT";
 
     case NFC_RF_FIELD_REVT:
         return "NFC_RF_FIELD_REVT";

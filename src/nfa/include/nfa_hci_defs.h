@@ -13,15 +13,13 @@
 #ifndef NFA_HCI_DEFS_H
 #define NFA_HCI_DEFS_H
 
-/* Default Session id */
-#define NFA_HCI_DEFAULT_SESSION             0xFFFFFFFFFFFFFFFF
-
 /* Static gates */
 #define NFA_HCI_LOOP_BACK_GATE              0x04
 #define NFA_HCI_IDENTITY_MANAGEMENT_GATE    0x05
 
-#define NFA_HCI_FIRST_DYNAMIC_GATE          0x10
-#define NFA_HCI_LAST_DYNAMIC_GATE           0xFF
+#define NFA_HCI_FIRST_HOST_SPECIFIC_GENERIC_GATE    0x10
+#define NFA_HCI_LAST_HOST_SPECIFIC_GENERIC_GATE     0xEF
+#define NFA_HCI_LAST_PROP_GATE                      0xFF
 
 /* Generic Gates */
 #define NFA_HCI_CONNECTIVITY_GATE           0x41

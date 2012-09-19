@@ -243,7 +243,7 @@ tNFA_STATUS NFA_HciDeallocGate (tNFA_HANDLE hci_handle, UINT8 gate)
         return (NFA_STATUS_FAILED);
     }
 
-    if ((gate < NFA_HCI_FIRST_DYNAMIC_GATE) || (gate > NFA_HCI_LAST_DYNAMIC_GATE) || (gate == NFA_HCI_CONNECTIVITY_GATE))
+    if ((gate < NFA_HCI_FIRST_HOST_SPECIFIC_GENERIC_GATE) || (gate > NFA_HCI_LAST_HOST_SPECIFIC_GENERIC_GATE) || (gate == NFA_HCI_CONNECTIVITY_GATE))
     {
         NFA_TRACE_API1 ("NFA_HciDeallocGate (): Cannot deallocate the gate:0x%02x", gate);
         return (NFA_STATUS_FAILED);
@@ -342,14 +342,14 @@ tNFA_STATUS NFA_HciCreatePipe (tNFA_HANDLE  hci_handle,
         return (NFA_STATUS_FAILED);
     }
 
-    if ((source_gate_id < NFA_HCI_FIRST_DYNAMIC_GATE) || (source_gate_id > NFA_HCI_LAST_DYNAMIC_GATE))
+    if ((source_gate_id < NFA_HCI_FIRST_HOST_SPECIFIC_GENERIC_GATE) || (source_gate_id > NFA_HCI_LAST_HOST_SPECIFIC_GENERIC_GATE))
     {
         NFA_TRACE_API1 ("NFA_HciCreatePipe (): Invalid local Gate:0x%02x", source_gate_id);
         return (NFA_STATUS_FAILED);
     }
 
-    if (  ((dest_gate < NFA_HCI_FIRST_DYNAMIC_GATE) && (dest_gate != NFA_HCI_LOOP_BACK_GATE) && (dest_gate != NFA_HCI_IDENTITY_MANAGEMENT_GATE))
-        ||(dest_gate > NFA_HCI_LAST_DYNAMIC_GATE))
+    if (  ((dest_gate < NFA_HCI_FIRST_HOST_SPECIFIC_GENERIC_GATE) && (dest_gate != NFA_HCI_LOOP_BACK_GATE) && (dest_gate != NFA_HCI_IDENTITY_MANAGEMENT_GATE))
+        ||(dest_gate > NFA_HCI_LAST_HOST_SPECIFIC_GENERIC_GATE))
     {
         NFA_TRACE_API1 ("NFA_HciCreatePipe (): Invalid Destination Gate:0x%02x", dest_gate);
         return (NFA_STATUS_FAILED);
@@ -847,6 +847,51 @@ tNFA_STATUS NFA_HciDeletePipe (tNFA_HANDLE  hci_handle, UINT8 pipe)
         nfa_sys_sendmsg (p_msg);
         return (NFA_STATUS_OK);
     }
+    return (NFA_STATUS_FAILED);
+}
+
+
+/*******************************************************************************
+**
+** Function         NFA_HciAddStaticPipe
+**
+** Description      This function is called to add a static pipe for sending
+**                  7816 APDUs.
+**
+** Returns          NFA_STATUS_OK if successfully added
+**                  NFA_STATUS_FAILED otherwise
+**
+*******************************************************************************/
+tNFA_STATUS NFA_HciAddStaticPipe (tNFA_HANDLE hci_handle, UINT8 pipe)
+{
+    tNFA_HCI_API_ADD_STATIC_PIPE_EVT *p_msg;
+
+    if ((NFA_HANDLE_GROUP_MASK & hci_handle) != NFA_HANDLE_GROUP_HCI)
+    {
+        NFA_TRACE_API1 ("NFA_HciAddStaticPipe (): Invalid hci_handle:0x%04x", hci_handle);
+        return (NFA_STATUS_FAILED);
+    }
+
+    if ((pipe != NFA_HCI_STATIC_PIPE_UICC0) && (pipe != NFA_HCI_STATIC_PIPE_UICC1))
+    {
+        NFA_TRACE_API1 ("NFA_HciAddStaticPipe (): Invalid Pipe:0x%02x", pipe);
+        return (NFA_STATUS_FAILED);
+    }
+
+    NFA_TRACE_API2 ("NFA_HciAddStaticPipe (): hci_handle:0x%04x, pipe:0x%02X", hci_handle, pipe);
+
+    /* Request HCI to delete a pipe created by the application identified by hci handle */
+    if (  (nfa_hci_cb.hci_state != NFA_HCI_STATE_DISABLED)
+        &&((p_msg = (tNFA_HCI_API_ADD_STATIC_PIPE_EVT *) GKI_getbuf (sizeof (tNFA_HCI_API_ADD_STATIC_PIPE_EVT))) != NULL)  )
+    {
+        p_msg->hdr.event    = NFA_HCI_API_ADD_STATIC_PIPE_EVT;
+        p_msg->hci_handle   = hci_handle;
+        p_msg->pipe         = pipe;
+
+        nfa_sys_sendmsg (p_msg);
+        return (NFA_STATUS_OK);
+    }
+    /* Unable to add static pipe */
     return (NFA_STATUS_FAILED);
 }
 

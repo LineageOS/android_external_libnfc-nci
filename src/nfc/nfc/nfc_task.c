@@ -15,8 +15,8 @@
 
 #if (NFC_INCLUDED == TRUE)
 #include "nfc_api.h"
+#include "nfc_hal_api.h"
 #include "nfc_int.h"
-#include "nci_int.h"
 #include "nci_hmsgs.h"
 #include "rw_int.h"
 #include "ce_int.h"
@@ -39,7 +39,7 @@
 *******************************************************************************/
 void nfc_notify_shared_transport_ready (void)
 {
-    if (ncit_cfg.shared_transport)
+    if (nfc_cb.shared_transport)
         GKI_send_event (NFC_TASK, NFC_TASK_EVT_TRANSPORT_READY);
 }
 
@@ -282,8 +282,6 @@ void nfc_process_quick_timer_evt (void)
             break;
 #endif
         default:
-            if (nfc_cb.p_vs_evt_hdlr)
-                (*nfc_cb.p_vs_evt_hdlr) (NFC_INT_TIMEOUT_EVT, p_tle);
             break;
         }
     }
@@ -317,17 +315,16 @@ void nfc_task_enable_nfc (void)
 
 /*******************************************************************************
 **
-** Function         nfc_task_handle_terminate
+** Function         nfc_task_terminate
 **
 ** Description      Handle NFC shutdown
 **
 ** Returns          nothing
 **
 *******************************************************************************/
-void nfc_task_handle_terminate (void)
+void nfc_task_terminate (void)
 {
     BT_HDR        *p_msg;
-    tNFC_RESPONSE  evt_data;
 
     /* Free any messages still in the mbox */
     while ((p_msg = (BT_HDR *) GKI_read_mbox (NFC_MBOX_ID)) != NULL)
@@ -346,20 +343,15 @@ void nfc_task_handle_terminate (void)
         if (nfc_cb.flags & NFC_FL_POWER_CYCLE_NFCC)
         {
             nfc_cb.flags |= NFC_FL_W4_TRANSPORT_READY;
-            GKI_send_event (NCIT_TASK, NCIT_TASK_EVT_POWER_CYCLE);
+            nfc_cb.p_hal->power_cycle();
         }
         else
         {
             /* if it is not shared transport, close port */
-            if (!ncit_cfg.shared_transport)
+            if (!nfc_cb.shared_transport)
             {
-                GKI_send_event (NCIT_TASK, NCIT_TASK_EVT_TERMINATE);
-            }
-
-            if (nfc_cb.p_resp_cback)
-            {
-                evt_data.status = NFC_STATUS_OK;
-                (*nfc_cb.p_resp_cback) (NFC_NFCC_POWER_OFF_REVT, &evt_data);
+                nfc_cb.flags |= NFC_FL_W4_TRANSPORT_READY;
+                nfc_cb.p_hal->close();
             }
         }
     }
@@ -391,6 +383,8 @@ UINT32 nfc_task (UINT32 param)
     UINT16  event;
     BT_HDR  *p_msg;
     BOOLEAN free_buf, ret;
+
+    NFC_TRACE_DEBUG0 ("NFC_TASK started.");
 
     /* Initialize the nfc control block */
     memset (&nfc_cb, 0, sizeof (tNFC_CB));
@@ -449,16 +443,6 @@ UINT32 nfc_task (UINT32 param)
             }
         }
 
-        /* Handle termination signal */
-        if (event & NFC_TASK_EVT_TERMINATE)
-        {
-            NFC_TRACE_DEBUG0 ("NFC_TASK got NFC_TASK_EVT_TERMINATE. Shutting down NFC...");
-            nfc_task_handle_terminate ();
-
-            continue;
-        }
-
-
         if (event & NFC_MBOX_EVT_MASK)
         {
             /* Process all incoming NCI messages */
@@ -484,18 +468,14 @@ UINT32 nfc_task (UINT32 param)
                         GKI_start_timer (NFC_QUICK_TIMER_ID, ((GKI_SECS_TO_TICKS (1) / QUICK_TIMER_TICKS_PER_SEC)), TRUE);
                         break;
 
-                    case BT_EVT_TO_NFC_ERR:
-                        nfc_main_handle_err (p_msg);
-                        free_buf = FALSE;
+                    case BT_EVT_TO_NFC_MSGS:
+                        nfc_main_handle_hal_evt ((tNFC_HAL_EVT_MSG*)p_msg);
                         break;
 
                     default:
                         NFC_TRACE_DEBUG1 ("nfc_task: unhandle mbox message, event=%04x", p_msg->event);
                         break;
                 }
-
-                if (nfc_cb.p_vs_evt_hdlr)
-                    ret = (*nfc_cb.p_vs_evt_hdlr) ((UINT16) (NFC_INT_MBOX_EVT| (p_msg->event & BT_EVT_MASK)), p_msg);
 
                 if (free_buf && ret == FALSE)
                 {

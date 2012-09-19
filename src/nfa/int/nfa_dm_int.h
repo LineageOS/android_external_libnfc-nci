@@ -47,7 +47,6 @@ enum
     NFA_DM_API_SEND_VSC_EVT,
     NFA_DM_TIMEOUT_DISABLE_EVT,
     NFA_DM_NFC_CBACK_DATA_EVT,
-
     NFA_DM_MAX_EVT
 };
 
@@ -181,6 +180,7 @@ typedef struct
     UINT16          pad;    /* add padding to ensure the size is big enough for offset=NCI_VSC_MSG_HDR_SIZE */
     UINT8           *p_cmd_params;
 } tNFA_DM_API_SEND_VSC;
+
 
 /* data type for NFA_DM_NFC_CBACK_DATA_EVT */
 typedef struct
@@ -397,7 +397,7 @@ typedef struct
 #define NFA_DM_FLAGS_SEND_DEACTIVATED_EVT       0x00000040  /* Send NFA_DEACTIVATED_EVT when deactivated                            */
 #define NFA_DM_FLAGS_NFCC_IS_RESTORING          0x00000100  /* NFCC is restoring after back to full power mode                      */
 #define NFA_DM_FLAGS_SETTING_PWR_MODE           0x00000200  /* NFCC power mode is updating                                          */
-
+#define NFA_DM_FLAGS_DM_DISABLING_NFC           0x00000400  /* NFA DM is disabling NFC                                              */
 /* stored parameters */
 typedef struct
 {
@@ -480,9 +480,6 @@ typedef struct
 
     /* NFCC power mode */
     UINT8                       nfcc_pwr_mode;          /* NFA_DM_PWR_MODE_FULL or NFA_DM_PWR_MODE_OFF_SLEEP */
-
-    tNFA_SYS_EVT_HDLR           *p_vs_evt_hdlr;         /* VS event handler */
-
 } tNFA_DM_CB;
 
 /* Internal function prototypes */
@@ -499,14 +496,14 @@ tNFA_STATUS nfa_rw_send_raw_frame (BT_HDR *p_data);
 
 /* Internal functions from nfa_ce */
 void nfa_ce_init (void);
-void nfa_ce_proc_nfcc_power_mode (UINT8 nfcc_power_mode);
-void nfa_ce_send_activate_evt (tNFC_DISCOVER *p_data);
-void nfa_ce_send_deactivate_evt (tNFC_DISCOVER *p_data);
 
 /* Pointer to compile-time configuration structure */
 extern tNFA_DM_CFG *p_nfa_dm_cfg;
 extern UINT8 *p_nfa_dm_ce_cfg;
+extern UINT8 *p_nfa_dm_gen_cfg;
+extern UINT8 nfa_ee_max_ee_cfg;
 extern tNCI_DISCOVER_MAPS *p_nfa_dm_interface_mapping;
+extern UINT8 nfa_dm_num_dm_interface_mapping;
 
 /* NFA device manager control block */
 #if NFA_DYNAMIC_MEMORY == FALSE
@@ -591,6 +588,7 @@ tNFC_STATUS nfa_dm_disc_presence_check (void);
 #if (BT_TRACE_VERBOSE == TRUE)
 char *nfa_dm_nfc_revt_2_str (tNFC_RESPONSE_EVT event);
 #endif
+
 
 #endif /* NFA_DM_INT_H */
 

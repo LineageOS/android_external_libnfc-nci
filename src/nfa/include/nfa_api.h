@@ -16,6 +16,7 @@
 #include "nci_defs.h"
 #include "tags_defs.h"
 #include "nfc_api.h"
+#include "nfc_hal_api.h"
 #include "gki.h"
 
 /*****************************************************************************
@@ -602,6 +603,7 @@ typedef void (tNFA_NDEF_CBACK) (tNFA_NDEF_EVT event, tNFA_NDEF_EVT_DATA *p_data)
 /* NFA VSC Callback */
 typedef void (tNFA_VSC_CBACK)(UINT8 event, UINT16 param_len, UINT8 *p_param);
 
+
 /*****************************************************************************
 **  External Function Declarations
 *****************************************************************************/
@@ -616,10 +618,16 @@ extern "C"
 **
 ** Description      This function initializes control blocks for NFA
 **
+**                  p_hal_entry_tbl points to a table of HAL entry points
+**
+**                  NOTE: the buffer that p_hal_entry_tbl points must be
+**                  persistent until NFA is disabled.
+**
+**
 ** Returns          none
 **
 *******************************************************************************/
-NFC_API extern void NFA_Init (void);
+NFC_API extern void NFA_Init (tHAL_NFC_ENTRY *p_hal_entry_tbl);
 
 /*******************************************************************************
 **
@@ -1095,6 +1103,7 @@ NFC_API extern tNFA_STATUS NFA_SendVsCommand (UINT8            oid,
 **
 *******************************************************************************/
 NFC_API extern UINT8 NFA_SetTraceLevel (UINT8 new_level);
+
 
 #ifdef __cplusplus
 }

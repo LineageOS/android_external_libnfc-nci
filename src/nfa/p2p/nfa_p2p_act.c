@@ -436,7 +436,7 @@ void nfa_p2p_proc_llcp_disconnect_ind (tLLCP_SAP_CBACK_DATA  *p_data)
 void nfa_p2p_proc_llcp_disconnect_resp (tLLCP_SAP_CBACK_DATA  *p_data)
 {
     UINT8             local_sap, xx;
-    tNFA_P2P_EVT_DATA evt_data = {0};
+    tNFA_P2P_EVT_DATA evt_data;
 
     P2P_TRACE_DEBUG0 ("nfa_p2p_proc_llcp_disconnect_resp ()");
 
@@ -459,6 +459,14 @@ void nfa_p2p_proc_llcp_disconnect_resp (tLLCP_SAP_CBACK_DATA  *p_data)
         else if (p_data->disconnect_resp.reason == LLCP_SAP_DM_REASON_NO_SERVICE)
         {
             evt_data.disc.reason = NFA_P2P_DISC_REASON_NO_SERVICE;
+        }
+        else if (p_data->disconnect_resp.reason == LLCP_SAP_DM_REASON_NO_ACTIVE_CONNECTION)
+        {
+            evt_data.disc.reason = NFA_P2P_DISC_REASON_LLCP_DEACTIVATED;
+        }
+        else
+        {
+            evt_data.disc.reason = NFA_P2P_DISC_REASON_NO_INFORMATION;
         }
 
         if (evt_data.disc.reason == NFA_P2P_DISC_REASON_LOCAL_INITITATE)

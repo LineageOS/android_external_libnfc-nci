@@ -40,8 +40,7 @@ enum
     NFA_EE_DISCOVER_REQ_EVT,    /* NFCEE Discover Request Notification                   */
     NFA_EE_ROUT_ERR_EVT,        /* Error - exceed NFCC CE Routing size                   */
     NFA_EE_NO_MEM_ERR_EVT,      /* Error - out of GKI buffers                            */
-    NFA_EE_NO_CB_ERR_EVT,       /* Error - Can not find control block or wrong state     */
-    NFA_EE_FIRST_VS_API_EVT     /* first vendor specific API event                       */
+    NFA_EE_NO_CB_ERR_EVT        /* Error - Can not find control block or wrong state     */
 };
 typedef UINT8 tNFA_EE_EVT;
 
@@ -78,6 +77,8 @@ typedef UINT8 tNFA_EE_PWR_STATE;
 #define NFA_EE_STATUS_ACTIVATING        (NFA_EE_STATUS_PENDING+NFC_NFCEE_STATUS_ACTIVE)
 #define NFA_EE_STATUS_DEACTIVATING      (NFA_EE_STATUS_PENDING+NFC_NFCEE_STATUS_INACTIVE)
 typedef UINT8 tNFA_EE_STATUS;
+
+
 
 /* additional NFCEE Info */
 typedef struct
@@ -429,6 +430,7 @@ NFC_API extern tNFA_STATUS NFA_EeSendData (tNFA_HANDLE  ee_handle,
 **
 *******************************************************************************/
 NFC_API extern tNFA_STATUS NFA_EeDisconnect (tNFA_HANDLE ee_handle);
+
 
 #ifdef __cplusplus
 }

@@ -74,19 +74,23 @@ static const tNFA_SYS_REG nfa_hci_sys_reg =
 *******************************************************************************/
 void nfa_hci_ee_info_cback (BOOLEAN disable_discover)
 {
-    tNFA_HCI_EVENT_DATA *p_msg;
-
     NFA_TRACE_DEBUG0 ("nfa_hci_ee_info_cback ()");
 
-    memset (nfa_hci_cb.inactive_host, 0, NFA_HCI_MAX_HOST_IN_NETWORK);
-
     /* Notify EE Discovery is complete */
-    if ((p_msg = (tNFA_HCI_EVENT_DATA *) GKI_getbuf (sizeof (tNFA_HCI_EVENT_DATA))) != NULL)
+
+    if (disable_discover)
     {
-        p_msg->ee_disc_cmplt.hdr.event    = NFA_HCI_EE_DISC_CMPLT_EVT;
-        p_msg->ee_disc_cmplt.b_disc_cmplt = disable_discover;
-        p_msg->ee_disc_cmplt.status       = NFA_STATUS_OK;
-        nfa_hci_evt_hdlr ((BT_HDR *) p_msg);
+        nfa_hci_cb.w4_hci_netwk_init = FALSE;
+        if (nfa_hci_cb.hci_state == NFA_HCI_STATE_WAIT_NETWK_ENABLE)
+        {
+            nfa_sys_stop_timer (&nfa_hci_cb.timer);
+            nfa_hciu_send_get_param_cmd (NFA_HCI_ADMIN_PIPE, NFA_HCI_HOST_LIST_INDEX);
+        }
+    }
+    else
+    {
+        nfa_hci_cb.ee_disc_cmplt = TRUE;
+        nfa_hci_startup ();
     }
 }
 
@@ -107,9 +111,6 @@ void nfa_hci_init (void)
     memset (&nfa_hci_cb, 0, sizeof (tNFA_HCI_CB));
 
     nfa_hci_cb.hci_state = NFA_HCI_STATE_STARTUP;
-
-    /* By Default, do not wait for any Vendor specific initialization or Vendor specific handling of EE discovery */
-    nfa_hci_cb.w4_vsc_init = FALSE;
 
     /* register message handler on NFA SYS */
     nfa_sys_register (NFA_ID_HCI, &nfa_hci_sys_reg);
@@ -170,8 +171,8 @@ BOOLEAN nfa_hci_is_valid_cfg (void)
         {
             if (  (  (nfa_hci_cb.cfg.dyn_gates[xx].gate_id != NFA_HCI_LOOP_BACK_GATE)
                    &&(nfa_hci_cb.cfg.dyn_gates[xx].gate_id != NFA_HCI_IDENTITY_MANAGEMENT_GATE)
-                   &&(nfa_hci_cb.cfg.dyn_gates[xx].gate_id < NFA_HCI_FIRST_DYNAMIC_GATE))
-                ||(nfa_hci_cb.cfg.dyn_gates[xx].gate_id > NFA_HCI_LAST_DYNAMIC_GATE))
+                   &&(nfa_hci_cb.cfg.dyn_gates[xx].gate_id < NFA_HCI_FIRST_HOST_SPECIFIC_GENERIC_GATE))
+                ||(nfa_hci_cb.cfg.dyn_gates[xx].gate_id > NFA_HCI_LAST_PROP_GATE))
                 return FALSE;
 
             /* Check if the same gate id is present more than once in the control block */
@@ -243,13 +244,13 @@ BOOLEAN nfa_hci_is_valid_cfg (void)
                 return FALSE;
 
             /* Check if local gate on which the pipe is created is valid */
-            if (  (((nfa_hci_cb.cfg.dyn_pipes[xx].local_gate != NFA_HCI_LOOP_BACK_GATE) && (nfa_hci_cb.cfg.dyn_pipes[xx].local_gate != NFA_HCI_IDENTITY_MANAGEMENT_GATE)) && (nfa_hci_cb.cfg.dyn_pipes[xx].local_gate < NFA_HCI_FIRST_DYNAMIC_GATE))
-                ||(nfa_hci_cb.cfg.dyn_pipes[xx].local_gate > NFA_HCI_LAST_DYNAMIC_GATE))
+            if (  (((nfa_hci_cb.cfg.dyn_pipes[xx].local_gate != NFA_HCI_LOOP_BACK_GATE) && (nfa_hci_cb.cfg.dyn_pipes[xx].local_gate != NFA_HCI_IDENTITY_MANAGEMENT_GATE)) && (nfa_hci_cb.cfg.dyn_pipes[xx].local_gate < NFA_HCI_FIRST_HOST_SPECIFIC_GENERIC_GATE))
+                ||(nfa_hci_cb.cfg.dyn_pipes[xx].local_gate > NFA_HCI_LAST_PROP_GATE))
                 return FALSE;
 
             /* Check if the peer gate on which the pipe is created is valid */
-            if (  (((nfa_hci_cb.cfg.dyn_pipes[xx].dest_gate != NFA_HCI_LOOP_BACK_GATE) && (nfa_hci_cb.cfg.dyn_pipes[xx].dest_gate != NFA_HCI_IDENTITY_MANAGEMENT_GATE)) && (nfa_hci_cb.cfg.dyn_pipes[xx].dest_gate < NFA_HCI_FIRST_DYNAMIC_GATE))
-                ||(nfa_hci_cb.cfg.dyn_pipes[xx].dest_gate > NFA_HCI_LAST_DYNAMIC_GATE))
+            if (  (((nfa_hci_cb.cfg.dyn_pipes[xx].dest_gate != NFA_HCI_LOOP_BACK_GATE) && (nfa_hci_cb.cfg.dyn_pipes[xx].dest_gate != NFA_HCI_IDENTITY_MANAGEMENT_GATE)) && (nfa_hci_cb.cfg.dyn_pipes[xx].dest_gate < NFA_HCI_FIRST_HOST_SPECIFIC_GENERIC_GATE))
+                ||(nfa_hci_cb.cfg.dyn_pipes[xx].dest_gate > NFA_HCI_LAST_PROP_GATE))
                 return FALSE;
 
             /* Check if the same pipe is present more than once in the control block */
@@ -315,10 +316,10 @@ BOOLEAN nfa_hci_is_valid_cfg (void)
 ** Returns          None
 **
 *******************************************************************************/
-void nfa_hci_restore_default_config (UINT64 session_id)
+void nfa_hci_restore_default_config (UINT8 *p_session_id)
 {
     memset (&nfa_hci_cb.cfg, 0, sizeof (nfa_hci_cb.cfg));
-    nfa_hci_cb.cfg.admin_gate.session_id = session_id;
+    memcpy (nfa_hci_cb.cfg.admin_gate.session_id, p_session_id, NFA_HCI_SESSION_ID_LEN);
     nfa_hci_cb.nv_write_needed = TRUE;
 }
 
@@ -377,7 +378,7 @@ void nfa_hci_dh_startup_complete (void)
         nfa_sys_start_timer (&nfa_hci_cb.timer, NFA_HCI_RSP_TIMEOUT_EVT, NFA_HCI_NETWK_INIT_TIMEOUT);
     }
     else
-        nfa_hci_startup_complete (NFA_STATUS_OK);
+        nfa_hciu_send_get_param_cmd (NFA_HCI_ADMIN_PIPE, NFA_HCI_HOST_LIST_INDEX);
 }
 
 /*******************************************************************************
@@ -443,7 +444,7 @@ void nfa_hci_startup (void)
     }
 
     /* We can only start up if NV Ram is read and EE discovery is complete */
-    if (nfa_hci_cb.nv_read_cmplt && nfa_hci_cb.ee_disc_cmplt && !nfa_hci_cb.w4_vsc_init)
+    if (nfa_hci_cb.nv_read_cmplt && nfa_hci_cb.ee_disc_cmplt)
     {
         NFA_EeGetInfo (&num_nfcee, ee_info);
         nfa_hci_cb.num_nfcee = num_nfcee;
@@ -545,20 +546,11 @@ static void nfa_hci_conn_cback (UINT8 conn_id, tNFC_CONN_EVT event, tNFC_CONN *p
     UINT8   chaining_bit;
     UINT8   pipe;
     UINT16  pkt_len;
-    tNFA_HCI_EVENT_DATA *p_msg;
 
     if (event == NFC_CONN_CREATE_CEVT)
     {
         nfa_hci_cb.conn_id   = conn_id;
         nfa_hci_cb.buff_size = p_data->conn_create.buff_size;
-
-        /* Notify HCP connection is created */
-        if ((p_msg = (tNFA_HCI_EVENT_DATA *) GKI_getbuf (sizeof (tNFA_HCI_EVENT_DATA))) != NULL)
-        {
-            p_msg->conn_create.hdr.event    = NFA_HCI_HCP_CONN_CREATE_EVT;
-            p_msg->conn_create.status       = NFA_STATUS_OK;
-            nfa_hci_evt_hdlr ((BT_HDR *) p_msg);
-        }
 
         if (nfa_hci_cb.hci_state == NFA_HCI_STATE_STARTUP)
         {
@@ -729,7 +721,10 @@ static void nfa_hci_conn_cback (UINT8 conn_id, tNFC_CONN_EVT event, tNFC_CONN *p
 *******************************************************************************/
 void nfa_hci_handle_nv_read (UINT8 block, tNFA_STATUS status)
 {
-    UINT64 session_id;
+    UINT8   session_id[NFA_HCI_SESSION_ID_LEN];
+    UINT8   default_session[NFA_HCI_SESSION_ID_LEN] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+    UINT8   reset_session[NFA_HCI_SESSION_ID_LEN]   = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    UINT32  os_tick;
 
     if (block == DH_NV_BLOCK)
     {
@@ -738,12 +733,13 @@ void nfa_hci_handle_nv_read (UINT8 block, tNFA_STATUS status)
         nfa_hci_cb.nv_read_cmplt = TRUE;
         if (  (status != NFA_STATUS_OK)
             ||(!nfa_hci_is_valid_cfg ())
-            ||(nfa_hci_cb.cfg.admin_gate.session_id == (UINT64) NFA_HCI_DEFAULT_SESSION)
-            ||(nfa_hci_cb.cfg.admin_gate.session_id == 0) )
+            ||(!(memcmp (nfa_hci_cb.cfg.admin_gate.session_id, default_session, NFA_HCI_SESSION_ID_LEN)))
+            ||(!(memcmp (nfa_hci_cb.cfg.admin_gate.session_id, reset_session, NFA_HCI_SESSION_ID_LEN)))  )
         {
             /* Set a new session id so that we clear all pipes later after seeing a difference with the HC Session ID */
-            session_id  = nfa_hci_cb.cfg.admin_gate.session_id << 32;
-            session_id |= GKI_get_os_tick_count ();
+            memcpy (&session_id[(NFA_HCI_SESSION_ID_LEN / 2)], nfa_hci_cb.cfg.admin_gate.session_id, (NFA_HCI_SESSION_ID_LEN / 2));
+            os_tick = GKI_get_os_tick_count ();
+            memcpy (session_id, (UINT8 *)&os_tick, (NFA_HCI_SESSION_ID_LEN / 2));
             nfa_hci_restore_default_config (session_id);
         }
         nfa_hci_startup ();
@@ -779,7 +775,7 @@ void nfa_hci_rsp_timeout (tNFA_HCI_EVENT_DATA *p_evt_data)
     case NFA_HCI_STATE_WAIT_NETWK_ENABLE:
         /* HCI Network is enabled */
         nfa_hci_cb.w4_hci_netwk_init = FALSE;
-        nfa_hci_startup_complete (NFA_STATUS_OK);
+        nfa_hciu_send_get_param_cmd (NFA_HCI_ADMIN_PIPE, NFA_HCI_HOST_LIST_INDEX);
         break;
 
     case NFA_HCI_STATE_REMOVE_GATE:
@@ -979,7 +975,6 @@ static BOOLEAN nfa_hci_evt_hdlr (BT_HDR *p_msg)
 {
     tNFA_HCI_EVENT_DATA *p_evt_data = (tNFA_HCI_EVENT_DATA *)p_msg;
 
-
 #if (BT_TRACE_VERBOSE == TRUE)
     NFA_TRACE_EVENT4 ("nfa_hci_evt_hdlr state: %s (%d) event: %s (0x%04x)",
                       nfa_hciu_get_state_name (nfa_hci_cb.hci_state), nfa_hci_cb.hci_state,
@@ -997,21 +992,6 @@ static BOOLEAN nfa_hci_evt_hdlr (BT_HDR *p_msg)
     {
         switch (p_msg->event)
         {
-        case NFA_HCI_VSC_INIT_EVT:
-            if (p_evt_data->vsc_init.status == NFA_STATUS_OK)
-                nfa_hci_startup ();
-            else
-                nfa_hci_startup_complete (p_evt_data->vsc_init.status);
-            break;
-
-        case NFA_HCI_EE_DISC_CMPLT_EVT:
-            if (!p_evt_data->ee_disc_cmplt.b_disc_cmplt)
-            {
-                nfa_hci_cb.ee_disc_cmplt = TRUE;
-                nfa_hci_startup ();
-            }
-            break;
-
         case NFA_HCI_RSP_NV_READ_EVT:
             nfa_hci_handle_nv_read (p_evt_data->nv_read.block, p_evt_data->nv_read.status);
             break;
@@ -1022,9 +1002,6 @@ static BOOLEAN nfa_hci_evt_hdlr (BT_HDR *p_msg)
 
         case NFA_HCI_RSP_TIMEOUT_EVT:
             nfa_hci_rsp_timeout ((tNFA_HCI_EVENT_DATA *)p_msg);
-            break;
-
-        case NFA_HCI_HCP_CONN_CREATE_EVT:
             break;
 
         case NFA_HCI_CHECK_QUEUE_EVT:
@@ -1040,11 +1017,6 @@ static BOOLEAN nfa_hci_evt_hdlr (BT_HDR *p_msg)
             }
             break;
         }
-    }
-
-    if (nfa_hci_cb.p_vs_evt_hdlr)
-    {
-        (*(nfa_hci_cb.p_vs_evt_hdlr)) (p_evt_data);
     }
 
     if ((p_msg->event > NFA_HCI_LAST_API_EVENT))

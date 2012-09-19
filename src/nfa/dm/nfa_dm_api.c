@@ -29,10 +29,15 @@
 **
 ** Description      This function initializes control blocks for NFA
 **
+**                  p_hal_entry_tbl points to a table of HAL entry points
+**
+**                  NOTE: the buffer that p_hal_entry_tbl points must be
+**                  persistent until NFA is disabled.
+**
 ** Returns          none
 **
 *******************************************************************************/
-void NFA_Init(void)
+void NFA_Init(tHAL_NFC_ENTRY *p_hal_entry_tbl)
 {
     NFA_TRACE_API0 ("NFA_Init ()");
     nfa_sys_init();
@@ -45,8 +50,9 @@ void NFA_Init(void)
     nfa_ce_init();
     nfa_hci_init();
 
+
     /* Initialize NFC module */
-    NFC_Init ();
+    NFC_Init (p_hal_entry_tbl);
 }
 
 /*******************************************************************************

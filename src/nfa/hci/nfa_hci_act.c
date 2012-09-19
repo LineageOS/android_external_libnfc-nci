@@ -34,6 +34,7 @@ static void nfa_hci_api_delete_pipe (tNFA_HCI_EVENT_DATA *p_evt_data);
 static void nfa_hci_api_send_event (tNFA_HCI_EVENT_DATA *p_evt_data);
 static void nfa_hci_api_send_cmd (tNFA_HCI_EVENT_DATA *p_evt_data);
 static void nfa_hci_api_send_rsp (tNFA_HCI_EVENT_DATA *p_evt_data);
+static void nfa_hci_api_add_static_pipe (tNFA_HCI_EVENT_DATA *p_evt_data);
 
 static void nfa_hci_handle_identity_mgmt_gate_pkt (UINT8 *p_data, tNFA_HCI_DYN_PIPE *p_pipe);
 static void nfa_hci_handle_loopback_gate_pkt (UINT8 *p_data, UINT16 data_len, tNFA_HCI_DYN_PIPE *p_pipe);
@@ -130,6 +131,10 @@ void nfa_hci_check_api_requests (void)
 
         case NFA_HCI_API_SEND_EVENT_EVT:
             nfa_hci_api_send_event (p_evt_data);
+            break;
+
+        case NFA_HCI_API_ADD_STATIC_PIPE_EVT:
+            nfa_hci_api_add_static_pipe (p_evt_data);
             break;
 
         default:
@@ -902,6 +907,78 @@ static void nfa_hci_api_send_event (tNFA_HCI_EVENT_DATA *p_evt_data)
     nfa_hciu_send_to_app (NFA_HCI_EVENT_SENT_EVT, &evt_data, p_evt_data->send_evt.hci_handle);
 }
 
+/*******************************************************************************
+**
+** Function         nfa_hci_api_add_static_pipe
+**
+** Description      action function to add static pipe
+**
+** Returns          None
+**
+*******************************************************************************/
+static void nfa_hci_api_add_static_pipe (tNFA_HCI_EVENT_DATA *p_evt_data)
+{
+    tNFA_HCI_DYN_GATE   *pg;
+    tNFA_HCI_DYN_PIPE   *pp;
+    UINT8               dest_host = (p_evt_data->add_static_pipe.pipe == NFA_HCI_STATIC_PIPE_UICC0) ? NFA_HCI_HOST_ID_UICC0:NFA_HCI_HOST_ID_UICC1;
+    tNFA_HCI_EVT_DATA   evt_data;
+    tNFA_HANDLE         prev_owner;
+    UINT8               dest_gate = (p_evt_data->add_static_pipe.pipe == NFA_HCI_STATIC_PIPE_UICC0) ? NFA_HCI_PROPRIETARY_GATE0:NFA_HCI_PROPRIETARY_GATE1;
+
+    /* Allocate a proprietary gate */
+    if ((pg = nfa_hciu_alloc_gate (dest_gate, p_evt_data->add_static_pipe.hci_handle)) != NULL)
+    {
+        prev_owner = pg->gate_owner;
+
+        if (  (p_evt_data->add_static_pipe.hci_handle != prev_owner)
+            &&(p_evt_data->add_static_pipe.pipe == NFA_HCI_STATIC_PIPE_UICC0)  )
+        {
+            /* If any other application owned this gate, release its pipe on this gate and notify the application */
+            if (nfa_hciu_release_pipe (NFA_HCI_STATIC_PIPE_UICC0) == NFA_HCI_ANY_OK)
+            {
+                evt_data.deleted.status = NFA_STATUS_OK;
+                evt_data.deleted.pipe   = NFA_HCI_STATIC_PIPE_UICC0;
+                nfa_hciu_send_to_app (NFA_HCI_DELETE_PIPE_EVT, &evt_data, prev_owner);
+            }
+        }
+
+        if (  (p_evt_data->add_static_pipe.hci_handle != prev_owner)
+            &&(p_evt_data->add_static_pipe.pipe == NFA_HCI_STATIC_PIPE_UICC1)  )
+        {
+            /* If any other application owned this gate, release its pipe on this gate and notify the application */
+            if (nfa_hciu_release_pipe (NFA_HCI_STATIC_PIPE_UICC1) == NFA_HCI_ANY_OK)
+            {
+                evt_data.deleted.status = NFA_STATUS_OK;
+                evt_data.deleted.pipe   = NFA_HCI_STATIC_PIPE_UICC1;
+                nfa_hciu_send_to_app (NFA_HCI_DELETE_PIPE_EVT, &evt_data, prev_owner);
+            }
+        }
+        /* Assign new owner to the gate */
+        pg->gate_owner = p_evt_data->add_static_pipe.hci_handle;
+
+        /* Add the dynamic pipe to the proprietary gate */
+        if (nfa_hciu_add_pipe_to_gate (p_evt_data->add_static_pipe.pipe,pg->gate_id, dest_host, dest_gate) != NFA_HCI_ANY_OK)
+        {
+            /* Unable to add the dynamic pipe, so release the gate */
+            nfa_hciu_release_gate (pg->gate_id);
+            evt_data.pipe_added.status = NFA_STATUS_FAILED;
+            nfa_hciu_send_to_app (NFA_HCI_ADD_STATIC_PIPE_EVT, &evt_data, p_evt_data->add_static_pipe.hci_handle);
+            return;
+        }
+        if ((pp = nfa_hciu_find_pipe_by_pid (p_evt_data->add_static_pipe.pipe)) != NULL)
+        {
+            /* This pipe is always opened */
+            pp->pipe_state = NFA_HCI_PIPE_OPENED;
+            evt_data.pipe_added.status = NFA_STATUS_OK;
+            nfa_hciu_send_to_app (NFA_HCI_ADD_STATIC_PIPE_EVT, &evt_data, p_evt_data->add_static_pipe.hci_handle);
+            return;
+        }
+    }
+    /* Unable to add static pipe */
+    evt_data.pipe_added.status = NFA_STATUS_FAILED;
+    nfa_hciu_send_to_app (NFA_HCI_ADD_STATIC_PIPE_EVT, &evt_data, p_evt_data->add_static_pipe.hci_handle);
+
+}
 
 /*******************************************************************************
 **
@@ -1118,7 +1195,7 @@ void nfa_hci_handle_admin_gate_cmd (UINT8 *p_data)
 *******************************************************************************/
 void nfa_hci_handle_admin_gate_rsp (UINT8 *p_data, UINT8 data_len)
 {
-    UINT8               hosts[2] = {0x02,0x03};
+    UINT8               hosts[2] = {NFA_HCI_HOST_ID_UICC0, (NFA_HCI_HOST_ID_UICC0 + 1)};
     UINT8               source_host;
     UINT8               source_gate = nfa_hci_cb.local_gate_in_use;
     UINT8               dest_host   = nfa_hci_cb.remote_host_in_use;
@@ -1126,7 +1203,10 @@ void nfa_hci_handle_admin_gate_rsp (UINT8 *p_data, UINT8 data_len)
     UINT8               pipe        = 0;
     tNFA_STATUS         status;
     tNFA_HCI_EVT_DATA   evt_data;
-    UINT64              default_session = (UINT64) NFA_HCI_DEFAULT_SESSION;
+    UINT8               default_session[NFA_HCI_SESSION_ID_LEN] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+    UINT8               host_count  = 0;
+    UINT8               host_id     = 0;
+    UINT32              os_tick;
 
 #if (BT_TRACE_VERBOSE == TRUE)
     NFA_TRACE_DEBUG4 ("nfa_hci_handle_admin_gate_rsp - LastCmdSent: %s  App: 0x%04x  Gate: 0x%02x  Pipe: 0x%02x",
@@ -1144,7 +1224,8 @@ void nfa_hci_handle_admin_gate_rsp (UINT8 *p_data, UINT8 data_len)
 
     /* If starting up, handle events here */
     if (  (nfa_hci_cb.hci_state == NFA_HCI_STATE_STARTUP)
-        ||(nfa_hci_cb.hci_state == NFA_HCI_STATE_RESTORE)  )
+        ||(nfa_hci_cb.hci_state == NFA_HCI_STATE_RESTORE)
+        ||(nfa_hci_cb.hci_state == NFA_HCI_STATE_WAIT_NETWK_ENABLE)  )
     {
         if (nfa_hci_cb.inst != NFA_HCI_ANY_OK)
         {
@@ -1172,17 +1253,43 @@ void nfa_hci_handle_admin_gate_rsp (UINT8 *p_data, UINT8 data_len)
             break;
 
         case NFA_HCI_ANY_GET_PARAMETER:
-            /* The only parameter we get when initializing is the session ID. Check for match. */
-            if (!memcmp ((UINT8 *) &nfa_hci_cb.cfg.admin_gate.session_id, p_data, NFA_HCI_SESSION_ID_LEN) )
+            if (nfa_hci_cb.param_in_use == NFA_HCI_HOST_LIST_INDEX)
             {
-                /* Session has not changed. Set the WHITELIST */
-                nfa_hciu_send_set_param_cmd (NFA_HCI_ADMIN_PIPE, NFA_HCI_WHITELIST_INDEX, 0x01, hosts);
+                host_count = 0;
+                while (host_count < NFA_HCI_MAX_HOST_IN_NETWORK)
+                {
+                    nfa_hci_cb.inactive_host[host_count] = NFA_HCI_HOST_ID_UICC0 + host_count;
+                    host_count++;
+                }
+
+                host_count = 0;
+                /* Collect active host in the Host Network */
+                while (host_count < data_len)
+                {
+                    host_id = (UINT8) *p_data++;
+
+                    if (  (host_id >= NFA_HCI_HOST_ID_UICC0)
+                        &&(host_id < NFA_HCI_HOST_ID_UICC0 + NFA_HCI_MAX_HOST_IN_NETWORK)  )
+                        nfa_hci_cb.inactive_host[host_id - NFA_HCI_HOST_ID_UICC0] = 0x00;
+
+                    host_count++;
+                }
+                nfa_hci_startup_complete (NFA_STATUS_OK);
             }
-            else
+            else if (nfa_hci_cb.param_in_use == NFA_HCI_SESSION_IDENTITY_INDEX)
             {
-                /* Something wrong, NVRAM data could be corrupt or first start with default session id */
-                nfa_hciu_send_clear_all_pipe_cmd ();
-                nfa_hci_cb.b_hci_netwk_reset = TRUE;
+                /* The only parameter we get when initializing is the session ID. Check for match. */
+                if (!memcmp ((UINT8 *) nfa_hci_cb.cfg.admin_gate.session_id, p_data, NFA_HCI_SESSION_ID_LEN) )
+                {
+                    /* Session has not changed. Set the WHITELIST */
+                    nfa_hciu_send_set_param_cmd (NFA_HCI_ADMIN_PIPE, NFA_HCI_WHITELIST_INDEX, 0x01, hosts);
+                }
+                else
+                {
+                    /* Something wrong, NVRAM data could be corrupt or first start with default session id */
+                    nfa_hciu_send_clear_all_pipe_cmd ();
+                    nfa_hci_cb.b_hci_netwk_reset = TRUE;
+                }
             }
             break;
 
@@ -1193,9 +1300,10 @@ void nfa_hci_handle_admin_gate_rsp (UINT8 *p_data, UINT8 data_len)
             {
                 nfa_hci_cb.b_hci_netwk_reset = FALSE;
                /* Session ID is reset, Set New session id */
-                nfa_hci_cb.cfg.admin_gate.session_id  = nfa_hci_cb.cfg.admin_gate.session_id << 32;
-                nfa_hci_cb.cfg.admin_gate.session_id |= GKI_get_os_tick_count ();
-                nfa_hciu_send_set_param_cmd (NFA_HCI_ADMIN_PIPE, NFA_HCI_SESSION_IDENTITY_INDEX, NFA_HCI_SESSION_ID_LEN, (UINT8 *) &nfa_hci_cb.cfg.admin_gate.session_id);
+                memcpy (&nfa_hci_cb.cfg.admin_gate.session_id[NFA_HCI_SESSION_ID_LEN / 2], nfa_hci_cb.cfg.admin_gate.session_id, (NFA_HCI_SESSION_ID_LEN / 2));
+                os_tick = GKI_get_os_tick_count ();
+                memcpy (nfa_hci_cb.cfg.admin_gate.session_id, (UINT8 *)&os_tick, (NFA_HCI_SESSION_ID_LEN / 2));
+                nfa_hciu_send_set_param_cmd (NFA_HCI_ADMIN_PIPE, NFA_HCI_SESSION_IDENTITY_INDEX, NFA_HCI_SESSION_ID_LEN, (UINT8 *) nfa_hci_cb.cfg.admin_gate.session_id);
             }
             else
             {
@@ -1231,12 +1339,13 @@ void nfa_hci_handle_admin_gate_rsp (UINT8 *p_data, UINT8 data_len)
         case NFA_HCI_ANY_GET_PARAMETER:
             if (nfa_hci_cb.param_in_use == NFA_HCI_SESSION_IDENTITY_INDEX)
             {
-                if (!memcmp ((UINT8 *) &default_session, p_data , NFA_HCI_SESSION_ID_LEN))
+                if (!memcmp ((UINT8 *) default_session, p_data , NFA_HCI_SESSION_ID_LEN))
                 {
-                    nfa_hci_cb.cfg.admin_gate.session_id  = nfa_hci_cb.cfg.admin_gate.session_id << 32;
-                    nfa_hci_cb.cfg.admin_gate.session_id |= GKI_get_os_tick_count ();
-                    nfa_hci_cb.nv_write_needed            = TRUE;
-                    nfa_hciu_send_set_param_cmd (NFA_HCI_ADMIN_PIPE, NFA_HCI_SESSION_IDENTITY_INDEX, NFA_HCI_SESSION_ID_LEN, (UINT8 *) &nfa_hci_cb.cfg.admin_gate.session_id);
+                    memcpy (&nfa_hci_cb.cfg.admin_gate.session_id[(NFA_HCI_SESSION_ID_LEN / 2)], nfa_hci_cb.cfg.admin_gate.session_id, (NFA_HCI_SESSION_ID_LEN / 2));
+                    os_tick = GKI_get_os_tick_count ();
+                    memcpy (nfa_hci_cb.cfg.admin_gate.session_id, (UINT8 *) &os_tick, (NFA_HCI_SESSION_ID_LEN / 2));
+                    nfa_hci_cb.nv_write_needed = TRUE;
+                    nfa_hciu_send_set_param_cmd (NFA_HCI_ADMIN_PIPE, NFA_HCI_SESSION_IDENTITY_INDEX, NFA_HCI_SESSION_ID_LEN, (UINT8 *) nfa_hci_cb.cfg.admin_gate.session_id);
                 }
                 else
                 {
@@ -1250,8 +1359,28 @@ void nfa_hci_handle_admin_gate_rsp (UINT8 *p_data, UINT8 data_len)
             {
                 evt_data.hosts.status    = status;
                 evt_data.hosts.num_hosts = data_len;
-
                 memcpy (evt_data.hosts.host, p_data, data_len);
+
+                host_count = 0;
+                while (host_count < NFA_HCI_MAX_HOST_IN_NETWORK)
+                {
+                    nfa_hci_cb.inactive_host[host_count] = NFA_HCI_HOST_ID_UICC0 + host_count;
+                    host_count++;
+                }
+
+                host_count = 0;
+                /* Collect active host in the Host Network */
+                while (host_count < data_len)
+                {
+                    host_id = (UINT8) *p_data++;
+
+                    if (  (host_id >= NFA_HCI_HOST_ID_UICC0)
+                        &&(host_id < NFA_HCI_HOST_ID_UICC0 + NFA_HCI_MAX_HOST_IN_NETWORK)  )
+                        nfa_hci_cb.inactive_host[host_id - NFA_HCI_HOST_ID_UICC0] = 0x00;
+
+                    host_count++;
+                }
+
 
                 nfa_hciu_send_to_app (NFA_HCI_HOST_LIST_EVT, &evt_data, nfa_hci_cb.app_in_use);
             }

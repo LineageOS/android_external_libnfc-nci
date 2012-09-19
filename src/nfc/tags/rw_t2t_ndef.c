@@ -839,11 +839,13 @@ tNFC_STATUS rw_t2t_read_locks (void)
     UINT16      offset;
     UINT16      block;
 
-    if (p_t2t->tag_hdr[T2T_CC3_RWA_BYTE] != T2T_CC3_RWA_RW)
+    if (  (p_t2t->tag_hdr[T2T_CC3_RWA_BYTE] != T2T_CC3_RWA_RW)
+        ||((p_t2t->tag_hdr[0] == TAG_MIFARE_MID) && (p_t2t->tag_hdr[T2T_CC2_TMS_BYTE] == T2T_CC2_TMS_MULC))  )
+
     {
+        /* Skip reading dynamic lock bytes if CC is set as Read only or on MUL-C tag */
         while (num_locks < p_t2t->num_lockbytes)
         {
-            /* Skip reading dynamic lock bytes if CC is set as Read only */
             p_t2t->lockbyte[num_locks].lock_byte   = 0x00;
             p_t2t->lockbyte[num_locks].b_lock_read = TRUE;
             num_locks++;

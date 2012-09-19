@@ -16,7 +16,6 @@
 #if (NFC_INCLUDED == TRUE)
 #include "nfc_api.h"
 #include "nfc_int.h"
-#include "nci_int.h"
 #include "nci_hmsgs.h"
 
 

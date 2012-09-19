@@ -1015,6 +1015,16 @@ void nfa_ee_nci_disc_ntf(tNFA_EE_MSG *p_data)
             nfa_ee_report_discover_req_evt();
         }
     }
+
+    if ((nfa_ee_cb.cur_ee == nfa_ee_max_ee_cfg) && (nfa_ee_cb.em_state == NFA_EE_EM_STATE_INIT_DONE) )
+    {
+        if (nfa_ee_cb.discv_timer.in_use)
+        {
+            nfa_sys_stop_timer (&nfa_ee_cb.discv_timer);
+            p_data->hdr.event = NFA_EE_DISCV_TIMEOUT_EVT;
+            nfa_ee_evt_hdlr((BT_HDR *)p_data);
+        }
+    }
 }
 
 /*******************************************************************************

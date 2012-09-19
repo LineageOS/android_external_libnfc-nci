@@ -119,28 +119,7 @@ BOOLEAN nfa_dm_evt_hdlr (BT_HDR *p_msg)
     {
         freebuf = (*nfa_dm_action[event]) ((tNFA_DM_MSG*) p_msg);
     }
-    /* if vendor specific event handler is registered */
-    if (nfa_dm_cb.p_vs_evt_hdlr)
-    {
-        (*nfa_dm_cb.p_vs_evt_hdlr) (p_msg);
-    }
-
     return freebuf;
-}
-
-/*******************************************************************************
-**
-** Function         nfa_dm_disc_state_cback
-**
-** Description      Wait for discovery suspended
-**
-** Returns          void
-**
-*******************************************************************************/
-void nfa_dm_disc_state_cback (UINT8 state)
-{
-    /* don't need to check state at this moment */
-    nfa_dm_disable_complete ();
 }
 
 /*******************************************************************************
@@ -160,7 +139,8 @@ void nfa_dm_sys_disable (void)
 
     if (nfa_sys_is_graceful_disable ())
     {
-        if (nfa_dm_cb.disc_cb.disc_state == NFA_DM_RFST_IDLE)
+        if (  (nfa_dm_cb.disc_cb.disc_state == NFA_DM_RFST_IDLE)
+            &&((nfa_dm_cb.disc_cb.disc_flags & NFA_DM_DISC_FLAGS_DISABLING) == 0)  )
         {
             /* discovery is not started */
             nfa_dm_disable_complete ();
@@ -168,7 +148,7 @@ void nfa_dm_sys_disable (void)
         else
         {
             /* probably waiting to be disabled */
-            NFA_TRACE_ERROR2 ("DM disc_state state = %d disc_flags:0x%x", nfa_dm_cb.disc_cb.disc_state, nfa_dm_cb.disc_cb.disc_flags);
+            NFA_TRACE_WARNING2 ("DM disc_state state = %d disc_flags:0x%x", nfa_dm_cb.disc_cb.disc_state, nfa_dm_cb.disc_cb.disc_flags);
         }
 
     }

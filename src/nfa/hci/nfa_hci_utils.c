@@ -250,7 +250,7 @@ tNFA_HCI_DYN_GATE *nfa_hciu_alloc_gate (UINT8 gate_id, tNFA_HANDLE app_handle)
     {
         /* If gate_id is 0, we need to assign a free one */
         /* Loop through all possible gate IDs checking if they are already used */
-        for (gate_id = NFA_HCI_FIRST_DYNAMIC_GATE; gate_id < NFA_HCI_LAST_DYNAMIC_GATE; gate_id++)
+        for (gate_id = NFA_HCI_FIRST_HOST_SPECIFIC_GENERIC_GATE; gate_id < NFA_HCI_LAST_PROP_GATE; gate_id++)
         {
             /* Skip connectivity gate */
             if (gate_id == NFA_HCI_CONNECTIVITY_GATE) gate_id++;
@@ -263,7 +263,7 @@ tNFA_HCI_DYN_GATE *nfa_hciu_alloc_gate (UINT8 gate_id, tNFA_HANDLE app_handle)
             if (xx == NFA_HCI_MAX_GATE_CB)
                 break;
         }
-        if (gate_id == NFA_HCI_LAST_DYNAMIC_GATE)
+        if (gate_id == NFA_HCI_LAST_PROP_GATE)
         {
             NFA_TRACE_ERROR2 ("nfa_hci_alloc_gate - no free Gate ID: %u  App Handle: 0x%04x", gate_id, app_handle);
             return (NULL);
@@ -1195,10 +1195,7 @@ char *nfa_hciu_get_event_name (UINT16 event)
     case NFA_HCI_API_SEND_EVENT_EVT:          return ("API_SEND_EVENT_EVT");
     case NFA_HCI_RSP_NV_READ_EVT:             return ("NV_READ_EVT");
     case NFA_HCI_RSP_NV_WRITE_EVT:            return ("NV_WRITE_EVT");
-    case NFA_HCI_VSC_INIT_EVT:                return ("VSC_INIT_EVT");
-    case NFA_HCI_EE_DISC_CMPLT_EVT:           return ("EE_DISCOVERY_COMPLETE_EVT");
     case NFA_HCI_RSP_TIMEOUT_EVT:             return ("RESPONSE_TIMEOUT_EVT");
-    case NFA_HCI_VSC_TIMEOUT_EVT:             return ("VSC_TIMEOUT");
     case NFA_HCI_CHECK_QUEUE_EVT:             return ("CHECK_QUEUE");
 
     default:
@@ -1344,7 +1341,7 @@ static void handle_debug_loopback (BT_HDR *p_buf, UINT8 pipe, UINT8 type, UINT8 
 
         case NFA_HCI_ANY_GET_PARAMETER:
             p[1] = (NFA_HCI_RESPONSE_TYPE << 6) | NFA_HCI_ANY_OK;
-            memcpy (&p[2], (UINT8 *)&nfa_hci_cb.cfg.admin_gate.session_id, NFA_HCI_SESSION_ID_LEN);
+            memcpy (&p[2], (UINT8 *) nfa_hci_cb.cfg.admin_gate.session_id, NFA_HCI_SESSION_ID_LEN);
             p_buf->len = p_buf->offset + 2 + NFA_HCI_SESSION_ID_LEN;
             break;
 

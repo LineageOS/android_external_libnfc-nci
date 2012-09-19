@@ -47,6 +47,7 @@
 #define NFA_HCI_SET_REG_CMD_EVT                 0x13    /* Registry write command sent                  */
 #define NFA_HCI_GET_REG_RSP_EVT                 0x14    /* Received response to read registry command   */
 #define NFA_HCI_SET_REG_RSP_EVT                 0x15    /* Received response to write registry command  */
+#define NFA_HCI_ADD_STATIC_PIPE_EVT             0x16    /* A static pipe is added                       */
 
 typedef UINT8 tNFA_HCI_EVT;
 
@@ -210,6 +211,12 @@ typedef struct
     tNFA_STATUS     status;
 } tNFA_HCI_EVENT_SENT;
 
+/* Data for NFA_HCI_ADD_STATIC_PIPE_EVT */
+typedef struct
+{
+    tNFA_STATUS     status;
+} tNFA_HCI_ADD_STATIC_PIPE_EVT;
+
 /* data type for all registry-related events */
 typedef struct
 {
@@ -224,26 +231,27 @@ typedef struct
 /* Union of all hci callback structures */
 typedef union
 {
-    tNFA_HCI_REGISTER           hci_register;   /* NFA_HCI_REGISTER_EVT           */
-    tNFA_HCI_DEREGISTER         hci_deregister; /* NFA_HCI_DEREGISTER_EVT         */
-    tNFA_HCI_GET_GATE_PIPE_LIST gates_pipes;    /* NFA_HCI_GET_GATE_PIPE_LIST_EVT */
-    tNFA_HCI_ALLOCATE_GATE      allocated;      /* NFA_HCI_ALLOCATE_GATE_EVT      */
-    tNFA_HCI_DEALLOCATE_GATE    deallocated;    /* NFA_HCI_DEALLOCATE_GATE_EVT    */
-    tNFA_HCI_CREATE_PIPE        created;        /* NFA_HCI_CREATE_PIPE_EVT        */
-    tNFA_HCI_OPEN_PIPE          opened;         /* NFA_HCI_OPEN_PIPE_EVT          */
-    tNFA_HCI_CLOSE_PIPE         closed;         /* NFA_HCI_CLOSE_PIPE_EVT         */
-    tNFA_HCI_DELETE_PIPE        deleted;        /* NFA_HCI_DELETE_PIPE_EVT        */
-    tNFA_HCI_HOST_LIST          hosts;          /* NFA_HCI_HOST_LIST_EVT          */
-    tNFA_HCI_RSP_RCVD           rsp_rcvd;       /* NFA_HCI_RSP_RCVD_EVT           */
-    tNFA_HCI_RSP_SENT           rsp_sent;       /* NFA_HCI_RSP_SENT_EVT           */
-    tNFA_HCI_CMD_SENT           cmd_sent;       /* NFA_HCI_CMD_SENT_EVT           */
-    tNFA_HCI_EVENT_SENT         evt_sent;       /* NFA_HCI_EVENT_SENT_EVT         */
-    tNFA_HCI_CMD_RCVD           cmd_rcvd;       /* NFA_HCI_CMD_RCVD_EVT           */
-    tNFA_HCI_EVENT_RCVD         rcvd_evt;       /* NFA_HCI_EVENT_RCVD_EVT         */
-    tNFA_STATUS                 status;         /* status of api command request  */
-    tNFA_HCI_REGISTRY           registry;       /* all registry-related events    */
-    tNFA_HCI_INIT               hci_init;       /* NFA_HCI_INIT_EVT               */
-    tNFA_HCI_EXIT               hci_exit;       /* NFA_HCI_EXIT_EVT               */
+    tNFA_HCI_REGISTER               hci_register;   /* NFA_HCI_REGISTER_EVT           */
+    tNFA_HCI_DEREGISTER             hci_deregister; /* NFA_HCI_DEREGISTER_EVT         */
+    tNFA_HCI_GET_GATE_PIPE_LIST     gates_pipes;    /* NFA_HCI_GET_GATE_PIPE_LIST_EVT */
+    tNFA_HCI_ALLOCATE_GATE          allocated;      /* NFA_HCI_ALLOCATE_GATE_EVT      */
+    tNFA_HCI_DEALLOCATE_GATE        deallocated;    /* NFA_HCI_DEALLOCATE_GATE_EVT    */
+    tNFA_HCI_CREATE_PIPE            created;        /* NFA_HCI_CREATE_PIPE_EVT        */
+    tNFA_HCI_OPEN_PIPE              opened;         /* NFA_HCI_OPEN_PIPE_EVT          */
+    tNFA_HCI_CLOSE_PIPE             closed;         /* NFA_HCI_CLOSE_PIPE_EVT         */
+    tNFA_HCI_DELETE_PIPE            deleted;        /* NFA_HCI_DELETE_PIPE_EVT        */
+    tNFA_HCI_HOST_LIST              hosts;          /* NFA_HCI_HOST_LIST_EVT          */
+    tNFA_HCI_RSP_RCVD               rsp_rcvd;       /* NFA_HCI_RSP_RCVD_EVT           */
+    tNFA_HCI_RSP_SENT               rsp_sent;       /* NFA_HCI_RSP_SENT_EVT           */
+    tNFA_HCI_CMD_SENT               cmd_sent;       /* NFA_HCI_CMD_SENT_EVT           */
+    tNFA_HCI_EVENT_SENT             evt_sent;       /* NFA_HCI_EVENT_SENT_EVT         */
+    tNFA_HCI_CMD_RCVD               cmd_rcvd;       /* NFA_HCI_CMD_RCVD_EVT           */
+    tNFA_HCI_EVENT_RCVD             rcvd_evt;       /* NFA_HCI_EVENT_RCVD_EVT         */
+    tNFA_STATUS                     status;         /* status of api command request  */
+    tNFA_HCI_REGISTRY               registry;       /* all registry-related events    */
+    tNFA_HCI_INIT                   hci_init;       /* NFA_HCI_INIT_EVT               */
+    tNFA_HCI_EXIT                   hci_exit;       /* NFA_HCI_EXIT_EVT               */
+    tNFA_HCI_ADD_STATIC_PIPE_EVT    pipe_added;     /* NFA_HCI_ADD_STATIC_PIPE_EVT    */
 } tNFA_HCI_EVT_DATA;
 
 /* NFA HCI callback */
@@ -556,6 +564,19 @@ NFC_API extern tNFA_STATUS NFA_HciClosePipe (tNFA_HANDLE  hci_handle, UINT8 pipe
 **
 *******************************************************************************/
 NFC_API extern tNFA_STATUS NFA_HciDeletePipe (tNFA_HANDLE  hci_handle, UINT8 pipe);
+
+/*******************************************************************************
+**
+** Function         NFA_HciAddStaticPipe
+**
+** Description      This function is called to add a static pipe for sending
+**                  7816 APDUs.
+**
+** Returns          NFA_STATUS_OK if successfully added
+**                  NFA_STATUS_FAILED otherwise
+**
+*******************************************************************************/
+NFC_API extern tNFA_STATUS NFA_HciAddStaticPipe (tNFA_HANDLE hci_handle, UINT8 pipe);
 
 /*******************************************************************************
 **

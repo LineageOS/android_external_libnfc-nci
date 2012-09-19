@@ -291,7 +291,9 @@ void rw_i93_send_to_upper (BT_HDR *p_resp)
 
             p_i93->ic_reference = rw_data.i93_sys_info.IC_reference;
 
-            if ((p_i93->uid[0] == I93_UID_FIRST_BYTE) && (p_i93->uid[1] == I93_UID_IC_MFG_CODE_NXP) && (p_i93->ic_reference == I93_IC_REF_ICODE_SLI_L))
+            if (  (p_i93->uid[0] == I93_UID_FIRST_BYTE)
+                &&(p_i93->uid[1] == I93_UID_IC_MFG_CODE_NXP)
+                &&(p_i93->ic_reference == I93_IC_REF_ICODE_SLI_L)  )
             {
                 p_i93->num_block  = 8;
                 p_i93->block_size = 4;
@@ -1269,7 +1271,9 @@ void rw_i93_sm_detect_ndef (BT_HDR *p_resp)
             STREAM_TO_UINT8 (p_i93->ic_reference, p);
 
             /* I-CODE SLI-L/SLIX-L */
-            if ((p_i93->uid[0] == I93_UID_FIRST_BYTE) && (p_i93->uid[1] == I93_UID_IC_MFG_CODE_NXP) && (p_i93->ic_reference == I93_IC_REF_ICODE_SLI_L))
+            if (  (p_i93->uid[0] == I93_UID_FIRST_BYTE)
+                &&(p_i93->uid[1] == I93_UID_IC_MFG_CODE_NXP)
+                &&(p_i93->ic_reference == I93_IC_REF_ICODE_SLI_L)  )
             {
                 p_i93->num_block  = 8;
                 p_i93->block_size = 4;
@@ -1457,7 +1461,7 @@ void rw_i93_sm_detect_ndef (BT_HDR *p_resp)
             /* get lock status to see if read-only */
             if (  (p_i93->product_version == RW_I93_TAG_IT_HF_I_STD_CHIP_INLAY)
                 ||(p_i93->product_version == RW_I93_TAG_IT_HF_I_PRO_CHIP_INLAY)
-                ||(p_i93->uid[1] == I93_UID_IC_MFG_CODE_NXP) && (p_i93->ic_reference & I93_ICODE_IC_REF_MBREAD_MASK)  )
+                ||((p_i93->uid[1] == I93_UID_IC_MFG_CODE_NXP) && (p_i93->ic_reference & I93_ICODE_IC_REF_MBREAD_MASK))  )
             {
                 /* these doesn't support GetMultiBlockSecurityStatus */
 
@@ -1504,7 +1508,7 @@ void rw_i93_sm_detect_ndef (BT_HDR *p_resp)
 
         if (  (p_i93->product_version == RW_I93_TAG_IT_HF_I_STD_CHIP_INLAY)
             ||(p_i93->product_version == RW_I93_TAG_IT_HF_I_PRO_CHIP_INLAY)
-            ||(p_i93->uid[1] == I93_UID_IC_MFG_CODE_NXP) && (p_i93->ic_reference & I93_ICODE_IC_REF_MBREAD_MASK)  )
+            ||((p_i93->uid[1] == I93_UID_IC_MFG_CODE_NXP) && (p_i93->ic_reference & I93_ICODE_IC_REF_MBREAD_MASK))  )
         {
             /* these doesn't support GetMultiBlockSecurityStatus */
 
@@ -2255,7 +2259,7 @@ void rw_i93_sm_format (BT_HDR *p_resp)
 
         if (  (p_i93->product_version == RW_I93_TAG_IT_HF_I_STD_CHIP_INLAY)
             ||(p_i93->product_version == RW_I93_TAG_IT_HF_I_PRO_CHIP_INLAY)
-            ||(p_i93->uid[1] == I93_UID_IC_MFG_CODE_NXP) && (p_i93->ic_reference & I93_ICODE_IC_REF_MBREAD_MASK)  )
+            ||((p_i93->uid[1] == I93_UID_IC_MFG_CODE_NXP) && (p_i93->ic_reference & I93_ICODE_IC_REF_MBREAD_MASK))  )
         {
             if ((*p) & I93_BLOCK_LOCKED)
             {
