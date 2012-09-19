@@ -487,6 +487,8 @@ UINT32 nfc_hal_main_task (UINT32 param)
                     nfc_hal_cb.dev_cb.next_startup_vsc = 1;
 
                     nfc_hal_dm_config_nfcc ();
+
+                    GKI_freebuf (p_msg);
                     break;
 
                 case NFC_HAL_EVT_TO_START_QUICK_TIMER:
