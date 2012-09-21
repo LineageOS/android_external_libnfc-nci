@@ -106,7 +106,7 @@ void gki_task_entry(UINT32 params)
 {
     pthread_t thread_id = pthread_self();
     gki_pthread_info_t *p_pthread_info = (gki_pthread_info_t *)params;
-    GKI_TRACE_5("gki_task_entry task_id=%i, thread_id=%x/%x, pCond/pMutex=%x/%x\n", p_pthread_info->task_id,
+    GKI_TRACE_5("gki_task_entry task_id=%i, thread_id=%x/%x, pCond/pMutex=%x/%x", p_pthread_info->task_id,
                 gki_cb.os.thread_id[p_pthread_info->task_id], pthread_self(),
                 p_pthread_info->pCond, p_pthread_info->pMutex);
 
@@ -114,7 +114,7 @@ void gki_task_entry(UINT32 params)
     /* Call the actual thread entry point */
     (p_pthread_info->task_entry)(p_pthread_info->params);
 
-    GKI_TRACE_1("gki_task task_id=%i terminating\n", p_pthread_info->task_id);
+    GKI_TRACE_1("gki_task task_id=%i terminating", p_pthread_info->task_id);
     gki_cb.os.thread_id[p_pthread_info->task_id] = 0;
 
     pthread_exit(0);    /* GKI tasks have no return value */
@@ -249,9 +249,9 @@ UINT8 GKI_create_task (TASKPTR task_entry, UINT8 task_id, INT8 *taskname, UINT16
 #if ( FALSE == GKI_PTHREAD_JOINABLE )
     pthread_attr_setdetachstate(&attr1, PTHREAD_CREATE_DETACHED);
 
-    GKI_TRACE_3("GKI creating task %i, pCond/pMutex=%x/%x\n", task_id, pCondVar, pMutex);
+    GKI_TRACE_3("GKI creating task %i, pCond/pMutex=%x/%x", task_id, pCondVar, pMutex);
 #else
-    GKI_TRACE_1("GKI creating JOINABLE task %i\n", task_id);
+    GKI_TRACE_1("GKI creating JOINABLE task %i", task_id);
 #endif
 
     /* On Android, the new tasks starts running before 'gki_cb.os.thread_id[task_id]' is initialized */
@@ -269,7 +269,7 @@ UINT8 GKI_create_task (TASKPTR task_entry, UINT8 task_id, INT8 *taskname, UINT16
 
     if (ret != 0)
     {
-         GKI_TRACE_2("pthread_create failed(%d), %s!\n\r", ret, taskname);
+         GKI_TRACE_2("pthread_create failed(%d), %s!", ret, taskname);
          return GKI_FAILURE;
     }
 
@@ -290,7 +290,7 @@ UINT8 GKI_create_task (TASKPTR task_entry, UINT8 task_id, INT8 *taskname, UINT16
          pthread_setschedparam(gki_cb.os.thread_id[task_id], policy, &param);
      }
 
-    GKI_TRACE_6( "Leaving GKI_create_task %x %d %x %s %x %d\n",
+    GKI_TRACE_6( "Leaving GKI_create_task %x %d %x %s %x %d",
               task_entry,
               task_id,
               gki_cb.os.thread_id[task_id],
@@ -352,7 +352,7 @@ void GKI_shutdown(void)
                 GKI_TRACE_1( "pthread_join() FAILED: result: %d", result );
             }
 #endif
-            GKI_TRACE_1( "GKI_shutdown(): task %s dead\n", gki_cb.com.OSTName[task_id]);
+            GKI_TRACE_1( "GKI_shutdown(): task %s dead", gki_cb.com.OSTName[task_id]);
             GKI_exit_task(task_id - 1);
         }
     }
@@ -537,7 +537,7 @@ void* GKI_run_worker_thread (void* dummy)
               timer_thread,
               NULL) != 0 )
     {
-        GKI_TRACE_1("%s: pthread_create failed to create timer_thread!\n\r", __func__);
+        GKI_TRACE_1("%s: pthread_create failed to create timer_thread!", __func__);
         return NULL;
     }
 #else
@@ -654,7 +654,7 @@ UINT16 GKI_wait (UINT16 flag, UINT32 timeout)
     gki_pthread_info_t* p_pthread_info = &gki_pthread_info[rtask];
     if (p_pthread_info->pCond != NULL && p_pthread_info->pMutex != NULL) {
         int ret;
-        GKI_TRACE_3("GKI_wait task=%i, pCond/pMutex = %x/%x\n", rtask, p_pthread_info->pCond, p_pthread_info->pMutex);
+        GKI_TRACE_3("GKI_wait task=%i, pCond/pMutex = %x/%x", rtask, p_pthread_info->pCond, p_pthread_info->pMutex);
         ret = pthread_mutex_lock(p_pthread_info->pMutex);
         ret = pthread_cond_signal(p_pthread_info->pCond);
         ret = pthread_mutex_unlock(p_pthread_info->pMutex);
@@ -996,20 +996,20 @@ void GKI_exception (UINT16 code, char *msg)
     UINT8 task_id;
     int i = 0;
 
-    GKI_TRACE_0( "GKI_exception(): Task State Table\n");
+    GKI_TRACE_ERROR_0( "GKI_exception(): Task State Table");
 
     for(task_id = 0; task_id < GKI_MAX_TASKS; task_id++)
     {
-        GKI_TRACE_3( "TASK ID [%d] task name [%s] state [%d]\n",
+        GKI_TRACE_ERROR_3( "TASK ID [%d] task name [%s] state [%d]",
                          task_id,
                          gki_cb.com.OSTName[task_id],
                          gki_cb.com.OSRdyTbl[task_id]);
     }
 
-    GKI_TRACE_2("GKI_exception %d %s", code, msg);
-    GKI_TRACE_0( "\n********************************************************************\n");
-    GKI_TRACE_2( "* GKI_exception(): %d %s\n", code, msg);
-    GKI_TRACE_0( "********************************************************************\n");
+    GKI_TRACE_ERROR_2("GKI_exception %d %s", code, msg);
+    GKI_TRACE_ERROR_0( "********************************************************************");
+    GKI_TRACE_ERROR_2( "* GKI_exception(): %d %s", code, msg);
+    GKI_TRACE_ERROR_0( "********************************************************************");
 
 #if (GKI_DEBUG == TRUE)
     GKI_disable();
@@ -1027,7 +1027,7 @@ void GKI_exception (UINT16 code, char *msg)
     GKI_enable();
 #endif
 
-    GKI_TRACE_2("GKI_exception %d %s done", code, msg);
+    GKI_TRACE_ERROR_2("GKI_exception %d %s done", code, msg);
 
 
     return;
