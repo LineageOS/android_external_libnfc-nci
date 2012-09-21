@@ -70,7 +70,7 @@ static void gki_init_free_queue (UINT8 id, UINT16 size, UINT16 total, void *p_me
     p_cb->freeq[id].max_cnt   = 0;
 
 #if GKI_BUFFER_DEBUG
-    LOGD("gki_init_free_queue() init pool=%d, size=%d (aligned=%d) total=%d start=%p\n", id, size, tempsize, total, p_mem);
+    LOGD("gki_init_free_queue() init pool=%d, size=%d (aligned=%d) total=%d start=%p", id, size, tempsize, total, p_mem);
 #endif
 
     /* Initialize  index table */
@@ -364,7 +364,7 @@ void *GKI_getbuf (UINT16 size)
     }
 
 #if GKI_BUFFER_DEBUG
-    LOGD("GKI_getbuf() requesting %d func:%s(line=%d)\n", size, _function_, _line_);
+    LOGD("GKI_getbuf() requesting %d func:%s(line=%d)", size, _function_, _line_);
 #endif
     /* Find the first buffer pool that is public that can hold the desired size */
     for (i=0; i < p_cb->curr_total_no_of_pools; i++)
@@ -395,7 +395,10 @@ void *GKI_getbuf (UINT16 size)
         {
         #ifdef GKI_USE_DEFERED_ALLOC_BUF_POOLS
             if(Q->p_first == 0 && gki_alloc_free_queue(i) != TRUE)
+            {
+                GKI_TRACE_ERROR_0("GKI_getbuf() out of buffer");
                 return NULL;
+            }
         #endif
             p_hdr = Q->p_first;
             Q->p_first = p_hdr->p_next;
@@ -414,7 +417,7 @@ void *GKI_getbuf (UINT16 size)
             p_hdr->p_next  = NULL;
             p_hdr->Type    = 0;
 #if GKI_BUFFER_DEBUG
-            LOGD("GKI_getbuf() allocated, %x, %x (%d of %d used) %d\n", (UINT8*)p_hdr + BUFFER_HDR_SIZE, p_hdr, Q->cur_cnt, Q->total, p_cb->freeq[i].total);
+            LOGD("GKI_getbuf() allocated, %x, %x (%d of %d used) %d", (UINT8*)p_hdr + BUFFER_HDR_SIZE, p_hdr, Q->cur_cnt, Q->total, p_cb->freeq[i].total);
 
             strncpy(p_hdr->_function, _function_, _GKI_MAX_FUNCTION_NAME_LEN);
             p_hdr->_function[_GKI_MAX_FUNCTION_NAME_LEN] = '\0';
@@ -424,31 +427,32 @@ void *GKI_getbuf (UINT16 size)
         }
     }
 
+    GKI_TRACE_ERROR_0("GKI_getbuf() unable to allocate buffer!!!!!");
 #if GKI_BUFFER_DEBUG
-    LOGD("GKI_getbuf() unable to allocated buffer!!!!!\n");
-    LOGD("******************** GKI Memory Pool Dump ********************\n");
+    LOGD("GKI_getbuf() unable to allocate buffer!!!!!");
+    LOGD("******************** GKI Memory Pool Dump ********************");
 
     p_cb = &gki_cb.com;
 
-    LOGD("Dumping total of %d buffer pools\n", p_cb->curr_total_no_of_pools);
+    LOGD("Dumping total of %d buffer pools", p_cb->curr_total_no_of_pools);
 
     for (i=0 ; i < p_cb->curr_total_no_of_pools; i++)
     {
         p_hdr = (BUFFER_HDR_T *)p_cb->pool_start[i];
 
-        LOGD("pool %d has a total of %d buffers (start=%p)\n", i, p_cb->freeq[i].total, p_hdr);
+        LOGD("pool %d has a total of %d buffers (start=%p)", i, p_cb->freeq[i].total, p_hdr);
 
         for (x=0; p_hdr && x < p_cb->freeq[i].total; x++)
         {
             if (p_hdr->status != BUF_STATUS_FREE)
             {
-                LOGD("pool:%d, buf[%d]:%x, hdr:%x status=%d func:%s(line=%d)\n", i, x, (UINT8*)p_hdr + BUFFER_HDR_SIZE, p_hdr, p_hdr->status, p_hdr->_function, p_hdr->_line);
+                LOGD("pool:%d, buf[%d]:%x, hdr:%x status=%d func:%s(line=%d)", i, x, (UINT8*)p_hdr + BUFFER_HDR_SIZE, p_hdr, p_hdr->status, p_hdr->_function, p_hdr->_line);
             }
 
             p_hdr = (BUFFER_HDR_T *)((UINT8 *)p_hdr + p_cb->pool_size[i]);
         }
     }
-    LOGD("**************************************************************\n");
+    LOGD("**************************************************************");
 #endif
 
     GKI_TRACE_ERROR_0("Failed to allocate GKI buffer");
@@ -488,7 +492,7 @@ void *GKI_getpoolbuf (UINT8 pool_id)
         return (NULL);
 
 #if GKI_BUFFER_DEBUG
-    LOGD("GKI_getpoolbuf() requesting from %d func:%s(line=%d)\n", pool_id, _function_, _line_);
+    LOGD("GKI_getpoolbuf() requesting from %d func:%s(line=%d)", pool_id, _function_, _line_);
 #endif
     /* Make sure the buffers aren't disturbed til finished with allocation */
     GKI_disable();
@@ -519,7 +523,7 @@ void *GKI_getpoolbuf (UINT8 pool_id)
         p_hdr->Type    = 0;
 
 #if GKI_BUFFER_DEBUG
-        LOGD("GKI_getpoolbuf() allocated, %x, %x (%d of %d used) %d\n", (UINT8*)p_hdr + BUFFER_HDR_SIZE, p_hdr, Q->cur_cnt, Q->total, p_cb->freeq[pool_id].total);
+        LOGD("GKI_getpoolbuf() allocated, %x, %x (%d of %d used) %d", (UINT8*)p_hdr + BUFFER_HDR_SIZE, p_hdr, Q->cur_cnt, Q->total, p_cb->freeq[pool_id].total);
 
         strncpy(p_hdr->_function, _function_, _GKI_MAX_FUNCTION_NAME_LEN);
         p_hdr->_function[_GKI_MAX_FUNCTION_NAME_LEN] = '\0';
@@ -567,7 +571,7 @@ void GKI_freebuf (void *p_buf)
     p_hdr = (BUFFER_HDR_T *) ((UINT8 *)p_buf - BUFFER_HDR_SIZE);
 
 #if GKI_BUFFER_DEBUG
-    LOGD("GKI_freebuf() freeing, %x, %x, func:%s(line=%d)\n", p_buf, p_hdr, p_hdr->_function, p_hdr->_line);
+    LOGD("GKI_freebuf() freeing, %x, %x, func:%s(line=%d)", p_buf, p_hdr, p_hdr->_function, p_hdr->_line);
 #endif
 
     if (p_hdr->status != BUF_STATUS_UNLINKED)

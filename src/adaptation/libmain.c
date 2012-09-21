@@ -450,6 +450,9 @@ void DispLLCP (BT_HDR *p_buf, BOOLEAN is_recv)
     UINT8 * data = (UINT8*) p_buf;
     int data_len = BT_HDR_SIZE + p_buf->offset + p_buf->len;
 
+    if (appl_trace_level < BT_TRACE_LEVEL_DEBUG)
+        return;
+
     for (i = 0; i < data_len; )
     {
         for(j = 0; i < data_len && j < sizeof(log_line)-3; i++)
@@ -478,6 +481,9 @@ void DispHcp (UINT8 *data, UINT16 len, BOOLEAN is_recv)
     int i,j;
     int nBytes = (len*2)+1;
     char line_buf[400];
+
+    if (appl_trace_level < BT_TRACE_LEVEL_DEBUG)
+        return;
 
     if (nBytes > sizeof(line_buf))
         return;

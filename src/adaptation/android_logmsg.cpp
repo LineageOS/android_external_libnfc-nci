@@ -16,6 +16,7 @@
  *
  ******************************************************************************/
 #include "buildcfg.h"
+#include "bt_types.h"
 #include <cutils/log.h>
 
 
@@ -64,10 +65,14 @@ void LogMsg (UINT32 trace_set_mask, const char *fmt_str, ...)
 {
     static char buffer[BTE_LOG_BUF_SIZE];
     va_list ap;
+    UINT32 trace_type = trace_set_mask & 0x07; //lower 3 bits contain trace type
+    int android_log_type = ANDROID_LOG_INFO;
 
     va_start(ap, fmt_str);
     vsnprintf(buffer, BTE_LOG_MAX_SIZE, fmt_str, ap);
     va_end(ap);
-    __android_log_write(ANDROID_LOG_INFO, "BrcmNfcNfa", buffer);
+    if (trace_type == TRACE_TYPE_ERROR)
+        android_log_type = ANDROID_LOG_ERROR;
+    __android_log_write(android_log_type, "BrcmNfcNfa", buffer);
 }
 

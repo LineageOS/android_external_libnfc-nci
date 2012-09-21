@@ -797,7 +797,7 @@ void GKI_add_to_timer_list (TIMER_LIST_Q *p_timer_listq, TIMER_LIST_ENT  *p_tle)
     UINT8 tt;
     TIMER_LIST_ENT  *p_temp;
     if (p_tle == NULL || p_timer_listq == NULL) {
-        GKI_TRACE_3("%s: invalid argument %x, %x****************************<<\r\n", __func__, p_timer_listq, p_tle);
+        GKI_TRACE_3("%s: invalid argument %x, %x****************************<<", __func__, p_timer_listq, p_tle);
         return;
     }
 
