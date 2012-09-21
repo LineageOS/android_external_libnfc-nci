@@ -560,6 +560,7 @@ UINT8 *nfc_hal_prm_spd_status_str (UINT8 spd_status_code)
 *******************************************************************************/
 void nfc_hal_prm_nci_command_complete_cback (tNFC_HAL_NCI_EVT event, UINT16 data_len, UINT8 *p_data)
 {
+    static BOOLEAN firstTime = TRUE;
     UINT8 status, u8;
     UINT8 *p;
     UINT32 post_signature_delay;
@@ -593,6 +594,11 @@ void nfc_hal_prm_nci_command_complete_cback (tNFC_HAL_NCI_EVT event, UINT16 data
         STREAM_TO_UINT16 (nfc_hal_cb.prm.spd_lpm_patch_size, p);
         STREAM_TO_UINT16 (nfc_hal_cb.prm.spd_fpm_patch_size, p);
 
+        if (firstTime) {
+            NCI_TRACE_ERROR2("BCM2079x: NVM patch version is %d.%d", nfc_hal_cb.prm.spd_ver_major,
+                    nfc_hal_cb.prm.spd_ver_minor);
+            firstTime = FALSE;
+        }
         /* LPMPatchCodeHasBadCRC (if not bad crc, then indicate LPM patch is present in nvm) */
         STREAM_TO_UINT8 (u8, p);
         if (!u8)

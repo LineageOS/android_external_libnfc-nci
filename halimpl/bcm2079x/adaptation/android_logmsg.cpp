@@ -32,7 +32,7 @@ extern "C"
 static char log_line[MAX_LOGCAT_LINE];
 static const char* sTable = "0123456789abcdef";
 
-
+extern UINT32 ScrProtocolTraceFlag;         // = SCR_PROTO_TRACE_ALL; // 0x017F;
 extern "C"
 {
     void DispNci (UINT8 *p, UINT16 len, BOOLEAN is_recv);
@@ -55,7 +55,7 @@ void LogMsg (UINT32 trace_set_mask, const char *fmt_str, ...)
 
 void DispNci (UINT8 *data, UINT16 len, BOOLEAN is_recv)
 {
-    if (appl_trace_level < BT_TRACE_LEVEL_DEBUG)
+    if (!(ScrProtocolTraceFlag & SCR_PROTO_TRACE_NCI))
         return;
 
     char line_buf[(MAX_NCI_PACKET_SIZE*2)+1];

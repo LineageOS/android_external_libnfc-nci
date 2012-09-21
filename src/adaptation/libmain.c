@@ -416,7 +416,7 @@ void DispHciEvt (BT_HDR *p_buf)
 *******************************************************************************/
 void DispNciDump (UINT8 *data, UINT16 len, BOOLEAN is_recv)
 {
-    if (appl_trace_level < BT_TRACE_LEVEL_DEBUG)
+    if (!(ScrProtocolTraceFlag & SCR_PROTO_TRACE_NCI))
         return;
 
     char line_buf[(MAX_NCI_PACKET_SIZE*2)+1];
@@ -480,6 +480,10 @@ void DispHcp (UINT8 *data, UINT16 len, BOOLEAN is_recv)
     char line_buf[400];
 
     if (nBytes > sizeof(line_buf))
+        return;
+
+    // Only trace HCP if we're tracing HCI as well
+    if (!(ScrProtocolTraceFlag & SCR_PROTO_TRACE_HCI_SUMMARY))
         return;
 
     for(i = 0, j = 0; i < len && j < sizeof(line_buf)-3; i++)
