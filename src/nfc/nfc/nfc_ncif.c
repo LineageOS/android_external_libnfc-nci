@@ -1264,7 +1264,7 @@ void nfc_ncif_proc_reset_rsp (UINT8 *p, BOOLEAN is_ntf)
     {
         if ((*p) != NCI_VERSION)
         {
-            NFC_TRACE_ERROR2 ("NCI version mismatch!!:0x%02x != 0x%02x ", NCI_VERSION, *p);
+            NFC_TRACE_WARNING2 ("NCI version mismatch!!:0x%02x != 0x%02x ", NCI_VERSION, *p);
             if ((*p) < NCI_VERSION_0_F)
             {
                 NFC_TRACE_ERROR0 ("NFCC version is too old");

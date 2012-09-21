@@ -87,7 +87,7 @@ void nfc_hal_nv_co_read (UINT8 *p_buf, UINT16 nbytes, UINT8 block)
     }
     else
     {
-        ALOGE ("%s: fail to open", __FUNCTION__);
+        ALOGD ("%s: fail to open", __FUNCTION__);
         nfc_hal_nv_ci_read (0, NFC_HAL_NV_CO_FAIL, block);
     }
 }

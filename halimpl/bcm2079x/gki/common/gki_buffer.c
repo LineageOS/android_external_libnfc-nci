@@ -451,6 +451,8 @@ void *GKI_getbuf (UINT16 size)
     LOGD("**************************************************************\n");
 #endif
 
+    GKI_TRACE_ERROR_0("Failed to allocate GKI buffer");
+
     GKI_enable();
 
     return (NULL);

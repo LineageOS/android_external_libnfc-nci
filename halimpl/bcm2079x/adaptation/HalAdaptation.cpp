@@ -43,6 +43,7 @@ static SyncEvent gOpenCompletedEvent;
 static SyncEvent gPostInitCompletedEvent;
 static SyncEvent gCloseCompletedEvent;
 
+UINT32 ScrProtocolTraceFlag = SCR_PROTO_TRACE_ALL; //0x017F00;
 
 static void BroadcomHalCallback (UINT8 event, tHAL_NFC_CBACK_DATA* p_data);
 
@@ -55,6 +56,7 @@ int HaiInitializeLibrary (const bcm2079x_dev_t* device)
     ALOGD ("%s: enter", __FUNCTION__);
     int retval = EACCES;
     unsigned long freq = 0;
+    unsigned long num = 0;
 
     InitializeGlobalAppLogLevel ();
 
@@ -66,7 +68,17 @@ int HaiInitializeLibrary (const bcm2079x_dev_t* device)
         nfc_post_reset_cb.dev_init_config.flags |= NFC_HAL_DEV_INIT_FLAGS_SET_XTAL_FREQ;
     }
 
+    // Initialize protocol logging level
+    if ( GetNumValue ( NAME_PROTOCOL_TRACE_LEVEL, &num, sizeof ( num ) ) )
+        ScrProtocolTraceFlag = num;
+
     HAL_NfcInitialize ();
+
+    // Initialize appliation logging level
+    if ( GetNumValue ( NAME_APPL_TRACE_LEVEL, &num, sizeof ( num ) ) ) {
+        HAL_NfcSetTraceLevel(num);
+    }
+
     retval = 0;
     ALOGD ("%s: exit %d", __FUNCTION__, retval);
     return retval;
