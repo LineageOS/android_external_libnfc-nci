@@ -144,6 +144,24 @@ void BroadcomHalCallback (UINT8 event, tHAL_NFC_CBACK_DATA* p_data)
             gCloseCompletedEvent.notifyOne ();
             break;
         }
+
+    case HAL_NFC_ERROR_EVT:
+        {
+            ALOGD ("%s: HAL_NFC_ERROR_EVT", __FUNCTION__);
+            {
+                SyncEventGuard guard (gOpenCompletedEvent);
+                gOpenCompletedEvent.notifyOne ();
+            }
+            {
+                SyncEventGuard guard (gPostInitCompletedEvent);
+                gPostInitCompletedEvent.notifyOne ();
+            }
+            {
+                SyncEventGuard guard (gCloseCompletedEvent);
+                gCloseCompletedEvent.notifyOne ();
+            }
+            break;
+        }
     }
     gAndroidHalCallback (event, (nfc_event_data_t*) p_data);
     ALOGD ("%s: exit; event=0x%X", __FUNCTION__, event);
