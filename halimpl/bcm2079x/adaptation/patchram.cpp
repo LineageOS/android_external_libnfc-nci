@@ -24,6 +24,7 @@ extern "C"
     #include "nfc_hal_post_reset.h"
 }
 #include <string>
+#include "spdhelper.h"
 
 #define LOG_TAG "NfcNciHal"
 
@@ -173,15 +174,25 @@ extern "C" void postDownloadPatchram(tHAL_NFC_STATUS status)
     ALOGD("%s: status=%i", __FUNCTION__, status);
     setReadPacketSize(0);
 
-    if (status != NCI_STATUS_OK)
+    if (status != HAL_NFC_STATUS_OK)
     {
-        ALOGE("%s: Patch download failed", __FUNCTION__);
-        HAL_NfcPreInitDone(HAL_NFC_STATUS_FAILED);
-        return;
-    }
+        ALOGE("Patch download failed");
+        if (status == HAL_NFC_STATUS_REFUSED)
+        {
+            SpdHelper::setPatchAsBad();
+        }
+        else
+            SpdHelper::incErrorCount();
 
+        if (SpdHelper::isSpdDebug()) {
+            HAL_NfcPreInitDone (HAL_NFC_STATUS_FAILED);
+        } else {
+            USERIAL_PowerupDevice(0);
+            HAL_NfcPreInitDone (HAL_NFC_STATUS_OK);
+        }
+    }
     /* Set snooze mode here */
-    if (gSnoozeModeCfg.snooze_mode != NFC_HAL_LP_SNOOZE_MODE_NONE)
+    else if (gSnoozeModeCfg.snooze_mode != NFC_HAL_LP_SNOOZE_MODE_NONE)
     {
         status = HAL_NfcSetSnoozeMode(gSnoozeModeCfg.snooze_mode,
                                        gSnoozeModeCfg.idle_threshold_dh,
@@ -192,7 +203,7 @@ extern "C" void postDownloadPatchram(tHAL_NFC_STATUS status)
         if (status != NCI_STATUS_OK)
         {
             ALOGE("%s: Setting snooze mode failed, status=%i", __FUNCTION__, status);
-            HAL_NfcPreInitDone(HAL_NFC_STATUS_OK);
+            HAL_NfcPreInitDone(HAL_NFC_STATUS_FAILED);
         }
     }
     else
@@ -231,7 +242,7 @@ void prmCallback(UINT8 event)
 
     case NFC_HAL_PRM_ABORT_INVALID_PATCH_EVT:
         ALOGD("%s: invalid patch...skipping patch download", __FUNCTION__);
-        postDownloadPatchram(HAL_NFC_STATUS_FAILED);
+        postDownloadPatchram(HAL_NFC_STATUS_REFUSED);
         break;
 
     case NFC_HAL_PRM_ABORT_BAD_SIGNATURE_EVT:
@@ -289,7 +300,7 @@ static void getNfaValues()
         p_nfc_hal_dm_lptd_cfg = &nfa_dm_lptd_cfg[0];
 }
 
-static void ReadConfigFile(UINT32 chipid)
+static void StartPatchDownload(UINT32 chipid)
 {
     ALOGD ("%s: chipid=%lx",__FUNCTION__, chipid);
 
@@ -341,6 +352,8 @@ static void ReadConfigFile(UINT32 chipid)
         /* If a patch file was specified, then download it now */
         if (sPatchFn[0] != '\0')
         {
+            UINT32 bDownloadStarted = false;
+
             /* open patchfile, read it into a buffer */
             if ((fd = fopen(sPatchFn, "rb")) != NULL)
             {
@@ -359,8 +372,12 @@ static void ReadConfigFile(UINT32 chipid)
                     if (patch_format != NFC_HAL_PRM_FORMAT_NCD)
                         setReadPacketSize(7);
 
-                    /* Download patch using static memeory mode */
-                    HAL_NfcPrmDownloadStart(patch_format, 0, (UINT8*)sPrmBuf, lenPrmBuffer, 0, prmCallback);
+                    if (!SpdHelper::isPatchBad((UINT8*)sPrmBuf, lenPrmBuffer))
+                    {
+                        /* Download patch using static memeory mode */
+                        HAL_NfcPrmDownloadStart(patch_format, 0, (UINT8*)sPrmBuf, lenPrmBuffer, 0, prmCallback);
+                        bDownloadStarted = true;
+                    }
                 }
                 else
                     ALOGE("%s Unable to buffer to hold patchram (%lu bytes)", __FUNCTION__, lenPrmBuffer);
@@ -369,6 +386,13 @@ static void ReadConfigFile(UINT32 chipid)
             }
             else
                 ALOGE("%s Unable to open patchfile %s", __FUNCTION__, sPatchFn);
+
+            /* If the download never got started */
+            if (!bDownloadStarted)
+            {
+                postDownloadPatchram(SpdHelper::isSpdDebug() ? HAL_NFC_STATUS_FAILED :
+                        HAL_NFC_STATUS_OK);
+            }
         }
         else
         {
@@ -393,7 +417,7 @@ static void ReadConfigFile(UINT32 chipid)
 void nfc_hal_post_reset_init (UINT32 brcm_hw_id, UINT8 nvm_type)
 {
     ALOGD("%s", __FUNCTION__);
-    ReadConfigFile(brcm_hw_id);
+    StartPatchDownload(brcm_hw_id);
 
     UINT8 max_credits;
 

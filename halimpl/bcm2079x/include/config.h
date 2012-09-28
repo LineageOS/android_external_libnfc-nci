@@ -66,6 +66,9 @@ int GetNumValue(const char* name, void* p_value, unsigned long len);
 #define NAME_UICC_LISTEN_TECH_MASK      "UICC_LISTEN_TECH_MASK"
 #define NAME_SNOOZE_MODE_CFG            "SNOOZE_MODE_CFG"
 #define NAME_XTAL_FREQUENCY             "XTAL_FREQUENCY"
+#define NAME_SPD_DEBUG                  "SPD_DEBUG"
+#define NAME_SPD_MAXRETRYCOUNT          "SPD_MAX_RETRY_COUNT"
+#define NAME_SPI_NEGOTIATION            "SPI_NEGOTIATION"
 
 #define                     LPTD_PARAM_LEN (40)
 
