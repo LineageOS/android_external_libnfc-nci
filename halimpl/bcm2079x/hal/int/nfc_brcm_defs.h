@@ -117,6 +117,8 @@
 #define NFC_VS_SEC_PATCH_DOWNLOAD_EVT   (NCI_RSP_BIT|NCI_MSG_SECURE_PATCH_DOWNLOAD)
 #define NFC_VS_SEC_PATCH_AUTH_EVT       (NCI_NTF_BIT|NCI_MSG_SECURE_PATCH_DOWNLOAD)
 
+#define NCI_GET_PATCH_VERSION_NVM_OFFSET    37
+
 
 #define NCI_NFCC_PIPE_INFO_NV_SIZE      24  /* Static and dynamic pipe id and status for each pipe to uicc0 and uicc1. */
 #define NCI_PERSONALITY_SLOT_SIZE       19

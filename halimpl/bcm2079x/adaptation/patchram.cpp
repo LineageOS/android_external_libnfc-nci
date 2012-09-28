@@ -43,7 +43,6 @@ static char sPrePatchFn[MAX_BUFFER+1];
 static char sPatchFn[MAX_BUFFER+1];
 static void * sPrmBuf = NULL;
 static void * sI2cFixPrmBuf = NULL;
-extern "C" void setReadPacketSize(int);
 
 #define NFA_DM_START_UP_CFG_PARAM_MAX_LEN   100
 static UINT8 nfa_dm_start_up_cfg[NFA_DM_START_UP_CFG_PARAM_MAX_LEN];
@@ -53,6 +52,8 @@ extern UINT8 *p_nfc_hal_dm_start_up_vsc_cfg;
 extern UINT8 *p_nfc_hal_dm_lptd_cfg;
 static UINT8 nfa_dm_lptd_cfg[LPTD_PARAM_LEN];
 extern tSNOOZE_MODE_CONFIG gSnoozeModeCfg;
+extern BOOLEAN nfc_hal_prm_nvm_required; //true: don't download firmware if controller cannot detect EERPOM
+static void HalNciCallback (tNFC_HAL_NCI_EVT event, UINT16 data_len, UINT8 *p_data);
 
 
 tNFC_POST_RESET_CB nfc_post_reset_cb =
@@ -169,10 +170,9 @@ static void continueAfterSetSnoozeMode(tHAL_NFC_STATUS status)
 ** Returns:     none
 **
 *******************************************************************************/
-extern "C" void postDownloadPatchram(tHAL_NFC_STATUS status)
+static void postDownloadPatchram(tHAL_NFC_STATUS status)
 {
     ALOGD("%s: status=%i", __FUNCTION__, status);
-    setReadPacketSize(0);
 
     if (status != HAL_NFC_STATUS_OK)
     {
@@ -248,6 +248,11 @@ void prmCallback(UINT8 event)
     case NFC_HAL_PRM_ABORT_BAD_SIGNATURE_EVT:
         ALOGD("%s: patch authentication failed", __FUNCTION__);
         postDownloadPatchram(HAL_NFC_STATUS_REFUSED);
+        break;
+
+    case NFC_HAL_PRM_ABORT_NO_NVM_EVT:
+        ALOGD("%s: No NVM detected", __FUNCTION__);
+        HAL_NfcPreInitDone(HAL_NFC_STATUS_FAILED);
         break;
 
     default:
@@ -367,11 +372,6 @@ static void StartPatchDownload(UINT32 chipid)
                 {
                     fread(sPrmBuf, lenPrmBuffer, 1, fd);
 
-                    // Only use custom read size when not doing .ncd.  The stack does extra commands for NCD
-                    // and the download will take place only once per new patch file.
-                    if (patch_format != NFC_HAL_PRM_FORMAT_NCD)
-                        setReadPacketSize(7);
-
                     if (!SpdHelper::isPatchBad((UINT8*)sPrmBuf, lenPrmBuffer))
                     {
                         /* Download patch using static memeory mode */
@@ -416,14 +416,70 @@ static void StartPatchDownload(UINT32 chipid)
 *******************************************************************************/
 void nfc_hal_post_reset_init (UINT32 brcm_hw_id, UINT8 nvm_type)
 {
-    ALOGD("%s", __FUNCTION__);
-    StartPatchDownload(brcm_hw_id);
+    ALOGD("%s: brcm_hw_id=0x%x, nvm_type=%d", __FUNCTION__, brcm_hw_id, nvm_type);
+    tHAL_NFC_STATUS stat = HAL_NFC_STATUS_FAILED;
+    UINT8 max_credits = 1;
 
-    UINT8 max_credits;
-
-    if (GetNumValue(MAX_RF_DATA_CREDITS, &max_credits, sizeof(max_credits)) && (max_credits > 0))
+    if (nvm_type == NCI_SPD_NVM_TYPE_NONE)
     {
-        ALOGD("%s : max_credits=%d", __FUNCTION__, max_credits);
-        HAL_NfcSetMaxRfDataCredits(max_credits);
+        ALOGD("%s: No NVM detected, FAIL the init stage to force a retry", __FUNCTION__);
+        USERIAL_PowerupDevice (0);
+        stat = HAL_NfcReInit (HalNciCallback);
+    }
+    else
+    {
+        StartPatchDownload(brcm_hw_id);
+        if (GetNumValue(MAX_RF_DATA_CREDITS, &max_credits, sizeof(max_credits)) && (max_credits > 0))
+        {
+            ALOGD("%s : max_credits=%d", __FUNCTION__, max_credits);
+            HAL_NfcSetMaxRfDataCredits(max_credits);
+        }
     }
 }
+
+
+/*******************************************************************************
+**
+** Function:    HalNciCallback
+**
+** Description: Determine whether controller has detected EEPROM.
+**
+** Returns:     none
+**
+*******************************************************************************/
+void HalNciCallback (tNFC_HAL_NCI_EVT event, UINT16 dataLen, UINT8* data)
+{
+    ALOGD ("%s: enter; event=%X; data len=%u", __FUNCTION__, event, dataLen);
+    if (event == NFC_VS_GET_PATCH_VERSION_EVT)
+    {
+        if (dataLen <= NCI_GET_PATCH_VERSION_NVM_OFFSET)
+        {
+            ALOGE("%s: response too short to detect NVM type", __FUNCTION__);
+            HAL_NfcPreInitDone (HAL_NFC_STATUS_FAILED);
+        }
+        else
+        {
+            UINT8 nvramType = *(data + NCI_GET_PATCH_VERSION_NVM_OFFSET);
+            if (nvramType == NCI_SPD_NVM_TYPE_NONE)
+            {
+                //controller did not find EEPROM, so re-initialize
+                ALOGD("%s: no nvram, try again", __FUNCTION__);
+                USERIAL_PowerupDevice (0);
+                HAL_NfcReInit (HalNciCallback);
+            }
+            else
+            {
+                UINT8 max_credits = 1;
+                ALOGD("%s: found nvram", __FUNCTION__, nvramType);
+                if (GetNumValue(MAX_RF_DATA_CREDITS, &max_credits, sizeof(max_credits)) && (max_credits > 0))
+                {
+                    ALOGD("%s : max_credits=%d", __FUNCTION__, max_credits);
+                    HAL_NfcSetMaxRfDataCredits(max_credits);
+                }
+                HAL_NfcPreInitDone (HAL_NFC_STATUS_OK);
+            }
+        }
+    }
+    ALOGD("%s: exit", __FUNCTION__);
+}
+

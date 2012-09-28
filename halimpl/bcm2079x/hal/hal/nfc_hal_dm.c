@@ -515,10 +515,18 @@ void nfc_hal_dm_proc_msg_during_init (NFC_HDR *p_msg)
         {
             if (mt == NCI_MT_RSP)
             {
-                NFC_HAL_SET_INIT_STATE (NFC_HAL_INIT_STATE_W4_BUILD_INFO);
+                if (nfc_hal_cb.dev_cb.initializing_state == NFC_HAL_INIT_STATE_W4_RE_INIT)
+                {
+                    NFC_HAL_SET_INIT_STATE (NFC_HAL_INIT_STATE_W4_APP_COMPLETE);
+                    nfc_hal_dm_send_nci_cmd (nfc_hal_dm_get_patch_version_cmd, NCI_MSG_HDR_SIZE, nfc_hal_cb.p_reinit_cback);
+                }
+                else
+                {
+                    NFC_HAL_SET_INIT_STATE (NFC_HAL_INIT_STATE_W4_BUILD_INFO);
 
-                /* get build information to find out HW */
-                nfc_hal_dm_send_nci_cmd (nfc_hal_dm_get_build_info_cmd, NCI_MSG_HDR_SIZE, NULL);
+                    /* get build information to find out HW */
+                    nfc_hal_dm_send_nci_cmd (nfc_hal_dm_get_build_info_cmd, NCI_MSG_HDR_SIZE, NULL);
+                }
             }
             else
             {
@@ -932,6 +940,38 @@ void HAL_NfcPreInitDone (tHAL_NFC_STATUS status)
 
         nfc_hal_main_pre_init_done (status);
     }
+}
+
+/*******************************************************************************
+**
+** Function         HAL_NfcReInit
+**
+** Description      This function is called to send an RESET and GET_PATCH_VERSION
+**                  command to NFCC.
+**
+**                  p_cback         - The callback function to receive the command
+**                                    status
+**
+** Note             This function should be called only during the HAL init process
+**
+** Returns          HAL_NFC_STATUS_OK if successfully initiated
+**                  HAL_NFC_STATUS_FAILED otherwise
+**
+*******************************************************************************/
+tHAL_NFC_STATUS HAL_NfcReInit (tNFC_HAL_NCI_CBACK *p_cback)
+{
+    tHAL_NFC_STATUS status = HAL_NFC_STATUS_FAILED;
+    NCI_TRACE_DEBUG1 ("HAL_NfcReInit () init st=0x%x", nfc_hal_cb.dev_cb.initializing_state);
+    if (nfc_hal_cb.dev_cb.initializing_state == NFC_HAL_INIT_STATE_W4_APP_COMPLETE)
+    {
+        /* Proceed with start up sequence: send CORE_RESET_CMD */
+        NFC_HAL_SET_INIT_STATE (NFC_HAL_INIT_STATE_W4_RE_INIT);
+        nfc_hal_cb.p_reinit_cback = p_cback;
+
+        nfc_hal_dm_send_nci_cmd (nfc_hal_dm_core_reset_cmd, NCI_MSG_HDR_SIZE + NCI_CORE_PARAM_SIZE_RESET, NULL);
+        status = HAL_NFC_STATUS_OK;
+    }
+    return status;
 }
 
 /*******************************************************************************

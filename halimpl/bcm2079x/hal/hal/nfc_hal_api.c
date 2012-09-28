@@ -101,7 +101,7 @@ void HAL_NfcOpen (tHAL_NFC_CBACK *p_hal_cback, tHAL_NFC_DATA_CBACK *p_data_cback
     NCI_TRACE_API0 ("HAL_NfcOpen ()");
 
     /* Only handle if HAL is not opened (stack cback is NULL) */
-    if ((nfc_hal_cb.p_stack_cback == NULL) && (p_hal_cback))
+    if (p_hal_cback)
     {
         nfc_hal_dm_init ();
         nfc_hal_cb.p_stack_cback = p_hal_cback;

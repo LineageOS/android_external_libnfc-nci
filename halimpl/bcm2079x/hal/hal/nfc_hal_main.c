@@ -188,7 +188,6 @@ static void nfc_hal_main_userial_cback (tUSERIAL_PORT port, tUSERIAL_EVT evt, tU
 *******************************************************************************/
 void nfc_hal_main_pre_init_done (tHAL_NFC_STATUS status)
 {
-
     NCI_TRACE_DEBUG1 ("nfc_hal_main_pre_init_done () status = %d", status);
 
     if (status != HAL_NFC_STATUS_OK)
@@ -200,7 +199,7 @@ void nfc_hal_main_pre_init_done (tHAL_NFC_STATUS status)
     }
 
     /* Notify NFC Task the status of initialization */
-    nfc_hal_cb.p_stack_cback(HAL_NFC_OPEN_CPLT_EVT, status);
+    nfc_hal_cb.p_stack_cback (HAL_NFC_OPEN_CPLT_EVT, status);
 }
 
 /*******************************************************************************
@@ -553,7 +552,10 @@ UINT32 nfc_hal_main_task (UINT32 param)
                                                              + nfc_hal_cb.ncit_cb.p_rcv_msg->offset));
 
                         }
+                    }
 
+                    if (nfc_hal_cb.ncit_cb.p_rcv_msg)
+                    {
                         GKI_freebuf(nfc_hal_cb.ncit_cb.p_rcv_msg);
                         nfc_hal_cb.ncit_cb.p_rcv_msg = NULL;
                     }

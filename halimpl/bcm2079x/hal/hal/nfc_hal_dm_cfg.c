@@ -129,3 +129,5 @@ const UINT8 nfc_hal_dm_pll_325_cfg[NFC_HAL_XTAL_INDEX_MAX][NFC_HAL_PLL_325_SETCO
 UINT8 *p_nfc_hal_dm_pll_325_cfg = (UINT8 *) nfc_hal_dm_pll_325_cfg;
 
 
+/* set nfc_hal_prm_nvm_required to TRUE, if the platform wants to abort PRM process without NVM */
+BOOLEAN nfc_hal_prm_nvm_required = FALSE;

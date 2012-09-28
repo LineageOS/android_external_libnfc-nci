@@ -66,6 +66,11 @@ static UINT8 nfc_hal_prm_get_patch_version_cmd [NCI_MSG_HDR_SIZE] =
 
 void nfc_hal_prm_post_baud_update (tHAL_NFC_STATUS status);
 
+/*****************************************************************************
+** Extern variable from nfc_hal_dm_cfg.c
+*****************************************************************************/
+extern BOOLEAN nfc_hal_prm_nvm_required;
+
 /*******************************************************************************
 **
 ** Function         nfc_hal_prm_spd_handle_download_complete
@@ -432,6 +437,9 @@ void nfc_hal_prm_spd_check_version (void)
     /* If we need to download anything, get the first patch to download */
     if (nfc_hal_cb.prm.spd_patch_needed_mask)
     {
+        NCI_TRACE_DEBUG4 ("Downloading patch version: %i.%i (previous version in NVM: %i.%i)...",
+                            patchfile_ver_major, patchfile_ver_minor,
+                            nfc_hal_cb.prm.spd_ver_major, nfc_hal_cb.prm.spd_ver_minor);
 #if (defined (NFC_HAL_PRE_I2C_PATCH_INCLUDED) && (NFC_HAL_PRE_I2C_PATCH_INCLUDED == TRUE))
         /* Check if I2C patch is needed: if                                     */
         /*      - I2C patch file was provided using HAL_NfcPrmSetI2cPatch, and        */
@@ -467,6 +475,12 @@ void nfc_hal_prm_spd_check_version (void)
     }
     else
     {
+        static BOOLEAN firstTime = TRUE;
+        if (firstTime) {
+            NCI_TRACE_ERROR2 ("BCM2079x: NVM patch version is %d.%d",
+                    nfc_hal_cb.prm.spd_ver_major, nfc_hal_cb.prm.spd_ver_minor);
+            firstTime = FALSE;
+        }
         /* Download complete */
         nfc_hal_prm_spd_handle_download_complete (return_code);
     }
@@ -550,7 +564,6 @@ UINT8 *nfc_hal_prm_spd_status_str (UINT8 spd_status_code)
 *******************************************************************************/
 void nfc_hal_prm_nci_command_complete_cback (tNFC_HAL_NCI_EVT event, UINT16 data_len, UINT8 *p_data)
 {
-    static BOOLEAN firstTime = TRUE;
     UINT8 status, u8;
     UINT8 *p;
     UINT32 post_signature_delay;
@@ -584,11 +597,6 @@ void nfc_hal_prm_nci_command_complete_cback (tNFC_HAL_NCI_EVT event, UINT16 data
         STREAM_TO_UINT16 (nfc_hal_cb.prm.spd_lpm_patch_size, p);
         STREAM_TO_UINT16 (nfc_hal_cb.prm.spd_fpm_patch_size, p);
 
-        if (firstTime) {
-            NCI_TRACE_ERROR2("BCM2079x: NVM patch version is %d.%d", nfc_hal_cb.prm.spd_ver_major,
-                    nfc_hal_cb.prm.spd_ver_minor);
-            firstTime = FALSE;
-        }
         /* LPMPatchCodeHasBadCRC (if not bad crc, then indicate LPM patch is present in nvm) */
         STREAM_TO_UINT8 (u8, p);
         if (!u8)
@@ -617,8 +625,15 @@ void nfc_hal_prm_nci_command_complete_cback (tNFC_HAL_NCI_EVT event, UINT16 data
         /* Check if downloading patch to RAM only (no NVM) */
         STREAM_TO_UINT8 (u8, p);
         if (!u8)
+        {
+            if (nfc_hal_prm_nvm_required)
+            {
+                NCI_TRACE_ERROR0 ("This platform requires NVM and the NVM is not available - Abort");
+                nfc_hal_prm_spd_handle_download_complete (NFC_HAL_PRM_ABORT_NO_NVM_EVT);
+                return;
+            }
             nfc_hal_cb.prm.flags |= NFC_HAL_PRM_FLAGS_NO_NVM;
-
+        }
         /* Get patchfile version number */
         nfc_hal_cb.prm.state = NFC_HAL_PRM_ST_SPD_COMPARE_VERSION;
 
