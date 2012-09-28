@@ -506,7 +506,7 @@ static tLLCP_STATUS llcp_dlsm_w4_remote_dm (tLLCP_DLCB *p_dlcb, tLLCP_DLC_EVENT 
         data.disconnect_resp.event       = LLCP_SAP_EVT_DISCONNECT_RESP;
         data.disconnect_resp.local_sap   = p_dlcb->local_sap;
         data.disconnect_resp.remote_sap  = p_dlcb->remote_sap;
-        data.disconnect_resp.reason      = *((UINT8*) p_data);
+        data.disconnect_resp.reason      = LLCP_SAP_DM_REASON_RESP_DISC;
         (*p_dlcb->p_app_cb->p_app_cback) (&data);
 
         llcp_util_deallocate_data_link (p_dlcb);
@@ -527,6 +527,11 @@ static tLLCP_STATUS llcp_dlsm_w4_remote_dm (tLLCP_DLCB *p_dlcb, tLLCP_DLC_EVENT 
         break;
 
     case LLCP_DLC_EVENT_PEER_DATA_IND:
+        break;
+
+    case LLCP_DLC_EVENT_PEER_DISCONNECT_IND:
+        /* it's race condition, send disconnect response and wait for DM */
+        llcp_util_send_dm (p_dlcb->remote_sap, p_dlcb->local_sap, LLCP_SAP_DM_REASON_RESP_DISC );
         break;
 
     default:
@@ -648,8 +653,10 @@ static void llcp_dlc_proc_connect_pdu (UINT8 dsap, UINT8 ssap, UINT16 length, UI
         if (strlen (params.sn))
             dsap = llcp_sdp_get_sap_by_name (params.sn, (UINT8) strlen (params.sn));
         else
-            dsap = 0;
-
+        {
+            llcp_util_send_dm (ssap, LLCP_SAP_SDP, LLCP_SAP_DM_REASON_PERM_REJECT_THIS );
+            return;
+        }
         if (dsap == LLCP_SAP_SDP)
         {
             LLCP_TRACE_ERROR0 ("llcp_dlc_proc_connect_pdu (): SDP doesn't accept connection");

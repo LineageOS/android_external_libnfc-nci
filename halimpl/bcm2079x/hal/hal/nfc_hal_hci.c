@@ -64,11 +64,6 @@ void nfc_hal_hci_evt_hdlr (tNFC_HAL_HCI_EVENT_DATA *p_evt_data)
         /* NV Ram write completed - nothing to do... */
         break;
 
-    case NFC_HAL_HCI_VSC_TIMEOUT_EVT:
-        NCI_TRACE_ERROR0 ("nfc_hal_hci_evt_hdlr: Timeout - NFC HAL HCI BRCM Initialization Failed!");
-        nfc_hal_hci_init_complete (HAL_NFC_STATUS_FAILED);
-        break;
-
     default:
         break;
     }
@@ -85,25 +80,31 @@ void nfc_hal_hci_evt_hdlr (tNFC_HAL_HCI_EVENT_DATA *p_evt_data)
 *******************************************************************************/
 void nfc_hal_hci_enable (void)
 {
+
+    UINT8 *p_hci_netwk_cmd;
+
     if (nfc_hal_cb.hci_cb.p_hci_netwk_dh_info_buf)
     {
-        GKI_freebuf (nfc_hal_cb.hci_cb.p_hci_netwk_dh_info_buf);
+        p_hci_netwk_cmd = (UINT8 *) nfc_hal_cb.hci_cb.p_hci_netwk_dh_info_buf - NCI_MSG_HDR_SIZE;
+        GKI_freebuf (p_hci_netwk_cmd);
         nfc_hal_cb.hci_cb.p_hci_netwk_dh_info_buf = NULL;
     }
 
     if (nfc_hal_cb.hci_cb.p_hci_netwk_info_buf)
     {
-        GKI_freebuf (nfc_hal_cb.hci_cb.p_hci_netwk_info_buf);
+        p_hci_netwk_cmd = (UINT8 *) nfc_hal_cb.hci_cb.p_hci_netwk_info_buf - NCI_MSG_HDR_SIZE;
+        GKI_freebuf (p_hci_netwk_cmd);
         nfc_hal_cb.hci_cb.p_hci_netwk_info_buf = NULL;
     }
 
-    if ((nfc_hal_cb.hci_cb.p_hci_netwk_info_buf = (tNCI_HCI_NETWK *) GKI_getbuf (sizeof (tNCI_HCI_NETWK))) == NULL)
+    if ((p_hci_netwk_cmd = (UINT8 *) GKI_getbuf (NCI_MSG_HDR_SIZE + sizeof (tNCI_HCI_NETWK))) == NULL)
     {
         NCI_TRACE_ERROR0 ("nfc_hal_hci_enable: unable to allocate buffer for reading hci network info from nvram");
         nfc_hal_hci_init_complete (HAL_NFC_STATUS_FAILED);
     }
     else
     {
+        nfc_hal_cb.hci_cb.p_hci_netwk_info_buf   = (tNCI_HCI_NETWK *) (p_hci_netwk_cmd + NCI_MSG_HDR_SIZE);
         nfc_hal_cb.hci_cb.hci_netwk_config_block = 0;
         memset (nfc_hal_cb.hci_cb.p_hci_netwk_info_buf, 0, sizeof (tNCI_HCI_NETWK));
         nfc_hal_nv_co_read ((UINT8 *) nfc_hal_cb.hci_cb.p_hci_netwk_info_buf, sizeof (tNCI_HCI_NETWK), HC_F3_NV_BLOCK);
@@ -161,63 +162,60 @@ void nfc_hal_hci_handle_hci_netwk_info (UINT8 *p_data)
 void nfc_hal_hci_handle_nv_read (UINT8 block, tHAL_NFC_STATUS status, UINT16 size)
 {
     NFC_HDR *p_data = NULL;
-    UINT8   *p_buf;
-    UINT8   buff[NCI_MSG_HDR_SIZE + 256];
-
-    if (block == DH_NV_BLOCK)
-    {
-        return;
-    }
+    UINT8   *p;
+    UINT8   *p_hci_netwk_info = NULL;
 
     /* Stop timer as NVDATA Read Completed */
     nfc_hal_main_stop_quick_timer (&nfc_hal_cb.hci_cb.hci_timer);
 
-    if (  ((block == HC_F3_NV_BLOCK) || (block == HC_F4_NV_BLOCK))
-        &&(nfc_hal_cb.hci_cb.p_hci_netwk_info_buf)
-        &&(size <= sizeof (tNCI_HCI_NETWK))  )
+    switch (block)
     {
-        if (status != HAL_NFC_STATUS_OK)
+    case HC_F3_NV_BLOCK:
+    case HC_F4_NV_BLOCK:
+        if (  (status != HAL_NFC_STATUS_OK)
+            ||(size > sizeof (tNCI_HCI_NETWK))  )
         {
+            NCI_TRACE_DEBUG0 ("nfc_hal_hci_handle_nv_read: Invalid data from nv memory, Set DEFAULT Configuration!");
             memset (nfc_hal_cb.hci_cb.p_hci_netwk_info_buf,0,sizeof (tNCI_HCI_NETWK));
             nfc_hal_cb.hci_cb.p_hci_netwk_info_buf->target_handle = (block == HC_F3_NV_BLOCK) ? NFC_HAL_HCI_UICC0_TARGET_HANDLE : NFC_HAL_HCI_UICC1_TARGET_HANDLE;
             memset (nfc_hal_cb.hci_cb.p_hci_netwk_info_buf->session_id, 0xFF, NFC_HAL_HCI_SESSION_ID_LEN);
             size = sizeof (tNCI_HCI_NETWK);
         }
 
-        /* We are in the middle of HCI Network configuration, Valid data read from NVRAM so send HCI Network ntf command */
-        p_buf = buff;
-        NCI_MSG_BLD_HDR0 (p_buf, NCI_MT_CMD, NCI_GID_PROP);
-        NCI_MSG_BLD_HDR1 (p_buf, NCI_MSG_HCI_NETWK);
-        UINT8_TO_STREAM  (p_buf, (UINT8) size);
+        p_hci_netwk_info = (UINT8 *) nfc_hal_cb.hci_cb.p_hci_netwk_info_buf - NCI_MSG_HDR_SIZE;
+        break;
 
-        memcpy (p_buf, (UINT8 *) nfc_hal_cb.hci_cb.p_hci_netwk_info_buf, size);
+    case HC_DH_NV_BLOCK:
+        if (  (status == HAL_NFC_STATUS_OK)
+            &&(size <= sizeof (tNCI_HCI_NETWK_DH))  )
+        {
+            p_hci_netwk_info = (UINT8 *) nfc_hal_cb.hci_cb.p_hci_netwk_dh_info_buf - NCI_MSG_HDR_SIZE;
+        }
+        else
+        {
+            NCI_TRACE_ERROR0 ("nfc_hal_hci_handle_nv_read: Invalid data from nv memory, Skip DH Configuration!");
+        }
+        break;
 
-        nfc_hal_dm_send_nci_cmd (buff, (UINT16) (NCI_MSG_HDR_SIZE + size), nfc_hal_hci_vsc_cback);
-
-        nfc_hal_cb.hci_cb.hci_netwk_config_block = block;
-        nfc_hal_main_start_quick_timer (&nfc_hal_cb.hci_cb.hci_timer, NFC_HAL_HCI_VSC_TIMEOUT_EVT, NFC_HAL_HCI_NFCC_RSP_TIMEOUT);
+    default:
+        return;
     }
-    else if (  (status == HAL_NFC_STATUS_OK)
-             &&(block == HC_DH_NV_BLOCK)
-             &&(size <= sizeof (tNCI_HCI_NETWK_DH))
-             &&(nfc_hal_cb.hci_cb.p_hci_netwk_dh_info_buf) )
+
+    if (p_hci_netwk_info)
     {
-        /* We are in the middle of HCI Network configuration, Valid data read from NVRAM so send HCI Network ntf command */
-        p_buf = buff;
-        NCI_MSG_BLD_HDR0 (p_buf, NCI_MT_CMD, NCI_GID_PROP);
-        NCI_MSG_BLD_HDR1 (p_buf, NCI_MSG_HCI_NETWK);
-        UINT8_TO_STREAM  (p_buf, (UINT8) size);
+        p = p_hci_netwk_info;
+        /* Send HCI Network ntf command using nv data */
+        NCI_MSG_BLD_HDR0 (p, NCI_MT_CMD, NCI_GID_PROP);
+        NCI_MSG_BLD_HDR1 (p, NCI_MSG_HCI_NETWK);
+        UINT8_TO_STREAM (p, (UINT8) size);
 
-        memcpy (p_buf,(UINT8 *) nfc_hal_cb.hci_cb.p_hci_netwk_dh_info_buf, size);
-
-        nfc_hal_dm_send_nci_cmd (buff, (UINT16) (NCI_MSG_HDR_SIZE + size), nfc_hal_hci_vsc_cback);
+        nfc_hal_dm_send_nci_cmd (p_hci_netwk_info, (UINT16) (NCI_MSG_HDR_SIZE + size), nfc_hal_hci_vsc_cback);
 
         nfc_hal_cb.hci_cb.hci_netwk_config_block = block;
-        nfc_hal_main_start_quick_timer (&nfc_hal_cb.hci_cb.hci_timer, NFC_HAL_HCI_VSC_TIMEOUT_EVT, NFC_HAL_HCI_NFCC_RSP_TIMEOUT);
     }
     else
     {
-        /* We are in the middle of HCI Network configuration, Move to next configuration step */
+        /* Set next HCI Network configuration */
         nfc_hal_hci_set_next_hci_netwk_config (block);
     }
 }
@@ -233,19 +231,24 @@ void nfc_hal_hci_handle_nv_read (UINT8 block, tHAL_NFC_STATUS status, UINT16 siz
 *******************************************************************************/
 void nfc_hal_hci_init_complete (tHAL_NFC_STATUS status)
 {
+    UINT8 *p_hci_netwk_cmd;
+
     if (nfc_hal_cb.hci_cb.p_hci_netwk_dh_info_buf)
     {
-        GKI_freebuf (nfc_hal_cb.hci_cb.p_hci_netwk_dh_info_buf);
+        p_hci_netwk_cmd = (UINT8 *) nfc_hal_cb.hci_cb.p_hci_netwk_dh_info_buf - NCI_MSG_HDR_SIZE;
+        GKI_freebuf (p_hci_netwk_cmd);
         nfc_hal_cb.hci_cb.p_hci_netwk_dh_info_buf = NULL;
     }
 
     if (nfc_hal_cb.hci_cb.p_hci_netwk_info_buf)
     {
-        GKI_freebuf (nfc_hal_cb.hci_cb.p_hci_netwk_info_buf);
+        p_hci_netwk_cmd = (UINT8 *) nfc_hal_cb.hci_cb.p_hci_netwk_info_buf - NCI_MSG_HDR_SIZE;
+        GKI_freebuf (p_hci_netwk_cmd);
         nfc_hal_cb.hci_cb.p_hci_netwk_info_buf = NULL;
     }
+
     NFC_HAL_SET_INIT_STATE (NFC_HAL_INIT_STATE_IDLE);
-    nfc_hal_cb.p_stack_cback (HAL_NFC_POST_INIT_CPLT_EVT, NULL);
+    nfc_hal_cb.p_stack_cback (HAL_NFC_POST_INIT_CPLT_EVT, HAL_NFC_STATUS_OK);
 }
 
 /*******************************************************************************
@@ -259,26 +262,26 @@ void nfc_hal_hci_init_complete (tHAL_NFC_STATUS status)
 *******************************************************************************/
 void nfc_hal_hci_set_next_hci_netwk_config (UINT8 block)
 {
+    UINT8 *p_hci_netwk_cmd;
+
     switch (block)
     {
     case HC_F3_NV_BLOCK:
-        if (nfc_hal_cb.hci_cb.p_hci_netwk_info_buf)
-        {
-            /* Send command to read nvram data for 0xF4 */
-            memset (nfc_hal_cb.hci_cb.p_hci_netwk_info_buf,0,sizeof (tNCI_HCI_NETWK));
-            nfc_hal_nv_co_read ((UINT8 *) nfc_hal_cb.hci_cb.p_hci_netwk_info_buf, sizeof (tNCI_HCI_NETWK), HC_F4_NV_BLOCK);
-            nfc_hal_main_start_quick_timer (&nfc_hal_cb.hci_cb.hci_timer, NFC_HAL_HCI_VSC_TIMEOUT_EVT, NFC_HAL_HCI_NV_READ_TIMEOUT);
-        }
+        /* Send command to read nvram data for 0xF4 */
+        memset (nfc_hal_cb.hci_cb.p_hci_netwk_info_buf,0,sizeof (tNCI_HCI_NETWK));
+        nfc_hal_nv_co_read ((UINT8 *) nfc_hal_cb.hci_cb.p_hci_netwk_info_buf, sizeof (tNCI_HCI_NETWK), HC_F4_NV_BLOCK);
+        nfc_hal_main_start_quick_timer (&nfc_hal_cb.hci_cb.hci_timer, NFC_HAL_HCI_VSC_TIMEOUT_EVT, NFC_HAL_HCI_NV_READ_TIMEOUT);
         break;
 
     case HC_F4_NV_BLOCK:
-        if ((nfc_hal_cb.hci_cb.p_hci_netwk_dh_info_buf = (tNCI_HCI_NETWK_DH *) GKI_getbuf (sizeof (tNCI_HCI_NETWK_DH))) == NULL)
+        if ((p_hci_netwk_cmd = (UINT8 *) GKI_getbuf (NCI_MSG_HDR_SIZE + sizeof (tNCI_HCI_NETWK_DH))) == NULL)
         {
             NCI_TRACE_ERROR0 ("nfa_hci_conn_cback: unable to allocate buffer for reading hci network info from nvram");
             nfc_hal_hci_init_complete (HAL_NFC_STATUS_FAILED);
         }
         else
         {
+            nfc_hal_cb.hci_cb.p_hci_netwk_dh_info_buf   = (tNCI_HCI_NETWK_DH *) (p_hci_netwk_cmd + NCI_MSG_HDR_SIZE);
             /* Send command to read nvram data for 0xF2 */
             memset (nfc_hal_cb.hci_cb.p_hci_netwk_dh_info_buf,0,sizeof (tNCI_HCI_NETWK_DH));
             nfc_hal_nv_co_read ((UINT8 *) nfc_hal_cb.hci_cb.p_hci_netwk_dh_info_buf, sizeof (tNCI_HCI_NETWK_DH), HC_DH_NV_BLOCK);
@@ -315,22 +318,45 @@ static void nfc_hal_hci_vsc_cback (tNFC_HAL_NCI_EVT event, UINT16 data_len, UINT
     p_ret  = p_data + NCI_MSG_HDR_SIZE;
     status = *p_ret;
 
-    if (  (status != HAL_NFC_STATUS_OK)
-        ||(event  != (NFC_VS_HCI_NETWK_RSP)) )
+    if (event  != NFC_VS_HCI_NETWK_RSP)
         return;
+
+    if (status != HAL_NFC_STATUS_OK)
+        nfc_hal_hci_init_complete (HAL_NFC_STATUS_FAILED);
 
     switch (nfc_hal_cb.hci_cb.hci_netwk_config_block)
     {
     case HC_F3_NV_BLOCK:
     case HC_F4_NV_BLOCK:
     case HC_DH_NV_BLOCK:
-        nfc_hal_main_stop_quick_timer (&nfc_hal_cb.hci_cb.hci_timer);
         nfc_hal_hci_set_next_hci_netwk_config (nfc_hal_cb.hci_cb.hci_netwk_config_block);
         break;
 
     default:
         /* Ignore the event */
         break;
+    }
+}
+
+/*******************************************************************************
+**
+** Function         nfc_hal_nci_cmd_timeout_cback
+**
+** Description      callback function for timeout
+**
+** Returns          void
+**
+*******************************************************************************/
+void nfc_hal_hci_timeout_cback (void *p_tle)
+{
+    TIMER_LIST_ENT  *p_tlent = (TIMER_LIST_ENT *)p_tle;
+
+    NCI_TRACE_DEBUG0 ("nfc_hal_hci_timeout_cback ()");
+
+    if (p_tlent->event == NFC_HAL_HCI_VSC_TIMEOUT_EVT)
+    {
+        NCI_TRACE_ERROR0 ("nfc_hal_hci_timeout_cback: Timeout - NFC HAL HCI BRCM Initialization Failed!");
+        nfc_hal_hci_init_complete (HAL_NFC_STATUS_FAILED);
     }
 }
 

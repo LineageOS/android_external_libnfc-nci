@@ -30,12 +30,12 @@
  *********************************/
 
 
-static int hal_open (const struct nfc_nci_device *p_dev, nfc_stack_callback_t p_hal_cback)
+static int hal_open (const struct nfc_nci_device *p_dev, nfc_stack_callback_t *p_hal_cback, nfc_stack_data_callback_t *p_hal_data_callback)
 {
     int retval = 0;
     bcm2079x_dev_t *dev = (bcm2079x_dev_t*) p_dev;
 
-    retval = HaiOpen (dev, p_hal_cback);
+    retval = HaiOpen (dev, p_hal_cback, p_hal_data_callback);
     return retval;
 }
 

@@ -45,6 +45,7 @@
 #define RW_T3T_SENSF_RES_RD_LEN         2   /* Size of RD in SENSF_RES   */
 
 /* Timeout definitions for commands */
+#define RW_T3T_POLL_CMD_TIMEOUT_TICKS                               ((RW_T3T_TOUT_RESP*2*QUICK_TIMER_TICKS_PER_SEC) / 1000)
 #define RW_T3T_DEFAULT_CMD_TIMEOUT_TICKS                            ((RW_T3T_TOUT_RESP*QUICK_TIMER_TICKS_PER_SEC) / 1000)
 #define RW_T3T_RAW_FRAME_CMD_TIMEOUT_TICKS                          (RW_T3T_DEFAULT_CMD_TIMEOUT_TICKS * 4)
 
@@ -234,6 +235,20 @@ void rw_t3t_process_error (tNFC_STATUS status)
         evt_data.status = status;
         (*(rw_cb.p_cback)) (RW_T3T_INTF_ERROR_EVT, &evt_data);
     }
+}
+
+/*******************************************************************************
+**
+** Function         rw_t3t_start_poll_timer
+**
+** Description      Start the timer for T3T POLL Command
+**
+** Returns          none
+**
+*******************************************************************************/
+void rw_t3t_start_poll_timer (tRW_T3T_CB *p_cb)
+{
+    nfc_start_quick_timer (&p_cb->poll_timer, NFC_TTYPE_RW_T3T_RESPONSE, RW_T3T_POLL_CMD_TIMEOUT_TICKS);
 }
 
 /*******************************************************************************
@@ -1487,14 +1502,14 @@ static void rw_t3t_handle_get_sc_poll_rsp (tRW_T3T_CB *p_cb, UINT8 nci_status, U
                 p_cb->system_codes[p_cb->num_system_codes++] = sc;
 
                 /* Poll for NDEF system code */
-                if ((status = (tNFC_STATUS) nci_snd_t3t_polling (T3T_SYSTEM_CODE_NDEF, 0, 0)) == NCI_STATUS_OK)
+                if ((status = (tNFC_STATUS) nci_snd_t3t_polling (T3T_SYSTEM_CODE_NDEF, T3T_POLL_RC_SC, 0)) == NCI_STATUS_OK)
                 {
                     p_cb->rw_substate = RW_T3T_GET_SC_SST_POLL_NDEF;
                     p_cb->cur_poll_rc = 0;
                     p_cb->flags |= RW_T3T_FL_W4_GET_SC_POLL_RSP;
 
                     /* start timer for waiting for responses */
-                    nfc_start_quick_timer (&p_cb->poll_timer, NFC_TTYPE_RW_T3T_RESPONSE, RW_T3T_DEFAULT_CMD_TIMEOUT_TICKS);
+                    rw_t3t_start_poll_timer (p_cb);
                 }
             }
             else
@@ -2221,7 +2236,7 @@ tNFC_STATUS RW_T3tDetectNDef (void)
         return (NFC_STATUS_FAILED);
     }
 
-    if ((retval = (tNFC_STATUS) nci_snd_t3t_polling (T3T_SYSTEM_CODE_NDEF, 0, 0)) == NCI_STATUS_OK)
+    if ((retval = (tNFC_STATUS) nci_snd_t3t_polling (T3T_SYSTEM_CODE_NDEF, T3T_POLL_RC_SC, 0)) == NCI_STATUS_OK)
     {
         p_cb->cur_cmd = RW_T3T_CMD_DETECT_NDEF;
         p_cb->cur_tout = RW_T3T_DEFAULT_CMD_TIMEOUT_TICKS;
@@ -2230,7 +2245,7 @@ tNFC_STATUS RW_T3tDetectNDef (void)
         p_cb->flags |= RW_T3T_FL_W4_NDEF_DETECT_POLL_RSP;
 
         /* start timer for waiting for responses */
-        nfc_start_quick_timer (&p_cb->poll_timer, NFC_TTYPE_RW_T3T_RESPONSE, RW_T3T_DEFAULT_CMD_TIMEOUT_TICKS);
+        rw_t3t_start_poll_timer (p_cb);
     }
 
     return (retval);
@@ -2494,14 +2509,14 @@ tNFC_STATUS RW_T3tPresenceCheck (void)
     else
     {
         /* IDLE state: send POLL command */
-        if ((retval = (tNFC_STATUS) nci_snd_t3t_polling (0xFFFF, 0, 0)) == NCI_STATUS_OK)
+        if ((retval = (tNFC_STATUS) nci_snd_t3t_polling (0xFFFF, T3T_POLL_RC_SC, 0)) == NCI_STATUS_OK)
         {
             p_rw_cb->tcb.t3t.flags |= RW_T3T_FL_W4_PRESENCE_CHECK_POLL_RSP;
             p_rw_cb->tcb.t3t.rw_state = RW_T3T_STATE_COMMAND_PENDING;
             p_rw_cb->tcb.t3t.cur_poll_rc = 0;
 
             /* start timer for waiting for responses */
-            nfc_start_quick_timer (&p_rw_cb->tcb.t3t.poll_timer, NFC_TTYPE_RW_T3T_RESPONSE, RW_T3T_DEFAULT_CMD_TIMEOUT_TICKS);
+            rw_t3t_start_poll_timer (&p_rw_cb->tcb.t3t);
         }
         else
         {
@@ -2544,7 +2559,7 @@ tNFC_STATUS RW_T3tPoll (UINT16 system_code, tT3T_POLL_RC rc, UINT8 tsn)
         /* start timer for waiting for responses */
         p_cb->cur_poll_rc = rc;
         p_cb->rw_state = RW_T3T_STATE_COMMAND_PENDING;
-        nfc_start_quick_timer (&p_cb->poll_timer, NFC_TTYPE_RW_T3T_RESPONSE, RW_T3T_DEFAULT_CMD_TIMEOUT_TICKS);
+        rw_t3t_start_poll_timer (p_cb);
     }
 
 
@@ -2637,7 +2652,7 @@ tNFC_STATUS RW_T3tGetSystemCodes (void)
             p_cb->num_system_codes = 0;
 
             /* start timer for waiting for responses */
-            nfc_start_quick_timer (&p_cb->poll_timer, NFC_TTYPE_RW_T3T_RESPONSE, RW_T3T_DEFAULT_CMD_TIMEOUT_TICKS);
+            rw_t3t_start_poll_timer (p_cb);
         }
     }
 
@@ -2688,7 +2703,7 @@ tNFC_STATUS RW_T3tFormatNDef (void)
             p_cb->flags |= RW_T3T_FL_W4_FMT_FELICA_LITE_POLL_RSP;
 
             /* start timer for waiting for responses */
-            nfc_start_quick_timer (&p_cb->poll_timer, NFC_TTYPE_RW_T3T_RESPONSE, RW_T3T_DEFAULT_CMD_TIMEOUT_TICKS);
+            rw_t3t_start_poll_timer (p_cb);
         }
     }
 

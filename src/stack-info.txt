@@ -1,2 +1,10 @@
 This file contains version information for the NFC stack code.
-element * NFA_MI_1.03.43  # HAL implementation
+main_blueth-bld_1703169
+main_darinlee_1699676
+main_gulee_1699564
+main_gulee_1701227
+main_prasadk_1702929
+main_sherrys_1699564
+main_sherrys_1699566
+element *  NFA_MI_1.03.44
+

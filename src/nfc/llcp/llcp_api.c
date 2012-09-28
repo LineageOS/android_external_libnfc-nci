@@ -120,8 +120,8 @@ void LLCP_SetConfig (UINT16 link_miu,
     }
     else if (link_miu > LLCP_MAX_MIU)
     {
-        LLCP_TRACE_WARNING2 ("LLCP_SetConfig (): link_miu (%d) shall not be bigger than LLCP_MAX_MIU (%d)",
-                            link_miu, LLCP_MAX_MIU);
+        LLCP_TRACE_ERROR1 ("LLCP_SetConfig (): link_miu shall not be bigger than LLCP_MAX_MIU (%d)",
+                            LLCP_MAX_MIU);
         link_miu = LLCP_MAX_MIU;
     }
 

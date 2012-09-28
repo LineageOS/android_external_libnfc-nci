@@ -72,7 +72,7 @@ int GetNumValue(const char* name, void* p_value, unsigned long len);
 
 // default configuration
 #define default_transport       "/dev/bcm2079x"
-#define default_storage_location "/data/bcmnfc"
+#define default_storage_location "/data/nfc"
 
 struct tUART_CONFIG {
     int     m_iBaudrate;            // 115200

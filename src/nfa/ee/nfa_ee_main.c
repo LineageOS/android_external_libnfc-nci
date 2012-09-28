@@ -218,6 +218,9 @@ void nfa_ee_proc_nfcc_power_mode (UINT8 nfcc_power_mode)
         for (xx = 0; xx < NFA_EE_MAX_EE_SUPPORTED; xx++, p_cb++)
         {
             p_cb->ee_old_status = 0;
+            if (xx >= nfa_ee_cb.cur_ee)
+                p_cb->nfcee_id = NFA_EE_INVALID;
+
             if ((p_cb->nfcee_id != NFA_EE_INVALID) && (p_cb->ee_interface[0] != NFC_NFCEE_INTERFACE_HCI_ACCESS) && (p_cb->ee_status  != NFA_EE_STATUS_REMOVED))
             {
                 proc_complete       = FALSE;

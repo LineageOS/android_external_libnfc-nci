@@ -931,8 +931,20 @@ static void llcp_link_proc_ui_pdu (UINT8  local_sap,
     UINT8        *p_dst;
     tLLCP_APP_CB *p_app_cb;
     tLLCP_SAP_CBACK_DATA data;
+    tLLCP_DLCB   *p_dlcb;
 
     p_app_cb = llcp_util_get_app_cb (local_sap);
+        /*if UI PDU sent to SAP with data link connection*/
+    if ((p_dlcb = llcp_dlc_find_dlcb_by_sap (local_sap, remote_sap)))
+    {
+        llcp_util_send_frmr (p_dlcb, LLCP_FRMR_W_ERROR_FLAG, LLCP_PDU_UI_TYPE, 0);
+        llcp_dlsm_execute (p_dlcb, LLCP_DLC_EVENT_FRAME_ERROR, NULL);
+        if (p_msg)
+        {
+            GKI_freebuf (p_msg);
+        }
+        return;
+    }
 
     /* if application is registered and expecting UI PDU on logical data link */
     if (  (p_app_cb)

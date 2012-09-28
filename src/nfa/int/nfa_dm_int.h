@@ -58,7 +58,6 @@ enum
     NFA_DM_API_REG_VSC_EVT,
     NFA_DM_API_SEND_VSC_EVT,
     NFA_DM_TIMEOUT_DISABLE_EVT,
-    NFA_DM_NFC_CBACK_DATA_EVT,
     NFA_DM_MAX_EVT
 };
 
@@ -194,14 +193,6 @@ typedef struct
 } tNFA_DM_API_SEND_VSC;
 
 
-/* data type for NFA_DM_NFC_CBACK_DATA_EVT */
-typedef struct
-{
-    BT_HDR              hdr;
-    tNFC_RESPONSE_EVT   event;
-    tNFC_RESPONSE       *p_data;
-} tNFA_DM_NFC_CBACK_DATA;
-
 /* union of all data types */
 typedef union
 {
@@ -225,7 +216,6 @@ typedef union
     tNFA_DM_API_SELECT              select;             /* NFA_DM_API_SELECT_EVT                */
     tNFA_DM_API_UPDATE_RF_PARAMS    update_rf_params;   /* NFA_DM_API_UPDATE_RF_PARAMS_EVT      */
     tNFA_DM_API_DEACTIVATE          deactivate;         /* NFA_DM_API_DEACTIVATE_EVT            */
-    tNFA_DM_NFC_CBACK_DATA          nfc_cback_data;     /* NFA_DM_NFC_CBACK_DATA_EVT            */
     tNFA_DM_API_SEND_VSC            send_vsc;           /* NFA_DM_API_SEND_VSC_EVT              */
     tNFA_DM_API_REG_VSC             reg_vsc;            /* NFA_DM_API_REG_VSC_EVT               */
 } tNFA_DM_MSG;

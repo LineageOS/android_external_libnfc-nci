@@ -223,7 +223,9 @@ static void nfa_dm_disable_event (void)
     nfa_sys_deregister (NFA_ID_DM);
 
     /* Notify app */
-    nfa_dm_cb.flags &= ~(NFA_DM_FLAGS_DM_IS_ACTIVE|NFA_DM_FLAGS_DM_DISABLING_NFC);
+    nfa_dm_cb.flags &= ~(NFA_DM_FLAGS_DM_IS_ACTIVE
+                        |NFA_DM_FLAGS_DM_DISABLING_NFC
+                        |NFA_DM_FLAGS_ENABLE_EVT_PEND);
     (*nfa_dm_cb.p_dm_cback) (NFA_DM_DISABLE_EVT, NULL);
 }
 
@@ -238,37 +240,19 @@ static void nfa_dm_disable_event (void)
 *******************************************************************************/
 static void nfa_dm_nfc_response_cback (tNFC_RESPONSE_EVT event, tNFC_RESPONSE *p_data)
 {
-    tNFA_DM_NFC_CBACK_DATA nfc_cback_data;
-
-    nfc_cback_data.hdr.event = NFA_DM_NFC_CBACK_DATA_EVT;
-    nfc_cback_data.event     = event;
-    nfc_cback_data.p_data    = p_data;
-
-    nfa_dm_evt_hdlr ((BT_HDR *) &nfc_cback_data);
-}
-
-/*******************************************************************************
-**
-** Function         nfa_dm_act_nfc_callback
-**
-** Description      NFC response callback
-**
-** Returns          TRUE (message buffer to be freed by caller)
-**
-*******************************************************************************/
-BOOLEAN nfa_dm_act_nfc_cback_data (tNFA_DM_MSG *p_msg)
-{
-    tNFC_RESPONSE_EVT event   = p_msg->nfc_cback_data.event;
-    tNFC_RESPONSE     *p_data = p_msg->nfc_cback_data.p_data;
-
     tNFA_DM_CBACK_DATA dm_cback_data;
     tNFA_GET_CONFIG   *p_nfa_get_confg;
     tNFA_CONN_EVT_DATA conn_evt;
     UINT8 dm_cback_evt;
 
-    NFA_TRACE_DEBUG1 ("nfa_dm_act_nfc_cback_data () event=0x%x ", event);
-    switch (event) {
+#if (BT_TRACE_VERBOSE == TRUE)
+    NFA_TRACE_DEBUG2 ("nfa_dm_nfc_response_cback () %s(0x%x)", nfa_dm_nfc_revt_2_str (event), event);
+#else
+    NFA_TRACE_DEBUG1 ("nfa_dm_nfc_response_cback () event=0x%x", event);
+#endif
 
+    switch (event)
+    {
     case NFC_ENABLE_REVT:                        /* 0  Enable event */
 
         /* NFC stack enabled. Enable nfa sub-systems */
@@ -326,7 +310,7 @@ BOOLEAN nfa_dm_act_nfc_cback_data (tNFA_DM_MSG *p_msg)
                 (*nfa_dm_cb.p_dm_cback) (NFA_DM_GET_CONFIG_EVT, (tNFA_DM_CBACK_DATA *) p_nfa_get_confg);
 
                 GKI_freebuf (p_nfa_get_confg);
-                return TRUE;
+                return;
             }
             else
             {
@@ -382,17 +366,8 @@ BOOLEAN nfa_dm_act_nfc_cback_data (tNFA_DM_MSG *p_msg)
     case NFC_NFCC_TIMEOUT_REVT:
     case NFC_NFCC_TRANSPORT_ERR_REVT:
         NFA_TRACE_DEBUG1 ("flags:0x%08x", nfa_dm_cb.flags);
-        if (nfa_dm_cb.flags & NFA_DM_FLAGS_ENABLE_EVT_PEND)
-        {
-            nfa_dm_cb.flags &= ~(NFA_DM_FLAGS_ENABLE_EVT_PEND | NFA_DM_FLAGS_DM_IS_ACTIVE);
-            dm_cback_data.status = NFA_STATUS_HW_TIMEOUT;
-            (*nfa_dm_cb.p_dm_cback) (NFA_DM_ENABLE_EVT, &dm_cback_data);
-        }
-        else
-        {
-            dm_cback_evt = (event == NFC_NFCC_TIMEOUT_REVT) ? NFA_DM_NFCC_TIMEOUT_EVT : NFA_DM_NFCC_TRANSPORT_ERR_EVT;
-            (*nfa_dm_cb.p_dm_cback) (dm_cback_evt, NULL);
-        }
+        dm_cback_evt = (event == NFC_NFCC_TIMEOUT_REVT) ? NFA_DM_NFCC_TIMEOUT_EVT : NFA_DM_NFCC_TRANSPORT_ERR_EVT;
+        (*nfa_dm_cb.p_dm_cback) (dm_cback_evt, NULL);
         break;
 
     case NFC_NFCC_POWER_OFF_REVT:
@@ -411,8 +386,6 @@ BOOLEAN nfa_dm_act_nfc_cback_data (tNFA_DM_MSG *p_msg)
     default:
         break;
     }
-
-    return TRUE;
 }
 
 
@@ -487,13 +460,13 @@ BOOLEAN nfa_dm_disable (tNFA_DM_MSG *p_data)
             }
             else
             {
-        nfa_dm_cb.disc_cb.disc_flags |= NFA_DM_DISC_FLAGS_DISABLING;
-        nfa_dm_disc_sm_execute (NFA_DM_RF_DEACTIVATE_CMD, (tNFA_DM_RF_DISC_DATA *) &deactivate_type);
-        if ((nfa_dm_cb.disc_cb.disc_flags & (NFA_DM_DISC_FLAGS_W4_RSP|NFA_DM_DISC_FLAGS_W4_NTF)) == 0)
-        {
-            /* not waiting to deactivate, clear the flag now */
-            nfa_dm_cb.disc_cb.disc_flags &= ~NFA_DM_DISC_FLAGS_DISABLING;
-        }
+                nfa_dm_cb.disc_cb.disc_flags |= NFA_DM_DISC_FLAGS_DISABLING;
+                nfa_dm_disc_sm_execute (NFA_DM_RF_DEACTIVATE_CMD, (tNFA_DM_RF_DISC_DATA *) &deactivate_type);
+                if ((nfa_dm_cb.disc_cb.disc_flags & (NFA_DM_DISC_FLAGS_W4_RSP|NFA_DM_DISC_FLAGS_W4_NTF)) == 0)
+                {
+                    /* not waiting to deactivate, clear the flag now */
+                    nfa_dm_cb.disc_cb.disc_flags &= ~NFA_DM_DISC_FLAGS_DISABLING;
+                }
             }
         }
         /* Start timeout for graceful shutdown. If timer expires, then force an ungraceful shutdown */
@@ -528,14 +501,14 @@ void nfa_dm_disable_complete (void)
 
         nfa_dm_cb.flags |= NFA_DM_FLAGS_DM_DISABLING_NFC;
 
-    nfa_sys_stop_timer (&nfa_dm_cb.tle);
+        nfa_sys_stop_timer (&nfa_dm_cb.tle);
 
-    /* Free all buffers for NDEF handlers */
-    nfa_dm_ndef_dereg_all();
+        /* Free all buffers for NDEF handlers */
+        nfa_dm_ndef_dereg_all();
 
-    /* Disable nfc core stack */
-    NFC_Disable ();
-}
+        /* Disable nfc core stack */
+        NFC_Disable ();
+    }
 }
 
 /*******************************************************************************

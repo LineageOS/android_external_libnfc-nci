@@ -278,8 +278,9 @@ void nfc_hal_dm_send_startup_vsc (void)
     }
 
     NCI_TRACE_ERROR0 ("nfc_hal_dm_send_startup_vsc (): Bad start-up VSC");
-    nfc_hal_cb.dev_cb.next_dm_config = NFC_HAL_DM_CONFIG_NONE;
-    nfc_hal_dm_config_nfcc_cback (0, 0, NULL);
+
+    NFC_HAL_SET_INIT_STATE (NFC_HAL_INIT_STATE_IDLE);
+    nfc_hal_cb.p_stack_cback (HAL_NFC_POST_INIT_CPLT_EVT, HAL_NFC_STATUS_FAILED);
 }
 
 /*******************************************************************************
@@ -308,6 +309,12 @@ void nfc_hal_dm_config_nfcc (void)
         {
             return;
         }
+        else
+        {
+            NFC_HAL_SET_INIT_STATE (NFC_HAL_INIT_STATE_IDLE);
+            nfc_hal_cb.p_stack_cback (HAL_NFC_POST_INIT_CPLT_EVT, HAL_NFC_STATUS_FAILED);
+            return;
+        }
     }
 
     if ((p_nfc_hal_dm_pll_325_cfg) && (nfc_hal_cb.dev_cb.next_dm_config <= NFC_HAL_DM_CONFIG_PLL_325))
@@ -323,6 +330,12 @@ void nfc_hal_dm_config_nfcc (void)
             {
                 return;
             }
+            else
+            {
+                NFC_HAL_SET_INIT_STATE (NFC_HAL_INIT_STATE_IDLE);
+                nfc_hal_cb.p_stack_cback (HAL_NFC_POST_INIT_CPLT_EVT, HAL_NFC_STATUS_FAILED);
+                return;
+            }
         }
     }
 
@@ -335,6 +348,12 @@ void nfc_hal_dm_config_nfcc (void)
         {
             return;
         }
+        else
+        {
+            NFC_HAL_SET_INIT_STATE (NFC_HAL_INIT_STATE_IDLE);
+            nfc_hal_cb.p_stack_cback (HAL_NFC_POST_INIT_CPLT_EVT, HAL_NFC_STATUS_FAILED);
+            return;
+        }
     }
 
 #if (NFC_HAL_I93_FLAG_DATA_RATE == NFC_HAL_I93_FLAG_DATA_RATE_HIGH)
@@ -345,6 +364,12 @@ void nfc_hal_dm_config_nfcc (void)
                                    nfc_hal_dm_i93_rw_cfg,
                                    nfc_hal_dm_config_nfcc_cback) == HAL_NFC_STATUS_OK)
         {
+            return;
+        }
+        else
+        {
+            NFC_HAL_SET_INIT_STATE (NFC_HAL_INIT_STATE_IDLE);
+            nfc_hal_cb.p_stack_cback (HAL_NFC_POST_INIT_CPLT_EVT, HAL_NFC_STATUS_FAILED);
             return;
         }
     }
@@ -390,6 +415,26 @@ void nfc_hal_dm_set_xtal_freq_index (void)
     NCI_TRACE_DEBUG1 ("nfc_hal_dm_set_xtal_freq_index (): xtal_freq = %d", nfc_post_reset_cb.dev_init_config.xtal_freq);
 
     xtal_index = nfc_hal_dm_get_xtal_index (nfc_post_reset_cb.dev_init_config.xtal_freq);
+
+    switch (xtal_index)
+    {
+    case NFC_HAL_XTAL_INDEX_9600:
+    case NFC_HAL_XTAL_INDEX_13000:
+    case NFC_HAL_XTAL_INDEX_19200:
+    case NFC_HAL_XTAL_INDEX_26000:
+    case NFC_HAL_XTAL_INDEX_38400:
+    case NFC_HAL_XTAL_INDEX_52000:
+
+        {
+            /* no need to set xtal index for these frequency */
+            NCI_TRACE_DEBUG0 ("nfc_hal_dm_set_xtal_freq_index (): no need to set xtal index");
+
+            nfc_post_reset_cb.dev_init_config.flags &= ~NFC_HAL_DEV_INIT_FLAGS_SET_XTAL_FREQ;
+            nfc_hal_dm_send_reset_cmd ();
+            return;
+        }
+        break;
+    }
 
     p = nci_brcm_xtal_index_cmd;
     UINT8_TO_STREAM  (p, (NCI_MTS_CMD|NCI_GID_PROP));
@@ -613,6 +658,12 @@ void nfc_hal_dm_send_pend_cmd (void)
     if (p_buf == NULL)
         return;
 
+    /* check low power mode state */
+    if (!nfc_hal_dm_power_mode_execute (NFC_HAL_LP_TX_DATA_EVT))
+    {
+        return;
+    }
+
     if (nfc_hal_cb.ncit_cb.nci_wait_rsp == NFC_HAL_WAIT_RSP_PROP)
     {
 #if (NFC_HAL_TRACE_PROTOCOL == TRUE)
@@ -679,7 +730,7 @@ void nfc_hal_dm_send_bt_cmd (const UINT8 *p_data, UINT16 len, tNFC_HAL_BTVSC_CPL
         if (nfc_hal_cb.dev_cb.initializing_state == NFC_HAL_INIT_STATE_IDLE)
         {
             NFC_HAL_SET_INIT_STATE(NFC_HAL_INIT_STATE_W4_CONTROL_DONE);
-            nfc_hal_cb.p_stack_cback (HAL_NFC_REQUEST_CONTROL_EVT, NULL);
+            nfc_hal_cb.p_stack_cback (HAL_NFC_REQUEST_CONTROL_EVT, HAL_NFC_STATUS_OK);
             return;
         }
 
@@ -828,6 +879,8 @@ void nfc_hal_dm_shutting_down_nfcc (void)
         nfc_hal_dm_set_nfc_wake (NFC_HAL_ASSERT_NFC_WAKE);
     }
 
+    nfc_hal_cb.ncit_cb.nci_wait_rsp = NFC_HAL_WAIT_RSP_NONE;
+
     nfc_hal_cb.dev_cb.power_mode  = NFC_HAL_POWER_MODE_FULL;
     nfc_hal_cb.dev_cb.snooze_mode = NFC_HAL_LP_SNOOZE_MODE_NONE;
 
@@ -855,6 +908,8 @@ void nfc_hal_dm_init (void)
     nfc_hal_cb.dev_cb.lp_timer.p_cback = nci_brcm_lp_timeout_cback;
 
     nfc_hal_cb.ncit_cb.nci_wait_rsp_timer.p_cback = nfc_hal_nci_cmd_timeout_cback;
+
+    nfc_hal_cb.hci_cb.hci_timer.p_cback = nfc_hal_hci_timeout_cback;
 
 }
 
@@ -897,6 +952,9 @@ static void nfc_hal_dm_set_snooze_mode_cback (tNFC_HAL_BTVSC_CPLT *pData)
     /* if it is completed */
     if (status == HCI_SUCCESS)
     {
+        /* update snooze mode */
+        nfc_hal_cb.dev_cb.snooze_mode = nfc_hal_cb.dev_cb.new_snooze_mode;
+
         nfc_hal_dm_set_nfc_wake (NFC_HAL_ASSERT_NFC_WAKE);
 
         if ( nfc_hal_cb.dev_cb.snooze_mode != NFC_HAL_LP_SNOOZE_MODE_NONE)
@@ -920,7 +978,7 @@ static void nfc_hal_dm_set_snooze_mode_cback (tNFC_HAL_BTVSC_CPLT *pData)
     {
         p_cback = nfc_hal_cb.dev_cb.p_prop_cback;
         nfc_hal_cb.dev_cb.p_prop_cback = NULL;
-        (p_cback) (hal_status);
+        (*p_cback) (hal_status);
     }
 }
 
@@ -959,7 +1017,7 @@ tHAL_NFC_STATUS HAL_NfcSetSnoozeMode (UINT8 snooze_mode,
 
     NCI_TRACE_API1 ("HAL_NfcSetSnoozeMode (): snooze_mode = %d", snooze_mode);
 
-    nfc_hal_cb.dev_cb.snooze_mode          = snooze_mode;
+    nfc_hal_cb.dev_cb.new_snooze_mode      = snooze_mode;
     nfc_hal_cb.dev_cb.nfc_wake_active_mode = nfc_wake_active_mode;
     nfc_hal_cb.dev_cb.p_prop_cback         = p_snooze_cback;
 

@@ -218,11 +218,6 @@
 #define NCI_MAX_CMD_WINDOW      1
 #endif
 
-/* the maximum number of buffers for the static RF connection. 1-5 */
-#ifndef NCI_MAX_RF_DATA_CREDITS
-#define NCI_MAX_RF_DATA_CREDITS     3
-#endif
-
 /* Define to TRUE to include the NFCEE related functionalities */
 #ifndef NFC_NFCEE_INCLUDED
 #define NFC_NFCEE_INCLUDED          TRUE
@@ -261,11 +256,6 @@
 /* RW Type 1 Tag timeout for each API call, in ms */
 #ifndef RW_T1T_TOUT_RESP
 #define RW_T1T_TOUT_RESP            100
-#endif
-
-/* CE Type 1 Tag timeout for controller command, in ms */
-#ifndef CE_T1T_TOUT_RESP
-#define CE_T1T_TOUT_RESP            1000
 #endif
 
 /* CE Type 2 Tag timeout for controller command, in ms */

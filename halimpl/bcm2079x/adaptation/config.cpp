@@ -25,7 +25,7 @@
 #define LOG_TAG "NfcNciHal"
 
 #if GENERIC_TARGET
-const char alternative_config_path[] = "/data/bcmnfc/";
+const char alternative_config_path[] = "/data/nfc/";
 #else
 const char alternative_config_path[] = "";
 #endif

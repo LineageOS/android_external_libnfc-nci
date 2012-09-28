@@ -34,6 +34,7 @@ NfcAdaptation* NfcAdaptation::mpInstance = NULL;
 ThreadMutex NfcAdaptation::sLock;
 nfc_nci_device_t* NfcAdaptation::mHalDeviceContext = NULL;
 tHAL_NFC_CBACK* NfcAdaptation::mHalCallback = NULL;
+tHAL_NFC_DATA_CBACK* NfcAdaptation::mHalDataCallback = NULL;
 
 UINT32 ScrProtocolTraceFlag = SCR_PROTO_TRACE_ALL; //0x017F00;
 UINT8 appl_trace_level = 0xff;
@@ -100,7 +101,7 @@ void NfcAdaptation::Initialize ()
     unsigned long num;
 
     if ( !GetStrValue ( NAME_NFA_STORAGE, bcm_nfc_location, sizeof ( bcm_nfc_location ) ) )
-        strcpy ( bcm_nfc_location, "/data/bcmnfc" );
+        strcpy ( bcm_nfc_location, "/data/nfc" );
     if ( GetNumValue ( NAME_PROTOCOL_TRACE_LEVEL, &num, sizeof ( num ) ) )
         ScrProtocolTraceFlag = num;
     initializeGlobalAppLogLevel ();
@@ -304,14 +305,15 @@ void NfcAdaptation::HalTerminate ()
 ** Returns:     None.
 **
 *******************************************************************************/
-void NfcAdaptation::HalOpen (tHAL_NFC_CBACK *p_hal_cback)
+void NfcAdaptation::HalOpen (tHAL_NFC_CBACK *p_hal_cback, tHAL_NFC_DATA_CBACK* p_data_cback)
 {
     const char* func = "NfcAdaptation::HalOpen";
     ALOGD ("%s", func);
     if (mHalDeviceContext)
     {
         mHalCallback = p_hal_cback;
-        mHalDeviceContext->open (mHalDeviceContext, HalDeviceContextCallback);
+        mHalDataCallback = p_data_cback;
+        mHalDeviceContext->open (mHalDeviceContext, HalDeviceContextCallback, HalDeviceContextDataCallback);
     }
 }
 
@@ -344,12 +346,30 @@ void NfcAdaptation::HalClose ()
 ** Returns:     None.
 **
 *******************************************************************************/
-void NfcAdaptation::HalDeviceContextCallback (nfc_event_t event, nfc_event_data_t* p_data)
+void NfcAdaptation::HalDeviceContextCallback (nfc_event_t event, nfc_status_t event_status)
 {
     const char* func = "NfcAdaptation::HalDeviceContextCallback";
     ALOGD ("%s: event=%u", func, event);
     if (mHalCallback)
-        mHalCallback (event, (tHAL_NFC_CBACK_DATA*) p_data);
+        mHalCallback (event, (tHAL_NFC_STATUS) event_status);
+}
+
+/*******************************************************************************
+**
+** Function:    NfcAdaptation::HalDeviceContextDataCallback
+**
+** Description: Translate generic Android HAL's callback into Broadcom-specific
+**              callback function.
+**
+** Returns:     None.
+**
+*******************************************************************************/
+void NfcAdaptation::HalDeviceContextDataCallback (uint16_t data_len, uint8_t* p_data)
+{
+    const char* func = "NfcAdaptation::HalDeviceContextDataCallback";
+    ALOGD ("%s: len=%u", func, data_len);
+    if (mHalDataCallback)
+        mHalDataCallback (data_len, p_data);
 }
 
 /*******************************************************************************

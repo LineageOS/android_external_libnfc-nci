@@ -39,13 +39,15 @@
 
 
 static nfc_stack_callback_t* gAndroidHalCallback = NULL;
+static nfc_stack_data_callback_t* gAndroidHalDataCallback = NULL;
 static SyncEvent gOpenCompletedEvent;
 static SyncEvent gPostInitCompletedEvent;
 static SyncEvent gCloseCompletedEvent;
 
 UINT32 ScrProtocolTraceFlag = SCR_PROTO_TRACE_ALL; //0x017F00;
 
-static void BroadcomHalCallback (UINT8 event, tHAL_NFC_CBACK_DATA* p_data);
+static void BroadcomHalCallback (UINT8 event, tHAL_NFC_STATUS status);
+static void BroadcomHalDataCallback (UINT16 data_len, UINT8* p_data);
 
 
 ///////////////////////////////////////
@@ -92,6 +94,7 @@ int HaiTerminateLibrary ()
 
     HAL_NfcTerminate ();
     gAndroidHalCallback = NULL;
+    gAndroidHalDataCallback = NULL;
     GKI_shutdown ();
     retval = 0;
     ALOGD ("%s: exit %d", __FUNCTION__, retval);
@@ -99,15 +102,16 @@ int HaiTerminateLibrary ()
 }
 
 
-int HaiOpen (const bcm2079x_dev_t* device, nfc_stack_callback_t* halCallbackFunc)
+int HaiOpen (const bcm2079x_dev_t* device, nfc_stack_callback_t* halCallbackFunc, nfc_stack_data_callback_t* halDataCallbackFunc)
 {
     ALOGD ("%s: enter", __FUNCTION__);
     int retval = EACCES;
 
     gAndroidHalCallback = halCallbackFunc;
+    gAndroidHalDataCallback = halDataCallbackFunc;
 
     SyncEventGuard guard (gOpenCompletedEvent);
-    HAL_NfcOpen (BroadcomHalCallback);
+    HAL_NfcOpen (BroadcomHalCallback, BroadcomHalDataCallback);
     gOpenCompletedEvent.wait ();
 
     retval = 0;
@@ -116,14 +120,14 @@ int HaiOpen (const bcm2079x_dev_t* device, nfc_stack_callback_t* halCallbackFunc
 }
 
 
-void BroadcomHalCallback (UINT8 event, tHAL_NFC_CBACK_DATA* p_data)
+void BroadcomHalCallback (UINT8 event, tHAL_NFC_STATUS status)
 {
     ALOGD ("%s: enter; event=0x%X", __FUNCTION__, event);
     switch (event)
     {
     case HAL_NFC_OPEN_CPLT_EVT:
         {
-            ALOGD ("%s: HAL_NFC_OPEN_CPLT_EVT; status=0x%X", __FUNCTION__, p_data->status);
+            ALOGD ("%s: HAL_NFC_OPEN_CPLT_EVT; status=0x%X", __FUNCTION__, status);
             SyncEventGuard guard (gOpenCompletedEvent);
             gOpenCompletedEvent.notifyOne ();
             break;
@@ -163,8 +167,15 @@ void BroadcomHalCallback (UINT8 event, tHAL_NFC_CBACK_DATA* p_data)
             break;
         }
     }
-    gAndroidHalCallback (event, (nfc_event_data_t*) p_data);
+    gAndroidHalCallback (event, status);
     ALOGD ("%s: exit; event=0x%X", __FUNCTION__, event);
+}
+
+
+void BroadcomHalDataCallback (UINT16 data_len, UINT8* p_data)
+{
+    ALOGD ("%s: enter; len=%u", __FUNCTION__, data_len);
+    gAndroidHalDataCallback (data_len, p_data);
 }
 
 

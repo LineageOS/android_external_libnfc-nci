@@ -46,7 +46,6 @@ extern "C" {
 
 /* NFC_TASK event masks */
 #define NFC_TASK_EVT_TRANSPORT_READY        EVENT_MASK (APPL_EVT_0)
-#define NFC_TASK_EVT_ENABLE                 EVENT_MASK (APPL_EVT_1)
 
 /* NFC Timer events */
 #define NFC_TTYPE_NCI_WAIT_RSP              0
@@ -69,25 +68,26 @@ extern "C" {
 
 enum
 {
-    NFC_STATE_NONE,     /* not start up yet         */
-    NFC_STATE_IDLE,     /* reset/init               */
-    NFC_STATE_OPEN,     /* NFC link is activated    */
-    NFC_STATE_CLOSING,  /* de-activating            */
-    NFC_STATE_RESTARTING,           /* restarting NFCC after reboot */
-    NFC_STATE_NFCC_POWER_OFF_SLEEP  /* NFCC is power-off sleep mode */
+    NFC_STATE_NONE,                 /* not start up yet                         */
+    NFC_STATE_W4_HAL_OPEN,          /* waiting for HAL_NFC_OPEN_CPLT_EVT        */
+    NFC_STATE_CORE_INIT,            /* sending CORE_RESET and CORE_INIT         */
+    NFC_STATE_W4_POST_INIT_CPLT,    /* waiting for HAL_NFC_POST_INIT_CPLT_EVT   */
+    NFC_STATE_IDLE,                 /* normal operation (discovery state)       */
+    NFC_STATE_OPEN,                 /* NFC link is activated                    */
+    NFC_STATE_CLOSING,              /* de-activating                            */
+    NFC_STATE_W4_HAL_CLOSE,         /* waiting for HAL_NFC_POST_INIT_CPLT_EVT   */
+    NFC_STATE_NFCC_POWER_OFF_SLEEP  /* NFCC is power-off sleep mode             */
 };
 typedef UINT8 tNFC_STATE;
 
 /* NFC control block flags */
-#define NFC_FL_ENABLED                  0x0001  /* NFC enabled                                  */
-#define NFC_FL_ENABLE_PENDING           0x0002  /* NFC is being enabled (NFC_ENABLE_EVT pending)*/
-#define NFC_FL_NCI_TRANSPORT_ENABLED    0x0004  /* Transport enabled                            */
-#define NFC_FL_DEACTIVATING             0x0008  /* NFC_Deactivate () is called and the NCI cmd is not sent   */
-#define NFC_FL_W4_TRANSPORT_READY       0x0010  /* Waiting for NCI transport to be ready before enabling NFC*/
-#define NFC_FL_POWER_CYCLE_NFCC         0x0020  /* Power cycle NFCC                             */
-#define NFC_FL_CONTROL_REQUESTED        0x0100  /* HAL requested control on NCI command window  */
-#define NFC_FL_CONTROL_GRANTED          0x0200  /* NCI command window is on the HAL side        */
-#define NFC_FL_DISCOVER_PENDING         0x0400  /* NCI command window is on the HAL side        */
+#define NFC_FL_DEACTIVATING             0x0001  /* NFC_Deactivate () is called and the NCI cmd is not sent   */
+#define NFC_FL_RESTARTING               0x0002  /* restarting NFCC after PowerOffSleep          */
+#define NFC_FL_POWER_OFF_SLEEP          0x0004  /* enterning power off sleep mode               */
+#define NFC_FL_POWER_CYCLE_NFCC         0x0008  /* Power cycle NFCC                             */
+#define NFC_FL_CONTROL_REQUESTED        0x0010  /* HAL requested control on NCI command window  */
+#define NFC_FL_CONTROL_GRANTED          0x0020  /* NCI command window is on the HAL side        */
+#define NFC_FL_DISCOVER_PENDING         0x0040  /* NCI command window is on the HAL side        */
 
 #define NFC_PEND_CONN_ID               0xFE
 #define NFC_CONN_ID_INT_MASK           0xF0
@@ -126,7 +126,7 @@ typedef struct
 typedef struct
 {
     BT_HDR          hdr;
-    UINT8           hal_evt;    /* HAL event code */
+    UINT8           hal_evt;    /* HAL event code  */
     UINT8           status;     /* tHAL_NFC_STATUS */
 } tNFC_HAL_EVT_MSG;
 
@@ -146,7 +146,6 @@ typedef void (tNFC_PWR_ST_CBACK) (void);
 typedef struct
 {
     UINT16              flags;                      /* NFC control block flags - NFC_FL_* */
-    BOOLEAN             shared_transport;           /* TRUE if using shared BT/NFC transport */
     tNFC_CONN_CB        conn_cb[NCI_MAX_CONN_CBS];
     UINT8               conn_id[NFC_MAX_CONN_ID+1]; /* index: conn_id; conn_id[]: index(1 based) to conn_cb[] */
     tNFC_DISCOVER_CBACK *p_discv_cback;
@@ -188,6 +187,7 @@ typedef struct
 
     BT_HDR              *p_nci_init_rsp;    /* holding INIT_RSP until receiving HAL_NFC_POST_INIT_CPLT_EVT */
     tHAL_NFC_ENTRY      *p_hal;
+
 } tNFC_CB;
 
 
@@ -246,7 +246,6 @@ NFC_API extern void nfc_ncif_proc_reset_rsp (UINT8 *p, BOOLEAN is_ntf);
 NFC_API extern void nfc_ncif_proc_init_rsp (BT_HDR *p_msg);
 NFC_API extern void nfc_ncif_proc_get_config_rsp (BT_HDR *p_msg);
 NFC_API extern void nfc_ncif_proc_data (BT_HDR *p_msg);
-extern void nfc_main_disable_complete (tNFC_STATUS status);
 
 #if (NFC_RW_ONLY == FALSE)
 NFC_API extern void nfc_ncif_proc_rf_field_ntf (UINT8 rf_status);
@@ -256,14 +255,13 @@ NFC_API extern void nfc_ncif_proc_rf_field_ntf (UINT8 rf_status);
 
 /* From nfc_task.c */
 NFC_API extern UINT32 nfc_task (UINT32 param);
-NFC_API extern void nfc_notify_shared_transport_ready (void);
-void nfc_task_terminate (void);
+void nfc_task_shutdown_nfcc (void);
 
 /* From nfc_main.c */
 void nfc_enabled (tNFC_STATUS nfc_status, BT_HDR *p_init_rsp_msg);
 void nfc_set_state (tNFC_STATE nfc_state);
+void nfc_main_flush_cmd_queue (void);
 void nfc_gen_cleanup (void);
-void nfc_main_cleanup (void);
 void nfc_main_handle_hal_evt (tNFC_HAL_EVT_MSG *p_msg);
 
 /* Timer functions */

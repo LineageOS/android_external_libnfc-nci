@@ -23,3 +23,6 @@
 #define USERIAL_HAL_TASK  1  //execute userial's read thread
 #define GKI_RUNNER_HAL_TASK 2  //execute GKI_run(), which runs forever
 #define GKI_MAX_TASKS  3 //total of 3 tasks
+
+
+#define NFC_HAL_PRM_POST_I2C_FIX_DELAY (500)

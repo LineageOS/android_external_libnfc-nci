@@ -440,7 +440,7 @@ static void nfc_hal_nci_proc_rx_bt_msg (void)
             if (nfc_hal_cb.dev_cb.initializing_state == NFC_HAL_INIT_STATE_W4_CONTROL_DONE)
             {
                 NFC_HAL_SET_INIT_STATE(NFC_HAL_INIT_STATE_IDLE);
-                nfc_hal_cb.p_stack_cback (HAL_NFC_RELEASE_CONTROL_EVT, NULL);
+                nfc_hal_cb.p_stack_cback (HAL_NFC_RELEASE_CONTROL_EVT, HAL_NFC_STATUS_OK);
             }
             if (p_cback)
             {
@@ -524,6 +524,7 @@ BOOLEAN nfc_hal_nci_preproc_rx_nci_msg (NFC_HDR *p_msg)
 {
     UINT8 *p;
     UINT8 mt, pbf, gid, op_code;
+    UINT8 payload_len;
 
     NCI_TRACE_DEBUG0 ("nfc_hal_nci_preproc_rx_nci_msg()");
 
@@ -539,6 +540,7 @@ BOOLEAN nfc_hal_nci_preproc_rx_nci_msg (NFC_HDR *p_msg)
         p = (UINT8 *) (p_msg + 1) + p_msg->offset;
         NCI_MSG_PRS_HDR0 (p, mt, pbf, gid);
         NCI_MSG_PRS_HDR1 (p, op_code);
+        payload_len = *p++;
 
         if (gid == NCI_GID_PROP) /* this is for hci netwk ntf */
         {
@@ -547,6 +549,25 @@ BOOLEAN nfc_hal_nci_preproc_rx_nci_msg (NFC_HDR *p_msg)
                 if (op_code == NCI_MSG_HCI_NETWK)
                 {
                     nfc_hal_hci_handle_hci_netwk_info ((UINT8 *) (p_msg + 1) + p_msg->offset);
+                }
+            }
+        }
+        else if (gid == NCI_GID_CORE)
+        {
+            if (mt == NCI_MT_NTF)
+            {
+                if (op_code == NCI_MSG_RF_INTF_ACTIVATED)
+                {
+                    if ((nfc_hal_cb.max_rf_credits) && (payload_len > 5))
+                    {
+                        /* API used wants to limit the RF data credits */
+                        p += 5; /* skip RF disc id, interface, protocol, tech&mode, payload size */
+                        if (*p > nfc_hal_cb.max_rf_credits)
+                        {
+                            NCI_TRACE_DEBUG2 ("RfDataCredits %d->%d", *p, nfc_hal_cb.max_rf_credits);
+                            *p = nfc_hal_cb.max_rf_credits;
+                        }
+                    }
                 }
             }
         }
@@ -711,11 +732,58 @@ void nfc_hal_nci_cmd_timeout_cback (void *p_tle)
 
     NCI_TRACE_DEBUG0 ("nfc_hal_nci_cmd_timeout_cback ()");
 
+    nfc_hal_cb.ncit_cb.nci_wait_rsp = NFC_HAL_WAIT_RSP_NONE;
+
     if (p_tlent->event == NFC_HAL_TTYPE_NCI_WAIT_RSP)
     {
-        /* report an error */
-        nfc_hal_main_send_error (HAL_NFC_STATUS_ERR_CMD_TIMEOUT);
+        if (nfc_hal_cb.dev_cb.initializing_state <= NFC_HAL_INIT_STATE_W4_PATCH_INFO)
+        {
+            NFC_HAL_SET_INIT_STATE (NFC_HAL_INIT_STATE_IDLE);
+            nfc_hal_main_pre_init_done (HAL_NFC_STATUS_ERR_CMD_TIMEOUT);
+        }
+        else if (nfc_hal_cb.dev_cb.initializing_state == NFC_HAL_INIT_STATE_W4_APP_COMPLETE)
+        {
+            if (nfc_hal_cb.prm.state != NFC_HAL_PRM_ST_IDLE)
+            {
+                nfc_hal_prm_process_timeout (NULL);
+            }
+            else
+            {
+                NFC_HAL_SET_INIT_STATE (NFC_HAL_INIT_STATE_IDLE);
+                nfc_hal_main_pre_init_done (HAL_NFC_STATUS_ERR_CMD_TIMEOUT);
+            }
+        }
+        else if (nfc_hal_cb.dev_cb.initializing_state == NFC_HAL_INIT_STATE_W4_POST_INIT_DONE)
+        {
+            NFC_HAL_SET_INIT_STATE (NFC_HAL_INIT_STATE_IDLE);
+            nfc_hal_cb.p_stack_cback (HAL_NFC_POST_INIT_CPLT_EVT, HAL_NFC_STATUS_ERR_CMD_TIMEOUT);
+        }
+        else if (nfc_hal_cb.dev_cb.initializing_state == NFC_HAL_INIT_STATE_W4_CONTROL_DONE)
+        {
+            NFC_HAL_SET_INIT_STATE(NFC_HAL_INIT_STATE_IDLE);
+            nfc_hal_cb.p_stack_cback (HAL_NFC_RELEASE_CONTROL_EVT, HAL_NFC_STATUS_ERR_CMD_TIMEOUT);
+        }
+        else if (nfc_hal_cb.dev_cb.initializing_state == NFC_HAL_INIT_STATE_W4_PREDISCOVER_DONE)
+        {
+            NFC_HAL_SET_INIT_STATE(NFC_HAL_INIT_STATE_IDLE);
+            nfc_hal_cb.p_stack_cback (HAL_NFC_PRE_DISCOVER_CPLT_EVT, HAL_NFC_STATUS_ERR_CMD_TIMEOUT);
+        }
     }
 }
 
 
+/*******************************************************************************
+**
+** Function         HAL_NfcSetMaxRfDataCredits
+**
+** Description      This function sets the maximum RF data credit for HAL.
+**                  If 0, use the value reported from NFCC.
+**
+** Returns          none
+**
+*******************************************************************************/
+void HAL_NfcSetMaxRfDataCredits (UINT8 max_credits)
+{
+    NCI_TRACE_DEBUG2 ("HAL_NfcSetMaxRfDataCredits %d->%d", nfc_hal_cb.max_rf_credits, max_credits);
+    nfc_hal_cb.max_rf_credits   = max_credits;
+}

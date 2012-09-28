@@ -129,11 +129,8 @@ static void nfc_hal_main_open_transport (void)
 *******************************************************************************/
 void nfc_hal_main_send_error (tHAL_NFC_STATUS status)
 {
-    tHAL_NFC_CBACK_DATA hal_nfc_cback_data;
-
     /* Notify stack */
-    hal_nfc_cback_data.status = status;
-    nfc_hal_cb.p_stack_cback(HAL_NFC_ERROR_EVT, &hal_nfc_cback_data);
+    nfc_hal_cb.p_stack_cback(HAL_NFC_ERROR_EVT, status);
 }
 
 /*******************************************************************************
@@ -160,7 +157,15 @@ static void nfc_hal_main_userial_cback (tUSERIAL_PORT port, tUSERIAL_EVT evt, tU
     else if (evt == USERIAL_ERR_EVT)
     {
         NCI_TRACE_ERROR0 ("nfc_hal_main_userial_cback: USERIAL_ERR_EVT. Notifying NFC_TASK of transport error");
-        nfc_hal_main_send_error (HAL_NFC_STATUS_ERR_TRANSPORT);
+        if (nfc_hal_cb.ncit_cb.nci_wait_rsp != NFC_HAL_WAIT_RSP_NONE)
+        {
+            nfc_hal_main_stop_quick_timer (&nfc_hal_cb.ncit_cb.nci_wait_rsp_timer);
+            nfc_hal_nci_cmd_timeout_cback ((void *)&nfc_hal_cb.ncit_cb.nci_wait_rsp_timer);
+        }
+        else
+        {
+            nfc_hal_main_send_error (HAL_NFC_STATUS_ERR_TRANSPORT);
+        }
     }
     else if (evt == USERIAL_WAKEUP_EVT)
     {
@@ -183,7 +188,6 @@ static void nfc_hal_main_userial_cback (tUSERIAL_PORT port, tUSERIAL_EVT evt, tU
 *******************************************************************************/
 void nfc_hal_main_pre_init_done (tHAL_NFC_STATUS status)
 {
-    tHAL_NFC_CBACK_DATA hal_nfc_cback_data;
 
     NCI_TRACE_DEBUG1 ("nfc_hal_main_pre_init_done () status = %d", status);
 
@@ -196,8 +200,7 @@ void nfc_hal_main_pre_init_done (tHAL_NFC_STATUS status)
     }
 
     /* Notify NFC Task the status of initialization */
-    hal_nfc_cback_data.status = status;
-    nfc_hal_cb.p_stack_cback(HAL_NFC_OPEN_CPLT_EVT, &hal_nfc_cback_data);
+    nfc_hal_cb.p_stack_cback(HAL_NFC_OPEN_CPLT_EVT, status);
 }
 
 /*******************************************************************************
@@ -426,7 +429,7 @@ UINT32 nfc_hal_main_task (UINT32 param)
     UINT8    num_interfaces;
     UINT8    *p;
     NFC_HDR  *p_msg;
-    tHAL_NFC_CBACK_DATA hal_nfc_cback_data;
+    BOOLEAN  free_msg;
 
     NCI_TRACE_DEBUG0 ("NFC_HAL_TASK started");
 
@@ -452,7 +455,7 @@ UINT32 nfc_hal_main_task (UINT32 param)
             /* Close uart */
             USERIAL_Close (USERIAL_NFC_PORT);
 
-            nfc_hal_cb.p_stack_cback (HAL_NFC_CLOSE_CPLT_EVT, NULL);
+            nfc_hal_cb.p_stack_cback (HAL_NFC_CLOSE_CPLT_EVT, HAL_NFC_STATUS_OK);
             nfc_hal_cb.p_stack_cback = NULL;
             continue;
         }
@@ -478,11 +481,13 @@ UINT32 nfc_hal_main_task (UINT32 param)
         {
             while ((p_msg = (NFC_HDR *) GKI_read_mbox (NFC_HAL_TASK_MBOX)) != NULL)
             {
+                free_msg = TRUE;
                 switch (p_msg->event & NFC_EVT_MASK)
                 {
                 case NFC_HAL_EVT_TO_NFC_NCI:
                     nfc_hal_main_send_message (p_msg);
                     /* do not free buffer. NCI VS code may keep it for processing later */
+                    free_msg = FALSE;
                     break;
 
                 case NFC_HAL_EVT_POST_CORE_RESET:
@@ -500,31 +505,27 @@ UINT32 nfc_hal_main_task (UINT32 param)
                     nfc_hal_cb.dev_cb.next_startup_vsc = 1;
 
                     nfc_hal_dm_config_nfcc ();
-
-                    GKI_freebuf (p_msg);
                     break;
 
                 case NFC_HAL_EVT_TO_START_QUICK_TIMER:
                     GKI_start_timer (NFC_HAL_QUICK_TIMER_ID, ((GKI_SECS_TO_TICKS (1) / QUICK_TIMER_TICKS_PER_SEC)), TRUE);
-                    GKI_freebuf (p_msg);
                     break;
 
                 case NFC_HAL_EVT_HCI:
                     nfc_hal_hci_evt_hdlr ((tNFC_HAL_HCI_EVENT_DATA *) p_msg);
-                    GKI_freebuf (p_msg);
                     break;
 
 
                 case NFC_HAL_EVT_CONTROL_GRANTED:
                     nfc_hal_dm_send_pend_cmd ();
-                    GKI_freebuf (p_msg);
                     break;
 
                 default:
-                    GKI_freebuf (p_msg);
                     break;
                 }
 
+                if (free_msg)
+                    GKI_freebuf (p_msg);
             }
         }
 
@@ -548,10 +549,8 @@ UINT32 nfc_hal_main_task (UINT32 param)
                         if (nfc_hal_nci_preproc_rx_nci_msg (nfc_hal_cb.ncit_cb.p_rcv_msg))
                         {
                             /* Send NCI message to the stack */
-                            hal_nfc_cback_data.nci_rx.p_data = (UINT8 *)((nfc_hal_cb.ncit_cb.p_rcv_msg + 1)
-                                                             + nfc_hal_cb.ncit_cb.p_rcv_msg->offset);
-                            hal_nfc_cback_data.nci_rx.len = nfc_hal_cb.ncit_cb.p_rcv_msg->len;
-                            nfc_hal_cb.p_stack_cback(HAL_NFC_NCI_RX_EVT, &hal_nfc_cback_data);
+                            nfc_hal_cb.p_data_cback(nfc_hal_cb.ncit_cb.p_rcv_msg->len, (UINT8 *)((nfc_hal_cb.ncit_cb.p_rcv_msg + 1)
+                                                             + nfc_hal_cb.ncit_cb.p_rcv_msg->offset));
 
                         }
 

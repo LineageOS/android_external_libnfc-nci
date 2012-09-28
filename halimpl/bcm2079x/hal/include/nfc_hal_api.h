@@ -40,22 +40,9 @@ typedef struct
 
 typedef UINT8 tHAL_NFC_STATUS;
 
-/* tHAL_NFC_CBACK event data types  */
-typedef struct {
-    UINT16  len;
-    UINT8   *p_data;
-} tHAL_NFC_NCI_RX;
-
-/* Union of all tHAL_NFC_CBACK data types */
-typedef union
-{
-    tHAL_NFC_STATUS     status;         /* HAL_NFC_OPEN_CPLT_EVT    */
-                                        /* HAL_NFC_ERROR_EVT        */
-
-    tHAL_NFC_NCI_RX     nci_rx;         /* HAL_NFC_NCI_RX_EVT       */
-} tHAL_NFC_CBACK_DATA;
-
-typedef void (tHAL_NFC_CBACK) (UINT8 event, tHAL_NFC_CBACK_DATA *p_data);
+typedef void (tHAL_NFC_STATUS_CBACK) (tHAL_NFC_STATUS status);
+typedef void (tHAL_NFC_CBACK) (UINT8 event, tHAL_NFC_STATUS status);
+typedef void (tHAL_NFC_DATA_CBACK) (UINT16 data_len, UINT8   *p_data);
 
 /*******************************************************************************
 ** tHAL_NFC_ENTRY HAL entry-point lookup table
@@ -63,7 +50,7 @@ typedef void (tHAL_NFC_CBACK) (UINT8 event, tHAL_NFC_CBACK_DATA *p_data);
 
 typedef void (tHAL_API_INITIALIZE) (void);
 typedef void (tHAL_API_TERMINATE) (void);
-typedef void (tHAL_API_OPEN) (tHAL_NFC_CBACK *p_hal_cback);
+typedef void (tHAL_API_OPEN) (tHAL_NFC_CBACK *p_hal_cback, tHAL_NFC_DATA_CBACK *p_data_cback);
 typedef void (tHAL_API_CLOSE) (void);
 typedef void (tHAL_API_CORE_INITIALIZED) (UINT8 *p_core_init_rsp_params);
 typedef void (tHAL_API_WRITE) (UINT16 data_len, UINT8 *p_data);
@@ -139,7 +126,7 @@ EXPORT_HAL_API void HAL_NfcTerminate(void);
 ** Returns          void
 **
 *******************************************************************************/
-EXPORT_HAL_API void HAL_NfcOpen (tHAL_NFC_CBACK *p_hal_cback);
+EXPORT_HAL_API void HAL_NfcOpen (tHAL_NFC_CBACK *p_hal_cback, tHAL_NFC_DATA_CBACK *p_data_cback);
 
 /*******************************************************************************
 **
