@@ -160,7 +160,7 @@ typedef UINT8 tNFC_HAL_LP_EVT;
 #define NFC_HAL_DEASSERT_NFC_WAKE    0x01   /* deassert NFC_WAKE    */
 
 #define NFC_HAL_BT_HCI_CMD_HDR_SIZE     3   /* opcode (2) +  length (1)    */
-#define NFC_HAL_CMD_TOUT            (1000)  /* timeout for NCI CMD (in ms) */
+#define NFC_HAL_CMD_TOUT            (2000)  /* timeout for NCI CMD (in ms) */
 
 #define NFC_HAL_SAVED_HDR_SIZE          (2)
 #define NFC_HAL_SAVED_CMD_SIZE          (2)
