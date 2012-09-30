@@ -41,6 +41,8 @@
 #define MAX_ERROR                           10
 #define default_transport                   "/dev/bcm2079x"
 
+#define NUM_RESET_ATTEMPTS                  5
+
 #ifndef BTE_APPL_MAX_USERIAL_DEV_NAME
 #define BTE_APPL_MAX_USERIAL_DEV_NAME           (256)
 #endif
@@ -965,6 +967,8 @@ UDRV_API void USERIAL_Open(tUSERIAL_PORT port, tUSERIAL_OPEN_CFG *p_cfg, tUSERIA
         strcpy((char*)device_name, (char*)userial_dev);
 
     {
+        unsigned int resetSuccess = 0;
+        unsigned int numTries = 0;
         ALOGD("%s Opening %s\n",  __FUNCTION__, device_name);
         if ((linux_cb.sock = open((char*)device_name, O_RDWR | O_NOCTTY )) == -1)
         {
@@ -986,39 +990,21 @@ UDRV_API void USERIAL_Open(tUSERIAL_PORT port, tUSERIAL_OPEN_CFG *p_cfg, tUSERIA
                 }
             }
         }
-        if ( bSerialPortDevice )
-        {
-            tcflush(linux_cb.sock, TCIOFLUSH);
-            tcgetattr(linux_cb.sock, &termios);
 
-            termios.c_cflag &= ~(CSIZE | PARENB);
-            termios.c_cflag = CLOCAL|CREAD|data_bits|stop_bits|parity;
-            if (!parity)
-                termios.c_cflag |= IGNPAR;
-            // termios.c_cflag &= ~CRTSCTS;
-            termios.c_oflag = 0;
-            termios.c_lflag &= ~(ECHO | ECHONL | ICANON | IEXTEN | ISIG);
-            termios.c_iflag &= ~(BRKINT | ICRNL | INLCR | ISTRIP | IXON | IGNBRK | PARMRK | INPCK);
-            termios.c_lflag = 0;
-            termios.c_iflag = 0;
-            cfsetospeed(&termios, baud);
-            cfsetispeed(&termios, baud);
+        if ( GetNumValue ( NAME_READ_MULTI_PACKETS, &num, sizeof ( num ) ) )
+            bcmi2cnfc_read_multi_packets = num;
 
-            termios.c_cc[VTIME] = 0;
-            termios.c_cc[VMIN] = 1;
-            tcsetattr(linux_cb.sock, TCSANOW, &termios);
+        if (bcmi2cnfc_read_multi_packets > 0)
+            ioctl(linux_cb.sock, BCMNFC_READ_MULTI_PACKETS, bcmi2cnfc_read_multi_packets);
 
-            tcflush(linux_cb.sock, TCIOFLUSH);
-
-#if (USERIAL_USE_IO_BT_WAKE==TRUE)
-            userial_io_init_bt_wake( linux_cb.sock, &linux_cb.bt_wake_state );
-#endif
-        }
-        else
-        {
-            unsigned long num = 0;
+        while (!resetSuccess && numTries < NUM_RESET_ATTEMPTS) {
+            if (numTries++ > 0) {
+                ALOGW("BCM2079x: retrying reset, attempt %d/%d", numTries + 1, NUM_RESET_ATTEMPTS);
+            }
+            // Max 5 retries to bring up the NFCC
             if (linux_cb.sock_power_control > 0)
             {
+                // Toggle reset
                 ioctl(linux_cb.sock_power_control, BCMNFC_POWER_CTL, 0);
                 GKI_delay(10);
                 ioctl(linux_cb.sock_power_control, BCMNFC_POWER_CTL, 1);
@@ -1032,11 +1018,6 @@ UDRV_API void USERIAL_Open(tUSERIAL_PORT port, tUSERIAL_OPEN_CFG *p_cfg, tUSERIA
                 USERIAL_Read(port, spi_nego_res,20);
             }
 
-            if ( GetNumValue ( NAME_READ_MULTI_PACKETS, &num, sizeof ( num ) ) )
-                bcmi2cnfc_read_multi_packets = num;
-
-            if (bcmi2cnfc_read_multi_packets > 0)
-                ioctl(linux_cb.sock, BCMNFC_READ_MULTI_PACKETS, bcmi2cnfc_read_multi_packets);
 
             if ( GetNumValue ( NAME_CLIENT_ADDRESS, &num, sizeof ( num ) ) )
                 bcmi2cnfc_client_addr = num & 0xFF;
@@ -1046,12 +1027,20 @@ UDRV_API void USERIAL_Open(tUSERIAL_PORT port, tUSERIAL_OPEN_CFG *p_cfg, tUSERIA
             {
                 ALOGD( "Change client address to %x\n", bcmi2cnfc_client_addr);
                 GKI_delay(gPowerOnDelay);
-                ioctl(linux_cb.sock, BCMNFC_CHANGE_ADDR, bcmi2cnfc_client_addr);
-                linux_cb.client_device_address = bcmi2cnfc_client_addr;
+                ret = ioctl(linux_cb.sock, BCMNFC_CHANGE_ADDR, bcmi2cnfc_client_addr);
+                if (!ret) {
+                    resetSuccess = 1;
+                    linux_cb.client_device_address = bcmi2cnfc_client_addr;
+                }
+            } else {
+                // TODO send core_reset to see if NFCC responds for non-i2c devices
+                resetSuccess = 1;
             }
-
+            GKI_delay(gPowerOnDelay);
         }
-        GKI_delay(gPowerOnDelay);
+        if (!resetSuccess) {
+            ALOGE("BCM2079x: failed to initialize NFC controller");
+        }
     }
 
     linux_cb.ser_cb     = p_cback;
