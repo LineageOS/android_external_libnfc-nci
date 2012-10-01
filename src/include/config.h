@@ -67,6 +67,7 @@ int GetNumValue(const char* name, void* p_value, unsigned long len);
 #define NAME_SNOOZE_MODE_CFG            "SNOOZE_MODE_CFG"
 #define NAME_XTAL_FREQUENCY             "XTAL_FREQUENCY"
 #define NAME_NFA_DM_DISC_DURATION_POLL  "NFA_DM_DISC_DURATION_POLL"
+#define NAME_AID_FOR_EMPTY_SELECT       "AID_FOR_EMPTY_SELECT"
 
 #define                     LPTD_PARAM_LEN (40)
 
