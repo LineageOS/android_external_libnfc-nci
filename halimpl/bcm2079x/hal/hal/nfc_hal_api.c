@@ -47,7 +47,7 @@ UINT32 nfc_hal_task_stack[(NFC_HAL_TASK_STACK_SIZE+3)/4];
 *******************************************************************************/
 void HAL_NfcInitialize (void)
 {
-    NCI_TRACE_API0 ("HAL_NfcInitialize");
+    NCI_TRACE_API0 ("HAL_NfcInitialize ()");
 
     /* Initialize HAL control block */
     nfc_hal_main_init ();
@@ -80,7 +80,7 @@ void HAL_NfcInitialize (void)
 *******************************************************************************/
 void HAL_NfcTerminate(void)
 {
-    NCI_TRACE_API0 ("HAL_NfcTerminate");
+    NCI_TRACE_API0 ("HAL_NfcTerminate ()");
 }
 
 
@@ -96,15 +96,16 @@ void HAL_NfcTerminate(void)
 ** Returns          void
 **
 *******************************************************************************/
-void HAL_NfcOpen (tHAL_NFC_CBACK *p_hal_cback)
+void HAL_NfcOpen (tHAL_NFC_CBACK *p_hal_cback, tHAL_NFC_DATA_CBACK *p_data_cback)
 {
-    NCI_TRACE_API0 ("HAL_NfcOpen");
+    NCI_TRACE_API0 ("HAL_NfcOpen ()");
 
     /* Only handle if HAL is not opened (stack cback is NULL) */
     if ((nfc_hal_cb.p_stack_cback == NULL) && (p_hal_cback))
     {
         nfc_hal_dm_init ();
         nfc_hal_cb.p_stack_cback = p_hal_cback;
+        nfc_hal_cb.p_data_cback  = p_data_cback;
 
         /* Send startup event to NFC_HAL_TASK */
         GKI_send_event (NFC_HAL_TASK, NFC_HAL_TASK_EVT_INITIALIZE);
@@ -123,7 +124,7 @@ void HAL_NfcOpen (tHAL_NFC_CBACK *p_hal_cback)
 *******************************************************************************/
 void HAL_NfcClose (void)
 {
-    NCI_TRACE_API0 ("HAL_NfcClose");
+    NCI_TRACE_API0 ("HAL_NfcClose ()");
 
     /* Only handle if HAL is opened (stack cback is not-NULL) */
     if (nfc_hal_cb.p_stack_cback)
@@ -150,7 +151,7 @@ void HAL_NfcCoreInitialized (UINT8 *p_core_init_rsp_params)
     NFC_HDR *p_msg;
     UINT16  size;
 
-    NCI_TRACE_API0 ("HAL_NfcCoreInitialized");
+    NCI_TRACE_API0 ("HAL_NfcCoreInitialized ()");
 
     /* NCI payload len + NCI header size */
     size = p_core_init_rsp_params[2] + NCI_MSG_HDR_SIZE;
@@ -185,7 +186,7 @@ void HAL_NfcWrite (UINT16 data_len, UINT8 *p_data)
     NFC_HDR *p_msg;
     UINT8 mt;
 
-    NCI_TRACE_API0 ("HAL_NfcWrite");
+    NCI_TRACE_API0 ("HAL_NfcWrite ()");
 
     if (data_len > (NCI_MAX_CTRL_SIZE + NCI_MSG_HDR_SIZE))
     {
@@ -251,7 +252,7 @@ BOOLEAN HAL_NfcPreDiscover (void)
 void HAL_NfcControlGranted (void)
 {
     NFC_HDR *p_msg;
-    NCI_TRACE_API0 ("HAL_NfcControlGranted");
+    NCI_TRACE_API0 ("HAL_NfcControlGranted ()");
 
     /* Send message to NFC_HAL_TASK */
     if ((p_msg = (NFC_HDR *)GKI_getpoolbuf (NFC_HAL_NCI_POOL_ID)) != NULL)
@@ -274,7 +275,7 @@ void HAL_NfcControlGranted (void)
 *******************************************************************************/
 void HAL_NfcPowerCycle (void)
 {
-    NCI_TRACE_API0 ("HAL_NfcPowerCycle");
+    NCI_TRACE_API0 ("HAL_NfcPowerCycle ()");
 
     /* Only handle if HAL is opened (stack cback is not-NULL) */
     if (nfc_hal_cb.p_stack_cback)
@@ -283,4 +284,5 @@ void HAL_NfcPowerCycle (void)
         GKI_send_event (NFC_HAL_TASK, NFC_HAL_TASK_EVT_POWER_CYCLE);
     }
 }
+
 

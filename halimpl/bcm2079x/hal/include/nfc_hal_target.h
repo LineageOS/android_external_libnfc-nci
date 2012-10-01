@@ -116,7 +116,7 @@
 
 /* amount of time to wait after downloading preI2C patch before downloading LPM/FPM patch */
 #ifndef NFC_HAL_PRM_POST_I2C_FIX_DELAY
-#define NFC_HAL_PRM_POST_I2C_FIX_DELAY          (500)
+#define NFC_HAL_PRM_POST_I2C_FIX_DELAY          (200)
 #endif
 
 /* NFCC will respond to more than one technology during listen discovery  */
@@ -147,7 +147,7 @@
 #endif
 
 #ifndef NFC_HAL_INITIAL_TRACE_LEVEL
-#define NFC_HAL_INITIAL_TRACE_LEVEL             0
+#define NFC_HAL_INITIAL_TRACE_LEVEL             5
 #endif
 
 /* Map NFC serial port to USERIAL_PORT_6 by default */

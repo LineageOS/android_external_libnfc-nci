@@ -87,7 +87,7 @@ static const tNFA_SYS_REG nfa_hci_sys_reg =
 *******************************************************************************/
 void nfa_hci_ee_info_cback (BOOLEAN disable_discover)
 {
-    NFA_TRACE_DEBUG0 ("nfa_hci_ee_info_cback ()");
+    NFA_TRACE_DEBUG1 ("nfa_hci_ee_info_cback (): %d", disable_discover);
 
     /* Notify EE Discovery is complete */
 
@@ -357,6 +357,7 @@ void nfa_hci_proc_nfcc_power_mode (UINT8 nfcc_power_mode)
         {
             nfa_hci_cb.hci_state     = NFA_HCI_STATE_RESTORE;
             nfa_hci_cb.ee_disc_cmplt = FALSE;
+            nfa_hci_cb.conn_id       = 0;
         }
         else
         {
@@ -457,7 +458,7 @@ void nfa_hci_startup (void)
     }
 
     /* We can only start up if NV Ram is read and EE discovery is complete */
-    if (nfa_hci_cb.nv_read_cmplt && nfa_hci_cb.ee_disc_cmplt)
+    if (nfa_hci_cb.nv_read_cmplt && nfa_hci_cb.ee_disc_cmplt && (nfa_hci_cb.conn_id == 0))
     {
         NFA_EeGetInfo (&num_nfcee, ee_info);
         nfa_hci_cb.num_nfcee = num_nfcee;

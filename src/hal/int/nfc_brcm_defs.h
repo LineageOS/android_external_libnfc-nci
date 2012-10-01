@@ -224,5 +224,14 @@
 #define NCI_PARAM_LEN_HOST_LISTEN_MASK      2
 #define NCI_PARAM_LEN_PLL325_CFG_PARAM      14
 
+/**********************************************
+ * Snooze Mode
+ **********************************************/
+#define NFC_SNOOZE_MODE_NONE      0x00    /* Snooze mode disabled    */
+#define NFC_SNOOZE_MODE_UART      0x01    /* Snooze mode for UART    */
+#define NFC_SNOOZE_MODE_SPI_I2C   0x08    /* Snooze mode for SPI/I2C */
+
+#define NFC_SNOOZE_ACTIVE_LOW     0x00    /* high to low voltage is asserting */
+#define NFC_SNOOZE_ACTIVE_HIGH    0x01    /* low to high voltage is asserting */
 
 #endif  /* NFC_BRCM_DEFS_H */

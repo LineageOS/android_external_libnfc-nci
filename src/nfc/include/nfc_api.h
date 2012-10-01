@@ -1231,6 +1231,7 @@ NFC_API extern tNFC_STATUS NFC_SendVsCommand(UINT8          oid,
 *******************************************************************************/
 NFC_API extern tNFC_STATUS NFC_TestLoopback(BT_HDR *p_data);
 
+
 /*******************************************************************************
 **
 ** Function         NFC_SetTraceLevel

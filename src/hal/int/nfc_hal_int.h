@@ -347,7 +347,8 @@ typedef struct
     UINT8                   next_startup_vsc;       /* next start-up VSC offset in post init    */
 
     tNFC_HAL_POWER_MODE     power_mode;             /* NFCC power mode                          */
-    BOOLEAN                 snooze_mode;            /* snooze mode                              */
+    UINT8                   snooze_mode;            /* current snooze mode                      */
+    UINT8                   new_snooze_mode;        /* next snooze mode after receiving cmpl    */
     UINT8                   nfc_wake_active_mode;   /* NFC_HAL_LP_ACTIVE_LOW/HIGH               */
     TIMER_LIST_ENT          lp_timer;               /* timer for low power mode                 */
 
@@ -367,6 +368,7 @@ typedef struct
 typedef struct
 {
     tHAL_NFC_CBACK          *p_stack_cback;     /* Callback for HAL event notification  */
+    tHAL_NFC_DATA_CBACK     *p_data_cback;      /* Callback for data event notification  */
 
     TIMER_LIST_Q            quick_timer_queue;  /* timer list queue                 */
     TIMER_LIST_ENT          timer;              /* timer for NCI transport task     */
@@ -382,6 +384,7 @@ typedef struct
     tNFC_HAL_HCI_CB         hci_cb;
 
 
+    UINT8                   max_rf_credits;     /* NFC Max RF data credits */
     UINT8                   trace_level;        /* NFC HAL trace level */
 } tNFC_HAL_CB;
 
@@ -430,11 +433,13 @@ void nfc_hal_dm_send_pend_cmd (void);
 /* nfc_hal_prm.c */
 void nfc_hal_prm_spd_reset_ntf (UINT8 reset_reason, UINT8 reset_type);
 void nfc_hal_prm_nci_command_complete_cback (tNFC_HAL_NCI_EVT event, UINT16 data_len, UINT8 *p_data);
+void nfc_hal_prm_process_timeout (void *p_tle);
 
 /* nfc_hal_hci.c */
 void nfc_hal_hci_enable (void);
 void nfc_hal_hci_evt_hdlr (tNFC_HAL_HCI_EVENT_DATA *p_evt_data);
 void nfc_hal_hci_handle_hci_netwk_info (UINT8 *p_data);
+void nfc_hal_hci_timeout_cback (void *p_tle);
 
 
 /* Define default NCI protocol trace function (if protocol tracing is enabled) */

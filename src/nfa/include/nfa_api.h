@@ -32,6 +32,7 @@
 #include "nfc_hal_api.h"
 #include "gki.h"
 
+
 /*****************************************************************************
 **  Constants and data types
 *****************************************************************************/
@@ -135,15 +136,14 @@ typedef UINT8 tNFA_PROTOCOL_MASK;
 
 
 /* NFA_DM callback events */
-#define NFA_DM_ENABLE_EVT	            0   /* Result of NFA_Enable             */
-#define NFA_DM_DISABLE_EVT	            1   /* Result of NFA_Disable            */
-#define NFA_DM_SET_CONFIG_EVT	        2   /* Result of NFA_SetConfig          */
-#define NFA_DM_GET_CONFIG_EVT	        3   /* Result of NFA_GetConfig          */
-#define NFA_DM_PWR_MODE_CHANGE_EVT	    4   /* Result of NFA_PowerOffSleepMode  */
+#define NFA_DM_ENABLE_EVT               0   /* Result of NFA_Enable             */
+#define NFA_DM_DISABLE_EVT              1   /* Result of NFA_Disable            */
+#define NFA_DM_SET_CONFIG_EVT           2   /* Result of NFA_SetConfig          */
+#define NFA_DM_GET_CONFIG_EVT           3   /* Result of NFA_GetConfig          */
+#define NFA_DM_PWR_MODE_CHANGE_EVT      4   /* Result of NFA_PowerOffSleepMode  */
 #define NFA_DM_RF_FIELD_EVT	            5   /* Status of RF Field               */
 #define NFA_DM_NFCC_TIMEOUT_EVT         6   /* NFCC is not responding           */
 #define NFA_DM_NFCC_TRANSPORT_ERR_EVT   7   /* NCI Tranport error               */
-#define NFA_DM_VS_EVT_BASE              8   /* Start of vendor specific events  */
 
 #define NFA_DM_MAX_UICC                 2   /* Max number of UICC               */
 

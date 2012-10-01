@@ -34,7 +34,6 @@
 #include <poll.h>
 #include "upio.h"
 #include "bcm2079x.h"
-#include "nfc_brcm_api.h"
 #include "config.h"
 
 #define HCISU_EVT                           EVENT_MASK(APPL_EVT_0)

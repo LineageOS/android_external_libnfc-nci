@@ -271,6 +271,8 @@ typedef struct {
     tCE_T4T_AID_HANDLE      t4t_prop_aid_hdl;   /* T4T registration handle for proprietary aid */
     UINT8                   nfc_dep_wt;
 
+    BOOLEAN                 llcp_cl_more_to_read;    /* TRUE if there is more to read in llcp cl link*/
+    BOOLEAN                 llcp_co_more_to_read;    /* TRUE if there is more to read in llcp recieve window*/
     BOOLEAN                 llcp_is_initiator;      /* TURE if IUT is LLCP initiator */
     UINT16                  llcp_local_link_miu;    /* link MIU of IUT               */
     UINT16                  llcp_remote_link_miu;   /* link MIU of LT                */

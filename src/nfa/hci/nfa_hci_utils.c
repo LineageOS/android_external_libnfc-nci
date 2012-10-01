@@ -813,7 +813,10 @@ void nfa_hciu_remove_all_pipes_from_host (UINT8 host)
     /* Remove all pipes from the specified host connected to all generic gates */
     for (xx = 0, pp = nfa_hci_cb.cfg.dyn_pipes; xx < NFA_HCI_MAX_PIPE_CB; xx++, pp++)
     {
-        if ( (pp->pipe_id == 0) || ((host != 0) && (pp->dest_host != host)) )
+        if (  (pp->pipe_id == 0)
+                    ||
+              (  (host != 0)
+               &&((pp->dest_host != host) || (pp->pipe_id > NFA_HCI_LAST_DYNAMIC_PIPE)))  )
             continue;
 
         if ((pg = nfa_hciu_find_gate_by_gid (pp->local_gate)) != NULL)

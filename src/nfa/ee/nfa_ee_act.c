@@ -905,6 +905,7 @@ void nfa_ee_nci_disc_ntf(tNFA_EE_MSG *p_data)
     BOOLEAN                 notify_new_ee = FALSE;
     tNFA_EE_CBACK_DATA      evt_data = {0};
     tNFA_EE_INFO            *p_info;
+    tNFA_EE_EM_STATE        new_em_state = NFA_EE_EM_STATE_MAX;
 
     NFA_TRACE_DEBUG4("nfa_ee_nci_disc_ntf() em_state:%d ee_flags:0x%x cur_ee:%d num_ee_expecting:%d", nfa_ee_cb.em_state, nfa_ee_cb.ee_flags, nfa_ee_cb.cur_ee, nfa_ee_cb.num_ee_expecting);
     if (nfa_ee_cb.num_ee_expecting)
@@ -951,6 +952,10 @@ void nfa_ee_nci_disc_ntf(tNFA_EE_MSG *p_data)
             nfa_ee_cb.cur_ee++;
             notify_new_ee = TRUE;
         }
+        else
+        {
+            NFA_TRACE_DEBUG3 ("cur_ee:%d ecb_flags=0x%02x  ee_status=0x%x", nfa_ee_cb.cur_ee, p_cb->ecb_flags, p_cb->ee_status);
+        }
         break;
 
     case NFA_EE_EM_STATE_RESTORING:
@@ -972,7 +977,7 @@ void nfa_ee_nci_disc_ntf(tNFA_EE_MSG *p_data)
             notify_enable_done = TRUE;
             if (nfa_ee_restore_ntf_done())
             {
-                nfa_ee_cb.em_state = NFA_EE_EM_STATE_INIT_DONE;
+                new_em_state       = NFA_EE_EM_STATE_INIT_DONE;
             }
         }
         break;
@@ -1024,9 +1029,16 @@ void nfa_ee_nci_disc_ntf(tNFA_EE_MSG *p_data)
 
         if (p_cb->ecb_flags & NFA_EE_ECB_FLAGS_ORDER)
         {
+            NFA_TRACE_DEBUG0 ("NFA_EE_ECB_FLAGS_ORDER");
             p_cb->ecb_flags &= ~NFA_EE_ECB_FLAGS_ORDER;
             nfa_ee_report_discover_req_evt();
         }
+    }
+
+    if (new_em_state != NFA_EE_EM_STATE_MAX)
+    {
+        nfa_ee_cb.em_state = new_em_state;
+        nfa_ee_check_restore_complete();
     }
 
     if ((nfa_ee_cb.cur_ee == nfa_ee_max_ee_cfg) && (nfa_ee_cb.em_state == NFA_EE_EM_STATE_INIT_DONE) )
@@ -1343,7 +1355,7 @@ void nfa_ee_nci_disc_req_ntf(tNFA_EE_MSG *p_data)
     tNFA_EE_ECB         *p_cb = NULL;
     UINT8 xx;
 
-    NFA_TRACE_DEBUG0 ("nfa_ee_nci_disc_req_ntf ()");
+    NFA_TRACE_DEBUG2 ("nfa_ee_nci_disc_req_ntf () num_info: %d cur_ee:%d", p_cbk->num_info, nfa_ee_cb.cur_ee );
 
     for (xx = 0; xx < p_cbk->num_info; xx++)
     {
@@ -1385,10 +1397,11 @@ void nfa_ee_nci_disc_req_ntf(tNFA_EE_MSG *p_data)
             {
                 p_cb->lbp_protocol = p_cbk->info[xx].protocol;
             }
+            NFA_TRACE_DEBUG6 ("nfcee_id=0x%x ee_status=0x%x ecb_flags=0x%x la_protocol=0x%x la_protocol=0x%x la_protocol=0x%x",
+                p_cb->nfcee_id, p_cb->ee_status, p_cb->ecb_flags,
+                p_cb->la_protocol, p_cb->lb_protocol, p_cb->lf_protocol);
         }
         else
-        {
-            if (p_cb)
             {
                 if (p_cbk->info[xx].tech_n_mode == NFC_DISCOVERY_TYPE_LISTEN_A)
                 {
@@ -1405,7 +1418,6 @@ void nfa_ee_nci_disc_req_ntf(tNFA_EE_MSG *p_data)
                 else if (p_cbk->info[xx].tech_n_mode == NFC_DISCOVERY_TYPE_LISTEN_B_PRIME)
                 {
                     p_cb->lbp_protocol = 0;
-                }
             }
         }
     }

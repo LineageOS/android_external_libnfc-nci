@@ -349,7 +349,6 @@ static void rw_t2t_handle_lock_read_rsp (UINT8 *p_data)
     UINT16                  lock_offset;
     UINT16                  base_lock_offset = 0;
     tRW_T2T_CB              *p_t2t  = &rw_cb.tcb.t2t;
-    UINT8                   state = p_t2t->state;
     UINT16                  block;
 
     /* Prepare NDEF/TLV attributes (based on current op) for sending response to upper layer */
@@ -966,14 +965,12 @@ void rw_t2t_extract_default_locks_info (void)
 tNFC_STATUS rw_t2t_read_ndef_last_block (void)
 {
     tRW_T2T_CB  *p_t2t = &rw_cb.tcb.t2t;
-    UINT8       *p_cc = &p_t2t->tag_hdr[T2T_CC0_NMN_BYTE];
     UINT16      header_len = (p_t2t->new_ndef_msg_len >= T2T_LONG_NDEF_MIN_LEN) ? T2T_LONG_NDEF_LEN_FIELD_LEN : T2T_SHORT_NDEF_LEN_FIELD_LEN;
     UINT16      num_ndef_bytes;
     UINT16      total_ndef_bytes;
     UINT16      last_ndef_byte_offset;
     UINT16      terminator_tlv_byte_index;
     tNFC_STATUS status;
-    UINT16      tag_size = p_cc[2] * 8 + T2T_FIRST_DATA_BLOCK * T2T_BLOCK_LEN;
     UINT16      block;
 
 

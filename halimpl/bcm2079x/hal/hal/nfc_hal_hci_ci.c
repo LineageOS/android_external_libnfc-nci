@@ -50,13 +50,11 @@ void nfc_hal_nv_ci_read (UINT16 num_bytes_read, tNFC_HAL_NV_CO_STATUS status, UI
 
         if (  (status == NFC_HAL_NV_CO_OK)
             &&(num_bytes_read != 0) )
-        {
             p_msg->nv_read.status = HAL_NFC_STATUS_OK;
-            p_msg->nv_read.size   = num_bytes_read;
-        }
         else
             p_msg->nv_read.status = HAL_NFC_STATUS_FAILED;
 
+        p_msg->nv_read.size  = num_bytes_read;
         p_msg->nv_read.block = block;
 
         GKI_send_msg (NFC_HAL_TASK, NFC_HAL_TASK_MBOX, p_msg);

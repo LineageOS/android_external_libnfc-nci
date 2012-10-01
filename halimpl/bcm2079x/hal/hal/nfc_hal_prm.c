@@ -429,16 +429,6 @@ void nfc_hal_prm_spd_check_version (void)
         return_code = NFC_HAL_PRM_ABORT_INVALID_PATCH_EVT;
     }
 
-    /* Validate sizes */
-    if ((nfc_hal_cb.prm.spd_patch_needed_mask) && (patchfile_patchsize > nfc_hal_cb.prm.spd_patch_max_size) && (nfc_hal_cb.prm.spd_patch_max_size != 0))
-    {
-        /* Invalid patch file header */
-        NCI_TRACE_ERROR2 ("Patchfile patch sizes (%i) is greater than NVM patch memory size (%i)",
-                          patchfile_patchsize, nfc_hal_cb.prm.spd_patch_max_size);
-        nfc_hal_cb.prm.spd_patch_needed_mask = 0;
-        return_code = NFC_HAL_PRM_ABORT_INVALID_PATCH_EVT;
-    }
-
     /* If we need to download anything, get the first patch to download */
     if (nfc_hal_cb.prm.spd_patch_needed_mask)
     {
@@ -871,7 +861,7 @@ void nfc_hal_prm_post_baud_update (tHAL_NFC_STATUS status)
 ** Returns          void
 **
 *******************************************************************************/
-static void nfc_hal_prm_process_timeout (void *p_tle)
+void nfc_hal_prm_process_timeout (void *p_tle)
 {
     NFC_HAL_PRM_STATE ("nfc_hal_prm_process_timeout");
 

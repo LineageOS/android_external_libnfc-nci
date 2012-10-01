@@ -56,18 +56,16 @@ typedef struct
     UINT16                  xtal_freq;
 } tNFC_HAL_DEV_INIT_CFG;
 
-typedef void (tHAL_NFC_STATUS_CBACK) (tHAL_NFC_STATUS status);
-
 /*****************************************************************************
 **  Low Power Mode definitions
 *****************************************************************************/
 
-#define NFC_HAL_LP_SNOOZE_MODE_NONE      0x00    /* Snooze mode disabled    */
-#define NFC_HAL_LP_SNOOZE_MODE_UART      0x01    /* Snooze mode for UART    */
-#define NFC_HAL_LP_SNOOZE_MODE_SPI_I2C   0x08    /* Snooze mode for SPI/I2C */
+#define NFC_HAL_LP_SNOOZE_MODE_NONE      NFC_SNOOZE_MODE_NONE       /* Snooze mode disabled    */
+#define NFC_HAL_LP_SNOOZE_MODE_UART      NFC_SNOOZE_MODE_UART       /* Snooze mode for UART    */
+#define NFC_HAL_LP_SNOOZE_MODE_SPI_I2C   NFC_SNOOZE_MODE_SPI_I2C    /* Snooze mode for SPI/I2C */
 
-#define NFC_HAL_LP_ACTIVE_LOW            0x00    /* high to low voltage is asserting */
-#define NFC_HAL_LP_ACTIVE_HIGH           0x01    /* low to high voltage is asserting */
+#define NFC_HAL_LP_ACTIVE_LOW            NFC_SNOOZE_ACTIVE_LOW      /* high to low voltage is asserting */
+#define NFC_HAL_LP_ACTIVE_HIGH           NFC_SNOOZE_ACTIVE_HIGH     /* low to high voltage is asserting */
 
 /*****************************************************************************
 **  Patch RAM Constants
@@ -240,6 +238,18 @@ void HAL_NfcPrmSetI2cPatch (UINT8 *p_i2c_patchfile_buf,
 **
 *******************************************************************************/
 tHAL_NFC_STATUS HAL_NfcPrmSetSpdNciCmdPayloadSize (UINT8 max_payload_size);
+
+/*******************************************************************************
+**
+** Function         HAL_NfcSetMaxRfDataCredits
+**
+** Description      This function sets the maximum RF data credit for HAL.
+**                  If 0, use the value reported from NFCC.
+**
+** Returns          none
+**
+*******************************************************************************/
+void HAL_NfcSetMaxRfDataCredits (UINT8 max_credits);
 
 /*******************************************************************************
 **

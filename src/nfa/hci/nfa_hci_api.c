@@ -869,9 +869,10 @@ tNFA_STATUS NFA_HciDeletePipe (tNFA_HANDLE  hci_handle, UINT8 pipe)
 ** Function         NFA_HciAddStaticPipe
 **
 ** Description      This function is called to add a static pipe for sending
-**                  7816 APDUs.
-**
-** Returns          NFA_STATUS_OK if successfully added
+**                  7816 APDUs. When the static pipe is added (or if an error occurs),
+**                  the app will be notified with NFA_HCI_ADD_STATIC_PIPE_EVT with
+**                  the status.
+** Returns          NFA_STATUS_OK if successfully initiated
 **                  NFA_STATUS_FAILED otherwise
 **
 *******************************************************************************/
