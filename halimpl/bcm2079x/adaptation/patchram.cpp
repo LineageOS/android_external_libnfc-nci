@@ -35,6 +35,7 @@ extern "C"
 #define FW_PRE_PATCH                        "FW_PRE_PATCH"
 #define FW_PATCH                            "FW_PATCH"
 #define NFA_CONFIG_FORMAT                   "NFA_CONFIG_FORMAT"
+#define MAX_RF_DATA_CREDITS                 "MAX_RF_DATA_CREDITS"
 
 #define MAX_BUFFER      (512)
 static char sPrePatchFn[MAX_BUFFER+1];
@@ -393,4 +394,12 @@ void nfc_hal_post_reset_init (UINT32 brcm_hw_id, UINT8 nvm_type)
 {
     ALOGD("%s", __FUNCTION__);
     ReadConfigFile(brcm_hw_id);
+
+    UINT8 max_credits;
+
+    if (GetNumValue(MAX_RF_DATA_CREDITS, &max_credits, sizeof(max_credits)) && (max_credits > 0))
+    {
+        ALOGD("%s : max_credits=%d", __FUNCTION__, max_credits);
+        HAL_NfcSetMaxRfDataCredits(max_credits);
+    }
 }
