@@ -454,7 +454,11 @@ tNFA_HCI_DYN_PIPE *nfa_hciu_alloc_pipe (UINT8 pipe_id)
 
     /* If we already have a pipe of the same ID, release it first it */
     if ((pp = nfa_hciu_find_pipe_by_pid (pipe_id)) != NULL)
+    {
+        if (pipe_id > NFA_HCI_LAST_DYNAMIC_PIPE)
+            return pp;
         nfa_hciu_release_pipe (pipe_id);
+    }
 
     /* Look for a free pipe control block */
     for (xx = 0, pp = nfa_hci_cb.cfg.dyn_pipes ; xx < NFA_HCI_MAX_PIPE_CB; xx++, pp++)
@@ -766,6 +770,12 @@ tNFA_HCI_RESPONSE nfa_hciu_release_pipe (UINT8 pipe_id)
     if ((p_pipe = nfa_hciu_find_pipe_by_pid (pipe_id)) == NULL)
         return (NFA_HCI_ANY_E_NOK);
 
+    if (pipe_id > NFA_HCI_LAST_DYNAMIC_PIPE)
+    {
+        NFA_TRACE_DEBUG1 ("ignore pipe: %d", pipe_id);
+        return (NFA_HCI_ANY_E_NOK);
+    }
+
     pipe_index = (UINT8) (p_pipe - nfa_hci_cb.cfg.dyn_pipes);
 
     if (p_pipe->local_gate == NFA_HCI_IDENTITY_MANAGEMENT_GATE)
@@ -870,6 +880,11 @@ tNFA_STATUS nfa_hciu_send_delete_pipe_cmd (UINT8 pipe)
 
     NFA_TRACE_DEBUG1 ("nfa_hciu_send_delete_pipe_cmd: %d", pipe);
 
+    if (pipe > NFA_HCI_LAST_DYNAMIC_PIPE)
+    {
+        NFA_TRACE_DEBUG1 ("ignore pipe: %d", pipe);
+        return (NFA_HCI_ANY_E_NOK);
+    }
     nfa_hci_cb.pipe_in_use = pipe;
 
     status = nfa_hciu_send_msg (NFA_HCI_ADMIN_PIPE, NFA_HCI_COMMAND_TYPE, NFA_HCI_ADM_DELETE_PIPE, 1, &pipe);

@@ -773,6 +773,7 @@ void nfa_hci_rsp_timeout (tNFA_HCI_EVENT_DATA *p_evt_data)
 {
     tNFA_HCI_EVT        evt = 0;
     tNFA_HCI_EVT_DATA   evt_data;
+    UINT8               delete_pipe;
 
     NFA_TRACE_EVENT2 ("nfa_hci_rsp_timeout () State: %u  Cmd: %u", nfa_hci_cb.hci_state, nfa_hci_cb.cmd_sent);
 
@@ -835,6 +836,7 @@ void nfa_hci_rsp_timeout (tNFA_HCI_EVENT_DATA *p_evt_data)
             break;
         }
 
+        delete_pipe          = 0;
         switch (nfa_hci_cb.cmd_sent)
         {
         case NFA_HCI_ANY_SET_PARAMETER:
@@ -842,12 +844,11 @@ void nfa_hci_rsp_timeout (tNFA_HCI_EVENT_DATA *p_evt_data)
              * As no response to the command sent on this pipe, we may assume the pipe is
              * deleted already and release the pipe. But still send delete pipe command to be safe.
              */
-            nfa_hciu_send_delete_pipe_cmd (nfa_hci_cb.pipe_in_use);
-            nfa_hciu_release_pipe (nfa_hci_cb.pipe_in_use);
+            delete_pipe                = nfa_hci_cb.pipe_in_use;
             evt_data.registry.pipe     = nfa_hci_cb.pipe_in_use;
             evt_data.registry.data_len = 0;
             evt_data.registry.index    = nfa_hci_cb.param_in_use;
-            evt                        = NFA_HCI_SET_REG_CMD_EVT;
+            evt                        = NFA_HCI_SET_REG_RSP_EVT;
             break;
 
         case NFA_HCI_ANY_GET_PARAMETER:
@@ -855,12 +856,11 @@ void nfa_hci_rsp_timeout (tNFA_HCI_EVENT_DATA *p_evt_data)
              * As no response to the command sent on this pipe, we may assume the pipe is
              * deleted already and release the pipe. But still send delete pipe command to be safe.
              */
-            nfa_hciu_send_delete_pipe_cmd (nfa_hci_cb.pipe_in_use);
-            nfa_hciu_release_pipe (nfa_hci_cb.pipe_in_use);
+            delete_pipe                = nfa_hci_cb.pipe_in_use;
             evt_data.registry.pipe     = nfa_hci_cb.pipe_in_use;
             evt_data.registry.data_len = 0;
             evt_data.registry.index    = nfa_hci_cb.param_in_use;
-            evt                        = NFA_HCI_GET_REG_CMD_EVT;
+            evt                        = NFA_HCI_GET_REG_RSP_EVT;
             break;
 
         case NFA_HCI_ANY_OPEN_PIPE:
@@ -868,8 +868,7 @@ void nfa_hci_rsp_timeout (tNFA_HCI_EVENT_DATA *p_evt_data)
              * As no response to the command sent on this pipe, we may assume the pipe is
              * deleted already and release the pipe. But still send delete pipe command to be safe.
              */
-            nfa_hciu_send_delete_pipe_cmd (nfa_hci_cb.pipe_in_use);
-            nfa_hciu_release_pipe (nfa_hci_cb.pipe_in_use);
+            delete_pipe          = nfa_hci_cb.pipe_in_use;
             evt_data.opened.pipe = nfa_hci_cb.pipe_in_use;
             evt                  = NFA_HCI_OPEN_PIPE_EVT;
             break;
@@ -879,8 +878,7 @@ void nfa_hci_rsp_timeout (tNFA_HCI_EVENT_DATA *p_evt_data)
              * As no response to the command sent on this pipe, we may assume the pipe is
              * deleted already and release the pipe. But still send delete pipe command to be safe.
              */
-            nfa_hciu_send_delete_pipe_cmd (nfa_hci_cb.pipe_in_use);
-            nfa_hciu_release_pipe (nfa_hci_cb.pipe_in_use);
+            delete_pipe          = nfa_hci_cb.pipe_in_use;
             evt_data.closed.pipe = nfa_hci_cb.pipe_in_use;
             evt                  = NFA_HCI_CLOSE_PIPE_EVT;
             break;
@@ -894,14 +892,14 @@ void nfa_hci_rsp_timeout (tNFA_HCI_EVENT_DATA *p_evt_data)
             break;
 
         case NFA_HCI_ADM_DELETE_PIPE:
-            nfa_hciu_release_pipe (nfa_hci_cb.pipe_in_use);
-            evt_data.deleted.pipe = nfa_hci_cb.pipe_in_use;
-            evt                   = NFA_HCI_DELETE_PIPE_EVT;
             /*
              * As no response to the command sent on this pipe, we may assume the pipe is
              * deleted already. Just release the pipe.
              */
-            nfa_hciu_release_pipe (nfa_hci_cb.pipe_in_use);
+            if (nfa_hci_cb.pipe_in_use <= NFA_HCI_LAST_DYNAMIC_PIPE)
+                nfa_hciu_release_pipe (nfa_hci_cb.pipe_in_use);
+            evt_data.deleted.pipe = nfa_hci_cb.pipe_in_use;
+            evt                   = NFA_HCI_DELETE_PIPE_EVT;
             break;
 
         default:
@@ -909,9 +907,13 @@ void nfa_hci_rsp_timeout (tNFA_HCI_EVENT_DATA *p_evt_data)
              * As no response to the command sent on this pipe, we may assume the pipe is
              * deleted already and release the pipe. But still send delete pipe command to be safe.
              */
-            nfa_hciu_send_delete_pipe_cmd (nfa_hci_cb.pipe_in_use);
-            nfa_hciu_release_pipe (nfa_hci_cb.pipe_in_use);
+            delete_pipe                = nfa_hci_cb.pipe_in_use;
             break;
+        }
+        if (delete_pipe && (delete_pipe <= NFA_HCI_LAST_DYNAMIC_PIPE))
+        {
+            nfa_hciu_send_delete_pipe_cmd (delete_pipe);
+            nfa_hciu_release_pipe (delete_pipe);
         }
         break;
     case NFA_HCI_STATE_DISABLED:
