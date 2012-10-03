@@ -437,7 +437,7 @@ void nfc_hal_prm_spd_check_version (void)
     /* If we need to download anything, get the first patch to download */
     if (nfc_hal_cb.prm.spd_patch_needed_mask)
     {
-        NCI_TRACE_DEBUG4 ("Downloading patch version: %i.%i (previous version in NVM: %i.%i)...",
+        NCI_TRACE_ERROR4 ("Downloading patch version: %i.%i (previous version in NVM: %i.%i)...",
                             patchfile_ver_major, patchfile_ver_minor,
                             nfc_hal_cb.prm.spd_ver_major, nfc_hal_cb.prm.spd_ver_minor);
 #if (defined (NFC_HAL_PRE_I2C_PATCH_INCLUDED) && (NFC_HAL_PRE_I2C_PATCH_INCLUDED == TRUE))

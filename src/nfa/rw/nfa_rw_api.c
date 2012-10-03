@@ -766,7 +766,7 @@ tNFA_STATUS NFA_RwT3tWrite (UINT8 num_blocks, tNFA_T3T_BLOCK_DESC *t3t_blocks,	U
     tNFA_RW_OPERATION *p_msg;
     UINT8 *p_block_desc, *p_data_area;
 
-    NFA_TRACE_API1 ("NFA_RwT3tRead (): num_blocks to read: %i", num_blocks);
+    NFA_TRACE_API1 ("NFA_RwT3tWrite (): num_blocks to write: %i", num_blocks);
 
     /* Validate parameters */
     if ((num_blocks == 0) || (t3t_blocks == NULL) | (p_data == NULL))
@@ -784,6 +784,7 @@ tNFA_STATUS NFA_RwT3tWrite (UINT8 num_blocks, tNFA_T3T_BLOCK_DESC *t3t_blocks,	U
 
         p_msg->params.t3t_write.num_blocks   = num_blocks;
         p_msg->params.t3t_write.p_block_desc = (tNFA_T3T_BLOCK_DESC *) p_block_desc;
+        p_msg->params.t3t_write.p_block_data = p_data_area;
 
         /* Copy block descriptor list */
         memcpy (p_block_desc, t3t_blocks, (num_blocks * sizeof (tNFA_T3T_BLOCK_DESC)));
