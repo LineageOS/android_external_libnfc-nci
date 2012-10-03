@@ -966,8 +966,6 @@ UDRV_API void USERIAL_Open(tUSERIAL_PORT port, tUSERIAL_OPEN_CFG *p_cfg, tUSERIA
         strcpy((char*)device_name, (char*)userial_dev);
 
     {
-        unsigned int resetSuccess = 0;
-        unsigned int numTries = 0;
         ALOGD("%s Opening %s\n",  __FUNCTION__, device_name);
         if ((linux_cb.sock = open((char*)device_name, O_RDWR | O_NOCTTY )) == -1)
         {
@@ -990,56 +988,7 @@ UDRV_API void USERIAL_Open(tUSERIAL_PORT port, tUSERIAL_OPEN_CFG *p_cfg, tUSERIA
             }
         }
 
-        if ( GetNumValue ( NAME_READ_MULTI_PACKETS, &num, sizeof ( num ) ) )
-            bcmi2cnfc_read_multi_packets = num;
-
-        if (bcmi2cnfc_read_multi_packets > 0)
-            ioctl(linux_cb.sock, BCMNFC_READ_MULTI_PACKETS, bcmi2cnfc_read_multi_packets);
-
-        while (!resetSuccess && numTries < NUM_RESET_ATTEMPTS) {
-            if (numTries++ > 0) {
-                ALOGW("BCM2079x: retrying reset, attempt %d/%d", numTries + 1, NUM_RESET_ATTEMPTS);
-            }
-            // Max 5 retries to bring up the NFCC
-            if (linux_cb.sock_power_control > 0)
-            {
-                // Toggle reset
-                ioctl(linux_cb.sock_power_control, BCMNFC_POWER_CTL, 0);
-                GKI_delay(10);
-                ioctl(linux_cb.sock_power_control, BCMNFC_POWER_CTL, 1);
-                current_nfc_wake_state = wake_state();
-                ret = ioctl(linux_cb.sock_power_control, BCMNFC_WAKE_CTL, current_nfc_wake_state);
-            }
-            if (ret != 0)
-            {
-                /* Wake control is not available: Start SPI negotiation*/
-                USERIAL_Write(port, spi_negotiation, 10);
-                USERIAL_Read(port, spi_nego_res,20);
-            }
-
-
-            if ( GetNumValue ( NAME_CLIENT_ADDRESS, &num, sizeof ( num ) ) )
-                bcmi2cnfc_client_addr = num & 0xFF;
-            if (bcmi2cnfc_client_addr != 0 &&
-                0x07 < bcmi2cnfc_client_addr &&
-                bcmi2cnfc_client_addr < 0x78)
-            {
-                ALOGD( "Change client address to %x\n", bcmi2cnfc_client_addr);
-                GKI_delay(gPowerOnDelay);
-                ret = ioctl(linux_cb.sock, BCMNFC_CHANGE_ADDR, bcmi2cnfc_client_addr);
-                if (!ret) {
-                    resetSuccess = 1;
-                    linux_cb.client_device_address = bcmi2cnfc_client_addr;
-                }
-            } else {
-                // TODO send core_reset to see if NFCC responds for non-i2c devices
-                resetSuccess = 1;
-            }
-            GKI_delay(gPowerOnDelay);
-        }
-        if (!resetSuccess) {
-            ALOGE("BCM2079x: failed to initialize NFC controller");
-        }
+        USERIAL_PowerupDevice(port);
     }
 
     linux_cb.ser_cb     = p_cback;
@@ -1555,3 +1504,62 @@ UDRV_API BOOLEAN USERIAL_IsClosed()
     return (linux_cb.sock == -1) ? TRUE : FALSE;
 }
 
+UDRV_API void USERIAL_PowerupDevice(tUSERIAL_PORT port)
+{
+    int ret = -1;
+    unsigned long num = 0;
+    unsigned int resetSuccess = 0;
+    unsigned int numTries = 0;
+    unsigned char spi_negotiation[64];
+
+    if ( GetNumValue ( NAME_READ_MULTI_PACKETS, &num, sizeof ( num ) ) )
+        bcmi2cnfc_read_multi_packets = num;
+
+    if (bcmi2cnfc_read_multi_packets > 0)
+        ioctl(linux_cb.sock, BCMNFC_READ_MULTI_PACKETS, bcmi2cnfc_read_multi_packets);
+
+    while (!resetSuccess && numTries < NUM_RESET_ATTEMPTS) {
+        if (numTries++ > 0) {
+            ALOGW("BCM2079x: retrying reset, attempt %d/%d", numTries, NUM_RESET_ATTEMPTS);
+        }
+        if (linux_cb.sock_power_control > 0)
+        {
+            ioctl(linux_cb.sock_power_control, BCMNFC_POWER_CTL, 0);
+            GKI_delay(10);
+            ioctl(linux_cb.sock_power_control, BCMNFC_POWER_CTL, 1);
+            current_nfc_wake_state = wake_state();
+            ret = ioctl(linux_cb.sock_power_control, BCMNFC_WAKE_CTL, current_nfc_wake_state);
+        }
+
+        ret = GetStrValue ( NAME_SPI_NEGOTIATION, (char*)spi_negotiation, sizeof ( spi_negotiation ) );
+        if (ret > 0 && spi_negotiation[0] > 0 && spi_negotiation[0] < sizeof ( spi_negotiation ) - 1)
+        {
+            int len = spi_negotiation[0];
+            /* Wake control is not available: Start SPI negotiation*/
+            USERIAL_Write(port, &spi_negotiation[1], len);
+            USERIAL_Read(port, spi_negotiation, sizeof ( spi_negotiation ));
+        }
+
+        if ( GetNumValue ( NAME_CLIENT_ADDRESS, &num, sizeof ( num ) ) )
+            bcmi2cnfc_client_addr = num & 0xFF;
+        if (bcmi2cnfc_client_addr != 0 &&
+            0x07 < bcmi2cnfc_client_addr &&
+            bcmi2cnfc_client_addr < 0x78)
+        {
+            ALOGD( "Change client address to %x\n", bcmi2cnfc_client_addr);
+            GKI_delay(gPowerOnDelay);
+            ret = ioctl(linux_cb.sock, BCMNFC_CHANGE_ADDR, bcmi2cnfc_client_addr);
+            if (!ret) {
+                resetSuccess = 1;
+                linux_cb.client_device_address = bcmi2cnfc_client_addr;
+            }
+        } else {
+            resetSuccess = 1;
+        }
+    }
+
+    if (!resetSuccess) {
+        ALOGE("BCM2079x: failed to initialize NFC controller");
+    }
+    GKI_delay(gPowerOnDelay);
+}
