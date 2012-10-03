@@ -38,14 +38,14 @@ static void nfa_hci_api_register (tNFA_HCI_EVENT_DATA *p_evt_data);
 static void nfa_hci_api_get_gate_pipe_list (tNFA_HCI_EVENT_DATA *p_evt_data);
 static void nfa_hci_api_alloc_gate (tNFA_HCI_EVENT_DATA *p_evt_data);
 static void nfa_hci_api_get_host_list (tNFA_HCI_EVENT_DATA *p_evt_data);
-static void nfa_hci_api_get_reg_value (tNFA_HCI_EVENT_DATA *p_evt_data);
-static void nfa_hci_api_set_reg_value (tNFA_HCI_EVENT_DATA *p_evt_data);
-static void nfa_hci_api_create_pipe (tNFA_HCI_EVENT_DATA *p_evt_data);
+static BOOLEAN nfa_hci_api_get_reg_value (tNFA_HCI_EVENT_DATA *p_evt_data);
+static BOOLEAN nfa_hci_api_set_reg_value (tNFA_HCI_EVENT_DATA *p_evt_data);
+static BOOLEAN nfa_hci_api_create_pipe (tNFA_HCI_EVENT_DATA *p_evt_data);
 static void nfa_hci_api_open_pipe (tNFA_HCI_EVENT_DATA *p_evt_data);
 static void nfa_hci_api_close_pipe (tNFA_HCI_EVENT_DATA *p_evt_data);
 static void nfa_hci_api_delete_pipe (tNFA_HCI_EVENT_DATA *p_evt_data);
-static void nfa_hci_api_send_event (tNFA_HCI_EVENT_DATA *p_evt_data);
-static void nfa_hci_api_send_cmd (tNFA_HCI_EVENT_DATA *p_evt_data);
+static BOOLEAN nfa_hci_api_send_event (tNFA_HCI_EVENT_DATA *p_evt_data);
+static BOOLEAN nfa_hci_api_send_cmd (tNFA_HCI_EVENT_DATA *p_evt_data);
 static void nfa_hci_api_send_rsp (tNFA_HCI_EVENT_DATA *p_evt_data);
 static void nfa_hci_api_add_static_pipe (tNFA_HCI_EVENT_DATA *p_evt_data);
 
@@ -56,6 +56,66 @@ static void nfa_hci_handle_generic_gate_cmd (UINT8 *p_data, UINT8 data_len, tNFA
 static void nfa_hci_handle_generic_gate_rsp (UINT8 *p_data, UINT8 data_len, tNFA_HCI_DYN_GATE *p_gate, tNFA_HCI_DYN_PIPE *p_pipe);
 static void nfa_hci_handle_generic_gate_evt (UINT8 *p_data, UINT16 data_len, tNFA_HCI_DYN_GATE *p_gate, tNFA_HCI_DYN_PIPE *p_pipe);
 
+
+/*******************************************************************************
+**
+** Function         nfa_hci_check_pending_api_requests
+**
+** Description      This function handles pending API requests
+**
+** Returns          none
+**
+*******************************************************************************/
+void nfa_hci_check_pending_api_requests (void)
+{
+    BT_HDR              *p_msg;
+    tNFA_HCI_EVENT_DATA *p_evt_data;
+    BOOLEAN             b_free;
+    UINT8               b_cmd_flag = 0;
+
+    if ((p_msg = (BT_HDR *) GKI_dequeue (&nfa_hci_cb.hci_host_reset_api_q)) == NULL)
+    {
+        nfa_hci_cb.b_api_cmd_in_queue = FALSE;
+        return;
+    }
+
+    /* Process API request */
+    p_evt_data = (tNFA_HCI_EVENT_DATA *)p_msg;
+
+    /* Save the application handle */
+    nfa_hci_cb.app_in_use = p_evt_data->comm.hci_handle;
+
+    b_free = TRUE;
+    switch (p_msg->event)
+    {
+    case NFA_HCI_API_CREATE_PIPE_EVT:
+        if (nfa_hci_api_create_pipe (p_evt_data) == FALSE)
+            b_free = FALSE;
+        break;
+
+    case NFA_HCI_API_GET_REGISTRY_EVT:
+        if (nfa_hci_api_get_reg_value (p_evt_data) == FALSE)
+            b_free = FALSE;
+        break;
+
+    case NFA_HCI_API_SET_REGISTRY_EVT:
+        if (nfa_hci_api_set_reg_value (p_evt_data) == FALSE)
+            b_free = FALSE;
+        break;
+
+    case NFA_HCI_API_SEND_CMD_EVT:
+        if (nfa_hci_api_send_cmd (p_evt_data) == FALSE)
+            b_free = FALSE;
+        break;
+    case NFA_HCI_API_SEND_EVENT_EVT:
+        if (nfa_hci_api_send_event (p_evt_data) == FALSE)
+            b_free = FALSE;
+        break;
+    }
+
+    if (b_free)
+        GKI_freebuf (p_msg);
+}
 
 /*******************************************************************************
 **
@@ -75,7 +135,7 @@ void nfa_hci_check_api_requests (void)
     {
         /* If busy, or API queue is empty, then exit */
         if (  (nfa_hci_cb.hci_state != NFA_HCI_STATE_IDLE)
-            ||((p_msg = (BT_HDR *)GKI_dequeue (&nfa_hci_cb.hci_api_q)) == NULL) )
+            ||((p_msg = (BT_HDR *) GKI_dequeue (&nfa_hci_cb.hci_api_q)) == NULL) )
             break;
 
         /* Process API request */
@@ -111,15 +171,18 @@ void nfa_hci_check_api_requests (void)
             break;
 
         case NFA_HCI_API_GET_REGISTRY_EVT:
-            nfa_hci_api_get_reg_value (p_evt_data);
+            if (nfa_hci_api_get_reg_value (p_evt_data) == FALSE)
+                continue;
             break;
 
         case NFA_HCI_API_SET_REGISTRY_EVT:
-            nfa_hci_api_set_reg_value (p_evt_data);
+            if (nfa_hci_api_set_reg_value (p_evt_data) == FALSE)
+                continue;
             break;
 
         case NFA_HCI_API_CREATE_PIPE_EVT:
-            nfa_hci_api_create_pipe (p_evt_data);
+           if (nfa_hci_api_create_pipe (p_evt_data) == FALSE)
+               continue;
             break;
 
         case NFA_HCI_API_OPEN_PIPE_EVT:
@@ -135,7 +198,8 @@ void nfa_hci_check_api_requests (void)
             break;
 
         case NFA_HCI_API_SEND_CMD_EVT:
-            nfa_hci_api_send_cmd (p_evt_data);
+            if (nfa_hci_api_send_cmd (p_evt_data) == FALSE)
+                continue;
             break;
 
         case NFA_HCI_API_SEND_RSP_EVT:
@@ -143,7 +207,8 @@ void nfa_hci_check_api_requests (void)
             break;
 
         case NFA_HCI_API_SEND_EVENT_EVT:
-            nfa_hci_api_send_event (p_evt_data);
+            if (nfa_hci_api_send_event (p_evt_data) == FALSE)
+                continue;
             break;
 
         case NFA_HCI_API_ADD_STATIC_PIPE_EVT:
@@ -514,10 +579,11 @@ static void nfa_hci_api_get_host_list (tNFA_HCI_EVENT_DATA *p_evt_data)
 **
 ** Description      action function to create a pipe
 **
-** Returns          None
+** Returns          TRUE, if the command is processed
+**                  FALSE, if command is queued for processing later
 **
 *******************************************************************************/
-static void nfa_hci_api_create_pipe (tNFA_HCI_EVENT_DATA *p_evt_data)
+static BOOLEAN nfa_hci_api_create_pipe (tNFA_HCI_EVENT_DATA *p_evt_data)
 {
     tNFA_HCI_DYN_GATE   *p_gate = nfa_hciu_find_gate_by_gid (p_evt_data->create_pipe.source_gate);
     tNFA_HCI_EVT_DATA   evt_data;
@@ -533,6 +599,13 @@ static void nfa_hci_api_create_pipe (tNFA_HCI_EVENT_DATA *p_evt_data)
     }
     else
     {
+        if (nfa_hciu_is_host_reseting (p_evt_data->create_pipe.dest_gate))
+        {
+            GKI_enqueue (&nfa_hci_cb.hci_host_reset_api_q, (BT_HDR *) p_evt_data);
+            nfa_hci_cb.b_api_cmd_in_queue = TRUE;
+            return FALSE;
+        }
+
         nfa_hci_cb.local_gate_in_use  = p_evt_data->create_pipe.source_gate;
         nfa_hci_cb.remote_gate_in_use = p_evt_data->create_pipe.dest_gate;
         nfa_hci_cb.remote_host_in_use = p_evt_data->create_pipe.dest_host;
@@ -540,6 +613,7 @@ static void nfa_hci_api_create_pipe (tNFA_HCI_EVENT_DATA *p_evt_data)
 
         nfa_hciu_send_create_pipe_cmd (p_evt_data->create_pipe.source_gate, p_evt_data->create_pipe.dest_host, p_evt_data->create_pipe.dest_gate);
     }
+    return TRUE;
 }
 
 /*******************************************************************************
@@ -592,10 +666,11 @@ static void nfa_hci_api_open_pipe (tNFA_HCI_EVENT_DATA *p_evt_data)
 **
 ** Description      action function to get the reg value of the specified index
 **
-** Returns          None
+** Returns          TRUE, if the command is processed
+**                  FALSE, if command is queued for processing later
 **
 *******************************************************************************/
-static void nfa_hci_api_get_reg_value (tNFA_HCI_EVENT_DATA *p_evt_data)
+static BOOLEAN nfa_hci_api_get_reg_value (tNFA_HCI_EVENT_DATA *p_evt_data)
 {
     tNFA_HCI_DYN_PIPE   *p_pipe = nfa_hciu_find_pipe_by_pid (p_evt_data->get_registry.pipe);
     tNFA_HCI_DYN_GATE   *p_gate;
@@ -610,6 +685,13 @@ static void nfa_hci_api_get_reg_value (tNFA_HCI_EVENT_DATA *p_evt_data)
         {
             nfa_hci_cb.app_in_use        = p_evt_data->get_registry.hci_handle;
 
+            if (nfa_hciu_is_host_reseting (p_pipe->dest_host))
+            {
+                GKI_enqueue (&nfa_hci_cb.hci_host_reset_api_q, (BT_HDR *) p_evt_data);
+                nfa_hci_cb.b_api_cmd_in_queue = TRUE;
+                return FALSE;
+            }
+
             if (p_pipe->pipe_state == NFA_HCI_PIPE_CLOSED)
             {
                 NFA_TRACE_WARNING1 ("nfa_hci_api_get_reg_value pipe:%d not open", p_evt_data->get_registry.pipe);
@@ -617,7 +699,7 @@ static void nfa_hci_api_get_reg_value (tNFA_HCI_EVENT_DATA *p_evt_data)
             else
             {
                 if ((status = nfa_hciu_send_get_param_cmd (p_evt_data->get_registry.pipe, p_evt_data->get_registry.reg_inx)) == NFA_STATUS_OK)
-                    return;
+                    return TRUE;
             }
         }
     }
@@ -626,6 +708,7 @@ static void nfa_hci_api_get_reg_value (tNFA_HCI_EVENT_DATA *p_evt_data)
 
     /* Send NFA_HCI_CMD_SENT_EVT to notify failure */
     nfa_hciu_send_to_app (NFA_HCI_CMD_SENT_EVT, &evt_data, p_evt_data->get_registry.hci_handle);
+    return TRUE;
 }
 
 /*******************************************************************************
@@ -634,10 +717,11 @@ static void nfa_hci_api_get_reg_value (tNFA_HCI_EVENT_DATA *p_evt_data)
 **
 ** Description      action function to set the reg value at specified index
 **
-** Returns          None
+** Returns          TRUE, if the command is processed
+**                  FALSE, if command is queued for processing later
 **
 *******************************************************************************/
-static void nfa_hci_api_set_reg_value (tNFA_HCI_EVENT_DATA *p_evt_data)
+static BOOLEAN nfa_hci_api_set_reg_value (tNFA_HCI_EVENT_DATA *p_evt_data)
 {
     tNFA_HCI_DYN_PIPE   *p_pipe = nfa_hciu_find_pipe_by_pid (p_evt_data->set_registry.pipe);
     tNFA_HCI_DYN_GATE   *p_gate;
@@ -652,6 +736,13 @@ static void nfa_hci_api_set_reg_value (tNFA_HCI_EVENT_DATA *p_evt_data)
         {
             nfa_hci_cb.app_in_use        = p_evt_data->set_registry.hci_handle;
 
+            if (nfa_hciu_is_host_reseting (p_pipe->dest_host))
+            {
+                GKI_enqueue (&nfa_hci_cb.hci_host_reset_api_q, (BT_HDR *) p_evt_data);
+                nfa_hci_cb.b_api_cmd_in_queue = TRUE;
+                return FALSE;
+            }
+
             if (p_pipe->pipe_state == NFA_HCI_PIPE_CLOSED)
             {
                 NFA_TRACE_WARNING1 ("nfa_hci_api_set_reg_value pipe:%d not open", p_evt_data->set_registry.pipe);
@@ -659,7 +750,7 @@ static void nfa_hci_api_set_reg_value (tNFA_HCI_EVENT_DATA *p_evt_data)
             else
             {
                 if ((status = nfa_hciu_send_set_param_cmd (p_evt_data->set_registry.pipe, p_evt_data->set_registry.reg_inx, p_evt_data->set_registry.size, p_evt_data->set_registry.data)) == NFA_STATUS_OK)
-                    return;
+                    return TRUE;
             }
         }
     }
@@ -667,6 +758,7 @@ static void nfa_hci_api_set_reg_value (tNFA_HCI_EVENT_DATA *p_evt_data)
 
     /* Send NFA_HCI_CMD_SENT_EVT to notify failure */
     nfa_hciu_send_to_app (NFA_HCI_CMD_SENT_EVT, &evt_data, p_evt_data->set_registry.hci_handle);
+    return TRUE;
 
 }
 
@@ -752,10 +844,11 @@ static void nfa_hci_api_delete_pipe (tNFA_HCI_EVENT_DATA *p_evt_data)
 **
 ** Description      action function to send command on the given pipe
 **
-** Returns          None
+** Returns          TRUE, if the command is processed
+**                  FALSE, if command is queued for processing later
 **
 *******************************************************************************/
-static void nfa_hci_api_send_cmd (tNFA_HCI_EVENT_DATA *p_evt_data)
+static BOOLEAN nfa_hci_api_send_cmd (tNFA_HCI_EVENT_DATA *p_evt_data)
 {
     tNFA_STATUS         status = NFA_STATUS_FAILED;
     tNFA_HCI_DYN_PIPE   *p_pipe;
@@ -769,12 +862,19 @@ static void nfa_hci_api_send_cmd (tNFA_HCI_EVENT_DATA *p_evt_data)
         if (  (nfa_hciu_is_active_host (p_pipe->dest_host))
             &&(app_handle == p_evt_data->send_cmd.hci_handle)  )
         {
+            if (nfa_hciu_is_host_reseting (p_pipe->dest_host))
+            {
+                GKI_enqueue (&nfa_hci_cb.hci_host_reset_api_q, (BT_HDR *) p_evt_data);
+                nfa_hci_cb.b_api_cmd_in_queue = TRUE;
+                return FALSE;
+            }
+
             if (p_pipe->pipe_state == NFA_HCI_PIPE_OPENED)
             {
                 nfa_hci_cb.pipe_in_use = p_evt_data->send_cmd.pipe;
                 if ((status = nfa_hciu_send_msg (p_pipe->pipe_id, NFA_HCI_COMMAND_TYPE, p_evt_data->send_cmd.cmd_code,
                                             p_evt_data->send_cmd.cmd_len, p_evt_data->send_cmd.data)) == NFA_STATUS_OK)
-                    return;
+                    return TRUE;
             }
             else
             {
@@ -796,6 +896,7 @@ static void nfa_hci_api_send_cmd (tNFA_HCI_EVENT_DATA *p_evt_data)
 
     /* Send NFA_HCI_CMD_SENT_EVT to notify failure */
     nfa_hciu_send_to_app (NFA_HCI_CMD_SENT_EVT, &evt_data, p_evt_data->send_cmd.hci_handle);
+    return TRUE;
 }
 
 /*******************************************************************************
@@ -855,10 +956,11 @@ static void nfa_hci_api_send_rsp (tNFA_HCI_EVENT_DATA *p_evt_data)
 **
 ** Description      action function to send an event to the given pipe
 **
-** Returns          None
+** Returns          TRUE, if the event is processed
+**                  FALSE, if event is queued for processing later
 **
 *******************************************************************************/
-static void nfa_hci_api_send_event (tNFA_HCI_EVENT_DATA *p_evt_data)
+static BOOLEAN nfa_hci_api_send_event (tNFA_HCI_EVENT_DATA *p_evt_data)
 {
     tNFA_STATUS         status = NFA_STATUS_FAILED;
     tNFA_HCI_DYN_PIPE   *p_pipe;
@@ -872,6 +974,13 @@ static void nfa_hci_api_send_event (tNFA_HCI_EVENT_DATA *p_evt_data)
         if (  (nfa_hciu_is_active_host (p_pipe->dest_host))
             &&(app_handle == p_evt_data->send_evt.hci_handle)  )
         {
+            if (nfa_hciu_is_host_reseting (p_pipe->dest_host))
+            {
+                GKI_enqueue (&nfa_hci_cb.hci_host_reset_api_q, (BT_HDR *) p_evt_data);
+                nfa_hci_cb.b_api_cmd_in_queue = TRUE;
+                return FALSE;
+            }
+
             if (p_pipe->pipe_state == NFA_HCI_PIPE_OPENED)
             {
                 status = nfa_hciu_send_msg (p_pipe->pipe_id, NFA_HCI_EVENT_TYPE, p_evt_data->send_evt.evt_code,
@@ -918,6 +1027,7 @@ static void nfa_hci_api_send_event (tNFA_HCI_EVENT_DATA *p_evt_data)
 
     /* Send NFC_HCI_EVENT_SENT_EVT to notify failure */
     nfa_hciu_send_to_app (NFA_HCI_EVENT_SENT_EVT, &evt_data, p_evt_data->send_evt.hci_handle);
+    return TRUE;
 }
 
 /*******************************************************************************
@@ -1187,6 +1297,14 @@ void nfa_hci_handle_admin_gate_cmd (UINT8 *p_data)
             nfa_hciu_send_open_pipe_cmd (NFA_HCI_ADMIN_PIPE);
             return;
         }
+        else
+        {
+            if (  (source_host >= NFA_HCI_HOST_ID_UICC0)
+                &&(source_host < (NFA_HCI_HOST_ID_UICC0 + NFA_HCI_MAX_HOST_IN_NETWORK))  )
+            {
+                nfa_hci_cb.reset_host[source_host - NFA_HCI_HOST_ID_UICC0] = source_host;
+            }
+        }
         break;
 
     default:
@@ -1283,7 +1401,10 @@ void nfa_hci_handle_admin_gate_rsp (UINT8 *p_data, UINT8 data_len)
 
                     if (  (host_id >= NFA_HCI_HOST_ID_UICC0)
                         &&(host_id < NFA_HCI_HOST_ID_UICC0 + NFA_HCI_MAX_HOST_IN_NETWORK)  )
+                    {
                         nfa_hci_cb.inactive_host[host_id - NFA_HCI_HOST_ID_UICC0] = 0x00;
+                        nfa_hci_cb.reset_host[host_id - NFA_HCI_HOST_ID_UICC0] = 0x00;
+                    }
 
                     host_count++;
                 }
@@ -1389,12 +1510,15 @@ void nfa_hci_handle_admin_gate_rsp (UINT8 *p_data, UINT8 data_len)
 
                     if (  (host_id >= NFA_HCI_HOST_ID_UICC0)
                         &&(host_id < NFA_HCI_HOST_ID_UICC0 + NFA_HCI_MAX_HOST_IN_NETWORK)  )
+                    {
                         nfa_hci_cb.inactive_host[host_id - NFA_HCI_HOST_ID_UICC0] = 0x00;
-
+                        nfa_hci_cb.reset_host[host_id - NFA_HCI_HOST_ID_UICC0] = 0x00;
+                    }
                     host_count++;
                 }
-
-
+                if (  (nfa_hci_cb.b_api_cmd_in_queue)
+                    &&(nfa_hciu_is_no_host_resetting ())  )
+                    nfa_hci_check_pending_api_requests ();
                 nfa_hciu_send_to_app (NFA_HCI_HOST_LIST_EVT, &evt_data, nfa_hci_cb.app_in_use);
             }
             break;
@@ -1514,6 +1638,8 @@ void nfa_hci_handle_admin_gate_evt (UINT8 *p_data)
     }
 
     evt_data.rcvd_evt.evt_code = nfa_hci_cb.inst;
+
+    nfa_hciu_send_get_param_cmd (NFA_HCI_ADMIN_PIPE, NFA_HCI_HOST_LIST_INDEX);
     nfa_hciu_send_to_all_apps (NFA_HCI_EVENT_RCVD_EVT, &evt_data);
 }
 

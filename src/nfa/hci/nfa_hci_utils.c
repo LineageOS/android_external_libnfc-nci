@@ -716,6 +716,52 @@ BOOLEAN nfa_hciu_is_active_host (UINT8 host_id)
 
 /*******************************************************************************
 **
+** Function         nfa_hciu_is_host_reseting
+**
+** Description      Check if the host is currently reseting
+**
+** Returns          TRUE, if the host is reseting
+**                  FALSE, if the host is not reseting
+**
+*******************************************************************************/
+BOOLEAN nfa_hciu_is_host_reseting (UINT8 host_id)
+{
+    UINT8   xx;
+
+    for (xx = 0; xx < NFA_HCI_MAX_HOST_IN_NETWORK; xx++)
+    {
+        if (nfa_hci_cb.reset_host[xx] == host_id)
+            return TRUE;
+    }
+
+    return FALSE;
+}
+
+/*******************************************************************************
+**
+** Function         nfa_hciu_is_no_host_resetting
+**
+** Description      Check if no host is reseting
+**
+** Returns          TRUE, if no host is resetting at this time
+**                  FALSE, if one or more host is resetting
+**
+*******************************************************************************/
+BOOLEAN nfa_hciu_is_no_host_resetting (void)
+{
+    UINT8   xx;
+
+    for (xx = 0; xx < NFA_HCI_MAX_HOST_IN_NETWORK; xx++)
+    {
+        if (nfa_hci_cb.reset_host[xx] != 0)
+            return FALSE;
+    }
+
+    return TRUE;
+}
+
+/*******************************************************************************
+**
 ** Function         nfa_hciu_find_active_pipe_on_gate
 **
 ** Description      Find the first active pipe associated with the given gate
