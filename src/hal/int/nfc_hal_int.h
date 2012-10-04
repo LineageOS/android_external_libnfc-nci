@@ -189,6 +189,7 @@ enum
     NFC_HAL_INIT_STATE_W4_POST_INIT_DONE,  /* Waiting for complete of post init     */
     NFC_HAL_INIT_STATE_W4_CONTROL_DONE,    /* Waiting for control release           */
     NFC_HAL_INIT_STATE_W4_PREDISCOVER_DONE,/* Waiting for complete of prediscover   */
+    NFC_HAL_INIT_STATE_W4_RE_INIT,         /* Waiting for reset rsp on ReInit       */
     NFC_HAL_INIT_STATE_CLOSING             /* Shutting down                         */
 };
 typedef UINT8 tNFC_HAL_INIT_STATE;
@@ -216,8 +217,6 @@ typedef struct
 
 typedef void (tNFC_HAL_BTVSC_CPLT_CBACK) (tNFC_HAL_BTVSC_CPLT *p1);
 
-typedef UINT8 tNFC_HAL_NCI_EVT;     /* MT + Opcode */
-typedef void (tNFC_HAL_NCI_CBACK) (tNFC_HAL_NCI_EVT event, UINT16 data_len, UINT8 *p_data);
 
 /* data type for NFC_HAL_HCI_RSP_NV_READ_EVT */
 typedef struct
@@ -384,6 +383,7 @@ typedef struct
     tNFC_HAL_HCI_CB         hci_cb;
 
 
+    tNFC_HAL_NCI_CBACK      *p_reinit_cback;
     UINT8                   max_rf_credits;     /* NFC Max RF data credits */
     UINT8                   trace_level;        /* NFC HAL trace level */
 } tNFC_HAL_CB;

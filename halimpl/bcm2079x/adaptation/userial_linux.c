@@ -57,7 +57,7 @@ int nfc_write_delay = 0;
 int gPowerOnDelay = 300;
 static int gPrePowerOffDelay = 0;    // default value
 static int gPostPowerOffDelay = 0;     // default value
-static pthread_t gCloseThrd = 0;    // USERIAL_Close thread
+static pthread_mutex_t close_thread_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 char userial_dev[BTE_APPL_MAX_USERIAL_DEV_NAME+1];
 char power_control_dev[BTE_APPL_MAX_USERIAL_DEV_NAME+1];
@@ -161,6 +161,8 @@ void userial_close_thread(UINT32 params);
 static UINT8 device_name[20];
 static int   bSerialPortDevice = FALSE;
 static int _timeout = POLL_TIMEOUT;
+static BOOLEAN is_close_thread_is_waiting = FALSE;
+
 
 int   perf_log_every_count = 0;
 typedef struct {
@@ -702,6 +704,7 @@ UINT32 userial_read_thread(UINT32 arg)
     int error_count = 0;
     int bErrorReported = 0;
     int iMaxError = MAX_ERROR;
+    BT_HDR *p_buf = NULL;
 
     worker_thread1 = pthread_self();
 
@@ -781,6 +784,14 @@ UINT32 userial_read_thread(UINT32 arg)
             }
         }
     } /* for */
+
+    ALOGD( "userial_read_thread(): freeing GKI_buffers\n");
+    while ((p_buf = (BT_HDR *) GKI_dequeue (&Userial_in_q)) != NULL)
+    {
+        GKI_freebuf(p_buf);
+        ALOGD("userial_read_thread: dequeued buffer from Userial_in_q\n");
+    }
+
     GKI_exit_task (GKI_get_taskid ());
     ALOGD( "USERIAL READ: EXITING TASK\n");
 
@@ -884,11 +895,22 @@ UDRV_API void USERIAL_Open(tUSERIAL_PORT port, tUSERIAL_OPEN_CFG *p_cfg, tUSERIA
     unsigned long num = 0;
     int     ret = 0;
 
-    ALOGI("USERIAL_Open() ");
+    ALOGI("USERIAL_Open(): enter");
 
-    // wait for USERIAL_Close thread to terminate
-    if (gCloseThrd != 0)
-        pthread_join(gCloseThrd, NULL);
+    //if userial_close_thread() is waiting to run; let it go first;
+    //let it finish; then continue this function
+    while (TRUE)
+    {
+        pthread_mutex_lock(&close_thread_mutex);
+        if (is_close_thread_is_waiting)
+        {
+            pthread_mutex_unlock(&close_thread_mutex);
+            ALOGI("USERIAL_Open(): wait for close-thread");
+            sleep (1);
+        }
+        else
+            break;
+    }
 
     // restore default power off delay settings incase they were changed in userial_set_poweroff_delays()
     gPrePowerOffDelay = 0;
@@ -927,13 +949,13 @@ UDRV_API void USERIAL_Open(tUSERIAL_PORT port, tUSERIAL_OPEN_CFG *p_cfg, tUSERIA
         if (uart_port >= MAX_SERIAL_PORT)
         {
             ALOGD( "Port > MAX_SERIAL_PORT\n");
-            return;
+            goto done_open;
         }
         bSerialPortDevice = TRUE;
         sprintf((char*)device_name, "%s%d", (char*)userial_dev, uart_port);
         ALOGI("USERIAL_Open() using device_name: %s ", (char*)device_name);
         if (!userial_to_tcio_baud(p_cfg->baud, &baud))
-            return;
+            goto done_open;
 
         if (p_cfg->fmt & USERIAL_DATABITS_8)
             data_bits = CS8;
@@ -944,7 +966,7 @@ UDRV_API void USERIAL_Open(tUSERIAL_PORT port, tUSERIAL_OPEN_CFG *p_cfg, tUSERIA
         else if (p_cfg->fmt & USERIAL_DATABITS_5)
             data_bits = CS5;
         else
-            return;
+            goto done_open;
 
         if (p_cfg->fmt & USERIAL_PARITY_NONE)
             parity = 0;
@@ -953,14 +975,14 @@ UDRV_API void USERIAL_Open(tUSERIAL_PORT port, tUSERIAL_OPEN_CFG *p_cfg, tUSERIA
         else if (p_cfg->fmt & USERIAL_PARITY_ODD)
             parity = (PARENB | PARODD);
         else
-            return;
+            goto done_open;
 
         if (p_cfg->fmt & USERIAL_STOPBITS_1)
             stop_bits = 0;
         else if (p_cfg->fmt & USERIAL_STOPBITS_2)
             stop_bits = CSTOPB;
         else
-            return;
+            goto done_open;
     }
     else
         strcpy((char*)device_name, (char*)userial_dev);
@@ -971,7 +993,7 @@ UDRV_API void USERIAL_Open(tUSERIAL_PORT port, tUSERIAL_OPEN_CFG *p_cfg, tUSERIA
         {
             ALOGI("%s unable to open %s",  __FUNCTION__, device_name);
             GKI_send_event(NFC_HAL_TASK, NFC_HAL_TASK_EVT_TERMINATE);
-            return;
+            goto done_open;
         }
         ALOGD( "sock = %d\n", linux_cb.sock);
         if (GetStrValue ( NAME_POWER_CONTROL_DRIVER, power_control_dev, sizeof ( power_control_dev ) ) &&
@@ -1005,6 +1027,10 @@ UDRV_API void USERIAL_Open(tUSERIAL_PORT port, tUSERIAL_OPEN_CFG *p_cfg, tUSERIA
     /* give 20ms time for reader thread */
     GKI_delay(20);
 #endif
+
+done_open:
+    pthread_mutex_unlock(&close_thread_mutex);
+    ALOGI("USERIAL_Open(): exit");
     return;
 }
 
@@ -1290,11 +1316,32 @@ UDRV_API void    USERIAL_Ioctl(tUSERIAL_PORT port, tUSERIAL_OP op, tUSERIAL_IOCT
 ** Returns            Nothing
 **
 *******************************************************************************/
-
 UDRV_API void    USERIAL_Close(tUSERIAL_PORT port)
 {
-    // close transport in a new thread so we don't block the caller
-    pthread_create( &gCloseThrd, NULL, (void *)userial_close_thread,(void*)port);
+    pthread_attr_t attr;
+    pthread_t      close_thread;
+
+    ALOGD ("%s: enter", __FUNCTION__);
+    // check to see if thread is already running
+    if (pthread_mutex_trylock(&close_thread_mutex) == 0)
+    {
+        // mutex aquired so thread is not running
+        is_close_thread_is_waiting = TRUE;
+        pthread_mutex_unlock(&close_thread_mutex);
+
+        // close transport in a new thread so we don't block the caller
+        // make thread detached, no other thread will join
+        pthread_attr_init(&attr);
+        pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+        pthread_create( &close_thread, &attr, (void *)userial_close_thread,(void*)port);
+        pthread_attr_destroy(&attr);
+    }
+    else
+    {
+        // mutex not aquired to thread is already running
+        ALOGD( "USERIAL_Close(): already closing \n");
+    }
+    ALOGD ("%s: exit", __FUNCTION__);
 }
 
 
@@ -1310,24 +1357,17 @@ UDRV_API void    USERIAL_Close(tUSERIAL_PORT port)
 void userial_close_thread(UINT32 params)
 {
     tUSERIAL_PORT port = (tUSERIAL_PORT )params;
-    static int closing = 0;
     BT_HDR                  *p_buf = NULL;
     int result;
 
-    ALOGD( "%s: closing transport (%d), closing=%d\n", __FUNCTION__, linux_cb.sock, closing);
-
-    if (closing == 1)
-    {
-        ALOGD( "%s: already closing \n", __FUNCTION__);
-        return;
-    }
-
-    closing = 1;
+    ALOGD( "%s: closing transport (%d)\n", __FUNCTION__, linux_cb.sock);
+    pthread_mutex_lock(&close_thread_mutex);
+    is_close_thread_is_waiting = FALSE;
 
     if (linux_cb.sock <= 0)
     {
-        ALOGD( "%s: already closed (%d)\n", __FUNCTION__, linux_cb.sock);
-        closing = 0;
+        ALOGD( "%s: already closed (%d)\n", __FUNCTION__, linux_cb.sock);        
+        pthread_mutex_unlock(&close_thread_mutex);
         return;
     }
 
@@ -1336,7 +1376,7 @@ void userial_close_thread(UINT32 params)
     if ( result < 0 )
         ALOGE( "%s: pthread_join() FAILED: result: %d", __FUNCTION__, result );
     else
-        ALOGE( "%s: pthread_join() joined: result: %d", __FUNCTION__, result );
+        ALOGD( "%s: pthread_join() joined: result: %d", __FUNCTION__, result );
 
     if (linux_cb.sock_power_control > 0)
     {
@@ -1360,15 +1400,7 @@ void userial_close_thread(UINT32 params)
     linux_cb.sock = -1;
 
     close_signal_fds();
-
-    while ((p_buf = (BT_HDR *) GKI_dequeue (&Userial_in_q)) != NULL)
-    {
-        GKI_freebuf(p_buf);
-        ALOGD("%s: dequeued buffer from Userial_in_q\n", __FUNCTION__);
-    }
-
-    closing = 0;
-    gCloseThrd = 0;
+    pthread_mutex_unlock(&close_thread_mutex);
     ALOGD("%s: exiting", __FUNCTION__);
 }
 

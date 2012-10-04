@@ -89,11 +89,14 @@ enum
     NFC_HAL_PRM_ABORT_INVALID_PATCH_EVT,       /* Patch is invalid (bad version, project id, or chip)  */
     NFC_HAL_PRM_ABORT_BAD_SIGNATURE_EVT,       /* Patch has invalid signature                          */
     NFC_HAL_PRM_SPD_GET_PATCHFILE_HDR_EVT,     /* Secure Patch Download: request for patchfile header  */
-    NFC_HAL_PRM_SPD_GET_NEXT_PATCH             /* Get first command of next patch in patchfile         */
+    NFC_HAL_PRM_SPD_GET_NEXT_PATCH,            /* Get first command of next patch in patchfile         */
+    NFC_HAL_PRM_ABORT_NO_NVM_EVT               /* nfc_hal_prm_nvm_required is TRUE and NVM is unavail  */
 };
 
 typedef void (tNFC_HAL_PRM_CBACK) (UINT8 event);
 
+typedef UINT8 tNFC_HAL_NCI_EVT;     /* MT + Opcode */
+typedef void (tNFC_HAL_NCI_CBACK) (tNFC_HAL_NCI_EVT event, UINT16 data_len, UINT8 *p_data);
 
 #ifdef __cplusplus
 extern "C" {
@@ -109,6 +112,24 @@ extern "C" {
 **
 *******************************************************************************/
 void HAL_NfcPreInitDone (tHAL_NFC_STATUS status);
+
+/*******************************************************************************
+**
+** Function         HAL_NfcReInit
+**
+** Description      This function is called to send an RESET and GET_PATCH_VERSION
+**                  command to NFCC.
+**
+**                  p_cback         - The callback function to receive the command
+**                                    status
+**
+** Note             This function should be called only during the HAL init process
+**
+** Returns          HAL_NFC_STATUS_OK if successfully initiated
+**                  HAL_NFC_STATUS_FAILED otherwise
+**
+*******************************************************************************/
+tHAL_NFC_STATUS HAL_NfcReInit (tNFC_HAL_NCI_CBACK *p_cback);
 
 /*******************************************************************************
 **
