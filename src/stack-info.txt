@@ -1,7 +1,17 @@
 This file contains version information for the NFC stack code.
-main_prasadk_1722753 # handle deleted connectivity pipe
-main_sherrys_1706383 # don't download firmware if controller cannot detect EEROM
-main_darinlee_1721357 # NFA_RwT3tWrite crash
-main_sherrys_1704686 # warm-reset Oberthur secure element
-element *  NFA_MI_1.03.45
+# reading NDEF message in T3T
+element * .../main_darinlee_1726051/LATEST
 
+# NFA_RwT3TWrite crash
+element * .../main_darinlee_1721357/LATEST
+
+# handle deleted connectivity pipe
+element * .../main_prasadk_1722753/LATEST
+
+# handle missing EEPROM
+element * .../main_sherrys_1706383/LATEST
+
+# warm-reset Oberthur secure element
+element * .../main_sherrys_1704686/LATEST
+
+element * NFA_MI_1.03.45

@@ -62,6 +62,7 @@ const char * const nfc_hal_init_state_str[] =
     "W4_POST_INIT",     /* Waiting for complete of post init     */
     "W4_CONTROL",       /* Waiting for control release           */
     "W4_PREDISC",       /* Waiting for complete of prediscover   */
+    "W4_RE_INIT",       /* Waiting for reset rsp on ReInit       */
     "CLOSING"           /* Shutting down                         */
 };
 #endif

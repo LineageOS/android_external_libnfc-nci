@@ -1040,9 +1040,7 @@ static BOOLEAN nfa_hci_evt_hdlr (BT_HDR *p_msg)
 
     nfa_hci_check_api_requests ();
 
-    if (  (nfa_hci_cb.hci_state == NFA_HCI_STATE_IDLE)
-        &&(nfa_hci_cb.b_api_cmd_in_queue)
-        &&(nfa_hciu_is_no_host_resetting ())  )
+    if (nfa_hciu_is_no_host_resetting ())
         nfa_hci_check_pending_api_requests ();
 
     if ((nfa_hci_cb.hci_state == NFA_HCI_STATE_IDLE) && (nfa_hci_cb.nv_write_needed))

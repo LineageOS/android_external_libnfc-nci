@@ -876,9 +876,10 @@ tNFA_STATUS NFA_HciDeletePipe (tNFA_HANDLE  hci_handle, UINT8 pipe)
 **                  NFA_STATUS_FAILED otherwise
 **
 *******************************************************************************/
-tNFA_STATUS NFA_HciAddStaticPipe (tNFA_HANDLE hci_handle, UINT8 pipe)
+tNFA_STATUS NFA_HciAddStaticPipe (tNFA_HANDLE hci_handle, UINT8 host, UINT8 gate, UINT8 pipe)
 {
     tNFA_HCI_API_ADD_STATIC_PIPE_EVT *p_msg;
+    UINT8                            xx;
 
     if ((NFA_HANDLE_GROUP_MASK & hci_handle) != NFA_HANDLE_GROUP_HCI)
     {
@@ -886,7 +887,23 @@ tNFA_STATUS NFA_HciAddStaticPipe (tNFA_HANDLE hci_handle, UINT8 pipe)
         return (NFA_STATUS_FAILED);
     }
 
-    if ((pipe != NFA_HCI_STATIC_PIPE_UICC0) && (pipe != NFA_HCI_STATIC_PIPE_UICC1))
+    for (xx = 0; xx < NFA_HCI_MAX_HOST_IN_NETWORK; xx++)
+        if (nfa_hci_cb.inactive_host[xx] == host)
+            break;
+
+    if (xx != NFA_HCI_MAX_HOST_IN_NETWORK)
+    {
+        NFA_TRACE_API1 ("NFA_HciAddStaticPipe (): Host not active:0x%02x", host);
+        return (NFA_STATUS_FAILED);
+    }
+
+    if (gate <= NFA_HCI_LAST_HOST_SPECIFIC_GATE)
+    {
+        NFA_TRACE_API1 ("NFA_HciAddStaticPipe (): Invalid Gate:0x%02x", gate);
+        return (NFA_STATUS_FAILED);
+    }
+
+    if (pipe <= NFA_HCI_LAST_DYNAMIC_PIPE)
     {
         NFA_TRACE_API1 ("NFA_HciAddStaticPipe (): Invalid Pipe:0x%02x", pipe);
         return (NFA_STATUS_FAILED);
@@ -900,6 +917,8 @@ tNFA_STATUS NFA_HciAddStaticPipe (tNFA_HANDLE hci_handle, UINT8 pipe)
     {
         p_msg->hdr.event    = NFA_HCI_API_ADD_STATIC_PIPE_EVT;
         p_msg->hci_handle   = hci_handle;
+        p_msg->host         = host;
+        p_msg->gate         = gate;
         p_msg->pipe         = pipe;
 
         nfa_sys_sendmsg (p_msg);

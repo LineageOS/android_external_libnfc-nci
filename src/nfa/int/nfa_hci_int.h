@@ -33,12 +33,9 @@ extern BOOLEAN HCI_LOOPBACK_DEBUG;
 *****************************************************************************/
 
 
-#define NFA_HCI_STATIC_PIPE_UICC0       0x70
-#define NFA_HCI_STATIC_PIPE_UICC1       0x71
 #define NFA_HCI_HOST_ID_UICC0           0x02
 #define NFA_HCI_HOST_ID_UICC1           0x03
-#define NFA_HCI_PROPRIETARY_GATE0       0xF0
-#define NFA_HCI_PROPRIETARY_GATE1       0xF1
+#define NFA_HCI_LAST_HOST_SPECIFIC_GATE 0xEF
 
 #define NFA_HCI_SESSION_ID_LEN          8           /* HCI Session ID length */
 #define NFA_MAX_PIPES_IN_GENERIC_GATE   0x0F        /* Maximum pipes that can be created on a generic pipe  */
@@ -221,6 +218,8 @@ typedef struct
     BT_HDR              hdr;
     tNFA_HANDLE         hci_handle;
     tNFA_STATUS         status;
+    UINT8               host;
+    UINT8               gate;
     UINT8               pipe;
 } tNFA_HCI_API_ADD_STATIC_PIPE_EVT;
 
@@ -372,7 +371,6 @@ typedef struct
     UINT8                           reset_host[NFA_HCI_MAX_HOST_IN_NETWORK]; /* List of host reseting */
     BOOLEAN                         b_low_power_mode;                   /* Host controller in low power mode */
     BOOLEAN                         b_hci_netwk_reset;                  /* Command sent to reset HCI Network */
-    BOOLEAN                         b_api_cmd_in_queue;                 /* Command pending in queue for UICC to reset */
     BOOLEAN                         w4_hci_netwk_init;                  /* Wait for other host in network to initialize */
     TIMER_LIST_ENT                  timer;                              /* Timer to avoid indefinitely waiting for response */
     UINT8                           conn_id;                            /* Connection ID */

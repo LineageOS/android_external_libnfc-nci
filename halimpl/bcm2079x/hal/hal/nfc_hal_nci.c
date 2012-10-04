@@ -552,7 +552,7 @@ BOOLEAN nfc_hal_nci_preproc_rx_nci_msg (NFC_HDR *p_msg)
                 }
             }
         }
-        else if (gid == NCI_GID_CORE)
+        else if (gid == NCI_GID_RF_MANAGE)
         {
             if (mt == NCI_MT_NTF)
             {
