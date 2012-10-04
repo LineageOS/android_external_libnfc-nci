@@ -369,8 +369,10 @@ typedef struct
     tNFA_HCI_STATE                  hci_state;                          /* state of the HCI */
     UINT8                           num_nfcee;
     UINT8                           inactive_host[NFA_HCI_MAX_HOST_IN_NETWORK]; /* Inactive host in the host network */
+    UINT8                           reset_host[NFA_HCI_MAX_HOST_IN_NETWORK]; /* List of host reseting */
     BOOLEAN                         b_low_power_mode;                   /* Host controller in low power mode */
     BOOLEAN                         b_hci_netwk_reset;                  /* Command sent to reset HCI Network */
+    BOOLEAN                         b_api_cmd_in_queue;                 /* Command pending in queue for UICC to reset */
     BOOLEAN                         w4_hci_netwk_init;                  /* Wait for other host in network to initialize */
     TIMER_LIST_ENT                  timer;                              /* Timer to avoid indefinitely waiting for response */
     UINT8                           conn_id;                            /* Connection ID */
@@ -396,6 +398,7 @@ typedef struct
     UINT8                           inst;                               /* Instruction of incoming message */
 
     BUFFER_Q                        hci_api_q;                          /* Buffer Q to hold incoming API commands */
+    BUFFER_Q                        hci_host_reset_api_q;               /* Buffer Q to hold incoming API commands to a host that is reactivating */
     tNFA_HCI_CBACK                  *p_app_cback[NFA_HCI_MAX_APP_CB];   /* Callback functions registered by the applications */
     UINT16                          rsp_buf_size;                       /* Maximum size of APDU buffer */
     UINT8                           *p_rsp_buf;                         /* Buffer to hold response to sent event */
@@ -444,6 +447,7 @@ extern void nfa_hci_vsc_cback (tNFC_VS_EVT event, UINT16 data_len, UINT8 *p_data
 
 /* Action functions in nfa_hci_act.c
 */
+extern void nfa_hci_check_pending_api_requests (void);
 extern void nfa_hci_check_api_requests (void);
 extern void nfa_hci_handle_admin_gate_cmd (UINT8 *p_data);
 extern void nfa_hci_handle_admin_gate_rsp (UINT8 *p_data, UINT8 data_len);
@@ -466,6 +470,8 @@ extern tNFA_HCI_DYN_PIPE  *nfa_hciu_find_active_pipe_by_owner (tNFA_HANDLE app_h
 extern tNFA_HCI_DYN_PIPE  *nfa_hciu_find_pipe_on_gate (UINT8 gate_id);
 extern tNFA_HANDLE         nfa_hciu_get_gate_owner (UINT8 gate_id);
 extern BOOLEAN             nfa_hciu_is_active_host (UINT8 host_id);
+extern BOOLEAN             nfa_hciu_is_host_reseting (UINT8 host_id);
+extern BOOLEAN             nfa_hciu_is_no_host_resetting (void);
 extern tNFA_HCI_DYN_PIPE  *nfa_hciu_find_active_pipe_on_gate (UINT8 gate_id);
 extern tNFA_HANDLE         nfa_hciu_get_pipe_owner (UINT8 pipe_id);
 extern UINT8               nfa_hciu_count_open_pipes_on_gate (tNFA_HCI_DYN_GATE *p_gate);
