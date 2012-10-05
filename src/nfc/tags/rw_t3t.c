@@ -670,10 +670,10 @@ tNFC_STATUS rw_t3t_send_next_ndef_update_cmd (tRW_T3T_CB *p_cb)
         ndef_bytes_remaining = p_cb->ndef_msg_len - p_cb->ndef_msg_bytes_sent;
 
         /* Calculate number of blocks remaining to write */
-        ndef_blocks_remaining = (UINT8) ((ndef_bytes_remaining+15) >> 4);      /* ndef blocks remaining (rounded upward) */
+        ndef_blocks_remaining = (UINT16) ((ndef_bytes_remaining+15) >> 4);      /* ndef blocks remaining (rounded upward) */
 
         /* Calculate first NDEF block ID for this UPDATE command */
-        first_block_to_write = (UINT8) ((p_cb->ndef_msg_bytes_sent >> 4) + 1);
+        first_block_to_write = (UINT16) ((p_cb->ndef_msg_bytes_sent >> 4) + 1);
 
         /* Calculate max number of blocks per write. */
         if ((first_block_to_write + RW_T3T_MAX_NDEF_BLOCKS_PER_UPDATE_1_BYTE_FORMAT) < 0x100)
@@ -813,10 +813,10 @@ tNFC_STATUS rw_t3t_send_next_ndef_check_cmd (tRW_T3T_CB *p_cb)
         ndef_bytes_remaining = p_cb->ndef_attrib.ln - p_cb->ndef_rx_offset;
 
         /* Calculate number of blocks remaining to read */
-        ndef_blocks_remaining = (UINT8) ((ndef_bytes_remaining+15) >> 4);      /* ndef blocks remaining (rounded upward) */
+        ndef_blocks_remaining = (UINT16) ((ndef_bytes_remaining+15) >> 4);      /* ndef blocks remaining (rounded upward) */
 
         /* Calculate first NDEF block ID */
-        first_block_to_read = (UINT8) ((p_cb->ndef_rx_offset >> 4) + 1);
+        first_block_to_read = (UINT16) ((p_cb->ndef_rx_offset >> 4) + 1);
 
         /* Check if remaining blocks can fit into one CHECK command */
         if (ndef_blocks_remaining <= p_cb->ndef_attrib.nbr)

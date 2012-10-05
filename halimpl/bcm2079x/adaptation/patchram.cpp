@@ -184,9 +184,12 @@ static void postDownloadPatchram(tHAL_NFC_STATUS status)
         else
             SpdHelper::incErrorCount();
 
-        if (SpdHelper::isSpdDebug()) {
+        /* If in SPD Debug mode, fail immediately and obviously */
+        if (SpdHelper::isSpdDebug())
             HAL_NfcPreInitDone (HAL_NFC_STATUS_FAILED);
-        } else {
+        else
+        {
+            /* otherwise, power cycle the chip and let the stack startup normally */
             USERIAL_PowerupDevice(0);
             HAL_NfcPreInitDone (HAL_NFC_STATUS_OK);
         }
@@ -305,6 +308,16 @@ static void getNfaValues()
         p_nfc_hal_dm_lptd_cfg = &nfa_dm_lptd_cfg[0];
 }
 
+/*******************************************************************************
+**
+** Function         StartPatchDownload
+**
+** Description      Reads configuration settings, and begins the download
+**                  process if patch files are configured.
+**
+** Returns:         None
+**
+*******************************************************************************/
 static void StartPatchDownload(UINT32 chipid)
 {
     ALOGD ("%s: chipid=%lx",__FUNCTION__, chipid);
@@ -390,6 +403,7 @@ static void StartPatchDownload(UINT32 chipid)
             /* If the download never got started */
             if (!bDownloadStarted)
             {
+                /* If debug mode, fail in an obvious way, otherwise try to start stack */
                 postDownloadPatchram(SpdHelper::isSpdDebug() ? HAL_NFC_STATUS_FAILED :
                         HAL_NFC_STATUS_OK);
             }
@@ -428,7 +442,9 @@ void nfc_hal_post_reset_init (UINT32 brcm_hw_id, UINT8 nvm_type)
     }
     else
     {
+        /* Start downloading the patch files */
         StartPatchDownload(brcm_hw_id);
+
         if (GetNumValue(MAX_RF_DATA_CREDITS, &max_credits, sizeof(max_credits)) && (max_credits > 0))
         {
             ALOGD("%s : max_credits=%d", __FUNCTION__, max_credits);

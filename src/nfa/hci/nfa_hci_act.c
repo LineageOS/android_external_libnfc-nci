@@ -73,11 +73,10 @@ void nfa_hci_check_pending_api_requests (void)
     BOOLEAN             b_free;
     UINT8               b_cmd_flag = 0;
 
-    if ((p_msg = (BT_HDR *) GKI_dequeue (&nfa_hci_cb.hci_host_reset_api_q)) == NULL)
-    {
-        nfa_hci_cb.b_api_cmd_in_queue = FALSE;
+    /* If busy, or API queue is empty, then exit */
+    if (  (nfa_hci_cb.hci_state != NFA_HCI_STATE_IDLE)
+        ||((p_msg = (BT_HDR *) GKI_dequeue (&nfa_hci_cb.hci_host_reset_api_q)) == NULL) )
         return;
-    }
 
     /* Process API request */
     p_evt_data = (tNFA_HCI_EVENT_DATA *)p_msg;
@@ -602,7 +601,6 @@ static BOOLEAN nfa_hci_api_create_pipe (tNFA_HCI_EVENT_DATA *p_evt_data)
         if (nfa_hciu_is_host_reseting (p_evt_data->create_pipe.dest_gate))
         {
             GKI_enqueue (&nfa_hci_cb.hci_host_reset_api_q, (BT_HDR *) p_evt_data);
-            nfa_hci_cb.b_api_cmd_in_queue = TRUE;
             return FALSE;
         }
 
@@ -688,7 +686,6 @@ static BOOLEAN nfa_hci_api_get_reg_value (tNFA_HCI_EVENT_DATA *p_evt_data)
             if (nfa_hciu_is_host_reseting (p_pipe->dest_host))
             {
                 GKI_enqueue (&nfa_hci_cb.hci_host_reset_api_q, (BT_HDR *) p_evt_data);
-                nfa_hci_cb.b_api_cmd_in_queue = TRUE;
                 return FALSE;
             }
 
@@ -739,7 +736,6 @@ static BOOLEAN nfa_hci_api_set_reg_value (tNFA_HCI_EVENT_DATA *p_evt_data)
             if (nfa_hciu_is_host_reseting (p_pipe->dest_host))
             {
                 GKI_enqueue (&nfa_hci_cb.hci_host_reset_api_q, (BT_HDR *) p_evt_data);
-                nfa_hci_cb.b_api_cmd_in_queue = TRUE;
                 return FALSE;
             }
 
@@ -865,7 +861,6 @@ static BOOLEAN nfa_hci_api_send_cmd (tNFA_HCI_EVENT_DATA *p_evt_data)
             if (nfa_hciu_is_host_reseting (p_pipe->dest_host))
             {
                 GKI_enqueue (&nfa_hci_cb.hci_host_reset_api_q, (BT_HDR *) p_evt_data);
-                nfa_hci_cb.b_api_cmd_in_queue = TRUE;
                 return FALSE;
             }
 
@@ -977,7 +972,6 @@ static BOOLEAN nfa_hci_api_send_event (tNFA_HCI_EVENT_DATA *p_evt_data)
             if (nfa_hciu_is_host_reseting (p_pipe->dest_host))
             {
                 GKI_enqueue (&nfa_hci_cb.hci_host_reset_api_q, (BT_HDR *) p_evt_data);
-                nfa_hci_cb.b_api_cmd_in_queue = TRUE;
                 return FALSE;
             }
 
@@ -1043,44 +1037,16 @@ static void nfa_hci_api_add_static_pipe (tNFA_HCI_EVENT_DATA *p_evt_data)
 {
     tNFA_HCI_DYN_GATE   *pg;
     tNFA_HCI_DYN_PIPE   *pp;
-    UINT8               dest_host = (p_evt_data->add_static_pipe.pipe == NFA_HCI_STATIC_PIPE_UICC0) ? NFA_HCI_HOST_ID_UICC0:NFA_HCI_HOST_ID_UICC1;
     tNFA_HCI_EVT_DATA   evt_data;
-    tNFA_HANDLE         prev_owner;
-    UINT8               dest_gate = (p_evt_data->add_static_pipe.pipe == NFA_HCI_STATIC_PIPE_UICC0) ? NFA_HCI_PROPRIETARY_GATE0:NFA_HCI_PROPRIETARY_GATE1;
 
     /* Allocate a proprietary gate */
-    if ((pg = nfa_hciu_alloc_gate (dest_gate, p_evt_data->add_static_pipe.hci_handle)) != NULL)
+    if ((pg = nfa_hciu_alloc_gate (p_evt_data->add_static_pipe.gate, p_evt_data->add_static_pipe.hci_handle)) != NULL)
     {
-        prev_owner = pg->gate_owner;
-
-        if (  (p_evt_data->add_static_pipe.hci_handle != prev_owner)
-            &&(p_evt_data->add_static_pipe.pipe == NFA_HCI_STATIC_PIPE_UICC0)  )
-        {
-            /* If any other application owned this gate, release its pipe on this gate and notify the application */
-            if (nfa_hciu_release_pipe (NFA_HCI_STATIC_PIPE_UICC0) == NFA_HCI_ANY_OK)
-            {
-                evt_data.deleted.status = NFA_STATUS_OK;
-                evt_data.deleted.pipe   = NFA_HCI_STATIC_PIPE_UICC0;
-                nfa_hciu_send_to_app (NFA_HCI_DELETE_PIPE_EVT, &evt_data, prev_owner);
-            }
-        }
-
-        if (  (p_evt_data->add_static_pipe.hci_handle != prev_owner)
-            &&(p_evt_data->add_static_pipe.pipe == NFA_HCI_STATIC_PIPE_UICC1)  )
-        {
-            /* If any other application owned this gate, release its pipe on this gate and notify the application */
-            if (nfa_hciu_release_pipe (NFA_HCI_STATIC_PIPE_UICC1) == NFA_HCI_ANY_OK)
-            {
-                evt_data.deleted.status = NFA_STATUS_OK;
-                evt_data.deleted.pipe   = NFA_HCI_STATIC_PIPE_UICC1;
-                nfa_hciu_send_to_app (NFA_HCI_DELETE_PIPE_EVT, &evt_data, prev_owner);
-            }
-        }
         /* Assign new owner to the gate */
         pg->gate_owner = p_evt_data->add_static_pipe.hci_handle;
 
         /* Add the dynamic pipe to the proprietary gate */
-        if (nfa_hciu_add_pipe_to_gate (p_evt_data->add_static_pipe.pipe,pg->gate_id, dest_host, dest_gate) != NFA_HCI_ANY_OK)
+        if (nfa_hciu_add_pipe_to_gate (p_evt_data->add_static_pipe.pipe,pg->gate_id, p_evt_data->add_static_pipe.host, p_evt_data->add_static_pipe.gate) != NFA_HCI_ANY_OK)
         {
             /* Unable to add the dynamic pipe, so release the gate */
             nfa_hciu_release_gate (pg->gate_id);
@@ -1516,8 +1482,7 @@ void nfa_hci_handle_admin_gate_rsp (UINT8 *p_data, UINT8 data_len)
                     }
                     host_count++;
                 }
-                if (  (nfa_hci_cb.b_api_cmd_in_queue)
-                    &&(nfa_hciu_is_no_host_resetting ())  )
+                if (nfa_hciu_is_no_host_resetting ())
                     nfa_hci_check_pending_api_requests ();
                 nfa_hciu_send_to_app (NFA_HCI_HOST_LIST_EVT, &evt_data, nfa_hci_cb.app_in_use);
             }

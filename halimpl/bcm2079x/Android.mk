@@ -28,6 +28,12 @@ ifeq ($(TARGET_DEVICE),crespo)
 endif
 
 
+######################################
+######################################
+# build shared library system/lib/hw/nfc_nci.*.so
+# which is linked by libhardware.so
+
+
 LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 LOCAL_MODULE := nfc_nci.$(HAL_SUFFIX)
