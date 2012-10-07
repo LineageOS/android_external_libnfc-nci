@@ -330,8 +330,10 @@ static inline int isWake(int state)
 *******************************************************************************/
 static void setWriteDelay(int delay)
 {
-    if (delay <= 0)
-        return;
+    if (delay <= 0) {
+        // Set a minimum delay of 5ms between back-to-back writes
+        delay = 5;
+    }
 
     clock_gettime(CLOCK_MONOTONIC, &linux_cb.write_time);
     if (delay > 1000)
