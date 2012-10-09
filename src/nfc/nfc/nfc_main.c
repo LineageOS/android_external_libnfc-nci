@@ -186,6 +186,10 @@ static void nfc_main_notify_enable_status (tNFC_STATUS nfc_status)
         if (nfc_cb.flags & (NFC_FL_RESTARTING|NFC_FL_POWER_CYCLE_NFCC))
         {
             nfc_cb.flags &= ~(NFC_FL_RESTARTING|NFC_FL_POWER_CYCLE_NFCC);
+            if (nfc_status != NFC_STATUS_OK)
+            {
+                nfc_cb.flags |= NFC_FL_POWER_OFF_SLEEP;
+            }
             (*nfc_cb.p_resp_cback) (NFC_NFCC_RESTART_REVT, &evt_data);
         }
         else
@@ -257,17 +261,24 @@ void nfc_enabled (tNFC_STATUS nfc_status, BT_HDR *p_init_rsp_msg)
     /* else not successful. the buffers will be freed in nfc_free_conn_cb () */
     else
     {
-        nfc_free_conn_cb (p_cb);
-
-        /* if NFCC didn't respond to CORE_RESET or CORE_INIT */
-        if (nfc_cb.nfc_state == NFC_STATE_CORE_INIT)
+        if (nfc_cb.flags & NFC_FL_RESTARTING)
         {
-            /* report status after closing HAL */
-            nfc_cb.p_hal->close ();
-            return;
+            nfc_set_state (NFC_STATE_NFCC_POWER_OFF_SLEEP);
         }
         else
-            nfc_set_state (NFC_STATE_NONE);
+        {
+            nfc_free_conn_cb (p_cb);
+
+            /* if NFCC didn't respond to CORE_RESET or CORE_INIT */
+            if (nfc_cb.nfc_state == NFC_STATE_CORE_INIT)
+            {
+                /* report status after closing HAL */
+                nfc_cb.p_hal->close ();
+                return;
+            }
+            else
+                nfc_set_state (NFC_STATE_NONE);
+        }
     }
 
     nfc_main_notify_enable_status (nfc_status);
