@@ -350,17 +350,23 @@ static void nfa_dm_nfc_response_cback (tNFC_RESPONSE_EVT event, tNFC_RESPONSE *p
 
     case NFC_NFCC_RESTART_REVT:                  /* NFCC has been re-initialized */
 
-        nfa_dm_cb.nfcc_pwr_mode = NFA_DM_PWR_MODE_FULL;
-        nfa_dm_cb.flags |= NFA_DM_FLAGS_NFCC_IS_RESTORING;
+        if (p_data->status == NFC_STATUS_OK)
+        {
+            nfa_dm_cb.nfcc_pwr_mode = NFA_DM_PWR_MODE_FULL;
+            nfa_dm_cb.flags |= NFA_DM_FLAGS_NFCC_IS_RESTORING;
 
-        /* NFCC will start from IDLE when turned on again */
-        nfa_dm_cb.disc_cb.disc_flags &= ~NFA_DM_DISC_FLAGS_W4_RSP;
-        nfa_dm_cb.disc_cb.disc_flags &= ~NFA_DM_DISC_FLAGS_W4_NTF;
-        nfa_dm_cb.disc_cb.disc_state = NFA_DM_RFST_IDLE;
-
+            /* NFCC will start from IDLE when turned on again */
+            nfa_dm_cb.disc_cb.disc_flags &= ~NFA_DM_DISC_FLAGS_W4_RSP;
+            nfa_dm_cb.disc_cb.disc_flags &= ~NFA_DM_DISC_FLAGS_W4_NTF;
+            nfa_dm_cb.disc_cb.disc_state = NFA_DM_RFST_IDLE;
+        }
+        else
+        {
+            nfa_dm_cb.nfcc_pwr_mode = NFA_DM_PWR_MODE_OFF_SLEEP;
+        }
         /* Notify NFA submodules change of NFCC power mode */
         nfa_sys_cback_reg_nfcc_power_mode_proc_complete (nfa_dm_nfcc_power_mode_proc_complete_cback);
-        nfa_sys_notify_nfcc_power_mode (NFA_DM_PWR_MODE_FULL);
+        nfa_sys_notify_nfcc_power_mode (nfa_dm_cb.nfcc_pwr_mode);
         break;
 
     case NFC_NFCC_TIMEOUT_REVT:

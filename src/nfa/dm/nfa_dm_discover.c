@@ -935,6 +935,8 @@ void nfa_dm_start_rf_discover (void)
                 {
                     /* host can listen ISO-DEP based on AID routing */
                     listen_mask |= (nfa_dm_cb.disc_cb.entry[xx].requested_disc_mask  & NFA_DM_DISC_MASK_LA_ISO_DEP);
+                    listen_mask |= (nfa_dm_cb.disc_cb.entry[xx].requested_disc_mask  & NFA_DM_DISC_MASK_LA_NFC_DEP);
+                    listen_mask |= (nfa_dm_cb.disc_cb.entry[xx].requested_disc_mask  & NFA_DM_DISC_MASK_LAA_NFC_DEP);
                 }
 
                 /* NFC-B */
@@ -1160,6 +1162,11 @@ static tNFA_STATUS nfa_dm_disc_notify_activation (tNFC_DISCOVER *p_data)
     }
     else    /* DH only */
     {
+        host_id_in_LRT = NFA_DM_DISC_HOST_ID_DH;
+    }
+
+    if (protocol == NFC_PROTOCOL_NFC_DEP) {
+        // Force NFC-DEP to the host
         host_id_in_LRT = NFA_DM_DISC_HOST_ID_DH;
     }
 
