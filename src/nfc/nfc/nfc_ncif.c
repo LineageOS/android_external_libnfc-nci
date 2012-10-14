@@ -101,6 +101,10 @@ void nfc_ncif_cmd_timeout (void)
     {
         nfc_enabled (NFC_STATUS_FAILED, NULL);
     }
+
+    /* terminate the process so we'll try again */
+    NFC_TRACE_ERROR0 ("NFC controller stopped responding, aborting the NFC process");
+    abort();
 }
 
 /*******************************************************************************
