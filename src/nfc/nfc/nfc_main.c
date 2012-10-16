@@ -699,8 +699,9 @@ void NFC_Disable (void)
 {
     NFC_TRACE_API1 ("NFC_Disable (): nfc_state = %d", nfc_cb.nfc_state);
 
-    if (nfc_cb.nfc_state == NFC_STATE_NONE)
+    if (nfc_cb.nfc_state == NFC_STATE_NONE || nfc_cb.nfc_state == NFC_STATE_NFCC_POWER_OFF_SLEEP)
     {
+        nfc_set_state (NFC_STATE_NONE);
         if (nfc_cb.p_resp_cback)
         {
             (*nfc_cb.p_resp_cback) (NFC_DISABLE_REVT, NULL);
