@@ -591,7 +591,7 @@ int my_read(int fd, uchar *pbuf, int len)
     /* See if there was an error */
     if (n < 0)
     {
-        ALOGD( "select failed n = %d\n", errno);
+        ALOGD( "select failed; errno = %d\n", errno);
         return -errno;
     }
     else if (n == 0)
@@ -1171,7 +1171,7 @@ UDRV_API UINT16  USERIAL_Write(tUSERIAL_PORT port, UINT8 *p_data, UINT16 len)
     }
     perf_update(&perf_write, clock() - t, total);
 
-    ALOGD_IF((appl_trace_level>=BT_TRACE_LEVEL_DEBUG), "USERIAL_Write len = %d, ret =  %d, error = %d\n", len, ret, errno);
+    ALOGD_IF((appl_trace_level>=BT_TRACE_LEVEL_DEBUG), "USERIAL_Write len = %d, ret =  %d, errno = %d\n", len, ret, errno);
 
     /* register a delay for next write
      */
