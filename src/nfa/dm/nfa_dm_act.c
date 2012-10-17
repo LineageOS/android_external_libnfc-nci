@@ -202,6 +202,8 @@ void nfa_dm_proc_nfcc_power_mode (UINT8 nfcc_power_mode)
     {
         memset (&nfa_dm_cb.params, 0x00, sizeof (tNFA_DM_PARAMS));
 
+        nfa_dm_cb.setcfg_pending_mask = 0;
+        nfa_dm_cb.setcfg_pending_num  = 0;
         nfa_dm_set_init_nci_params ();
     }
 
