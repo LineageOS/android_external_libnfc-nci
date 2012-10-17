@@ -367,9 +367,9 @@ void nfa_hci_proc_nfcc_power_mode (UINT8 nfcc_power_mode)
     }
     else
     {
-        nfa_hci_cb.hci_state        = NFA_HCI_STATE_IDLE;
-        nfa_hci_cb.w4_rsp_evt       = FALSE;
-        nfa_hci_cb.conn_id          = 0;
+        nfa_hci_cb.hci_state     = NFA_HCI_STATE_IDLE;
+        nfa_hci_cb.w4_rsp_evt    = FALSE;
+        nfa_hci_cb.conn_id       = 0;
         nfa_sys_stop_timer (&nfa_hci_cb.timer);
         nfa_hci_cb.b_low_power_mode = TRUE;
         nfa_sys_cback_notify_nfcc_power_mode_proc_complete (NFA_ID_HCI);

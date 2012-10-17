@@ -79,6 +79,14 @@ typedef UINT16 tNFC_HAL_HCI_EVT;
 #define NFC_HAL_HCI_UICC1_TARGET_HANDLE         0xF4
 
 #define NFC_HAL_HCI_SESSION_ID_LEN              0x08
+#define NFC_HAL_HCI_NETWK_INFO_SIZE             184
+#define NFC_HAL_HCI_DH_NETWK_INFO_SIZE          111
+
+#define NFC_HAL_HCI_ADM_NOTIFY_ALL_PIPE_CLEARED 0x15
+#define NFC_HAL_HCI_ADMIN_PIPE                  0x01
+#define NFC_HAL_HCI_HOST_ID_UICC0               0x02        /* Host ID for UICC 0 */
+#define NFC_HAL_HCI_HOST_ID_UICC1               0x03        /* Host ID for UICC 1 */
+#define NFC_HAL_HCI_COMMAND_TYPE                0x00
 
 /* NFC HAL transport configuration */
 typedef struct
@@ -359,9 +367,12 @@ typedef struct
 typedef struct
 {
     TIMER_LIST_ENT          hci_timer;                /* Timer to avoid indefinitely waiting for response */
-    tNCI_HCI_NETWK          *p_hci_netwk_info_buf;    /* Buffer for reading HCI Network information */
-    tNCI_HCI_NETWK_DH       *p_hci_netwk_dh_info_buf; /* Buffer for reading HCI Network DH information */
+    UINT8                   *p_hci_netwk_info_buf;    /* Buffer for reading HCI Network information */
+    UINT8                   *p_hci_netwk_dh_info_buf; /* Buffer for reading HCI Network DH information */
     UINT8                   hci_netwk_config_block;   /* Rsp awaiting for hci network configuration block */
+    BOOLEAN                 b_wait_hcp_conn_create_rsp; /* Waiting for hcp connection create response */
+    BOOLEAN                 b_check_clear_all_pipe_cmd;
+    UINT8                   hcp_conn_id;
 } tNFC_HAL_HCI_CB;
 
 typedef struct
@@ -439,6 +450,7 @@ void nfc_hal_prm_process_timeout (void *p_tle);
 void nfc_hal_hci_enable (void);
 void nfc_hal_hci_evt_hdlr (tNFC_HAL_HCI_EVENT_DATA *p_evt_data);
 void nfc_hal_hci_handle_hci_netwk_info (UINT8 *p_data);
+void nfc_hal_hci_handle_hcp_pkt (UINT8 *p_data);
 void nfc_hal_hci_timeout_cback (void *p_tle);
 
 
