@@ -888,6 +888,7 @@ void nfc_hal_dm_shutting_down_nfcc (void)
     }
 
     nfc_hal_cb.ncit_cb.nci_wait_rsp = NFC_HAL_WAIT_RSP_NONE;
+    nfc_hal_cb.hci_cb.b_check_clear_all_pipe_cmd = FALSE;
 
     nfc_hal_cb.dev_cb.power_mode  = NFC_HAL_POWER_MODE_FULL;
     nfc_hal_cb.dev_cb.snooze_mode = NFC_HAL_LP_SNOOZE_MODE_NONE;

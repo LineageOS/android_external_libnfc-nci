@@ -522,9 +522,10 @@ BOOLEAN nfc_hal_nci_receive_msg (UINT8 byte)
 *******************************************************************************/
 BOOLEAN nfc_hal_nci_preproc_rx_nci_msg (NFC_HDR *p_msg)
 {
-    UINT8 *p;
+    UINT8 *p, *pp, cid;
     UINT8 mt, pbf, gid, op_code;
     UINT8 payload_len;
+    UINT16 data_len;
 
     NCI_TRACE_DEBUG0 ("nfc_hal_nci_preproc_rx_nci_msg()");
 
@@ -538,9 +539,23 @@ BOOLEAN nfc_hal_nci_preproc_rx_nci_msg (NFC_HDR *p_msg)
     else
     {
         p = (UINT8 *) (p_msg + 1) + p_msg->offset;
+        pp = p;
         NCI_MSG_PRS_HDR0 (p, mt, pbf, gid);
         NCI_MSG_PRS_HDR1 (p, op_code);
         payload_len = *p++;
+
+        if (mt == NCI_MT_DATA)
+        {
+            if (nfc_hal_cb.hci_cb.b_check_clear_all_pipe_cmd)
+            {
+                NCI_DATA_PRS_HDR(pp, pbf, cid, data_len);
+                if (cid == nfc_hal_cb.hci_cb.hcp_conn_id)
+                {
+                    nfc_hal_hci_handle_hcp_pkt (pp);
+                }
+
+            }
+        }
 
         if (gid == NCI_GID_PROP) /* this is for hci netwk ntf */
         {
@@ -567,6 +582,24 @@ BOOLEAN nfc_hal_nci_preproc_rx_nci_msg (NFC_HDR *p_msg)
                             NCI_TRACE_DEBUG2 ("RfDataCredits %d->%d", *p, nfc_hal_cb.max_rf_credits);
                             *p = nfc_hal_cb.max_rf_credits;
                         }
+                    }
+                }
+            }
+        }
+        else if (gid == NCI_GID_CORE)
+        {
+            if (mt == NCI_MT_RSP)
+            {
+                if (op_code == NCI_MSG_CORE_CONN_CREATE)
+                {
+                    if (nfc_hal_cb.hci_cb.b_wait_hcp_conn_create_rsp)
+                    {
+                        p++; /* skip status byte */
+                        nfc_hal_cb.hci_cb.b_wait_hcp_conn_create_rsp = FALSE;
+                        p++; /* skip buff size */
+                        p++; /* num of buffers */
+                        nfc_hal_cb.hci_cb.hcp_conn_id = *p;
+                        nfc_hal_cb.hci_cb.b_check_clear_all_pipe_cmd = TRUE;
                     }
                 }
             }
@@ -617,6 +650,54 @@ void nfc_hal_nci_add_nfc_pkt_type (NFC_HDR *p_msg)
     }
 }
 
+/*******************************************************************************
+**
+** Function         nci_brcm_check_cmd_create_hcp_connection
+**
+** Description      Check if this is command to create HCP connection
+**
+** Returns          None
+**
+*******************************************************************************/
+static void nci_brcm_check_cmd_create_hcp_connection (NFC_HDR *p_msg)
+{
+    UINT8 *p;
+    UINT8 mt, pbf, gid, op_code;
+
+    nfc_hal_cb.hci_cb.b_wait_hcp_conn_create_rsp = FALSE;
+
+    p = (UINT8 *) (p_msg + 1) + p_msg->offset;
+
+    if (nfc_hal_cb.dev_cb.initializing_state == NFC_HAL_INIT_STATE_IDLE)
+    {
+        NCI_MSG_PRS_HDR0 (p, mt, pbf, gid);
+        NCI_MSG_PRS_HDR1 (p, op_code);
+
+        if (gid == NCI_GID_CORE)
+        {
+            if (mt == NCI_MT_CMD)
+            {
+                if (op_code == NCI_MSG_CORE_CONN_CREATE)
+                {
+                    if (  ((NCI_CORE_PARAM_SIZE_CON_CREATE + 4) == *p++)
+                        &&(NCI_DEST_TYPE_NFCEE == *p++)
+                        &&(1 == *p++)
+                        &&(NCI_CON_CREATE_TAG_NFCEE_VAL == *p++)
+                        &&(2 == *p++)  )
+                    {
+                        p++;
+                        if (NCI_NFCEE_INTERFACE_HCI_ACCESS == *p)
+                        {
+                            nfc_hal_cb.hci_cb.b_wait_hcp_conn_create_rsp = TRUE;
+                            return;
+                        }
+                    }
+
+                }
+            }
+        }
+    }
+}
 
 /*******************************************************************************
 **
@@ -638,6 +719,7 @@ void nfc_hal_nci_send_cmd (NFC_HDR *p_buf)
     UINT8   nci_ctrl_size = nfc_hal_cb.ncit_cb.nci_ctrl_size;
     UINT8   delta = 0;
 
+    nci_brcm_check_cmd_create_hcp_connection ((NFC_HDR*) p_buf);
 
     /* check low power mode state */
     continue_to_process = nfc_hal_dm_power_mode_execute (NFC_HAL_LP_TX_DATA_EVT);
