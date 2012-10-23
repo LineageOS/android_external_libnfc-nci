@@ -126,6 +126,7 @@ void nfc_hal_hci_handle_hci_netwk_info (UINT8 *p_data)
     UINT8  *p = p_data;
     UINT16 data_len;
     UINT8  target_handle;
+    UINT8   hci_netwk_cmd[1 + NFC_HAL_HCI_SESSION_ID_LEN];
 
     NCI_TRACE_DEBUG0 ("nfc_hal_hci_handle_hci_netwk_info()");
 
@@ -140,13 +141,34 @@ void nfc_hal_hci_handle_hci_netwk_info (UINT8 *p_data)
 
     else if (target_handle == NFC_HAL_HCI_UICC0_TARGET_HANDLE)
     {
-        /* HCI Network notification received for UICC 0, Update nv data */
-        nfc_hal_nv_co_write (p, data_len,HC_F3_NV_BLOCK);
+        if (p[12] & 0x80)
+        {
+            /* HCI Network notification received for UICC 0, Update nv data */
+            nfc_hal_nv_co_write (p, data_len,HC_F3_NV_BLOCK);
+        }
+        else
+        {
+            NCI_TRACE_DEBUG1 ("nfc_hal_hci_handle_hci_netwk_info(): Type A Card Emulation invalid, Reset nv file: 0x%02x", p[15]);
+            hci_netwk_cmd[0] = NFC_HAL_HCI_UICC0_TARGET_HANDLE;
+            memset (&hci_netwk_cmd[1], 0xFF, NFC_HAL_HCI_SESSION_ID_LEN);
+            nfc_hal_nv_co_write (hci_netwk_cmd, 1, HC_F3_NV_BLOCK);
+        }
     }
     else if (target_handle == NFC_HAL_HCI_UICC1_TARGET_HANDLE)
     {
-        /* HCI Network notification received for UICC 1, Update nv data */
-        nfc_hal_nv_co_write (p, data_len,HC_F4_NV_BLOCK);
+        if (p[12] & 0x80)
+        {
+            /* HCI Network notification received for UICC 1, Update nv data */
+            nfc_hal_nv_co_write (p, data_len,HC_F4_NV_BLOCK);
+        }
+        else
+        {
+            NCI_TRACE_DEBUG1 ("nfc_hal_hci_handle_hci_netwk_info(): Type A Card Emulation invalid, Reset nv file: 0x%02x", p[15]);
+            hci_netwk_cmd[0] = NFC_HAL_HCI_UICC1_TARGET_HANDLE;
+            /* Reset Session ID */
+            memset (&hci_netwk_cmd[1], 0xFF, NFC_HAL_HCI_SESSION_ID_LEN);
+            nfc_hal_nv_co_write (hci_netwk_cmd, 1, HC_F4_NV_BLOCK);
+        }
     }
 }
 
@@ -165,7 +187,7 @@ void nfc_hal_hci_handle_hcp_pkt (UINT8 *p_data)
     UINT8   pipe;
     UINT8   type;
     UINT8   inst;
-    UINT8   hci_netwk_cmd;
+    UINT8   hci_netwk_cmd[1 + NFC_HAL_HCI_SESSION_ID_LEN];
     UINT8   source_host;
 
     chaining_bit = ((*p_data) >> 0x07) & 0x01;
@@ -188,14 +210,18 @@ void nfc_hal_hci_handle_hcp_pkt (UINT8 *p_data)
                 NCI_TRACE_DEBUG1 ("nfc_hal_hci_handle_hcp_pkt(): Received Clear All pipe command for UICC: 0x%02x", source_host);
                 if (source_host == NFC_HAL_HCI_HOST_ID_UICC0)
                 {
-                    hci_netwk_cmd = NFC_HAL_HCI_UICC0_TARGET_HANDLE;
-                    nfc_hal_nv_co_write (&hci_netwk_cmd, 1, HC_F3_NV_BLOCK);
+                    hci_netwk_cmd[0] = NFC_HAL_HCI_UICC0_TARGET_HANDLE;
+                    /* Reset Session ID */
+                    memset (&hci_netwk_cmd[1], 0xFF, NFC_HAL_HCI_SESSION_ID_LEN);
+                    nfc_hal_nv_co_write (hci_netwk_cmd, 1, HC_F3_NV_BLOCK);
                     NCI_TRACE_DEBUG1 ("nfc_hal_hci_handle_hcp_pkt(): Sent command to reset nv file for block: 0x%02x", HC_F3_NV_BLOCK);
                 }
                 else if (source_host == NFC_HAL_HCI_HOST_ID_UICC1)
                 {
-                    hci_netwk_cmd = NFC_HAL_HCI_UICC1_TARGET_HANDLE;
-                    nfc_hal_nv_co_write (&hci_netwk_cmd, 1, HC_F4_NV_BLOCK);
+                    hci_netwk_cmd[0] = NFC_HAL_HCI_UICC1_TARGET_HANDLE;
+                    /* Reset Session ID */
+                    memset (&hci_netwk_cmd[1], 0xFF, NFC_HAL_HCI_SESSION_ID_LEN);
+                    nfc_hal_nv_co_write (hci_netwk_cmd, 1, HC_F4_NV_BLOCK);
                     NCI_TRACE_DEBUG1 ("nfc_hal_hci_handle_hcp_pkt(): Sent command to reset nv file for block: 0x%02x", HC_F4_NV_BLOCK);
                 }
             }
