@@ -45,8 +45,16 @@ include $(BUILD_SHARED_LIBRARY)
 # Android's generic HAL (libhardware.so) dynamically loads this shared library.
 
 include $(CLEAR_VARS)
-LOCAL_MODULE := nfc_nci.bcm2079x.default
 LOCAL_MODULE_RELATIVE_PATH := hw
+
+ifneq ($(BOARD_NFC_HAL_SUFFIX),)
+    HAL_SUFFIX := $(BOARD_NFC_HAL_SUFFIX)
+else
+    HAL_SUFFIX := bcm2079x.default
+endif
+
+LOCAL_MODULE := nfc_nci.$(HAL_SUFFIX)
+
 LOCAL_SRC_FILES := $(call all-c-files-under, $(HALIMPL)) \
     $(call all-cpp-files-under, $(HALIMPL)) \
     src/adaptation/CrcChecksum.cpp \
