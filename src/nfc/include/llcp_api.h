@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- *  Copyright (C) 2010-2012 Broadcom Corporation
+ *  Copyright (C) 2010-2013 Broadcom Corporation
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  *  limitations under the License.
  *
  ******************************************************************************/
+
 
 /******************************************************************************
  *
@@ -68,6 +69,7 @@ typedef struct
 #define LLCP_LINK_ACTIVATION_FAILED_EVT     0x00    /* Fail to activate link    */
 #define LLCP_LINK_ACTIVATION_COMPLETE_EVT   0x01    /* LLCP Link is activated   */
 #define LLCP_LINK_DEACTIVATED_EVT           0x02    /* LLCP Link is deactivated */
+#define LLCP_LINK_FIRST_PACKET_RECEIVED_EVT 0x03    /* First LLCP packet received from remote */
 
 /* Link Management Callback Reasons */
 
@@ -79,6 +81,7 @@ typedef struct
 #define LLCP_LINK_REMOTE_INITIATED          0x05    /* Link has been deactivated by remote      */
 #define LLCP_LINK_TIMEOUT                   0x06    /* Link has been deactivated by timeout     */
 #define LLCP_LINK_FRAME_ERROR               0x07    /* Link has been deactivated by frame error */
+#define LLCP_LINK_RF_LINK_LOSS_NO_RX_LLC    0x08    /* RF link loss without any rx LLC PDU      */
 #define LLCP_LINK_RF_TRANSMISSION_ERR       NFC_STATUS_RF_TRANSMISSION_ERR
 #define LLCP_LINK_RF_PROTOCOL_ERR           NFC_STATUS_RF_PROTOCOL_ERR
 #define LLCP_LINK_RF_TIMEOUT                NFC_STATUS_TIMEOUT

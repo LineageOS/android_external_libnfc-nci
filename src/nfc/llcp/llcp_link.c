@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- *  Copyright (C) 2010-2012 Broadcom Corporation
+ *  Copyright (C) 2010-2013 Broadcom Corporation
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  *  limitations under the License.
  *
  ******************************************************************************/
+
 
 /******************************************************************************
  *
@@ -208,7 +209,11 @@ tLLCP_STATUS llcp_link_activate (tLLCP_ACTIVATE_CONFIG *p_config)
         return LLCP_STATUS_FAIL;
     }
 
+    llcp_cb.lcb.received_first_packet = FALSE;
     llcp_cb.lcb.is_initiator = p_config->is_initiator;
+
+    /* reset internal flags */
+    llcp_cb.lcb.flags = 0x00;
 
     /* set tx MIU to MIN (MIU of local LLCP, MIU of peer LLCP) */
 
@@ -427,6 +432,7 @@ void llcp_link_deactivate (UINT8 reason)
     }
     else /*  for link timeout and interface error */
     {
+        /* if got RF link loss receiving no LLC PDU from peer */
         NFC_FlushData (NFC_RF_CONN_ID);
     }
 
@@ -1268,6 +1274,11 @@ static void llcp_link_proc_rx_data (BT_HDR *p_msg)
     {
         llcp_link_stop_link_timer ();
 
+        if (llcp_cb.lcb.received_first_packet == FALSE)
+        {
+            llcp_cb.lcb.received_first_packet = TRUE;
+            (*llcp_cb.lcb.p_link_cback) (LLCP_LINK_FIRST_PACKET_RECEIVED_EVT, LLCP_LINK_SUCCESS);
+        }
         if (  (llcp_cb.lcb.link_state == LLCP_LINK_STATE_DEACTIVATING)
             &&(llcp_cb.lcb.sig_xmit_q.count == 0)  )
         {
@@ -1659,6 +1670,7 @@ void llcp_link_connection_cback (UINT8 conn_id, tNFC_CONN_EVT event, tNFC_CONN *
         }
         else
         {
+            llcp_cb.lcb.flags |= LLCP_LINK_FLAGS_RX_ANY_LLC_PDU;
             llcp_link_proc_rx_data ((BT_HDR *) p_data->data.p_data);
         }
     }

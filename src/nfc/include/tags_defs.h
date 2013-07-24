@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- *  Copyright (C) 2009-2012 Broadcom Corporation
+ *  Copyright (C) 2009-2013 Broadcom Corporation
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  *  limitations under the License.
  *
  ******************************************************************************/
+
 
 /******************************************************************************
  *
@@ -215,6 +216,7 @@
 #define T2T_NUM_STATIC_LOCK_BYTES           2   /* Number of static lock bytes in tag   */
 #define T2T_BYTES_LOCKED_BY_STATIC_LOCK_BIT 4   /* Bytes locked by one static lock bit  */
 
+#define T2T_CC2_TMS_MUL           0x06
 #define T2T_CC2_TMS_MULC          0x12
 /*
 **
@@ -225,6 +227,7 @@
 #define T3T_SYSTEM_CODE_NDEF        0x12FC  /* System Code for NDEF tags */
 #define T3T_SYSTEM_CODE_FELICA_LITE 0x88B4  /* System Code for felica-lite tags */
 #define T3T_MAX_SYSTEM_CODES        16
+#define T3T_FELICALITE_NMAXB        13      /* Maximum number of blocks for NDEF message for Felica Lite tags */
 
 /* Block descriptor, used to describe a block to check/update */
 typedef struct
@@ -306,7 +309,11 @@ typedef UINT8 tT3T_POLL_RC;
 
 /* Felica Lite defintions */
 #define T3T_MSG_FELICALITE_BLOCK_ID_MC              0x88    /* Block ID for MC (memory configuration)                       */
-#define T3T_MSG_FELICALITE_MC_OFFSET_SYS_OP         0x03    /* Memory Configuration Block offset: SYS_OP (System Option)    */
+
+#define T3T_MSG_FELICALITE_MC_OFFSET_MC_SP          0x00    /* Memory Configuration Block offset: MC_SP (Memory Configuration for scratch pad)   */
+#define T3T_MSG_FELICALITE_MC_OFFSET_MC_ALL         0x02    /* Memory Configuration Block offset: MC_ALL (Memory Configuration for system block) */
+#define T3T_MSG_FELICALITE_MC_OFFSET_SYS_OP         0x03    /* Memory Configuration Block offset: SYS_OP (System Option)                         */
+#define T3T_MSG_FELICALITE_MC_OFFSET_RF_PRM         0x04    /* Memory Configuration Block offset: RF_PRM (Memory Configuration for RF Parameter) */
 
 
 
@@ -355,8 +362,9 @@ typedef UINT8 tT3T_POLL_RC;
 #define T4T_CC_FILE_ID                  0xE103
 #define T4T_CC_FILE_MIN_LEN             0x000F
 
-#define T4T_VERSION_OFFSET_IN_CC        0x02
-#define T4T_FC_TLV_OFFSET_IN_CC         0x07
+#define T4T_VERSION_OFFSET_IN_CC          0x02
+#define T4T_FC_TLV_OFFSET_IN_CC           0x07
+#define T4T_FC_WRITE_ACCESS_OFFSET_IN_TLV 0x07  /* Offset of Write access byte from type field in CC */
 
 #define T4T_NDEF_FILE_CONTROL_TYPE      0x04    /* NDEF File Control Type */
 #define T4T_PROP_FILE_CONTROL_TYPE      0x05    /* Proprietary File Control Type */
@@ -480,6 +488,7 @@ typedef UINT8 tT3T_POLL_RC;
 #define I93_ICODE_CC_READ_ONLY              0x03    /* write access not granted at all       */
 #define I93_ICODE_CC_MBREAD_MASK            0x01    /* read multi block supported in CC[3]   */
 #define I93_ICODE_CC_IPREAD_MASK            0x02    /* inventory page read supported in CC[3] */
+#define I93_STM_CC_OVERFLOW_MASK            0x04    /* More than 2040 bytes are supported in CC[3] */
 
 /* ICODE TLV type */
 #define I93_ICODE_TLV_TYPE_NULL             0x00    /* NULL TLV         */
@@ -491,6 +500,7 @@ typedef UINT8 tT3T_POLL_RC;
 #define I93_UID_FIRST_BYTE                      0xE0
 
 /* UID Coding (UID Bit 56-49), IC manufacturer code */
+#define I93_UID_IC_MFG_CODE_STM                 0x02
 #define I93_UID_IC_MFG_CODE_NXP                 0x04
 #define I93_UID_IC_MFG_CODE_TI                  0x07
 
@@ -515,5 +525,19 @@ typedef UINT8 tT3T_POLL_RC;
 #define I93_TAG_IT_HF_I_STD_PRO_CHIP_INLAY_BLK_SIZE         4
 #define I93_TAG_IT_HF_I_STD_PRO_CHIP_INLAY_NUM_USER_BLK     8
 #define I93_TAG_IT_HF_I_STD_PRO_CHIP_INLAY_AFI_LOCATION    40   /* LSB in Block 0x0A */
+
+/* STM, product version (IC manufacturer code) */
+#define I93_IC_REF_STM_MASK                     0xFC    /* IC Reference mask for STM */
+#define I93_IC_REF_STM_LRI1K                    0x40    /* IC Reference for LRI1K:      010000xx(b), blockSize: 4, numberBlocks: 0x20 */
+#define I93_IC_REF_STM_LRI2K                    0x20    /* IC Reference for LRI2K:      001000xx(b), blockSize: 4, numberBlocks: 0x40 */
+#define I93_IC_REF_STM_LRIS2K                   0x28    /* IC Reference for LRIS2K:     001010xx(b), blockSize: 4, numberBlocks: 0x40 */
+#define I93_IC_REF_STM_LRIS64K                  0x44    /* IC Reference for LRIS64K:    010001xx(b), blockSize: 4, numberBlocks: 0x800 */
+#define I93_IC_REF_STM_M24LR64_R                0x2C    /* IC Reference for M24LR64-R:  001011xx(b), blockSize: 4, numberBlocks: 0x800 */
+#define I93_IC_REF_STM_M24LR04E_R               0x5A    /* IC Reference for M24LR04E-R: 01011010(b), blockSize: 4, numberBlocks: 0x80 */
+#define I93_IC_REF_STM_M24LR16E_R               0x4E    /* IC Reference for M24LR16E-R: 01001110(b), blockSize: 4, numberBlocks: 0x200 */
+#define I93_IC_REF_STM_M24LR64E_R               0x5E    /* IC Reference for M24LR64E-R: 01011110(b), blockSize: 4, numberBlocks: 0x800 */
+
+#define I93_STM_BLOCKS_PER_SECTOR               32
+#define I93_STM_MAX_BLOCKS_PER_READ             32
 
 #endif /* TAGS_DEFS_H */

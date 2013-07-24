@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- *  Copyright (C) 2010-2012 Broadcom Corporation
+ *  Copyright (C) 2010-2013 Broadcom Corporation
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  *  limitations under the License.
  *
  ******************************************************************************/
+
 
 /******************************************************************************
  *
@@ -36,6 +37,7 @@ static tNFC_STATUS nfa_rw_start_ndef_detection(void);
 static tNFC_STATUS nfa_rw_config_tag_ro(BOOLEAN b_hard_lock);
 static BOOLEAN     nfa_rw_op_req_while_busy(tNFA_RW_MSG *p_data);
 static void        nfa_rw_error_cleanup (UINT8 event);
+static void        nfa_rw_presence_check (tNFA_RW_MSG *p_data);
 
 /*******************************************************************************
 **
@@ -129,18 +131,26 @@ static void nfa_rw_error_cleanup (UINT8 event)
 **
 ** Function         nfa_rw_check_start_presence_check_timer
 **
-** Description      Start timer for presence check
+** Description      Start timer to wait for specified time before presence check
 **
 ** Returns          Nothing
 **
 *******************************************************************************/
-static void nfa_rw_check_start_presence_check_timer (void)
+static void nfa_rw_check_start_presence_check_timer (UINT16 presence_check_start_delay)
 {
 #if (defined (NFA_DM_AUTO_PRESENCE_CHECK) && (NFA_DM_AUTO_PRESENCE_CHECK == TRUE))
     if (nfa_rw_cb.flags & NFA_RW_FL_NOT_EXCL_RF_MODE)
     {
-        NFA_TRACE_DEBUG0("Starting presence check timer...");
-        nfa_sys_start_timer(&nfa_rw_cb.tle, NFA_RW_PRESENCE_CHECK_TICK_EVT, NFA_RW_PRESENCE_CHECK_INTERVAL);
+        if (presence_check_start_delay)
+        {
+            NFA_TRACE_DEBUG0("Starting presence check timer...");
+            nfa_sys_start_timer(&nfa_rw_cb.tle, NFA_RW_PRESENCE_CHECK_TICK_EVT, presence_check_start_delay);
+        }
+        else
+        {
+            /* Presence check now */
+            nfa_rw_presence_check (NULL);
+        }
     }
 #endif   /* NFA_DM_AUTO_PRESENCE_CHECK  */
 }
@@ -491,7 +501,18 @@ static void nfa_rw_handle_t1t_evt (tRW_EVENT event, tRW_DATA *p_rw_data)
 
     case RW_T1T_NDEF_DETECT_EVT:
         nfa_rw_cb.tlv_st = NFA_RW_TLV_DETECT_ST_COMPLETE;
+
+        if (  (p_rw_data->status != NFC_STATUS_OK)
+            &&(nfa_rw_cb.cur_op == NFA_RW_OP_WRITE_NDEF)
+            &&(p_rw_data->ndef.flags & RW_NDEF_FL_FORMATABLE) && (!(p_rw_data->ndef.flags & RW_NDEF_FL_FORMATED)) && (p_rw_data->ndef.flags & RW_NDEF_FL_SUPPORTED)  )
+        {
+            /* Tag is in Initialized state, Format the tag first and then Write NDEF */
+            if (RW_T1tFormatNDef() == NFC_STATUS_OK)
+                break;
+        }
+
         nfa_rw_handle_ndef_detect(event, p_rw_data);
+
         break;
 
     case RW_T1T_NDEF_READ_EVT:
@@ -558,12 +579,32 @@ static void nfa_rw_handle_t1t_evt (tRW_EVENT event, tRW_DATA *p_rw_data)
         break;
 
     case RW_T1T_FORMAT_CPLT_EVT:
+
         if (p_rw_data->data.status == NFA_STATUS_OK)
             nfa_rw_cb.ndef_st = NFA_RW_NDEF_ST_UNKNOWN;
 
-        /* Command complete - perform cleanup, notify the app */
-        nfa_rw_command_complete();
-        nfa_dm_act_conn_cback_notify(NFA_FORMAT_CPLT_EVT, &conn_evt_data);
+        if (nfa_rw_cb.cur_op == NFA_RW_OP_WRITE_NDEF)
+        {
+            /* if format operation was done as part of ndef-write operation, now start NDEF Write */
+            if (  (p_rw_data->data.status != NFA_STATUS_OK)
+                ||((conn_evt_data.status = RW_T1tDetectNDef ()) != NFC_STATUS_OK)  )
+            {
+                /* Command complete - perform cleanup, notify app */
+                nfa_rw_command_complete();
+                nfa_rw_cb.ndef_st = NFA_RW_NDEF_ST_FALSE;
+
+
+                /* if format operation failed or ndef detection did not start, then notify app of ndef-write operation failure */
+                conn_evt_data.status = NFA_STATUS_FAILED;
+                nfa_dm_act_conn_cback_notify(NFA_WRITE_CPLT_EVT, &conn_evt_data);
+            }
+        }
+        else
+        {
+            /* Command complete - perform cleanup, notify the app */
+            nfa_rw_command_complete();
+            nfa_dm_act_conn_cback_notify(NFA_FORMAT_CPLT_EVT, &conn_evt_data);
+        }
         break;
 
     case RW_T1T_INTF_ERROR_EVT:
@@ -1156,39 +1197,15 @@ static void nfa_rw_handle_i93_evt (tRW_EVENT event, tRW_DATA *p_rw_data)
         /* Command complete - perform cleanup, notify app */
         nfa_rw_command_complete();
 
-        if (nfa_rw_cb.flags & NFA_RW_FL_ACTIVATION_NTF_PENDING)
-        {
-            /* read AFI */
-            if (RW_I93ReadSingleBlock ((UINT8)(nfa_rw_cb.i93_afi_location / nfa_rw_cb.i93_block_size)) != NFC_STATUS_OK)
-            {
-                nfa_rw_cb.flags &= ~NFA_RW_FL_ACTIVATION_NTF_PENDING;
+        conn_evt_data.i93_cmd_cplt.status       = p_rw_data->i93_inventory.status;
+        conn_evt_data.i93_cmd_cplt.sent_command = I93_CMD_INVENTORY;
 
-                i93_params.i93.info_flags = (I93_INFO_FLAG_DSFID|I93_INFO_FLAG_MEM_SIZE);
-                i93_params.i93.dsfid      = p_rw_data->i93_inventory.dsfid;
-                i93_params.i93.block_size = nfa_rw_cb.i93_block_size;
-                i93_params.i93.num_block  = nfa_rw_cb.i93_num_block;
-                memcpy (i93_params.i93.uid, nfa_rw_cb.i93_uid, I93_UID_BYTE_LEN);
+        conn_evt_data.i93_cmd_cplt.params.inventory.dsfid = p_rw_data->i93_inventory.dsfid;
+        memcpy (conn_evt_data.i93_cmd_cplt.params.inventory.uid,
+                p_rw_data->i93_inventory.uid,
+                I93_UID_BYTE_LEN);
 
-                nfa_dm_notify_activation_status (NFA_STATUS_OK, &i93_params);
-            }
-            else
-            {
-                nfa_rw_cb.i93_dsfid = p_rw_data->i93_inventory.dsfid;
-                break;
-            }
-        }
-        else
-        {
-            conn_evt_data.i93_cmd_cplt.status       = p_rw_data->i93_inventory.status;
-            conn_evt_data.i93_cmd_cplt.sent_command = I93_CMD_INVENTORY;
-
-            conn_evt_data.i93_cmd_cplt.params.inventory.dsfid = p_rw_data->i93_inventory.dsfid;
-            memcpy (conn_evt_data.i93_cmd_cplt.params.inventory.uid,
-                    p_rw_data->i93_inventory.uid,
-                    I93_UID_BYTE_LEN);
-
-            nfa_dm_act_conn_cback_notify(NFA_I93_CMD_CPLT_EVT, &conn_evt_data);
-        }
+        nfa_dm_act_conn_cback_notify(NFA_I93_CMD_CPLT_EVT, &conn_evt_data);
 
         nfa_rw_cb.cur_op = NFA_RW_OP_MAX; /* clear current operation */
         break;
@@ -1250,7 +1267,7 @@ static void nfa_rw_handle_i93_evt (tRW_EVENT event, tRW_DATA *p_rw_data)
         }
         else
         {
-            conn_evt_data.i93_cmd_cplt.status       = p_rw_data->i93_inventory.status;
+            conn_evt_data.i93_cmd_cplt.status       = p_rw_data->i93_sys_info.status;
             conn_evt_data.i93_cmd_cplt.sent_command = I93_CMD_GET_SYS_INFO;
 
             conn_evt_data.i93_cmd_cplt.params.sys_info.info_flags = p_rw_data->i93_sys_info.info_flags;
@@ -1277,13 +1294,27 @@ static void nfa_rw_handle_i93_evt (tRW_EVENT event, tRW_DATA *p_rw_data)
         /* Command complete - perform cleanup, notify app */
         nfa_rw_command_complete();
 
-        conn_evt_data.i93_cmd_cplt.status       = p_rw_data->i93_cmd_cmpl.status;
-        conn_evt_data.i93_cmd_cplt.sent_command = p_rw_data->i93_cmd_cmpl.command;
+        if (nfa_rw_cb.flags & NFA_RW_FL_ACTIVATION_NTF_PENDING)
+        {
+            /* Reader got error code from tag */
 
-        if (conn_evt_data.i93_cmd_cplt.status != NFC_STATUS_OK)
-            conn_evt_data.i93_cmd_cplt.params.error_code = p_rw_data->i93_cmd_cmpl.error_code;
+            nfa_rw_cb.flags &= ~NFA_RW_FL_ACTIVATION_NTF_PENDING;
 
-        nfa_dm_act_conn_cback_notify(NFA_I93_CMD_CPLT_EVT, &conn_evt_data);
+            memset (&i93_params, 0x00, sizeof(i93_params));
+            memcpy (i93_params.i93.uid, nfa_rw_cb.i93_uid, I93_UID_BYTE_LEN);
+
+            nfa_dm_notify_activation_status (NFA_STATUS_OK, &i93_params);
+        }
+        else
+        {
+            conn_evt_data.i93_cmd_cplt.status       = p_rw_data->i93_cmd_cmpl.status;
+            conn_evt_data.i93_cmd_cplt.sent_command = p_rw_data->i93_cmd_cmpl.command;
+
+            if (conn_evt_data.i93_cmd_cplt.status != NFC_STATUS_OK)
+                conn_evt_data.i93_cmd_cplt.params.error_code = p_rw_data->i93_cmd_cmpl.error_code;
+
+            nfa_dm_act_conn_cback_notify(NFA_I93_CMD_CPLT_EVT, &conn_evt_data);
+        }
 
         nfa_rw_cb.cur_op = NFA_RW_OP_MAX; /* clear current operation */
         break;
@@ -1630,8 +1661,17 @@ static BOOLEAN nfa_rw_write_ndef(tNFA_RW_MSG *p_data)
     }
     else if (nfa_rw_cb.ndef_st == NFA_RW_NDEF_ST_FALSE)
     {
-        /* Tag is not NDEF */
-        write_status = NFA_STATUS_FAILED;
+        if (nfa_rw_cb.protocol == NFC_PROTOCOL_T1T)
+        {
+            /* For Type 1 tag, NDEF can be written on Initialized tag
+            *  Perform ndef detection first to check if tag is in Initialized state to Write NDEF */
+            write_status = nfa_rw_start_ndef_detection();
+        }
+        else
+        {
+            /* Tag is not NDEF */
+            write_status = NFA_STATUS_FAILED;
+        }
     }
     else
     {
@@ -2180,12 +2220,15 @@ static BOOLEAN nfa_rw_i93_command (tNFA_RW_MSG *p_data)
         i93_command = I93_CMD_INVENTORY;
         if (p_data->op_req.params.i93_cmd.uid_present)
         {
-            status = RW_I93Inventory (p_data->op_req.params.i93_cmd.afi,
+            status = RW_I93Inventory (p_data->op_req.params.i93_cmd.afi_present,
+                                      p_data->op_req.params.i93_cmd.afi,
                                       p_data->op_req.params.i93_cmd.uid);
         }
         else
         {
-            status = RW_I93Inventory (p_data->op_req.params.i93_cmd.afi, NULL);
+            status = RW_I93Inventory (p_data->op_req.params.i93_cmd.afi_present,
+                                      p_data->op_req.params.i93_cmd.afi,
+                                      NULL);
         }
         break;
 
@@ -2207,7 +2250,7 @@ static BOOLEAN nfa_rw_i93_command (tNFA_RW_MSG *p_data)
 
     case NFA_RW_OP_I93_LOCK_BLOCK:
         i93_command = I93_CMD_LOCK_BLOCK;
-        status = RW_I93LockBlock (p_data->op_req.params.i93_cmd.first_block_number);
+        status = RW_I93LockBlock ((UINT8)p_data->op_req.params.i93_cmd.first_block_number);
         break;
 
     case NFA_RW_OP_I93_READ_MULTI_BLOCK:
@@ -2218,7 +2261,7 @@ static BOOLEAN nfa_rw_i93_command (tNFA_RW_MSG *p_data)
 
     case NFA_RW_OP_I93_WRITE_MULTI_BLOCK:
         i93_command = I93_CMD_WRITE_MULTI_BLOCK;
-        status = RW_I93WriteMultipleBlocks (p_data->op_req.params.i93_cmd.first_block_number,
+        status = RW_I93WriteMultipleBlocks ((UINT8)p_data->op_req.params.i93_cmd.first_block_number,
                                             p_data->op_req.params.i93_cmd.number_blocks,
                                             p_data->op_req.params.i93_cmd.p_data);
         break;
@@ -2373,7 +2416,7 @@ BOOLEAN nfa_rw_activate_ntf(tNFA_RW_MSG *p_data)
 
         /* Notify app of NFA_ACTIVATED_EVT and start presence check timer */
         nfa_dm_notify_activation_status (NFA_STATUS_OK, NULL);
-        nfa_rw_check_start_presence_check_timer ();
+        nfa_rw_check_start_presence_check_timer (NFA_RW_PRESENCE_CHECK_INTERVAL);
         return TRUE;
     }
 
@@ -2407,16 +2450,15 @@ BOOLEAN nfa_rw_activate_ntf(tNFA_RW_MSG *p_data)
         break;
 
     case NFC_PROTOCOL_15693:
-        /* Issue INVENTORY command to retrieve additional tag infomation */
+        /* Delay notifying upper layer of NFA_ACTIVATED_EVT to retrieve additional tag infomation */
         nfa_rw_cb.flags |= NFA_RW_FL_ACTIVATION_NTF_PENDING;
-        activate_notify = FALSE;                    /* Delay notifying upper layer of NFA_ACTIVATED_EVT until INVENTORY response is received */
+        activate_notify = FALSE;
+
+        /* store DSFID and UID from activation NTF */
+        nfa_rw_cb.i93_dsfid = p_activate_params->rf_tech_param.param.pi93.dsfid;
 
         p = nfa_rw_cb.i93_uid;
-        ARRAY8_TO_STREAM (p, p_data->activate_ntf.p_activate_params->rf_tech_param.param.pi93.uid);
-
-        msg.params.i93_cmd.uid_present = TRUE;
-        p = msg.params.i93_cmd.uid;
-        ARRAY8_TO_STREAM (p, p_data->activate_ntf.p_activate_params->rf_tech_param.param.pi93.uid);
+        ARRAY8_TO_STREAM (p, p_activate_params->rf_tech_param.param.pi93.uid);
 
         if ((nfa_rw_cb.i93_uid[1] == I93_UID_IC_MFG_CODE_TI)
           &&(((nfa_rw_cb.i93_uid[2] & I93_UID_TAG_IT_HF_I_PRODUCT_ID_MASK) == I93_UID_TAG_IT_HF_I_STD_CHIP_INLAY)
@@ -2435,8 +2477,19 @@ BOOLEAN nfa_rw_activate_ntf(tNFA_RW_MSG *p_data)
                 nfa_rw_cb.i93_num_block     = I93_TAG_IT_HF_I_PRO_CHIP_INLAY_NUM_TOTAL_BLK;
             }
 
-            msg.op = NFA_RW_OP_I93_INVENTORY; /* Let stack know UID of activated tag */
-            msg.params.i93_cmd.afi = 0x00;
+            /* read AFI */
+            if (RW_I93ReadSingleBlock ((UINT8)(nfa_rw_cb.i93_afi_location / nfa_rw_cb.i93_block_size)) != NFC_STATUS_OK)
+            {
+                /* notify activation without AFI/IC-Ref */
+                nfa_rw_cb.flags &= ~NFA_RW_FL_ACTIVATION_NTF_PENDING;
+                activate_notify = TRUE;
+
+                tag_params.i93.info_flags = (I93_INFO_FLAG_DSFID|I93_INFO_FLAG_MEM_SIZE);
+                tag_params.i93.dsfid      = nfa_rw_cb.i93_dsfid;
+                tag_params.i93.block_size = nfa_rw_cb.i93_block_size;
+                tag_params.i93.num_block  = nfa_rw_cb.i93_num_block;
+                memcpy (tag_params.i93.uid, nfa_rw_cb.i93_uid, I93_UID_BYTE_LEN);
+            }
         }
         else
         {
@@ -2444,14 +2497,25 @@ BOOLEAN nfa_rw_activate_ntf(tNFA_RW_MSG *p_data)
             /* Tag-it HF-I Plus Chip/Inlay supports Get System Information Command */
             /* just try for others */
 
-            nfa_rw_cb.i93_block_size = 0;
-            nfa_rw_cb.i93_num_block  = 0;
+            if (RW_I93GetSysInfo (nfa_rw_cb.i93_uid) != NFC_STATUS_OK)
+            {
+                /* notify activation without AFI/MEM size/IC-Ref */
+                nfa_rw_cb.flags &= ~NFA_RW_FL_ACTIVATION_NTF_PENDING;
+                activate_notify = TRUE;
 
-            msg.op = NFA_RW_OP_I93_GET_SYS_INFO;
+                tag_params.i93.info_flags = I93_INFO_FLAG_DSFID;
+                tag_params.i93.dsfid      = nfa_rw_cb.i93_dsfid;
+                tag_params.i93.block_size = 0;
+                tag_params.i93.num_block  = 0;
+                memcpy (tag_params.i93.uid, nfa_rw_cb.i93_uid, I93_UID_BYTE_LEN);
+            }
+            else
+            {
+                /* reset memory size */
+                nfa_rw_cb.i93_block_size = 0;
+                nfa_rw_cb.i93_num_block  = 0;
+            }
         }
-
-        /* Send the command */
-        nfa_rw_handle_op_req((tNFA_RW_MSG *)&msg);
         break;
 
 
@@ -2464,7 +2528,7 @@ BOOLEAN nfa_rw_activate_ntf(tNFA_RW_MSG *p_data)
     if (activate_notify)
     {
         nfa_dm_notify_activation_status (NFA_STATUS_OK, &tag_params);
-        nfa_rw_check_start_presence_check_timer ();
+        nfa_rw_check_start_presence_check_timer (NFA_RW_PRESENCE_CHECK_INTERVAL);
     }
 
 
@@ -2515,6 +2579,7 @@ BOOLEAN nfa_rw_deactivate_ntf(tNFA_RW_MSG *p_data)
 BOOLEAN nfa_rw_handle_op_req (tNFA_RW_MSG *p_data)
 {
     BOOLEAN freebuf = TRUE;
+    UINT16  presence_check_start_delay = 0;
 
     /* Check if activated */
     if (!(nfa_rw_cb.flags & NFA_RW_FL_ACTIVATED))
@@ -2563,10 +2628,15 @@ BOOLEAN nfa_rw_handle_op_req (tNFA_RW_MSG *p_data)
         break;
 
     case NFA_RW_OP_SEND_RAW_FRAME:
+        presence_check_start_delay = p_data->op_req.params.send_raw_frame.p_data->layer_specific;
+
         NFC_SendData (NFC_RF_CONN_ID, p_data->op_req.params.send_raw_frame.p_data);
 
-        /* Command complete - perform cleanup */
-        nfa_rw_command_complete();
+        /* Clear the busy flag */
+        nfa_rw_cb.flags &= ~NFA_RW_FL_API_BUSY;
+
+        /* Start presence_check after specified delay */
+        nfa_rw_check_start_presence_check_timer (presence_check_start_delay);
         break;
 
     case NFA_RW_OP_PRESENCE_CHECK:
@@ -2772,5 +2842,5 @@ void nfa_rw_command_complete(void)
     nfa_rw_cb.flags &= ~NFA_RW_FL_API_BUSY;
 
     /* Restart presence_check timer */
-    nfa_rw_check_start_presence_check_timer ();
+    nfa_rw_check_start_presence_check_timer (NFA_RW_PRESENCE_CHECK_INTERVAL);
 }

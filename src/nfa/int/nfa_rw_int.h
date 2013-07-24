@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- *  Copyright (C) 2003-2012 Broadcom Corporation
+ *  Copyright (C) 2003-2013 Broadcom Corporation
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  *  limitations under the License.
  *
  ******************************************************************************/
+
 
 /******************************************************************************
  *
@@ -188,14 +189,15 @@ typedef struct
     UINT8               *p_block_data;
 } tNFA_RW_OP_PARAMS_T3T_WRITE;
 
-/* NFA_RW_OP_I93_INVENTORY params */
+/* NFA_RW_OP_I93_XXX params */
 typedef struct
 {
     BOOLEAN             uid_present;
     UINT8               uid[I93_UID_BYTE_LEN];
+    BOOLEAN             afi_present;
     UINT8               afi;
     UINT8               dsfid;
-    UINT8               first_block_number;
+    UINT16              first_block_number;
     UINT16              number_blocks;
     UINT8              *p_data;
 } tNFA_RW_OP_PARAMS_I93_CMD;
