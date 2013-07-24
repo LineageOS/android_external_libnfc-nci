@@ -21,15 +21,12 @@ $(patsubst ./%,%, \
  )
 endef
 
-ifneq ($(BOARD_NFC_HAL_SUFFIX),)
-	HAL_SUFFIX := $(BOARD_NFC_HAL_SUFFIX)
-else
-	HAL_SUFFIX := $(TARGET_DEVICE)
 
+HAL_SUFFIX := $(TARGET_DEVICE)
 ifeq ($(TARGET_DEVICE),crespo)
 	HAL_SUFFIX := herring
 endif
-endif
+
 
 ######################################
 ######################################
