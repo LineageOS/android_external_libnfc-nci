@@ -1,15 +1,23 @@
-/*****************************************************************************/
-/*                                                                           */
-/*  Name:          nfca_version.c                                             */
-/*                                                                           */
-/*  Description:                                                             */
-/*      NFCA Version string declaration.                                      */
-/*                                                                           */
-/*  Copyright (c) 2011, Broadcom Corporation, All Rights Reserved.           */
-/*****************************************************************************/
+/******************************************************************************
+ *
+ *  Copyright (C) 2012 Broadcom Corporation
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at:
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ ******************************************************************************/
 #include "bt_types.h"
 
-const UINT8 nfca_version_string[] = "NFCDROID_MI_422_10.0.4";
+const UINT8 nfca_version_string[] = "NFCDROID_MI_422.10.0.15";
 
 /*
 // The following string should be manually updated to contain the
@@ -17,4 +25,4 @@ const UINT8 nfca_version_string[] = "NFCDROID_MI_422_10.0.4";
 //
 // NOTE: IF additional branches are used add a "+" at the end of the string
 */
-const UINT8 nfa_version_string[] =  "NFA_MI_1.03.57+";
+const UINT8 nfa_version_string[] =  "NFA_MI_1.03.62+";

@@ -250,6 +250,11 @@
 #define NFC_MAX_EE_TLV_SIZE        150
 #endif
 
+/* Maximum time to discover NFCEE */
+#ifndef NFA_EE_DISCV_TIMEOUT_VAL
+#define NFA_EE_DISCV_TIMEOUT_VAL    2000
+#endif
+
 /* Number of times reader/writer should attempt to resend a command on failure */
 #ifndef RW_MAX_RETRIES
 #define RW_MAX_RETRIES              5
@@ -272,7 +277,7 @@
 
 /* RW Type 2 Tag timeout for each API call, in ms */
 #ifndef RW_T2T_TOUT_RESP
-#define RW_T2T_TOUT_RESP            100
+#define RW_T2T_TOUT_RESP            150 /* Android requires 150 instead of 100 for presence-check*/
 #endif
 
 /* RW Type 2 Tag timeout for each API call, in ms */
@@ -567,9 +572,9 @@
 #define NFA_DM_DEFAULT_PRESENCE_CHECK_START_DELAY   750
 #endif
 
-/* Time to restart discovery after deactivated */
-#ifndef NFA_DM_DISC_DELAY_DISCOVERY
-#define NFA_DM_DISC_DELAY_DISCOVERY     1000
+/* Timeout for reactivation of Kovio bar code tag (presence check) */
+#ifndef NFA_DM_DISC_TIMEOUT_KOVIO_PRESENCE_CHECK
+#define NFA_DM_DISC_TIMEOUT_KOVIO_PRESENCE_CHECK    (1000)
 #endif
 
 /* Max number of NDEF type handlers that can be registered (including the default handler) */
@@ -647,7 +652,7 @@
 
 /* Max number of NFCEE supported */
 #ifndef NFA_EE_MAX_EE_SUPPORTED
-#define NFA_EE_MAX_EE_SUPPORTED         3
+#define NFA_EE_MAX_EE_SUPPORTED         3           /* Modified for NFC-A until we add dynamic support */
 #endif
 
 /* Maximum number of AID entries per target_handle  */

@@ -29,7 +29,8 @@ extern "C"
 
 extern "C" void GKI_shutdown();
 extern void resetConfig();
-extern "C" void delete_stack_non_volatile_store ();
+extern "C" void verify_stack_non_volatile_store ();
+extern "C" void delete_stack_non_volatile_store (BOOLEAN forceDelete);
 
 NfcAdaptation* NfcAdaptation::mpInstance = NULL;
 ThreadMutex NfcAdaptation::sLock;
@@ -46,6 +47,8 @@ char bcm_nfc_location[120];
 static UINT8 nfa_dm_cfg[sizeof ( tNFA_DM_CFG ) ];
 extern tNFA_DM_CFG *p_nfa_dm_cfg;
 extern UINT8 nfa_ee_max_ee_cfg;
+extern const UINT8  nfca_version_string [];
+extern const UINT8  nfa_version_string [];
 
 /*******************************************************************************
 **
@@ -104,11 +107,15 @@ NfcAdaptation& NfcAdaptation::GetInstance()
 void NfcAdaptation::Initialize ()
 {
     const char* func = "NfcAdaptation::Initialize";
-    ALOGD("%s: enter\n", func);
+    ALOGD("%s: enter", func);
+    ALOGE("%s: ver=%s nfa=%s", func, nfca_version_string, nfa_version_string);
     unsigned long num;
 
     if ( !GetStrValue ( NAME_NFA_STORAGE, bcm_nfc_location, sizeof ( bcm_nfc_location ) ) )
-        strcpy ( bcm_nfc_location, "/data/nfc" );
+    {
+        memset (bcm_nfc_location, 0, sizeof(bcm_nfc_location));
+        strncpy (bcm_nfc_location, "/data/nfc", 9);
+    }
     if ( GetNumValue ( NAME_PROTOCOL_TRACE_LEVEL, &num, sizeof ( num ) ) )
         ScrProtocolTraceFlag = num;
 
@@ -123,11 +130,14 @@ void NfcAdaptation::Initialize ()
 
     initializeGlobalAppLogLevel ();
 
+    verify_stack_non_volatile_store ();
     if ( GetNumValue ( NAME_PRESERVE_STORAGE, (char*)&num, sizeof ( num ) ) &&
             (num == 1) )
         ALOGD ("%s: preserve stack NV store", __FUNCTION__);
     else
-        delete_stack_non_volatile_store ();
+    {
+        delete_stack_non_volatile_store (FALSE);
+    }
 
     GKI_init ();
     GKI_enable ();
@@ -272,6 +282,7 @@ void NfcAdaptation::InitializeHalDeviceContext ()
     mHalEntryFuncs.prediscover = HalPrediscover;
     mHalEntryFuncs.control_granted = HalControlGranted;
     mHalEntryFuncs.power_cycle = HalPowerCycle;
+    mHalEntryFuncs.get_max_ee = HalGetMaxNfcee;
 
     ret = hw_get_module (NFC_NCI_HARDWARE_MODULE_ID, &hw_module);
     if (ret == 0)
@@ -499,6 +510,27 @@ void NfcAdaptation::HalPowerCycle ()
     }
 }
 
+/*******************************************************************************
+**
+** Function:    NfcAdaptation::HalGetMaxNfcee
+**
+** Description: Turn off and turn on the controller.
+**
+** Returns:     None.
+**
+*******************************************************************************/
+UINT8 NfcAdaptation::HalGetMaxNfcee()
+{
+    const char* func = "NfcAdaptation::HalPowerCycle";
+    UINT8 maxNfcee = 0;
+    if (mHalDeviceContext)
+    {
+        // TODO maco call into HAL when we figure out binary compatibility.
+        return nfa_ee_max_ee_cfg;
+    }
+
+    return maxNfcee;
+}
 
 /*******************************************************************************
 **

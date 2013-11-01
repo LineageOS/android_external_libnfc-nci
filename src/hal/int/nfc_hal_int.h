@@ -296,6 +296,7 @@ typedef UINT8 tNFC_HAL_PRM_STATE;
 /* Maximum number of patches (currently 2: LPM and FPM) */
 #define NFC_HAL_PRM_MAX_PATCH_COUNT    2
 #define NFC_HAL_PRM_PATCH_MASK_ALL     0xFFFFFFFF
+#define NFC_HAL_PRM_MAX_CHIP_VER_LEN   8
 
 /* Structures for PRM Control Block */
 typedef struct
@@ -341,6 +342,7 @@ typedef struct
     UINT16              lpm_size;               /* Current size of LPM patch in nvm         */
     UINT8               flags;                  /* See NFC_HAL_NVM_FLAGS_* flag definitions */
     UINT8               nvm_type;               /* Current NVM Type - UICC/EEPROM           */
+    UINT8               chip_ver[NFC_HAL_PRM_MAX_CHIP_VER_LEN]; /* patch chip version       */
 } tNFC_HAL_NVM;
 
 /* Patch for I2C fix */
@@ -423,6 +425,7 @@ typedef struct
     UINT8                   pre_discover_done;  /* TRUE, when the prediscover config is complete */
 
     UINT8                   max_rf_credits;     /* NFC Max RF data credits */
+    UINT8                   max_ee;             /* NFC Max number of NFCEE supported by NFCC */
     UINT8                   trace_level;        /* NFC HAL trace level */
 } tNFC_HAL_CB;
 

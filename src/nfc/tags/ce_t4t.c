@@ -597,7 +597,7 @@ void ce_t4t_process_timeout (TIMER_LIST_ENT *p_tle)
 *******************************************************************************/
 static void ce_t4t_data_cback (UINT8 conn_id, tNFC_CONN_EVT event, tNFC_CONN *p_data)
 {
-    BT_HDR  *p_c_apdu = (BT_HDR *) p_data->data.p_data;
+    BT_HDR  *p_c_apdu;
     UINT8   *p_cmd;
     UINT8    cla, instruct, select_type = 0, length;
     UINT16   offset, max_file_size;
@@ -613,6 +613,8 @@ static void ce_t4t_data_cback (UINT8 conn_id, tNFC_CONN_EVT event, tNFC_CONN *p_
         return;
     }
 
+    p_c_apdu = (BT_HDR *) p_data->data.p_data;
+
 #if (BT_TRACE_PROTOCOL == TRUE)
     DispCET4Tags (p_c_apdu, TRUE);
 #endif
@@ -626,7 +628,9 @@ static void ce_t4t_data_cback (UINT8 conn_id, tNFC_CONN_EVT event, tNFC_CONN *p_
 
     /* Don't check class if registered AID has been selected */
     if (  (cla != T4T_CMD_CLASS)
-        &&((ce_cb.mem.t4t.status & CE_T4T_STATUS_REG_AID_SELECTED) == 0)  )
+        &&((ce_cb.mem.t4t.status & CE_T4T_STATUS_REG_AID_SELECTED) == 0)
+        &&((ce_cb.mem.t4t.status & CE_T4T_STATUS_WILDCARD_AID_SELECTED) == 0)
+       )
     {
         CE_TRACE_ERROR1 ("CET4T: Unsupported Class byte (0x%02X)", cla);
         GKI_freebuf (p_c_apdu);

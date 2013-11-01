@@ -33,7 +33,8 @@
 #include <errno.h>
 #include <pthread.h>
 #include "buildcfg.h"
-extern void delete_hal_non_volatile_store ();
+extern void delete_hal_non_volatile_store (bool forceDelete);
+extern void verify_hal_non_volatile_store ();
 extern "C"
 {
 #include "userial.h"
@@ -56,6 +57,8 @@ static void BroadcomHalCallback (UINT8 event, tHAL_NFC_STATUS status);
 static void BroadcomHalDataCallback (UINT16 data_len, UINT8* p_data);
 
 extern tNFC_HAL_CFG *p_nfc_hal_cfg;
+extern const UINT8  nfca_version_string [];
+extern const UINT8  nfa_version_string [];
 
 ///////////////////////////////////////
 
@@ -63,6 +66,7 @@ extern tNFC_HAL_CFG *p_nfc_hal_cfg;
 int HaiInitializeLibrary (const bcm2079x_dev_t* device)
 {
     ALOGD ("%s: enter", __FUNCTION__);
+    ALOGE ("%s: ver=%s nfa=%s", __FUNCTION__, nfca_version_string, nfa_version_string);
     int retval = EACCES;
     unsigned long freq = 0;
     unsigned long num = 0;
@@ -71,11 +75,14 @@ int HaiInitializeLibrary (const bcm2079x_dev_t* device)
 
     logLevel = InitializeGlobalAppLogLevel ();
 
+    verify_hal_non_volatile_store ();
     if ( GetNumValue ( NAME_PRESERVE_STORAGE, (char*)&num, sizeof ( num ) ) &&
             (num == 1) )
         ALOGD ("%s: preserve HAL NV store", __FUNCTION__);
     else
-        delete_hal_non_volatile_store ();
+    {
+        delete_hal_non_volatile_store (false);
+    }
 
     // Initialize protocol logging level
     if ( GetNumValue ( NAME_PROTOCOL_TRACE_LEVEL, &num, sizeof ( num ) ) )
@@ -155,6 +162,12 @@ int HaiInitializeLibrary (const bcm2079x_dev_t* device)
     if ( GetNumValue ( NAME_NFCC_ENABLE_TIMEOUT, &num, sizeof ( num ) ) )
     {
         p_nfc_hal_cfg->nfc_hal_nfcc_enable_timeout = num;
+    }
+
+    if ( GetNumValue ( NAME_NFA_MAX_EE_SUPPORTED, &num, sizeof ( num ) ) && num == 0 )
+    {
+        // Since NFA_MAX_EE_SUPPORTED is explicetly set to 0, no UICC support is needed.
+        p_nfc_hal_cfg->nfc_hal_hci_uicc_support = 0;
     }
 
     HAL_NfcInitialize ();
@@ -332,3 +345,27 @@ int HaiPowerCycle (const bcm2079x_dev_t* device)
     return retval;
 }
 
+
+int HaiGetMaxNfcee (const bcm2079x_dev_t* device, uint8_t* maxNfcee)
+{
+    ALOGD ("%s: enter", __FUNCTION__);
+    int retval = EACCES;
+
+    if ( maxNfcee )
+    {
+        unsigned long num;
+
+        // At this point we can see if there is a chip-specific value for max ee.
+        if ( GetNumValue ( NAME_NFA_MAX_EE_SUPPORTED, &num, sizeof ( num ) ) )
+        {
+            *maxNfcee = num;
+        }
+        else
+            *maxNfcee = HAL_NfcGetMaxNfcee ();
+
+        ALOGD("%s: max_ee from HAL to use %d", __FUNCTION__, *maxNfcee);
+        retval = 0;
+    }
+    ALOGD ("%s: exit %d", __FUNCTION__, retval);
+    return retval;
+}

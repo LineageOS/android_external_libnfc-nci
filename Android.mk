@@ -62,7 +62,9 @@ endif
 LOCAL_MODULE := nfc_nci.$(HAL_SUFFIX)
 LOCAL_MODULE_PATH := $(TARGET_OUT_SHARED_LIBRARIES)/hw
 LOCAL_SRC_FILES := $(call all-c-files-under, $(HALIMPL)) \
-    $(call all-cpp-files-under, $(HALIMPL))
+    $(call all-cpp-files-under, $(HALIMPL)) \
+    src/adaptation/CrcChecksum.cpp \
+    src//nfca_version.c
 LOCAL_SHARED_LIBRARIES := liblog libcutils libhardware_legacy libstlport
 LOCAL_MODULE_TAGS := optional
 LOCAL_C_INCLUDES := external/stlport/stlport bionic/ bionic/libstdc++/include \

@@ -128,6 +128,12 @@ void nfc_hal_prm_spd_send_next_segment (void)
         /* Check if patch is for BCM20791B3 */
         p_src += NCI_SPD_HEADER_OFFSET_CHIPVERLEN;
         STREAM_TO_UINT8 (chipverlen, p_src);
+        if (memcmp (nfc_hal_cb.nvm_cb.chip_ver, p_src, chipverlen) != 0)
+        {
+            HAL_TRACE_ERROR0 ("Unexpected chip ver.");
+            nfc_hal_prm_spd_handle_download_complete (NFC_HAL_PRM_ABORT_INVALID_PATCH_EVT);
+            return;
+        }
         STREAM_TO_ARRAY (chipverstr, p_src, NCI_SPD_HEADER_CHIPVER_LEN);
 
         if (memcmp (NFC_HAL_PRM_BCM20791B3_STR, chipverstr, NFC_HAL_PRM_BCM20791B3_STR_LEN) == 0)
@@ -297,6 +303,7 @@ void nfc_hal_prm_spd_download_i2c_fix (void)
 void nfc_hal_prm_spd_check_version (void)
 {
     UINT8 *p, *p_start, i;
+    UINT32 nvm_patch_present_mask = 0;
     UINT32 patchfile_patch_present_mask;
     UINT16 patchfile_project_id = 0;
     UINT16 patchfile_ver_major = 0;
@@ -308,6 +315,13 @@ void nfc_hal_prm_spd_check_version (void)
     /* Initialize patchfile offset pointers */
     p = p_start = NULL;
     patchfile_patchsize = 0;
+
+    /* the good patches in NVM */
+    if (nfc_hal_cb.nvm_cb.lpm_size && !(nfc_hal_cb.nvm_cb.flags & (NFC_HAL_NVM_FLAGS_LPM_BAD)))
+        nvm_patch_present_mask  |= (1 << NFC_HAL_PRM_SPD_POWER_MODE_LPM);
+
+    if (nfc_hal_cb.nvm_cb.fpm_size && !(nfc_hal_cb.nvm_cb.flags & (NFC_HAL_NVM_FLAGS_FPM_BAD)))
+        nvm_patch_present_mask  |= (1 << NFC_HAL_PRM_SPD_POWER_MODE_FPM);
 
     /* Get patchfile version */
     if (nfc_hal_cb.prm.cur_patch_len_remaining >= NFC_HAL_PRM_NCD_PATCHFILE_HDR_LEN)
@@ -358,15 +372,15 @@ void nfc_hal_prm_spd_check_version (void)
         nfc_hal_cb.prm.cur_patch_len_remaining -= (UINT16) (p - p_start);       /* Adjust size of patchfile                        */
 
 
+        HAL_TRACE_DEBUG4 ("NVM Patch info: flags=0x%04x,   Ver=%i.%i, PatchMask=0x%08x",
+            nfc_hal_cb.nvm_cb.flags, nfc_hal_cb.nvm_cb.ver_major, nfc_hal_cb.nvm_cb.ver_minor, nvm_patch_present_mask );
         HAL_TRACE_DEBUG6 ("Patchfile info: ProjID=0x%04x,  Ver=%i.%i, Num patches=%i, PatchMask=0x%08x, PatchSize=%i",
                            patchfile_project_id, patchfile_ver_major, patchfile_ver_minor,
                            nfc_hal_cb.prm.spd_patch_count, patchfile_patch_present_mask, patchfile_patchsize);
 
         /*********************************************************************
         * Version check of patchfile against NVM
-        *********************************************************************/
-
-#if (!defined (NFC_HAL_PRM_SKIP_VERSION_CHECK) || (NFC_HAL_PRM_SKIP_VERSION_CHECK == FALSE))
+        ********************************************************************
         /* Download the patchfile if no patches in NVM */
         if ((nfc_hal_cb.nvm_cb.project_id == 0) || !(nfc_hal_cb.nvm_cb.flags & NFC_HAL_NVM_FLAGS_PATCH_PRESENT))
         {
@@ -385,22 +399,18 @@ void nfc_hal_prm_spd_check_version (void)
 
             return_code = NFC_HAL_PRM_ABORT_INVALID_PATCH_EVT;
         }
-        /* Skip download if version of patchfile older or equal to version in NVM */
-        /* unless NVM is corrupted (then don't skip download if patchfile has the same major ver)*/
-        else if (  (nfc_hal_cb.nvm_cb.ver_major > patchfile_ver_major)
-                 ||(  (nfc_hal_cb.nvm_cb.ver_major == patchfile_ver_major) && (nfc_hal_cb.nvm_cb.ver_minor == patchfile_ver_minor)
-                    && !((patchfile_patch_present_mask & ( 1 << NFC_HAL_PRM_SPD_POWER_MODE_LPM)) && (nfc_hal_cb.nvm_cb.lpm_size == 0))  /* Do not skip download: patchfile has LPM, but NVM does not */
-                    && !((patchfile_patch_present_mask & ( 1 << NFC_HAL_PRM_SPD_POWER_MODE_FPM)) && (nfc_hal_cb.nvm_cb.fpm_size == 0))  /* Do not skip download: patchfile has FPM, but NVM does not */
-                    && !(nfc_hal_cb.nvm_cb.flags & (NFC_HAL_NVM_FLAGS_FPM_BAD |NFC_HAL_NVM_FLAGS_LPM_BAD))  )  )
+        /* Skip download if version of patchfile is equal to version in NVM */
+        /*                  and patches of the power modes are the same as the good patches in NVM */
+        else if (  (nfc_hal_cb.nvm_cb.ver_major == patchfile_ver_major)
+                 &&(nfc_hal_cb.nvm_cb.ver_minor == patchfile_ver_minor)
+                 &&((nvm_patch_present_mask | patchfile_patch_present_mask) == nvm_patch_present_mask)  ) /* if the NVM patch include all the patched in file */
         {
-            /* NVM version is newer than patchfile */
-            HAL_TRACE_DEBUG2 ("Patch download skipped. NVM patch (version %i.%i) is newer than the patchfile ",
+            HAL_TRACE_DEBUG2 ("Patch download skipped. NVM patch (version %i.%i) is the same than the patchfile ",
                               nfc_hal_cb.nvm_cb.ver_major, nfc_hal_cb.nvm_cb.ver_minor);
 
             return_code = NFC_HAL_PRM_COMPLETE_EVT;
         }
-        /* Remaining cases: patchfile major version is newer than NVM; or major version is the same with different minor version */
-        /* Download all patches in the patchfile */
+        /* Remaining cases: Download all patches in the patchfile */
         else
         {
             nfc_hal_cb.prm.spd_patch_needed_mask = patchfile_patch_present_mask;
@@ -409,9 +419,7 @@ void nfc_hal_prm_spd_check_version (void)
                               patchfile_ver_major, patchfile_ver_minor,
                               nfc_hal_cb.nvm_cb.ver_major, nfc_hal_cb.nvm_cb.ver_minor);
         }
-#else   /* NFC_HAL_PRM_SKIP_VERSION_CHECK */
-        nfc_hal_cb.prm.spd_patch_needed_mask = patchfile_patch_present_mask;
-#endif
+
     }
     else
     {

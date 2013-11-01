@@ -65,8 +65,6 @@ static void mayDisableSecureElement (StartupConfig& config);
 #define NFA_APP_DEFAULT_I2C_PATCHFILE_NAME  "\0"
 #endif
 
-#define BRCM_43341B0_ID 0x43341b00
-
 tNFC_POST_RESET_CB nfc_post_reset_cb =
 {
     /* Default Patch & Pre-Patch */
@@ -80,10 +78,10 @@ tNFC_POST_RESET_CB nfc_post_reset_cb =
 
     /* Default tNFC_HAL_DEV_INIT_CFG (flags, num_xtal_cfg, {brcm_hw_id, xtal-freq, xtal-index} ) */
     {
-        1, /* number of valid entries */
+        2, /* number of valid entries */
         {
-            {BRCM_43341B0_ID, 37400, NFC_HAL_XTAL_INDEX_37400},
-            {0, 0, 0},
+            {0x43341000, 37400, NFC_HAL_XTAL_INDEX_37400},      // All revisions of 43341 use 37,400
+            {0x20795000, 26000, NFC_HAL_XTAL_INDEX_26000},
             {0, 0, 0},
             {0, 0, 0},
             {0, 0, 0},
@@ -120,7 +118,7 @@ static long getFileLength(FILE* fp)
     sz = ftell(fp);
     fseek(fp, 0L, SEEK_SET);
 
-    return sz;
+    return (sz > 0) ? sz : 0;
 }
 
 /*******************************************************************************
@@ -185,6 +183,8 @@ static const char* findPatchramFile(const char * pConfigName, char * pBuffer, in
 static void continueAfterSetSnoozeMode(tHAL_NFC_STATUS status)
 {
     ALOGD("%s: status=%u", __FUNCTION__, status);
+    //let stack download firmware during next initialization
+    nfc_post_reset_cb.spd_skip_on_power_cycle = FALSE;
     if (status == NCI_STATUS_OK)
         HAL_NfcPreInitDone (HAL_NFC_STATUS_OK);
     else
@@ -203,10 +203,10 @@ static void continueAfterSetSnoozeMode(tHAL_NFC_STATUS status)
 static void postDownloadPatchram(tHAL_NFC_STATUS status)
 {
     ALOGD("%s: status=%i", __FUNCTION__, status);
-
+    GetStrValue (NAME_SNOOZE_MODE_CFG, (char*)&gSnoozeModeCfg, sizeof(gSnoozeModeCfg));
     if (status != HAL_NFC_STATUS_OK)
     {
-        ALOGE("Patch download failed");
+        ALOGE("%s: Patch download failed", __FUNCTION__);
         if (status == HAL_NFC_STATUS_REFUSED)
         {
             SpdHelper::setPatchAsBad();
@@ -220,8 +220,11 @@ static void postDownloadPatchram(tHAL_NFC_STATUS status)
         else
         {
             /* otherwise, power cycle the chip and let the stack startup normally */
+            ALOGD("%s: re-init; don't download firmware", __FUNCTION__);
+            //stop stack from downloading firmware during next initialization
+            nfc_post_reset_cb.spd_skip_on_power_cycle = TRUE;
             USERIAL_PowerupDevice(0);
-            HAL_NfcPreInitDone (HAL_NFC_STATUS_OK);
+            HAL_NfcReInit ();
         }
     }
     /* Set snooze mode here */
@@ -316,19 +319,8 @@ static void getNfaValues()
 
 
     actualLen = GetStrValue (NAME_NFA_DM_START_UP_CFG, (char*)sConfig, sizeof(sConfig));
-    if (actualLen >= 8)
-    {
-        ALOGD ( "START_UP_CFG[0] = %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\n",
-                sConfig[0],
-                sConfig[1],
-                sConfig[2],
-                sConfig[3],
-                sConfig[4],
-                sConfig[5],
-                sConfig[6],
-                sConfig[7] );
+    if (actualLen)
         sStartupConfig.append (sConfig, actualLen);
-    }
 
     // Set antenna tuning configuration if configured.
     actualLen = GetStrValue(NAME_PREINIT_DSP_CFG, (char*)sConfig, sizeof(sConfig));
@@ -363,6 +355,7 @@ static void getNfaValues()
     if (actualLen)
     {
         sPreDiscoveryConfig.append (sConfig, actualLen);
+        mayDisableSecureElement (sPreDiscoveryConfig);
         p_nfc_hal_pre_discover_cfg = const_cast<UINT8*> (sPreDiscoveryConfig.getInternalBuffer ());
     }
 }
@@ -404,10 +397,14 @@ static void StartPatchDownload(UINT32 chipid)
 
                 if ((sI2cFixPrmBuf = malloc(lenPrmBuffer)) != NULL)
                 {
-                    fread(sI2cFixPrmBuf, lenPrmBuffer, 1, fd);
-
-                    ALOGD("%s Setting I2C fix to %s (size: %lu)", __FUNCTION__, sPrePatchFn, lenPrmBuffer);
-                    HAL_NfcPrmSetI2cPatch((UINT8*)sI2cFixPrmBuf, (UINT16)lenPrmBuffer, 0);
+                    size_t actualLen = fread(sI2cFixPrmBuf, 1, lenPrmBuffer, fd);
+                    if (actualLen == lenPrmBuffer)
+                    {
+                        ALOGD("%s Setting I2C fix to %s (size: %lu)", __FUNCTION__, sPrePatchFn, lenPrmBuffer);
+                        HAL_NfcPrmSetI2cPatch((UINT8*)sI2cFixPrmBuf, (UINT16)lenPrmBuffer, 0);
+                    }
+                    else
+                        ALOGE("%s fail reading i2c fix; actual len=%u; expected len=%lu", __FUNCTION__, actualLen, lenPrmBuffer);
                 }
                 else
                 {
@@ -438,14 +435,18 @@ static void StartPatchDownload(UINT32 chipid)
                 ALOGD("%s Downloading patchfile %s (size: %lu) format=%u", __FUNCTION__, sPatchFn, lenPrmBuffer, NFC_HAL_PRM_FORMAT_NCD);
                 if ((sPrmBuf = malloc(lenPrmBuffer)) != NULL)
                 {
-                    fread(sPrmBuf, lenPrmBuffer, 1, fd);
-
-                    if (!SpdHelper::isPatchBad((UINT8*)sPrmBuf, lenPrmBuffer))
+                    size_t actualLen = fread(sPrmBuf, 1, lenPrmBuffer, fd);
+                    if (actualLen == lenPrmBuffer)
                     {
-                        /* Download patch using static memeory mode */
-                        HAL_NfcPrmDownloadStart(NFC_HAL_PRM_FORMAT_NCD, 0, (UINT8*)sPrmBuf, lenPrmBuffer, 0, prmCallback);
-                        bDownloadStarted = true;
+                        if (!SpdHelper::isPatchBad((UINT8*)sPrmBuf, lenPrmBuffer))
+                        {
+                            /* Download patch using static memeory mode */
+                            HAL_NfcPrmDownloadStart(NFC_HAL_PRM_FORMAT_NCD, 0, (UINT8*)sPrmBuf, lenPrmBuffer, 0, prmCallback);
+                            bDownloadStarted = true;
+                        }
                     }
+                    else
+                        ALOGE("%s fail reading patchram", __FUNCTION__);
                 }
                 else
                     ALOGE("%s Unable to buffer to hold patchram (%lu bytes)", __FUNCTION__, lenPrmBuffer);

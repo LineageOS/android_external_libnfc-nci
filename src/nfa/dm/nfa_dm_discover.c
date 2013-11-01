@@ -50,6 +50,8 @@ static void nfa_dm_notify_discovery (tNFA_DM_RF_DISC_DATA *p_data);
 static tNFA_STATUS nfa_dm_disc_notify_activation (tNFC_DISCOVER *p_data);
 static void nfa_dm_disc_notify_deactivation (tNFA_DM_RF_DISC_SM_EVENT sm_event, tNFC_DISCOVER *p_data);
 static void nfa_dm_disc_data_cback (UINT8 conn_id, tNFC_CONN_EVT event, tNFC_CONN *p_data);
+static void nfa_dm_disc_kovio_timeout_cback (TIMER_LIST_ENT *p_tle);
+static void nfa_dm_disc_report_kovio_presence_check (tNFC_STATUS status);
 
 #if (BT_TRACE_VERBOSE == TRUE)
 static char *nfa_dm_disc_state_2_str (UINT8 state);
@@ -72,6 +74,12 @@ static UINT8 nfa_dm_get_rf_discover_config (tNFA_DM_DISC_TECH_PROTO_MASK dm_disc
 {
     UINT8 num_params = 0;
 
+    if (nfa_dm_cb.flags & NFA_DM_FLAGS_LISTEN_DISABLED)
+    {
+        NFA_TRACE_DEBUG1 ("nfa_dm_get_rf_discover_config () listen disabled, rm listen from 0x%x", dm_disc_mask);
+        dm_disc_mask &= NFA_DM_DISC_MASK_POLL;
+    }
+
     /* Check polling A */
     if (dm_disc_mask & ( NFA_DM_DISC_MASK_PA_T1T
                         |NFA_DM_DISC_MASK_PA_T2T
@@ -80,7 +88,7 @@ static UINT8 nfa_dm_get_rf_discover_config (tNFA_DM_DISC_TECH_PROTO_MASK dm_disc
                         |NFA_DM_DISC_MASK_P_LEGACY) )
     {
         disc_params[num_params].type      = NFC_DISCOVERY_TYPE_POLL_A;
-        disc_params[num_params].frequency = 1;
+        disc_params[num_params].frequency = p_nfa_dm_rf_disc_freq_cfg->pa;
         num_params++;
 
         if (num_params >= max_params)
@@ -91,7 +99,7 @@ static UINT8 nfa_dm_get_rf_discover_config (tNFA_DM_DISC_TECH_PROTO_MASK dm_disc
     if (dm_disc_mask & NFA_DM_DISC_MASK_PB_ISO_DEP)
     {
         disc_params[num_params].type      = NFC_DISCOVERY_TYPE_POLL_B;
-        disc_params[num_params].frequency = 1;
+        disc_params[num_params].frequency = p_nfa_dm_rf_disc_freq_cfg->pb;
         num_params++;
 
         if (num_params >= max_params)
@@ -103,7 +111,7 @@ static UINT8 nfa_dm_get_rf_discover_config (tNFA_DM_DISC_TECH_PROTO_MASK dm_disc
                         |NFA_DM_DISC_MASK_PF_NFC_DEP) )
     {
         disc_params[num_params].type      = NFC_DISCOVERY_TYPE_POLL_F;
-        disc_params[num_params].frequency = 1;
+        disc_params[num_params].frequency = p_nfa_dm_rf_disc_freq_cfg->pf;
         num_params++;
 
         if (num_params >= max_params)
@@ -114,7 +122,7 @@ static UINT8 nfa_dm_get_rf_discover_config (tNFA_DM_DISC_TECH_PROTO_MASK dm_disc
     if (dm_disc_mask & NFA_DM_DISC_MASK_PAA_NFC_DEP)
     {
         disc_params[num_params].type      = NFC_DISCOVERY_TYPE_POLL_A_ACTIVE;
-        disc_params[num_params].frequency = 1;
+        disc_params[num_params].frequency = p_nfa_dm_rf_disc_freq_cfg->paa;
         num_params++;
 
         if (num_params >= max_params)
@@ -125,7 +133,7 @@ static UINT8 nfa_dm_get_rf_discover_config (tNFA_DM_DISC_TECH_PROTO_MASK dm_disc
     if (dm_disc_mask & NFA_DM_DISC_MASK_PFA_NFC_DEP)
     {
         disc_params[num_params].type      = NFC_DISCOVERY_TYPE_POLL_F_ACTIVE;
-        disc_params[num_params].frequency = 1;
+        disc_params[num_params].frequency = p_nfa_dm_rf_disc_freq_cfg->pfa;
         num_params++;
 
         if (num_params >= max_params)
@@ -195,7 +203,7 @@ static UINT8 nfa_dm_get_rf_discover_config (tNFA_DM_DISC_TECH_PROTO_MASK dm_disc
     if (dm_disc_mask & NFA_DM_DISC_MASK_P_ISO15693)
     {
         disc_params[num_params].type      = NFC_DISCOVERY_TYPE_POLL_ISO15693;
-        disc_params[num_params].frequency = 1;
+        disc_params[num_params].frequency = p_nfa_dm_rf_disc_freq_cfg->pi93;
         num_params++;
 
         if (num_params >= max_params)
@@ -206,7 +214,7 @@ static UINT8 nfa_dm_get_rf_discover_config (tNFA_DM_DISC_TECH_PROTO_MASK dm_disc
     if (dm_disc_mask & NFA_DM_DISC_MASK_P_B_PRIME)
     {
         disc_params[num_params].type      = NFC_DISCOVERY_TYPE_POLL_B_PRIME;
-        disc_params[num_params].frequency = 1;
+        disc_params[num_params].frequency = p_nfa_dm_rf_disc_freq_cfg->pbp;
         num_params++;
 
         if (num_params >= max_params)
@@ -217,7 +225,7 @@ static UINT8 nfa_dm_get_rf_discover_config (tNFA_DM_DISC_TECH_PROTO_MASK dm_disc
     if (dm_disc_mask & NFA_DM_DISC_MASK_P_KOVIO)
     {
         disc_params[num_params].type      = NFC_DISCOVERY_TYPE_POLL_KOVIO;
-        disc_params[num_params].frequency = 1;
+        disc_params[num_params].frequency = p_nfa_dm_rf_disc_freq_cfg->pk;
         num_params++;
 
         if (num_params >= max_params)
@@ -360,29 +368,16 @@ static tNFA_STATUS nfa_dm_set_rf_listen_mode_config (tNFA_DM_DISC_TECH_PROTO_MAS
     }
 
     /* for Listen F */
-    if (nfa_dm_cb.disc_cb.listen_RT[NFA_DM_DISC_LRT_NFC_F] == NFA_DM_DISC_HOST_ID_DH)
+    /* NFCC can support NFC-DEP and T3T listening based on NFCID routing regardless of NFC-F tech routing */
+    UINT8_TO_STREAM (p, NFC_PMID_LF_PROTOCOL);
+    UINT8_TO_STREAM (p, NCI_PARAM_LEN_LF_PROTOCOL);
+    if (tech_proto_mask & NFA_DM_DISC_MASK_LF_NFC_DEP)
     {
-        UINT8_TO_STREAM (p, NFC_PMID_LF_PROTOCOL);
-        UINT8_TO_STREAM (p, NCI_PARAM_LEN_LF_PROTOCOL);
-        if (tech_proto_mask & NFA_DM_DISC_MASK_LF_NFC_DEP)
-        {
-            UINT8_TO_STREAM (p, NCI_LISTEN_PROTOCOL_NFC_DEP);
-        }
-        else
-        {
-            UINT8_TO_STREAM (p, 0x00);
-        }
+        UINT8_TO_STREAM (p, NCI_LISTEN_PROTOCOL_NFC_DEP);
     }
     else
     {
-        /* If DH is not listening on T3T, let NFCC use UICC configuration by configuring with length = 0 */
-        if ((tech_proto_mask & NFA_DM_DISC_MASK_LF_T3T) == 0)
-        {
-            UINT8_TO_STREAM (p, NFC_PMID_LF_PROTOCOL);
-            UINT8_TO_STREAM (p, 0);
-            UINT8_TO_STREAM (p, NFC_PMID_LF_T3T_FLAGS2);
-            UINT8_TO_STREAM (p, 0);
-        }
+        UINT8_TO_STREAM (p, 0x00);
     }
 
     if (p > params)
@@ -1004,18 +999,11 @@ void nfa_dm_start_rf_discover (void)
                                & NFA_DM_DISC_MASK_LB_ISO_DEP;
 
                 /* NFC-F */
-                if (nfa_dm_cb.disc_cb.entry[xx].host_id == nfa_dm_cb.disc_cb.listen_RT[NFA_DM_DISC_LRT_NFC_F])
-                {
-                    listen_mask |= nfa_dm_cb.disc_cb.entry[xx].requested_disc_mask
-                                   & ( NFA_DM_DISC_MASK_LF_T3T
-                                      |NFA_DM_DISC_MASK_LF_NFC_DEP
-                                      |NFA_DM_DISC_MASK_LFA_NFC_DEP );
-                }
-                else
-                {
-                    /* NFCC can listen T3T based on NFCID routing */
-                    listen_mask |= (nfa_dm_cb.disc_cb.entry[xx].requested_disc_mask  & NFA_DM_DISC_MASK_LF_T3T);
-                }
+                /* NFCC can support NFC-DEP and T3T listening based on NFCID routing regardless of NFC-F tech routing */
+                listen_mask |= nfa_dm_cb.disc_cb.entry[xx].requested_disc_mask
+                               & ( NFA_DM_DISC_MASK_LF_T3T
+                                  |NFA_DM_DISC_MASK_LF_NFC_DEP
+                                  |NFA_DM_DISC_MASK_LFA_NFC_DEP );
 
                 /* NFC-B Prime */
                 if (nfa_dm_cb.disc_cb.entry[xx].host_id == nfa_dm_cb.disc_cb.listen_RT[NFA_DM_DISC_LRT_NFC_BP])
@@ -1114,8 +1102,14 @@ void nfa_dm_start_rf_discover (void)
         nfa_dm_disc_notify_started (NFA_STATUS_OK);
     }
 
-    /* reset hanlde of activated sub-module */
-    nfa_dm_cb.disc_cb.activated_handle = NFA_HANDLE_INVALID;
+    /* if Kovio presence check timer is running, timeout callback will reset the activation information */
+    if (  (nfa_dm_cb.disc_cb.activated_protocol != NFC_PROTOCOL_KOVIO)
+        ||(!nfa_dm_cb.disc_cb.kovio_tle.in_use)  )
+    {
+        /* reset protocol and hanlde of activated sub-module */
+        nfa_dm_cb.disc_cb.activated_protocol = NFA_PROTOCOL_INVALID;
+        nfa_dm_cb.disc_cb.activated_handle   = NFA_HANDLE_INVALID;
+    }
 }
 
 /*******************************************************************************
@@ -1138,6 +1132,62 @@ static void nfa_dm_notify_discovery (tNFA_DM_RF_DISC_DATA *p_data)
             sizeof (tNFC_RESULT_DEVT));
 
     nfa_dm_conn_cback_event_notify (NFA_DISC_RESULT_EVT, &conn_evt);
+}
+
+
+/*******************************************************************************
+**
+** Function         nfa_dm_disc_handle_kovio_activation
+**
+** Description      Handle Kovio activation; whether it's new or repeated activation
+**
+** Returns          TRUE if repeated activation. No need to notify activated event to upper layer
+**
+*******************************************************************************/
+BOOLEAN nfa_dm_disc_handle_kovio_activation (tNFC_DISCOVER *p_data, tNFA_DISCOVER_CBACK *p_disc_cback)
+{
+    tNFC_DISCOVER disc_data;
+
+    if (nfa_dm_cb.disc_cb.kovio_tle.in_use)
+    {
+        /* if this is new Kovio bar code tag */
+        if (  (nfa_dm_cb.activated_nfcid_len != p_data->activate.rf_tech_param.param.pk.uid_len)
+            ||(memcmp (p_data->activate.rf_tech_param.param.pk.uid,
+                       nfa_dm_cb.activated_nfcid, nfa_dm_cb.activated_nfcid_len)))
+        {
+            NFA_TRACE_DEBUG0 ("new Kovio tag is detected");
+
+            /* notify presence check failure for previous tag, if presence check is pending */
+            nfa_dm_disc_report_kovio_presence_check (NFA_STATUS_FAILED);
+
+            /* notify deactivation of previous activation before notifying new activation */
+            if (p_disc_cback)
+            {
+                disc_data.deactivate.type = NFA_DEACTIVATE_TYPE_IDLE;
+                (*(p_disc_cback)) (NFA_DM_RF_DISC_DEACTIVATED_EVT, &disc_data);
+            }
+
+            /* restart timer */
+            nfa_sys_start_timer (&nfa_dm_cb.disc_cb.kovio_tle, 0, NFA_DM_DISC_TIMEOUT_KOVIO_PRESENCE_CHECK);
+        }
+        else
+        {
+            /* notify presence check ok, if presence check is pending */
+            nfa_dm_disc_report_kovio_presence_check (NFC_STATUS_OK);
+
+            /* restart timer and do not notify upper layer */
+            nfa_sys_start_timer (&nfa_dm_cb.disc_cb.kovio_tle, 0, NFA_DM_DISC_TIMEOUT_KOVIO_PRESENCE_CHECK);
+            return (TRUE);
+        }
+    }
+    else
+    {
+        /* this is the first activation, so start timer and notify upper layer */
+        nfa_dm_cb.disc_cb.kovio_tle.p_cback = (TIMER_CBACK *)nfa_dm_disc_kovio_timeout_cback;
+        nfa_sys_start_timer (&nfa_dm_cb.disc_cb.kovio_tle, 0, NFA_DM_DISC_TIMEOUT_KOVIO_PRESENCE_CHECK);
+    }
+
+    return (FALSE);
 }
 
 /*******************************************************************************
@@ -1169,6 +1219,16 @@ static tNFA_STATUS nfa_dm_disc_notify_activation (tNFC_DISCOVER *p_data)
         nfa_dm_cb.disc_cb.activated_rf_interface = p_data->activate.intf_param.type;
         nfa_dm_cb.disc_cb.activated_protocol     = protocol;
         nfa_dm_cb.disc_cb.activated_handle       = NFA_HANDLE_INVALID;
+
+        if (protocol == NFC_PROTOCOL_KOVIO)
+        {
+            /* check whether it's new or repeated activation */
+            if (nfa_dm_disc_handle_kovio_activation (p_data, nfa_dm_cb.disc_cb.excl_disc_entry.p_disc_cback))
+            {
+                /* do not notify activation of Kovio to upper layer */
+                return (NFA_STATUS_OK);
+            }
+        }
 
         if (nfa_dm_cb.disc_cb.excl_disc_entry.p_disc_cback)
             (*(nfa_dm_cb.disc_cb.excl_disc_entry.p_disc_cback)) (NFA_DM_RF_DISC_ACTIVATED_EVT, p_data);
@@ -1290,6 +1350,16 @@ static tNFA_STATUS nfa_dm_disc_notify_activation (tNFC_DISCOVER *p_data)
                            nfa_dm_cb.disc_cb.activated_protocol,
                            nfa_dm_cb.disc_cb.activated_handle);
 
+        if (protocol == NFC_PROTOCOL_KOVIO)
+        {
+            /* check whether it's new or repeated activation */
+            if (nfa_dm_disc_handle_kovio_activation (p_data, nfa_dm_cb.disc_cb.entry[xx].p_disc_cback))
+            {
+                /* do not notify activation of Kovio to upper layer */
+                return (NFA_STATUS_OK);
+            }
+        }
+
         if (nfa_dm_cb.disc_cb.entry[xx].p_disc_cback)
             (*(nfa_dm_cb.disc_cb.entry[xx].p_disc_cback)) (NFA_DM_RF_DISC_ACTIVATED_EVT, p_data);
 
@@ -1324,7 +1394,7 @@ static void nfa_dm_disc_notify_deactivation (tNFA_DM_RF_DISC_SM_EVENT sm_event,
 
     if (nfa_dm_cb.disc_cb.disc_flags & NFA_DM_DISC_FLAGS_CHECKING)
     {
-        NFA_TRACE_DEBUG0 ("nfa_dm_disc_notify_deactivation (): for presence check");
+        NFA_TRACE_DEBUG0 ("nfa_dm_disc_notify_deactivation (): for sleep wakeup");
         return;
     }
 
@@ -1360,15 +1430,47 @@ static void nfa_dm_disc_notify_deactivation (tNFA_DM_RF_DISC_SM_EVENT sm_event,
                 }
             }
         }
-        else if (!(nfa_dm_cb.disc_cb.disc_flags & NFA_DM_DISC_FLAGS_STOPPING))
+        else if (  (!(nfa_dm_cb.disc_cb.disc_flags & NFA_DM_DISC_FLAGS_STOPPING))
+                 ||(nfa_dm_cb.disc_cb.deact_notify_pending)  )
         {
-            evt_data.deactivated.type = NFA_DEACTIVATE_TYPE_IDLE;
-            /* notify deactivation to application */
-            nfa_dm_conn_cback_event_notify (NFA_DEACTIVATED_EVT, &evt_data);
+            xx = nfa_dm_cb.disc_cb.activated_handle;
+
+            /* notify event to activated module if failed while reactivation */
+            if (nfa_dm_cb.disc_cb.excl_disc_entry.in_use)
+            {
+                if (nfa_dm_cb.disc_cb.excl_disc_entry.p_disc_cback)
+                {
+                    disc_data.deactivate.type = NFA_DEACTIVATE_TYPE_IDLE;
+                    (*(nfa_dm_cb.disc_cb.excl_disc_entry.p_disc_cback)) (NFA_DM_RF_DISC_DEACTIVATED_EVT, p_data);
+                }
+            }
+            else if (  (xx < NFA_DM_DISC_NUM_ENTRIES)
+                     &&(nfa_dm_cb.disc_cb.entry[xx].in_use)
+                     &&(nfa_dm_cb.disc_cb.entry[xx].p_disc_cback)  )
+            {
+                (*(nfa_dm_cb.disc_cb.entry[xx].p_disc_cback)) (NFA_DM_RF_DISC_DEACTIVATED_EVT, p_data);
+            }
+            else
+            {
+                /* notify deactivation to application if there is no activated module */
+                evt_data.deactivated.type = NFA_DEACTIVATE_TYPE_IDLE;
+                nfa_dm_conn_cback_event_notify (NFA_DEACTIVATED_EVT, &evt_data);
+            }
         }
     }
     else
     {
+        if (nfa_dm_cb.disc_cb.activated_protocol == NFC_PROTOCOL_KOVIO)
+        {
+            if (nfa_dm_cb.disc_cb.kovio_tle.in_use)
+            {
+                /* restart timer and do not notify upper layer */
+                nfa_sys_start_timer (&nfa_dm_cb.disc_cb.kovio_tle, 0, NFA_DM_DISC_TIMEOUT_KOVIO_PRESENCE_CHECK);
+                return;
+            }
+            /* Otherwise, upper layer initiated deactivation. */
+        }
+
         /* notify event to activated module */
         if (nfa_dm_cb.disc_cb.excl_disc_entry.in_use)
         {
@@ -1396,19 +1498,21 @@ static void nfa_dm_disc_notify_deactivation (tNFA_DM_RF_DISC_SM_EVENT sm_event,
     nfa_dm_cb.disc_cb.activated_rf_interface = 0;
     nfa_dm_cb.disc_cb.activated_protocol     = NFA_PROTOCOL_INVALID;
     nfa_dm_cb.disc_cb.activated_handle       = NFA_HANDLE_INVALID;
+    nfa_dm_cb.disc_cb.deact_notify_pending   = FALSE;
 }
 
 /*******************************************************************************
 **
-** Function         nfa_dm_disc_presence_check
+** Function         nfa_dm_disc_sleep_wakeup
 **
-** Description      Perform legacy presence check (put tag to sleep, then
-**                  wake it up to see if tag is present)
+** Description      Put tag to sleep, then wake it up. Can be used Perform
+**                  legacy presence check or to wake up tag that went to HALT
+**                  state
 **
 ** Returns          TRUE if operation started
 **
 *******************************************************************************/
-tNFC_STATUS nfa_dm_disc_presence_check (void)
+tNFC_STATUS nfa_dm_disc_sleep_wakeup (void)
 {
     tNFC_STATUS status = NFC_STATUS_FAILED;
 
@@ -1418,10 +1522,10 @@ tNFC_STATUS nfa_dm_disc_presence_check (void)
         status = nfa_dm_send_deactivate_cmd(NFC_DEACTIVATE_TYPE_SLEEP);
         if (status == NFC_STATUS_OK)
         {
-            /* deactivate to sleep is sent on behave of presence check.
-             * set the presence check information in control block */
-            nfa_dm_cb.disc_cb.disc_flags          |= NFA_DM_DISC_FLAGS_CHECKING;
-            nfa_dm_cb.presence_check_deact_pending = FALSE;
+            /* deactivate to sleep is sent on behalf of sleep wakeup.
+             * set the sleep wakeup information in control block */
+            nfa_dm_cb.disc_cb.disc_flags    |= NFA_DM_DISC_FLAGS_CHECKING;
+            nfa_dm_cb.disc_cb.deact_pending = FALSE;
         }
     }
 
@@ -1430,28 +1534,159 @@ tNFC_STATUS nfa_dm_disc_presence_check (void)
 
 /*******************************************************************************
 **
-** Function         nfa_dm_disc_end_presence_check
+** Function         nfa_dm_is_p2p_paused
 **
-** Description      Perform legacy presence check (put tag to sleep, then
-**                  wake it up to see if tag is present)
+** Description      If NFA_PauseP2p is called sand still effective,
+**                  this function returns TRUE.
 **
-** Returns          TRUE if operation started
+** Returns          TRUE if NFA_SendRawFrame is called
 **
 *******************************************************************************/
-static void nfa_dm_disc_end_presence_check (tNFC_STATUS status)
+BOOLEAN nfa_dm_is_p2p_paused (void)
 {
+    return ((nfa_dm_cb.flags & NFA_DM_FLAGS_P2P_PAUSED) ? TRUE : FALSE);
+}
+
+/*******************************************************************************
+**
+** Function         nfa_dm_disc_end_sleep_wakeup
+**
+** Description      Sleep Wakeup is complete
+**
+** Returns          None
+**
+*******************************************************************************/
+static void nfa_dm_disc_end_sleep_wakeup (tNFC_STATUS status)
+{
+    if (  (nfa_dm_cb.disc_cb.activated_protocol == NFC_PROTOCOL_KOVIO)
+        &&(nfa_dm_cb.disc_cb.kovio_tle.in_use)  )
+    {
+        /* ignore it while doing Kovio presence check */
+        return;
+    }
+
     if (nfa_dm_cb.disc_cb.disc_flags & NFA_DM_DISC_FLAGS_CHECKING)
     {
         nfa_dm_cb.disc_cb.disc_flags &= ~NFA_DM_DISC_FLAGS_CHECKING;
 
-        /* notify RW module that presence checking is finished */
+        /* notify RW module that sleep wakeup is finished */
+        nfa_rw_handle_sleep_wakeup_rsp (status);
+
+        if (nfa_dm_cb.disc_cb.deact_pending)
+        {
+            nfa_dm_cb.disc_cb.deact_pending = FALSE;
+            /* Perform pending deactivate command and on response notfiy deactivation */
+            nfa_dm_cb.disc_cb.deact_notify_pending = TRUE;
+            nfa_dm_disc_sm_execute (NFA_DM_RF_DEACTIVATE_CMD,
+                                   (tNFA_DM_RF_DISC_DATA *) &nfa_dm_cb.disc_cb.pending_deact_type);
+        }
+    }
+}
+
+/*******************************************************************************
+**
+** Function         nfa_dm_disc_kovio_timeout_cback
+**
+** Description      Timeout for Kovio bar code tag presence check
+**
+** Returns          void
+**
+*******************************************************************************/
+static void nfa_dm_disc_kovio_timeout_cback (TIMER_LIST_ENT *p_tle)
+{
+    tNFC_DEACTIVATE_DEVT deact;
+
+    NFA_TRACE_DEBUG0 ("nfa_dm_disc_kovio_timeout_cback()");
+
+    /* notify presence check failure, if presence check is pending */
+    nfa_dm_disc_report_kovio_presence_check (NFC_STATUS_FAILED);
+
+    if (nfa_dm_cb.disc_cb.disc_state == NFA_DM_RFST_POLL_ACTIVE)
+    {
+        /* restart timer in case that upper layer's presence check interval is too long */
+        nfa_sys_start_timer (&nfa_dm_cb.disc_cb.kovio_tle, 0, NFA_DM_DISC_TIMEOUT_KOVIO_PRESENCE_CHECK);
+    }
+    else
+    {
+        /* notify upper layer deactivated event */
+        deact.status = NFC_STATUS_OK;
+        deact.type   = NFC_DEACTIVATE_TYPE_DISCOVERY;
+        deact.is_ntf = TRUE;
+        nfa_dm_disc_notify_deactivation (NFA_DM_RF_DEACTIVATE_NTF, (tNFC_DISCOVER*)&deact);
+    }
+}
+
+/*******************************************************************************
+**
+** Function         nfa_dm_disc_start_kovio_presence_check
+**
+** Description      Deactivate to discovery mode and wait for activation
+**
+** Returns          TRUE if operation started
+**
+*******************************************************************************/
+tNFC_STATUS nfa_dm_disc_start_kovio_presence_check (void)
+{
+    tNFC_STATUS status = NFC_STATUS_FAILED;
+
+    NFA_TRACE_DEBUG0 ("nfa_dm_disc_start_kovio_presence_check ()");
+
+    if (  (nfa_dm_cb.disc_cb.activated_protocol == NFC_PROTOCOL_KOVIO)
+        &&(nfa_dm_cb.disc_cb.kovio_tle.in_use)  )
+    {
+        if (nfa_dm_cb.disc_cb.disc_state == NFA_DM_RFST_POLL_ACTIVE)
+        {
+            /* restart timer */
+            nfa_sys_start_timer (&nfa_dm_cb.disc_cb.kovio_tle, 0, NFA_DM_DISC_TIMEOUT_KOVIO_PRESENCE_CHECK);
+
+            /* Deactivate to discovery mode */
+            status = nfa_dm_send_deactivate_cmd (NFC_DEACTIVATE_TYPE_DISCOVERY);
+
+            if (status == NFC_STATUS_OK)
+            {
+                /* deactivate to sleep is sent on behalf of sleep wakeup.
+                 * set the sleep wakeup information in control block */
+                nfa_dm_cb.disc_cb.disc_flags    |= NFA_DM_DISC_FLAGS_CHECKING;
+                nfa_dm_cb.disc_cb.deact_pending = FALSE;
+            }
+        }
+        else
+        {
+            /* wait for next activation */
+            nfa_dm_cb.disc_cb.disc_flags    |= NFA_DM_DISC_FLAGS_CHECKING;
+            nfa_dm_cb.disc_cb.deact_pending = FALSE;
+            status = NFC_STATUS_OK;
+        }
+    }
+
+    return (status);
+}
+
+/*******************************************************************************
+**
+** Function         nfa_dm_disc_report_kovio_presence_check
+**
+** Description      Report Kovio presence check status
+**
+** Returns          None
+**
+*******************************************************************************/
+static void nfa_dm_disc_report_kovio_presence_check (tNFC_STATUS status)
+{
+    NFA_TRACE_DEBUG0 ("nfa_dm_disc_report_kovio_presence_check ()");
+
+    if (nfa_dm_cb.disc_cb.disc_flags & NFA_DM_DISC_FLAGS_CHECKING)
+    {
+        nfa_dm_cb.disc_cb.disc_flags &= ~NFA_DM_DISC_FLAGS_CHECKING;
+
+        /* notify RW module that sleep wakeup is finished */
         nfa_rw_handle_presence_check_rsp (status);
 
-        if (nfa_dm_cb.presence_check_deact_pending)
+        if (nfa_dm_cb.disc_cb.deact_pending)
         {
-            nfa_dm_cb.presence_check_deact_pending = FALSE;
+            nfa_dm_cb.disc_cb.deact_pending = FALSE;
             nfa_dm_disc_sm_execute (NFA_DM_RF_DEACTIVATE_CMD,
-                                   (tNFA_DM_RF_DISC_DATA *) &nfa_dm_cb.presence_check_deact_type);
+                                   (tNFA_DM_RF_DISC_DATA *) &nfa_dm_cb.disc_cb.pending_deact_type);
         }
     }
 }
@@ -1502,7 +1737,9 @@ void nfa_dm_disc_new_state (tNFA_DM_RF_DISC_STATE new_state)
     NFA_TRACE_DEBUG3 ("nfa_dm_disc_new_state(): old_state: %d, new_state: %d disc_flags: 0x%x",
                        nfa_dm_cb.disc_cb.disc_state, new_state, nfa_dm_cb.disc_cb.disc_flags);
 #endif
+
     nfa_dm_cb.disc_cb.disc_state = new_state;
+
     if (  (new_state == NFA_DM_RFST_IDLE)
         &&(!(nfa_dm_cb.disc_cb.disc_flags & NFA_DM_DISC_FLAGS_W4_RSP))  ) /* not error recovering */
     {
@@ -1852,9 +2089,9 @@ static void nfa_dm_disc_sm_w4_host_select (tNFA_DM_RF_DISC_SM_EVENT event,
                                            tNFA_DM_RF_DISC_DATA *p_data)
 {
     tNFA_CONN_EVT_DATA conn_evt;
-    tNFA_DM_DISC_FLAGS  old_pres_check_flag = (nfa_dm_cb.disc_cb.disc_flags & NFA_DM_DISC_FLAGS_CHECKING);
-    BOOLEAN             pres_check_event = FALSE;
-    BOOLEAN             pres_check_event_processed = FALSE;
+    tNFA_DM_DISC_FLAGS  old_sleep_wakeup_flag = (nfa_dm_cb.disc_cb.disc_flags & NFA_DM_DISC_FLAGS_CHECKING);
+    BOOLEAN             sleep_wakeup_event = FALSE;
+    BOOLEAN             sleep_wakeup_event_processed = FALSE;
 
     switch (event)
     {
@@ -1873,11 +2110,11 @@ static void nfa_dm_disc_sm_w4_host_select (tNFA_DM_RF_DISC_SM_EVENT event,
         break;
 
     case NFA_DM_RF_DISCOVER_SELECT_RSP:
-        pres_check_event = TRUE;
+        sleep_wakeup_event = TRUE;
         /* notify application status of selection */
         if (p_data->nfc_discover.status == NFC_STATUS_OK)
         {
-            pres_check_event_processed = TRUE;
+            sleep_wakeup_event_processed = TRUE;
             conn_evt.status = NFA_STATUS_OK;
             /* register callback to get interface error NTF */
             NFC_SetStaticRfCback (nfa_dm_disc_data_cback);
@@ -1885,19 +2122,18 @@ static void nfa_dm_disc_sm_w4_host_select (tNFA_DM_RF_DISC_SM_EVENT event,
         else
             conn_evt.status = NFA_STATUS_FAILED;
 
-        if (!old_pres_check_flag)
+        if (!old_sleep_wakeup_flag)
         {
             nfa_dm_disc_conn_event_notify (NFA_SELECT_RESULT_EVT, p_data->nfc_discover.status);
         }
         break;
     case NFA_DM_RF_INTF_ACTIVATED_NTF:
         nfa_dm_disc_new_state (NFA_DM_RFST_POLL_ACTIVE);
-        if (old_pres_check_flag)
+        if (old_sleep_wakeup_flag)
         {
-            /* Handle presence check success: notify RW module of presence of tag; if deactivation is pending then deactivate  */
-            nfa_dm_disc_end_presence_check (NFC_STATUS_OK);
+            /* Handle sleep wakeup success: notify RW module of sleep wakeup of tag; if deactivation is pending then deactivate  */
+            nfa_dm_disc_end_sleep_wakeup (NFC_STATUS_OK);
         }
-
         else if (nfa_dm_disc_notify_activation (&(p_data->nfc_discover)) == NFA_STATUS_FAILED)
         {
             NFA_TRACE_DEBUG0 ("Not matched, restart discovery after receiving deactivate ntf");
@@ -1907,10 +2143,10 @@ static void nfa_dm_disc_sm_w4_host_select (tNFA_DM_RF_DISC_SM_EVENT event,
         }
         break;
     case NFA_DM_RF_DEACTIVATE_CMD:
-        if (old_pres_check_flag)
+        if (old_sleep_wakeup_flag)
         {
-            nfa_dm_cb.presence_check_deact_pending = TRUE;
-            nfa_dm_cb.presence_check_deact_type    = p_data->deactivate_type;
+            nfa_dm_cb.disc_cb.deact_pending      = TRUE;
+            nfa_dm_cb.disc_cb.pending_deact_type = p_data->deactivate_type;
         }
         /* if deactivate CMD was not sent to NFCC */
         else if (!(nfa_dm_cb.disc_cb.disc_flags & NFA_DM_DISC_FLAGS_W4_RSP))
@@ -1930,8 +2166,8 @@ static void nfa_dm_disc_sm_w4_host_select (tNFA_DM_RF_DISC_SM_EVENT event,
         break;
 
     case NFA_DM_CORE_INTF_ERROR_NTF:
-        pres_check_event    = TRUE;
-        if (!old_pres_check_flag)
+        sleep_wakeup_event    = TRUE;
+        if (!old_sleep_wakeup_flag)
         {
             /* target activation failed, upper layer may deactivate or select again */
             conn_evt.status = NFA_STATUS_FAILED;
@@ -1943,11 +2179,11 @@ static void nfa_dm_disc_sm_w4_host_select (tNFA_DM_RF_DISC_SM_EVENT event,
         break;
     }
 
-    if (old_pres_check_flag && pres_check_event && !pres_check_event_processed)
+    if (old_sleep_wakeup_flag && sleep_wakeup_event && !sleep_wakeup_event_processed)
     {
-        /* performing presence check for unknow protocol and exception conditions happened
-         * clear presence check information and report failure */
-        nfa_dm_disc_end_presence_check (NFC_STATUS_FAILED);
+        /* performing sleep wakeup and exception conditions happened
+         * clear sleep wakeup information and report failure */
+        nfa_dm_disc_end_sleep_wakeup (NFC_STATUS_FAILED);
     }
 }
 
@@ -1964,20 +2200,20 @@ static void nfa_dm_disc_sm_poll_active (tNFA_DM_RF_DISC_SM_EVENT event,
                                         tNFA_DM_RF_DISC_DATA *p_data)
 {
     tNFC_STATUS status;
-    tNFA_DM_DISC_FLAGS  old_pres_check_flag = (nfa_dm_cb.disc_cb.disc_flags & NFA_DM_DISC_FLAGS_CHECKING);
-    BOOLEAN             pres_check_event = FALSE;
-    BOOLEAN             pres_check_event_processed = FALSE;
+    tNFA_DM_DISC_FLAGS  old_sleep_wakeup_flag = (nfa_dm_cb.disc_cb.disc_flags & NFA_DM_DISC_FLAGS_CHECKING);
+    BOOLEAN             sleep_wakeup_event = FALSE;
+    BOOLEAN             sleep_wakeup_event_processed = FALSE;
     tNFC_DEACTIVATE_DEVT deact;
 
     switch (event)
     {
     case NFA_DM_RF_DEACTIVATE_CMD:
-        if (old_pres_check_flag)
+        if (old_sleep_wakeup_flag)
         {
-            /* presence check is already enabled when deactivate cmd is requested,
+            /* sleep wakeup is already enabled when deactivate cmd is requested,
              * keep the information in control block to issue it later */
-            nfa_dm_cb.presence_check_deact_pending = TRUE;
-            nfa_dm_cb.presence_check_deact_type    = p_data->deactivate_type;
+            nfa_dm_cb.disc_cb.deact_pending      = TRUE;
+            nfa_dm_cb.disc_cb.pending_deact_type = p_data->deactivate_type;
         }
         else
         {
@@ -2017,7 +2253,7 @@ static void nfa_dm_disc_sm_poll_active (tNFA_DM_RF_DISC_SM_EVENT event,
             break;
         }
 
-        pres_check_event    = TRUE;
+        sleep_wakeup_event    = TRUE;
 
         nfa_dm_disc_notify_deactivation (NFA_DM_RF_DEACTIVATE_NTF, &(p_data->nfc_discover));
 
@@ -2025,23 +2261,23 @@ static void nfa_dm_disc_sm_poll_active (tNFA_DM_RF_DISC_SM_EVENT event,
             ||(p_data->nfc_discover.deactivate.type == NFC_DEACTIVATE_TYPE_SLEEP_AF)  )
         {
             nfa_dm_disc_new_state (NFA_DM_RFST_W4_HOST_SELECT);
-            if (old_pres_check_flag)
+            if (old_sleep_wakeup_flag)
             {
-                pres_check_event_processed  = TRUE;
+                sleep_wakeup_event_processed  = TRUE;
                 /* process pending deactivate request */
-                if (nfa_dm_cb.presence_check_deact_pending)
+                if (nfa_dm_cb.disc_cb.deact_pending)
                 {
-                    /* notify RW module that presence checking is finished */
+                    /* notify RW module that sleep wakeup is finished */
                     /* if deactivation is pending then deactivate  */
-                    nfa_dm_disc_end_presence_check (NFC_STATUS_OK);
+                    nfa_dm_disc_end_sleep_wakeup (NFC_STATUS_OK);
 
                     /* Notify NFA RW sub-systems because NFA_DM_RF_DEACTIVATE_RSP will not call this function */
                     nfa_rw_proc_disc_evt (NFA_DM_RF_DISC_DEACTIVATED_EVT, NULL, TRUE);
                 }
                 else
                 {
-                    /* Successfully went to sleep mode for presence check */
-                    /* Now wake up the tag to see if it is present */
+                    /* Successfully went to sleep mode for sleep wakeup */
+                    /* Now wake up the tag to complete the operation */
                     NFC_DiscoverySelect (nfa_dm_cb.disc_cb.activated_rf_disc_id,
                                          nfa_dm_cb.disc_cb.activated_protocol,
                                          nfa_dm_cb.disc_cb.activated_rf_interface);
@@ -2066,8 +2302,12 @@ static void nfa_dm_disc_sm_poll_active (tNFA_DM_RF_DISC_SM_EVENT event,
         break;
 
     case NFA_DM_CORE_INTF_ERROR_NTF:
-        pres_check_event    = TRUE;
-        NFC_Deactivate (NFC_DEACTIVATE_TYPE_DISCOVERY);
+        sleep_wakeup_event    = TRUE;
+        if (  (!old_sleep_wakeup_flag)
+            ||(!nfa_dm_cb.disc_cb.deact_pending)  )
+        {
+            nfa_dm_send_deactivate_cmd (NFA_DEACTIVATE_TYPE_DISCOVERY);
+        }
         break;
 
     default:
@@ -2075,11 +2315,11 @@ static void nfa_dm_disc_sm_poll_active (tNFA_DM_RF_DISC_SM_EVENT event,
         break;
     }
 
-    if (old_pres_check_flag && pres_check_event && !pres_check_event_processed)
+    if (old_sleep_wakeup_flag && sleep_wakeup_event && !sleep_wakeup_event_processed)
     {
-        /* performing presence check for unknow protocol and exception conditions happened
-         * clear presence check information and report failure */
-        nfa_dm_disc_end_presence_check (NFC_STATUS_FAILED);
+        /* performing sleep wakeup and exception conditions happened
+         * clear sleep wakeup information and report failure */
+        nfa_dm_disc_end_sleep_wakeup (NFC_STATUS_FAILED);
     }
 }
 
@@ -2256,6 +2496,10 @@ static void nfa_dm_disc_sm_lp_listen (tNFA_DM_RF_DISC_SM_EVENT event,
     case NFA_DM_RF_INTF_ACTIVATED_NTF:
         nfa_dm_disc_new_state (NFA_DM_RFST_LP_ACTIVE);
         nfa_dm_disc_notify_activation (&(p_data->nfc_discover));
+        if (nfa_dm_disc_notify_activation (&(p_data->nfc_discover)) == NFA_STATUS_FAILED)
+        {
+            NFA_TRACE_DEBUG0 ("Not matched, unexpected activation");
+        }
         break;
 
     default:
@@ -2565,6 +2809,38 @@ tNFA_STATUS nfa_dm_rf_deactivate (tNFA_DEACTIVATE_TYPE deactivate_type)
     if (nfa_dm_cb.disc_cb.disc_state == NFA_DM_RFST_IDLE)
     {
         return NFA_STATUS_FAILED;
+    }
+    else if (nfa_dm_cb.disc_cb.disc_state == NFA_DM_RFST_DISCOVERY)
+    {
+        if (deactivate_type == NFA_DEACTIVATE_TYPE_DISCOVERY)
+        {
+            if (nfa_dm_cb.disc_cb.kovio_tle.in_use)
+            {
+                nfa_sys_stop_timer (&nfa_dm_cb.disc_cb.kovio_tle);
+                nfa_dm_disc_kovio_timeout_cback (&nfa_dm_cb.disc_cb.kovio_tle);
+                return NFA_STATUS_OK;
+            }
+            else
+            {
+                /* it could be race condition. */
+                NFA_TRACE_DEBUG0 ("nfa_dm_rf_deactivate (): already in discovery state");
+                return NFA_STATUS_FAILED;
+            }
+        }
+        else if (deactivate_type == NFA_DEACTIVATE_TYPE_IDLE)
+        {
+            if (nfa_dm_cb.disc_cb.kovio_tle.in_use)
+            {
+                nfa_sys_stop_timer (&nfa_dm_cb.disc_cb.kovio_tle);
+                nfa_dm_disc_kovio_timeout_cback (&nfa_dm_cb.disc_cb.kovio_tle);
+            }
+            nfa_dm_disc_sm_execute (NFA_DM_RF_DEACTIVATE_CMD, (tNFA_DM_RF_DISC_DATA *) &deactivate_type);
+            return NFA_STATUS_OK;
+        }
+        else
+        {
+            return NFA_STATUS_FAILED;
+        }
     }
     else
     {

@@ -382,7 +382,8 @@ tNFC_HAL_XTAL_INDEX nfc_hal_dm_get_xtal_index (UINT32 brcm_hw_id, UINT16 *p_xtal
 
     for (xx = 0; xx < nfc_post_reset_cb.dev_init_config.num_xtal_cfg; xx++)
     {
-        if (brcm_hw_id == nfc_post_reset_cb.dev_init_config.xtal_cfg[xx].brcm_hw_id)
+        if ((brcm_hw_id & BRCM_NFC_GEN_MASK)
+            == nfc_post_reset_cb.dev_init_config.xtal_cfg[xx].brcm_hw_id)
         {
             *p_xtal_freq = nfc_post_reset_cb.dev_init_config.xtal_cfg[xx].xtal_freq;
             return (nfc_post_reset_cb.dev_init_config.xtal_cfg[xx].xtal_index);
@@ -606,6 +607,9 @@ void nfc_hal_dm_proc_msg_during_init (NFC_HDR *p_msg)
 
             /* Get chip version string */
             STREAM_TO_UINT8 (u8, p);
+            if (u8 > NFC_HAL_PRM_MAX_CHIP_VER_LEN)
+                u8 = NFC_HAL_PRM_MAX_CHIP_VER_LEN;
+            memcpy (nfc_hal_cb.nvm_cb.chip_ver, p, u8);
             p += NCI_PATCH_INFO_VERSION_LEN;
 
             /* Get major/minor version */

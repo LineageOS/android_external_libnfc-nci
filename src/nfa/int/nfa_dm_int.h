@@ -45,6 +45,10 @@ enum
     NFA_DM_API_RELEASE_EXCL_RF_CTRL_EVT,
     NFA_DM_API_ENABLE_POLLING_EVT,
     NFA_DM_API_DISABLE_POLLING_EVT,
+    NFA_DM_API_ENABLE_LISTENING_EVT,
+    NFA_DM_API_DISABLE_LISTENING_EVT,
+    NFA_DM_API_PAUSE_P2P_EVT,
+    NFA_DM_API_RESUME_P2P_EVT,
     NFA_DM_API_RAW_FRAME_EVT,
     NFA_DM_API_SET_P2P_LISTEN_TECH_EVT,
     NFA_DM_API_START_RF_DISCOVERY_EVT,
@@ -322,7 +326,7 @@ typedef void (tNFA_DISCOVER_CBACK) (tNFA_DM_RF_DISC_EVT event, tNFC_DISCOVER *p_
 #define NFA_DM_DISC_FLAGS_ENABLED        0x0001    /* RF discovery process has been started        */
 #define NFA_DM_DISC_FLAGS_STOPPING       0x0002    /* Stop RF discovery is pending                 */
 #define NFA_DM_DISC_FLAGS_DISABLING      0x0004    /* Disable NFA is pending                       */
-#define NFA_DM_DISC_FLAGS_CHECKING       0x0008    /* Presence check/unknown protocol in progress  */
+#define NFA_DM_DISC_FLAGS_CHECKING       0x0008    /* Sleep wakeup in progress                     */
 #define NFA_DM_DISC_FLAGS_NOTIFY         0x0010    /* Notify sub-module that discovery is starting */
 #define NFA_DM_DISC_FLAGS_W4_RSP         0x0020    /* command has been sent to NFCC in the state   */
 #define NFA_DM_DISC_FLAGS_W4_NTF         0x0040    /* wait for NTF before changing discovery state */
@@ -385,6 +389,11 @@ typedef struct
     tNFA_DM_DISC_TECH_PROTO_MASK    dm_disc_mask;   /* technology and protocol waiting for activation   */
 
     TIMER_LIST_ENT          tle;                    /* timer for waiting deactivation NTF               */
+    TIMER_LIST_ENT          kovio_tle;              /* timer for Kovio bar code tag presence check      */
+
+    BOOLEAN                 deact_pending;          /* TRUE if deactivate while checking presence       */
+    BOOLEAN                 deact_notify_pending;   /* TRUE if notify DEACTIVATED EVT while Stop rf discovery*/
+    tNFA_DEACTIVATE_TYPE    pending_deact_type;     /* pending deactivate type                          */
 
 } tNFA_DM_DISC_CB;
 
@@ -407,6 +416,8 @@ typedef struct
 #define NFA_DM_FLAGS_NFCC_IS_RESTORING          0x00000100  /* NFCC is restoring after back to full power mode                      */
 #define NFA_DM_FLAGS_SETTING_PWR_MODE           0x00000200  /* NFCC power mode is updating                                          */
 #define NFA_DM_FLAGS_DM_DISABLING_NFC           0x00000400  /* NFA DM is disabling NFC                                              */
+#define NFA_DM_FLAGS_LISTEN_DISABLED            0x00001000  /* NFA_DisableListening() is called and engaged                         */
+#define NFA_DM_FLAGS_P2P_PAUSED                 0x00002000  /* NFA_PauseP2p() is called and engaged                         */
 /* stored parameters */
 typedef struct
 {
@@ -456,9 +467,6 @@ typedef struct
     tNFA_DM_CBACK              *p_dm_cback;         /* NFA DM callback                                      */
     TIMER_LIST_ENT              tle;
 
-    BOOLEAN                     presence_check_deact_pending; /* TRUE if deactivate while checking presence */
-    tNFA_DEACTIVATE_TYPE        presence_check_deact_type;    /* deactivate type                            */
-
     /* NFC link connection management */
     tNFA_CONN_CBACK            *p_conn_cback;       /* callback for connection events       */
     tNFA_TECHNOLOGY_MASK        poll_mask;          /* technologies being polled            */
@@ -469,10 +477,11 @@ typedef struct
     tNFA_HANDLE                 poll_disc_handle;   /* discovery handle for polling         */
 
     UINT8                      *p_activate_ntf;     /* temp holding activation notfication  */
+    tHAL_API_GET_MAX_NFCEE     *get_max_ee;
 
-    UINT8                       activated_nfcid[NCI_NFCID1_MAX_LEN];
-                                                    /* NFCID 0/1/2 or UID of ISO15694       */
-    UINT8                       activated_nfcid_len;/* length of NFCID ot UID               */
+    tNFC_RF_TECH_N_MODE         activated_tech_mode;/* previous activated technology and mode */
+    UINT8                       activated_nfcid[NFC_KOVIO_MAX_LEN]; /* NFCID 0/1/2 or UID of ISO15694/Kovio  */
+    UINT8                       activated_nfcid_len;/* length of NFCID or UID               */
 
     /* NFC link discovery management */
     tNFA_DM_DISC_CB             disc_cb;
@@ -507,6 +516,7 @@ tNFA_STATUS nfa_rw_send_raw_frame (BT_HDR *p_data);
 void nfa_ce_init (void);
 
 /* Pointer to compile-time configuration structure */
+extern tNFA_DM_DISC_FREQ_CFG *p_nfa_dm_rf_disc_freq_cfg;
 extern tNFA_HCI_CFG *p_nfa_hci_cfg;
 extern tNFA_DM_CFG *p_nfa_dm_cfg;
 extern UINT8 *p_nfa_dm_ce_cfg;
@@ -554,6 +564,10 @@ BOOLEAN nfa_dm_act_request_excl_rf_ctrl (tNFA_DM_MSG *p_data);
 BOOLEAN nfa_dm_act_release_excl_rf_ctrl (tNFA_DM_MSG *p_data);
 BOOLEAN nfa_dm_act_enable_polling (tNFA_DM_MSG *p_data);
 BOOLEAN nfa_dm_act_disable_polling (tNFA_DM_MSG *p_data);
+BOOLEAN nfa_dm_act_enable_listening (tNFA_DM_MSG *p_data);
+BOOLEAN nfa_dm_act_disable_listening (tNFA_DM_MSG *p_data);
+BOOLEAN nfa_dm_act_pause_p2p (tNFA_DM_MSG *p_data);
+BOOLEAN nfa_dm_act_resume_p2p (tNFA_DM_MSG *p_data);
 BOOLEAN nfa_dm_act_send_raw_frame (tNFA_DM_MSG *p_data);
 BOOLEAN nfa_dm_set_p2p_listen_tech (tNFA_DM_MSG *p_data);
 BOOLEAN nfa_dm_act_start_rf_discovery (tNFA_DM_MSG *p_data);
@@ -597,7 +611,9 @@ void nfa_dm_rf_discover_select (UINT8 rf_disc_id, tNFA_NFC_PROTOCOL protocol, tN
 tNFA_STATUS nfa_dm_rf_deactivate (tNFA_DEACTIVATE_TYPE deactivate_type);
 BOOLEAN nfa_dm_is_protocol_supported (tNFA_NFC_PROTOCOL protocol, UINT8 sel_res);
 BOOLEAN nfa_dm_is_active (void);
-tNFC_STATUS nfa_dm_disc_presence_check (void);
+tNFC_STATUS nfa_dm_disc_sleep_wakeup (void);
+tNFC_STATUS nfa_dm_disc_start_kovio_presence_check (void);
+BOOLEAN nfa_dm_is_p2p_paused (void);
 
 
 #if (NFC_NFCEE_INCLUDED == FALSE)
