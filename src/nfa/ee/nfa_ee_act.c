@@ -15,7 +15,25 @@
  *  limitations under the License.
  *
  ******************************************************************************/
-
+/******************************************************************************
+ *
+ *  The original Work has been changed by NXP Semiconductors.
+ *
+ *  Copyright (C) 2013-2014 NXP Semiconductors
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ ******************************************************************************/
 
 /******************************************************************************
  *
@@ -1486,6 +1504,12 @@ BOOLEAN nfa_ee_is_active (tNFA_HANDLE nfcee_id)
     int     xx;
     tNFA_EE_ECB  *p_cb = nfa_ee_cb.ecb;
 
+    /* Added case for NFCEE_DH */
+    if(nfcee_id == NFA_EE_HANDLE_DH)
+    {
+        is_active = TRUE;
+        goto TheEnd;
+    }
     if ((NFA_HANDLE_GROUP_MASK & nfcee_id) == NFA_HANDLE_GROUP_EE)
         nfcee_id    &= NFA_HANDLE_MASK;
 
@@ -1501,6 +1525,7 @@ BOOLEAN nfa_ee_is_active (tNFA_HANDLE nfcee_id)
             break;
         }
     }
+TheEnd:
     return is_active;
 }
 
