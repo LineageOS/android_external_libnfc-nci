@@ -15,6 +15,25 @@
  *  limitations under the License.
  *
  ******************************************************************************/
+/******************************************************************************
+ *
+ *  The original Work has been changed by NXP Semiconductors.
+ *
+ *  Copyright (C) 2013-2014 NXP Semiconductors
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ ******************************************************************************/
 
 
 /******************************************************************************
@@ -63,6 +82,7 @@ enum
     NFA_DM_API_REG_VSC_EVT,
     NFA_DM_API_SEND_VSC_EVT,
     NFA_DM_TIMEOUT_DISABLE_EVT,
+    NFA_DM_API_SEND_NXP_EVT,
     NFA_DM_MAX_EVT
 };
 
@@ -582,6 +602,7 @@ BOOLEAN nfa_dm_ndef_dereg_hdlr (tNFA_DM_MSG *p_data);
 BOOLEAN nfa_dm_tout (tNFA_DM_MSG *p_data);
 BOOLEAN nfa_dm_act_reg_vsc (tNFA_DM_MSG *p_data);
 BOOLEAN nfa_dm_act_send_vsc (tNFA_DM_MSG *p_data);
+BOOLEAN nfa_dm_act_send_nxp(tNFA_DM_MSG *p_data);
 BOOLEAN nfa_dm_act_disable_timeout (tNFA_DM_MSG *p_data);
 BOOLEAN nfa_dm_act_nfc_cback_data (tNFA_DM_MSG *p_data);
 

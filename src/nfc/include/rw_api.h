@@ -15,7 +15,25 @@
  *  limitations under the License.
  *
  ******************************************************************************/
-
+/******************************************************************************
+ *
+ *  The original Work has been changed by NXP Semiconductors.
+ *
+ *  Copyright (C) 2013-2014 NXP Semiconductors
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ ******************************************************************************/
 
 /******************************************************************************
  *
@@ -102,6 +120,7 @@ enum
     RW_T4T_PRESENCE_CHECK_EVT,                  /* Response to RW_T4tPresenceCheck          */
     RW_T4T_RAW_FRAME_EVT,                       /* Response of raw frame sent               */
     RW_T4T_INTF_ERROR_EVT,                      /* RF Interface error event                 */
+    RW_T4T_NDEF_FORMAT_CPLT_EVT,                /* Format operation completed               */
     RW_T4T_MAX_EVT,
 
     /* ISO 15693 tag events for tRW_CBACK */
@@ -833,6 +852,21 @@ NFC_API extern tNFC_STATUS RW_T3tPresenceCheck (void);
 *****************************************************************************/
 NFC_API extern tNFC_STATUS RW_T3tGetSystemCodes (void);
 
+/*****************************************************************************
+**
+** Function         RW_T4tFormatNDef
+**
+** Description
+**      Format a type-4 tag for NDEF.
+**
+**      Only Desifire tags are supported by this API. The
+**      RW_T4T_FORMAT_CPLT_EVT is used to notify the status of the operation.
+**
+** Returns
+**      NFC_STATUS_OK: if success
+**      NFC_STATUS_FAILED: other error
+*****************************************************************************/
+NFC_API extern tNFC_STATUS RW_T4tFormatNDef (void);
 /*******************************************************************************
 **
 ** Function         RW_T4tDetectNDef

@@ -15,8 +15,25 @@
  *  limitations under the License.
  *
  ******************************************************************************/
-
-
+/******************************************************************************
+ *
+ *  The original Work has been changed by NXP Semiconductors.
+ *
+ *  Copyright (C) 2013-2014 NXP Semiconductors
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ ******************************************************************************/
 /******************************************************************************
  *
  *  This file contains the action functions for device manager discovery
@@ -1866,6 +1883,13 @@ static void nfa_dm_disc_sm_idle (tNFA_DM_RF_DISC_SM_EVENT event,
             }
             /* Otherwise, deactivating when getting unexpected activation */
         }
+        else if (p_data->nfc_discover.status == NCI_STATUS_SEMANTIC_ERROR)
+        {
+            /* check any pending flags like NFA_DM_DISC_FLAGS_STOPPING or NFA_DM_DISC_FLAGS_DISABLING */
+            nfa_dm_disc_new_state (NFA_DM_RFST_IDLE);
+            /* check if need to restart discovery after resync discovery state with NFCC */
+            nfa_dm_start_rf_discover ();
+        }
         /* Otherwise, wait for deactivation NTF */
         break;
 
@@ -1946,7 +1970,17 @@ static void nfa_dm_disc_sm_discovery (tNFA_DM_RF_DISC_SM_EVENT event,
         }
         break;
     case NFA_DM_RF_DISCOVER_NTF:
-        nfa_dm_disc_new_state (NFA_DM_RFST_W4_ALL_DISCOVERIES);
+        /* Notification Type = NCI_DISCOVER_NTF_LAST_ABORT */
+        if (p_data->nfc_discover.result.more == NCI_DISCOVER_NTF_LAST_ABORT)
+        {
+            /* Fix for multiple tags: After receiving deactivate event, restart discovery */
+            NFA_TRACE_DEBUG0 ("Received NCI_DISCOVER_NTF_LAST_ABORT, sending deactivate command");
+            NFC_Deactivate (NFA_DEACTIVATE_TYPE_IDLE);
+        }
+        else
+        {
+            nfa_dm_disc_new_state (NFA_DM_RFST_W4_ALL_DISCOVERIES);
+        }
         nfa_dm_notify_discovery (p_data);
         break;
     case NFA_DM_RF_INTF_ACTIVATED_NTF:
@@ -2044,6 +2078,13 @@ static void nfa_dm_disc_sm_w4_all_discoveries (tNFA_DM_RF_DISC_SM_EVENT event,
         nfa_dm_start_rf_discover ();
         break;
     case NFA_DM_RF_DISCOVER_NTF:
+        if(p_data->nfc_discover.result.protocol == NCI_PROTOCOL_UNKNOWN)
+        {
+            NFA_TRACE_DEBUG0("Unknown protocol - Restart Discovery");
+            /* after receiving unknown protocol, restart discovery */
+            NFC_Deactivate (NFA_DEACTIVATE_TYPE_IDLE);
+            return;
+        }
         /* if deactivate CMD is already sent then ignore discover NTF */
         if (!(nfa_dm_cb.disc_cb.disc_flags & NFA_DM_DISC_FLAGS_W4_RSP))
         {
@@ -2176,6 +2217,7 @@ static void nfa_dm_disc_sm_w4_host_select (tNFA_DM_RF_DISC_SM_EVENT event,
         break;
     default:
         NFA_TRACE_ERROR0 ("nfa_dm_disc_sm_w4_host_select (): Unexpected discovery event");
+        NFC_Deactivate (NFA_DEACTIVATE_TYPE_IDLE);
         break;
     }
 

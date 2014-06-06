@@ -15,6 +15,25 @@
  *  limitations under the License.
  *
  ******************************************************************************/
+/******************************************************************************
+ *
+ *  The original Work has been changed by NXP Semiconductors.
+ *
+ *  Copyright (C) 2013-2014 NXP Semiconductors
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ ******************************************************************************/
 
 
 /******************************************************************************
@@ -143,6 +162,7 @@ typedef void (tNFC_PWR_ST_CBACK) (void);
 
 /* NCI command buffer contains a VSC (in BT_HDR.layer_specific) */
 #define NFC_WAIT_RSP_VSC            0x01
+#define NFC_WAIT_RSP_NXP            0x02
 
 /* NFC control blocks */
 typedef struct
@@ -154,6 +174,7 @@ typedef struct
     tNFC_RESPONSE_CBACK *p_resp_cback;
     tNFC_TEST_CBACK     *p_test_cback;
     tNFC_VS_CBACK       *p_vs_cb[NFC_NUM_VS_CBACKS];/* Register for vendor specific events  */
+    UINT8               nxpCbflag;
 
 #if (NFC_RW_ONLY == FALSE)
     /* NFCC information at init rsp */
@@ -168,6 +189,7 @@ typedef struct
     UINT16              nci_interfaces;             /* the NCI interfaces of NFCC       */
     UINT8               num_disc_maps;              /* number of RF Discovery interface mappings */
     void               *p_disc_pending;            /* the parameters associated with pending NFC_DiscoveryStart */
+    void               *p_last_disc;               /* the parameters associated with pending NFC_DiscoveryStart */
 
     /* NFC_TASK timer management */
     TIMER_LIST_Q        timer_queue;                /* 1-sec timer event queue */
