@@ -15,6 +15,25 @@
  *  limitations under the License.
  *
  ******************************************************************************/
+/******************************************************************************
+ *
+ *  The original Work has been changed by NXP Semiconductors.
+ *
+ *  Copyright (C) 2013-2014 NXP Semiconductors
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ ******************************************************************************/
 
 
 /******************************************************************************
@@ -573,11 +592,6 @@ void nfa_hci_startup (void)
             if(ee_info[count].ee_interface[0] == NFA_EE_INTERFACE_HCI_ACCESS)
             {
                 found = TRUE;
-
-                if (ee_info[count].ee_status == NFA_EE_STATUS_INACTIVE)
-                {
-                    NFC_NfceeModeSet (target_handle, NFC_MODE_ACTIVATE);
-                }
                 if ((status = NFC_ConnCreate (NCI_DEST_TYPE_NFCEE, target_handle, NFA_EE_INTERFACE_HCI_ACCESS, nfa_hci_conn_cback)) == NFA_STATUS_OK)
                     nfa_sys_start_timer (&nfa_hci_cb.timer, NFA_HCI_RSP_TIMEOUT_EVT, NFA_HCI_CON_CREATE_TIMEOUT_VAL);
                 else
@@ -585,6 +599,10 @@ void nfa_hci_startup (void)
                     nfa_hci_cb.hci_state = NFA_HCI_STATE_DISABLED;
                     NFA_TRACE_ERROR0 ("nfa_hci_startup - Failed to Create Logical connection. HCI Initialization/Restore failed");
                     nfa_hci_startup_complete (NFA_STATUS_FAILED);
+                }
+                if (ee_info[count].ee_status == NFA_EE_STATUS_INACTIVE)
+                {
+                    NFC_NfceeModeSet (target_handle, NFC_MODE_ACTIVATE);
                 }
             }
             count++;

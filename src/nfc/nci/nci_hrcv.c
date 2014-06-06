@@ -15,6 +15,25 @@
  *  limitations under the License.
  *
  ******************************************************************************/
+/******************************************************************************
+ *
+ *  The original Work has been changed by NXP Semiconductors.
+ *
+ *  Copyright (C) 2013-2014 NXP Semiconductors
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ ******************************************************************************/
 
 
 /******************************************************************************
@@ -446,6 +465,37 @@ void nci_proc_prop_rsp (BT_HDR *p_msg)
     /*If there's a pending/stored command, restore the associated address of the callback function */
     if (p_cback)
         (*p_cback) ((tNFC_VS_EVT) (NCI_RSP_BIT|op_code), p_msg->len, p_evt);
+}
+
+/*******************************************************************************
+**
+** Function         nci_proc_prop_nxp_rsp
+**
+** Description      Process NXP NCI responses
+**
+** Returns          void
+**
+*******************************************************************************/
+void nci_proc_prop_nxp_rsp (BT_HDR *p_msg)
+{
+    UINT8   *p;
+    UINT8   *p_evt;
+    UINT8   *pp, len, op_code;
+    tNFC_VS_CBACK   *p_cback = (tNFC_VS_CBACK *)nfc_cb.p_vsc_cback;
+
+    /* find the start of the NCI message and parse the NCI header */
+    p   = p_evt = (UINT8 *) (p_msg + 1) + p_msg->offset;
+    pp  = p+1;
+    NCI_MSG_PRS_HDR1 (pp, op_code);
+    len = *pp++;
+
+    /*If there's a pending/stored command, restore the associated address of the callback function */
+    if (p_cback)
+    {
+        (*p_cback) ((tNFC_VS_EVT) (NCI_RSP_BIT|op_code), p_msg->len, p_evt);
+        nfc_cb.p_vsc_cback = NULL;
+    }
+    nfc_ncif_update_window ();
 }
 
 /*******************************************************************************
