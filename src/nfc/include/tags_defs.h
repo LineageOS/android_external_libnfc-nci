@@ -15,6 +15,25 @@
  *  limitations under the License.
  *
  ******************************************************************************/
+/******************************************************************************
+ *
+ *  The original Work has been changed by NXP Semiconductors.
+ *
+ *  Copyright (C) 2013-2014 NXP Semiconductors
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ ******************************************************************************/
 
 
 /******************************************************************************
@@ -157,7 +176,7 @@
 #define T2T_CC_LEN              4     /* the len of CC used in T2T tag                  */
 
 /* Capability Container definitions */
-#define T2T_CC_BLOCK		    0x03  /* Capability container block */
+#define T2T_CC_BLOCK            0x03  /* Capability container block */
 #define T2T_CC0_NMN_BYTE        0x0C  /* NDEF Magic Number byte number */
 #define T2T_CC1_VNO_BYTE        0x0D  /* Version Number byte number*/
 #define T2T_CC2_TMS_BYTE        0x0E  /* Tag Memory Size byte number */
@@ -179,8 +198,8 @@
 #define T2T_CMD_READ            0x30    /* read  4 blocks (16 bytes) */
 #define T2T_CMD_WRITE           0xA2    /* write 1 block  (4 bytes)  */
 #define T2T_CMD_SEC_SEL         0xC2    /* Sector select             */
-#define T2T_RSP_ACK			    0xA
-#define T2T_RSP_NACK5		    0x5
+#define T2T_RSP_ACK             0xA
+#define T2T_RSP_NACK5           0x5
 #define T2T_RSP_NACK1           0x1     /* Nack can be either 1    */
 
 #define T2T_FIRST_DATA_BLOCK    4
@@ -335,6 +354,12 @@ typedef UINT8 tT3T_POLL_RC;
 #define T4T_CMD_INS_SELECT              0xA4
 #define T4T_CMD_INS_READ_BINARY         0xB0
 #define T4T_CMD_INS_UPDATE_BINARY       0xD6
+#define T4T_CMD_DES_CLASS               0x90
+#define T4T_CMD_INS_GET_HW_VERSION      0x60
+#define T4T_CMD_CREATE_AID              0xCA
+#define T4T_CMD_SELECT_APP              0x5A
+#define T4T_CMD_CREATE_DATAFILE         0xCD
+#define T4T_CMD_DES_WRITE               0x3D
 #define T4T_CMD_P1_SELECT_BY_NAME       0x04
 #define T4T_CMD_P1_SELECT_BY_FILE_ID    0x00
 #define T4T_CMD_P2_FIRST_OR_ONLY_00H    0x00
@@ -377,6 +402,16 @@ typedef UINT8 tT3T_POLL_RC;
 #define T4T_FC_NO_WRITE_ACCESS          0xFF    /* no write access granted at all (read-only) */
 
 #define T4T_FILE_LENGTH_SIZE            0x02
+#define T4T_ADDI_FRAME_RESP             0xAFU
+#define T4T_SIZE_IDENTIFIER_2K          0x16U
+#define T4T_SIZE_IDENTIFIER_4K          0x18U
+#define T4T_SIZE_IDENTIFIER_8K          0x1AU
+#define T4T_DESEV1_MAJOR_VERSION        0x01U
+#define T4T_TYPE_DESFIRE_EV1            0x01U
+#define T4T_DESEV0_MAJOR_VERSION        0x00U
+#define T4T_DESEV0_MINOR_VERSION        0x06U
+#define T4T_DES_EV1_NFC_APP_ID          0x010000
+#define T4T_DES_EV0_NFC_APP_ID          0x10EEEE
 
 /*
 **
