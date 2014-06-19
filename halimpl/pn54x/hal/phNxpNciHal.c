@@ -604,6 +604,11 @@ init_retry:
         NXPLOG_NCIHAL_D ("FW uptodate not required");
         phDnldNfc_ReSetHwDevHandle();
     }
+    else if (wFwVer != 0 && (wFwVerRsp & 0x0000FFFF) > wFwVer)
+    {
+        NXPLOG_NCIHAL_D ("FW image older than device's, skip update");
+        phDnldNfc_ReSetHwDevHandle();
+    }
     else
     {
 force_download:
