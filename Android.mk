@@ -15,7 +15,6 @@ UDRV := src/udrv
 HALIMPL := halimpl/bcm2079x
 D_CFLAGS := -DANDROID -DBUILDCFG=1
 
-
 ######################################
 # Build shared library system/lib/libnfc-nci.so for stack code.
 
@@ -53,6 +52,10 @@ include $(BUILD_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
 
+ifeq ($(BOARD_NFC_CHIPSET),pn547)
+    include $(LOCAL_PATH)/halimpl/pn54x/hal.mk
+else
+
 ifneq ($(BOARD_NFC_HAL_SUFFIX),)
     HAL_SUFFIX := $(BOARD_NFC_HAL_SUFFIX)
 else
@@ -81,6 +84,7 @@ LOCAL_CFLAGS := $(D_CFLAGS) -DNFC_HAL_TARGET=TRUE -DNFC_RW_ONLY=TRUE
 LOCAL_CPPFLAGS := $(LOCAL_CFLAGS)
 include $(BUILD_SHARED_LIBRARY)
 
+endif # pn547
 
 ######################################
 include $(call all-makefiles-under,$(LOCAL_PATH))
