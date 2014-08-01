@@ -25,7 +25,7 @@ endef
 ifneq ($(BOARD_NFC_HAL_SUFFIX),)
     HAL_SUFFIX := $(BOARD_NFC_HAL_SUFFIX)
 else
-    HAL_SUFFIX := $(TARGET_DEVICE)
+    HAL_SUFFIX := pn54x.default
 endif
 
 LOCAL_PRELINK_MODULE := false
