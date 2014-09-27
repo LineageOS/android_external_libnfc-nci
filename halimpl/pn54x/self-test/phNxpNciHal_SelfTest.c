@@ -1182,7 +1182,11 @@ NFCSTATUS phNxpNciHal_TestMode_open (void)
 
     gDrvCfg.nClientId = phDal4Nfc_msgget(0, 0600);
     gDrvCfg.nLinkType = ENUM_LINK_TYPE_I2C;/* For PN547 */
+#ifdef OPPO_PN547
     tTmlConfig.pDevName = (int8_t *) "/dev/pn544";
+#else
+    tTmlConfig.pDevName = (int8_t *) "/dev/pn547";
+#endif
     tOsalConfig.dwCallbackThreadId = (uint32_t) gDrvCfg.nClientId;
     tOsalConfig.pLogFile = NULL;
     tTmlConfig.dwGetMsgThreadId = (uint32_t) gDrvCfg.nClientId;

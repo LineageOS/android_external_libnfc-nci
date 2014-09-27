@@ -432,7 +432,11 @@ int phNxpNciHal_open(nfc_stack_callback_t *p_cback, nfc_stack_data_callback_t *p
     /* Configure hardware link */
     nxpncihal_ctrl.gDrvCfg.nClientId = phDal4Nfc_msgget(0, 0600);
     nxpncihal_ctrl.gDrvCfg.nLinkType = ENUM_LINK_TYPE_I2C;/* For PN547 */
+#ifdef OPPO_PN547
     tTmlConfig.pDevName = (int8_t *) "/dev/pn544";
+#else
+    tTmlConfig.pDevName = (int8_t *) "/dev/pn547";
+#endif
     tOsalConfig.dwCallbackThreadId
     = (uint32_t) nxpncihal_ctrl.gDrvCfg.nClientId;
     tOsalConfig.pLogFile = NULL;
