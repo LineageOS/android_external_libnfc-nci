@@ -34,7 +34,7 @@
 #include <phNfcStatus.h>
 #include <string.h>
 
-#include <linux/pn544.h>
+#include <linux/nfc/pn544.h>
 
 #define CRC_LEN                     2
 #define NORMAL_MODE_HEADER_LEN      3
