@@ -48,7 +48,7 @@ include $(CLEAR_VARS)
 LOCAL_MODULE_RELATIVE_PATH := hw
 
 ifneq ($(BOARD_NFC_HAL_SUFFIX),)
-    HAL_SUFFIX := $(BOARD_NFC_HAL_SUFFIX)
+    HAL_SUFFIX := bcm2079x.$(BOARD_NFC_HAL_SUFFIX)
 else
     HAL_SUFFIX := bcm2079x.default
 endif
