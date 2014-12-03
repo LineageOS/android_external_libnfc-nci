@@ -12,9 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+ifneq ($(BOARD_NFC_HAL_SUFFIX),)
+    HAL_SUFFIX := pn54x.$(BOARD_NFC_HAL_SUFFIX)
+else
+    HAL_SUFFIX := pn54x.default
+endif
+
 LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
-LOCAL_MODULE := nfc_nci.$(TARGET_DEVICE)
+LOCAL_MODULE := nfc_nci.$(HAL_SUFFIX)
 LOCAL_MODULE_RELATIVE_PATH := hw
 LOCAL_SRC_FILES := $(call all-subdir-c-files)  $(call all-subdir-cpp-files)
 LOCAL_SHARED_LIBRARIES := liblog libcutils libhardware_legacy libdl libhardware
