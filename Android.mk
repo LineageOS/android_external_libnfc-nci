@@ -60,7 +60,7 @@ ifeq ($(BOARD_NFC_CHIPSET),pn547)
 else
 
 ifneq ($(BOARD_NFC_HAL_SUFFIX),)
-    HAL_SUFFIX := $(BOARD_NFC_HAL_SUFFIX)
+    HAL_SUFFIX := bcm2079x.$(BOARD_NFC_HAL_SUFFIX)
 else
     HAL_SUFFIX := bcm2079x.default
 endif

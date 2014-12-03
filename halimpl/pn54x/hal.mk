@@ -23,7 +23,7 @@ $(patsubst ./%,%, \
 endef
 
 ifneq ($(BOARD_NFC_HAL_SUFFIX),)
-    HAL_SUFFIX := $(BOARD_NFC_HAL_SUFFIX)
+    HAL_SUFFIX := pn54x.$(BOARD_NFC_HAL_SUFFIX)
 else
     HAL_SUFFIX := pn54x.default
 endif
