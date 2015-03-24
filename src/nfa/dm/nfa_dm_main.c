@@ -386,7 +386,9 @@ tNFA_STATUS nfa_dm_check_set_config (UINT8 tlv_list_len, UINT8 *p_tlv_list, BOOL
                     *p_cur_len = len;
                     update = TRUE;
                 }
+#ifndef NFCC_FORCE_CONFIG_UPDATE
                 else if (memcmp (p_value, p_stored, len))
+#endif
                 {
                     update = TRUE;
                 }
