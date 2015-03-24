@@ -43,6 +43,13 @@ LOCAL_SRC_FILES := \
     $(call all-cpp-files-under, src/adaptation) \
     $(call all-c-files-under, src/gki) \
     src/nfca_version.c
+
+ifeq ($(BOARD_NFC_CHIPSET),pn547)
+ifeq ($(BOARD_NFC_LPM_LOSES_CONFIG),true)
+    LOCAL_CFLAGS += -DNFCC_FORCE_CONFIG_UPDATE
+endif
+endif
+
 include $(BUILD_SHARED_LIBRARY)
 
 
