@@ -37,6 +37,13 @@ LOCAL_SRC_FILES := \
     $(call all-c-files-under, src/gki) \
     $(HALIMPL)/adaptation/android_logmsg.cpp \
     src/nfca_version.c
+
+ifeq ($(BOARD_NFC_CHIPSET),pn547)
+ifeq ($(BOARD_NFC_LPM_LOSES_CONFIG),true)
+    LOCAL_CFLAGS += -DNFCC_FORCE_CONFIG_UPDATE
+endif
+endif
+
 include $(BUILD_SHARED_LIBRARY)
 
 
