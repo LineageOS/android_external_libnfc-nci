@@ -109,8 +109,6 @@ BOOLEAN nci_proc_core_rsp (BT_HDR *p_msg)
         break;
     }
 
-    nfc_ncif_update_window ();
-
     return free;
 }
 
@@ -163,8 +161,6 @@ void nci_proc_core_ntf (BT_HDR *p_msg)
         NFC_TRACE_ERROR1 ("unknown opcode:0x%x", op_code);
         break;
     }
-
-    nfc_ncif_update_window ();
 }
 
 
