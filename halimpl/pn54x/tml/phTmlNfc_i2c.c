@@ -59,7 +59,7 @@ void phTmlNfc_i2c_close(void *pDevHandle)
 {
     if (NULL != pDevHandle)
     {
-        close((int32_t)pDevHandle);
+        close((intptr_t)pDevHandle);
     }
 
     return;
@@ -94,14 +94,14 @@ NFCSTATUS phTmlNfc_i2c_open_and_configure(pphTmlNfc_Config_t pConfig, void ** pL
         return NFCSTATUS_INVALID_DEVICE;
     }
 
-    *pLinkHandle = (void*) nHandle;
+    *pLinkHandle = (void*)(intptr_t) nHandle;
 
     /*Reset PN547*/
-    phTmlNfc_i2c_reset((void *)nHandle, 1);
+    phTmlNfc_i2c_reset((void *)(intptr_t)nHandle, 1);
     usleep(100 * 1000);
-    phTmlNfc_i2c_reset((void *)nHandle, 0);
+    phTmlNfc_i2c_reset((void *)(intptr_t)nHandle, 0);
     usleep(100 * 1000);
-    phTmlNfc_i2c_reset((void *)nHandle, 1);
+    phTmlNfc_i2c_reset((void *)(intptr_t)nHandle, 1);
 
     return NFCSTATUS_SUCCESS;
 }
@@ -149,11 +149,11 @@ int phTmlNfc_i2c_read(void *pDevHandle, uint8_t * pBuffer, int nNbBytesToRead)
        when the pn547 does not respond and we need to switch to FW download
        mode. This should be done via a control socket instead. */
     FD_ZERO(&rfds);
-    FD_SET((int) pDevHandle, &rfds);
+    FD_SET((intptr_t) pDevHandle, &rfds);
     tv.tv_sec = 2;
     tv.tv_usec = 1;
 
-    ret_Select = select((int)((int)pDevHandle + (int)1), &rfds, NULL, NULL, &tv);
+    ret_Select = select((int)((intptr_t)pDevHandle + (int)1), &rfds, NULL, NULL, &tv);
     if (ret_Select < 0)
     {
         NXPLOG_TML_E("i2c select() errno : %x",errno);
@@ -166,7 +166,7 @@ int phTmlNfc_i2c_read(void *pDevHandle, uint8_t * pBuffer, int nNbBytesToRead)
     }
     else
     {
-        ret_Read = read((int)pDevHandle, pBuffer, totalBtyesToRead - numRead);
+        ret_Read = read((intptr_t)pDevHandle, pBuffer, totalBtyesToRead - numRead);
         if (ret_Read > 0)
         {
             numRead += ret_Read;
@@ -193,7 +193,7 @@ int phTmlNfc_i2c_read(void *pDevHandle, uint8_t * pBuffer, int nNbBytesToRead)
 
         if(numRead < totalBtyesToRead)
         {
-            ret_Read = read((int)pDevHandle, pBuffer, totalBtyesToRead - numRead);
+            ret_Read = read((intptr_t)pDevHandle, pBuffer, totalBtyesToRead - numRead);
             if (ret_Read != totalBtyesToRead - numRead)
             {
                 NXPLOG_TML_E("_i2c_read() [hdr] errno : %x",errno);
@@ -212,7 +212,7 @@ int phTmlNfc_i2c_read(void *pDevHandle, uint8_t * pBuffer, int nNbBytesToRead)
         {
             totalBtyesToRead = pBuffer[NORMAL_MODE_LEN_OFFSET] + NORMAL_MODE_HEADER_LEN;
         }
-        ret_Read = read((int)pDevHandle, (pBuffer + numRead), totalBtyesToRead - numRead);
+        ret_Read = read((intptr_t)pDevHandle, (pBuffer + numRead), totalBtyesToRead - numRead);
         if (ret_Read > 0)
         {
             numRead += ret_Read;
@@ -275,7 +275,7 @@ int phTmlNfc_i2c_write(void *pDevHandle, uint8_t * pBuffer, int nNbBytesToWrite)
             }
 
         }
-        ret = write((int32_t)pDevHandle, pBuffer + numWrote, numBytes - numWrote);
+        ret = write((intptr_t)pDevHandle, pBuffer + numWrote, numBytes - numWrote);
         if (ret > 0)
         {
             numWrote += ret;
@@ -326,7 +326,7 @@ int phTmlNfc_i2c_reset(void *pDevHandle, long level)
         return -1;
     }
 
-    ret = ioctl((int32_t)pDevHandle, PN544_SET_PWR, level);
+    ret = ioctl((intptr_t)pDevHandle, PN544_SET_PWR, level);
     if(level == 2 && ret == 0)
     {
         bFwDnldFlag = TRUE;

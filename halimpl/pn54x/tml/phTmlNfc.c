@@ -355,7 +355,7 @@ static void phTmlNfc_TmlThread(void *pParam)
             dwNoBytesWrRd = PH_TMLNFC_RESET_VALUE;
 
             /* Read the data from the file onto the buffer */
-            if (NFCSTATUS_INVALID_DEVICE != (uint32_t)gpphTmlNfc_Context->pDevHandle)
+            if (NFCSTATUS_INVALID_DEVICE != (uintptr_t)gpphTmlNfc_Context->pDevHandle)
             {
                 NXPLOG_TML_D("PN547 - Invoking I2C Read.....\n");
                 dwNoBytesWrRd = phTmlNfc_i2c_read(gpphTmlNfc_Context->pDevHandle, temp, 260);
@@ -466,7 +466,7 @@ static void phTmlNfc_TmlWriterThread(void *pParam)
             NXPLOG_TML_D("PN547 - Write requested.....\n");
             /* Set the variable to success initially */
             wStatus = NFCSTATUS_SUCCESS;
-            if (NFCSTATUS_INVALID_DEVICE != (uint32_t)gpphTmlNfc_Context->pDevHandle)
+            if (NFCSTATUS_INVALID_DEVICE != (uintptr_t)gpphTmlNfc_Context->pDevHandle)
             {
                 retry:
 
