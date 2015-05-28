@@ -25,6 +25,7 @@ LOCAL_MODULE := libnfc-nci
 LOCAL_MODULE_TAGS := optional
 LOCAL_SHARED_LIBRARIES := libhardware_legacy libcutils liblog libdl libstlport libhardware
 LOCAL_CFLAGS := $(D_CFLAGS)
+LOCAL_CFLAGS += -Wno-unused-parameter
 LOCAL_C_INCLUDES := external/stlport/stlport bionic/ bionic/libstdc++/include \
     $(LOCAL_PATH)/src/include \
     $(LOCAL_PATH)/src/gki/ulinux \
