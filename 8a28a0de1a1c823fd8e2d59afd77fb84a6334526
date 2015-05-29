@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7a8ec9b2_2777b8d5",
+        "filename": "halimpl/pn54x/dnld/phDnldNfc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 878,
+      "author": {
+        "id": 6334
+      },
+      "writtenOn": "2015-05-29T03:08:24Z",
+      "side": 1,
+      "message": "Why intptr here but uintptr below",
+      "range": {
+        "startLine": 878,
+        "startChar": 61,
+        "endLine": 878,
+        "endChar": 69
+      },
+      "revId": "8a28a0de1a1c823fd8e2d59afd77fb84a6334526",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71",
+      "unresolved": false
+    }
+  ]
+}
