@@ -35,16 +35,27 @@
 
 #   define FW_DLL_ROOT_DIR "/system/vendor/firmware/"
 #   define FW_DLL_EXTENSION ".so"
+
+#if(NFC_NXP_CHIP_TYPE != PN547C2)
+
+/* Actual FW library name*/
+#define FW_LIB_PATH       FW_DLL_ROOT_DIR "libpn548ad_fw"          FW_DLL_EXTENSION
+/* Restore Currupted PLL Setttings/etc */
+#define PLATFORM_LIB_PATH FW_DLL_ROOT_DIR "libpn548ad_fw_platform" FW_DLL_EXTENSION
+/* Upgrade the public Key */
+#define PKU_LIB_PATH      FW_DLL_ROOT_DIR "libpn548ad_fw_pku"      FW_DLL_EXTENSION
+#else
 /* Actual FW library name*/
 #define FW_LIB_PATH       FW_DLL_ROOT_DIR "libpn547_fw"          FW_DLL_EXTENSION
 /* Restore Currupted PLL Setttings/etc */
 #define PLATFORM_LIB_PATH FW_DLL_ROOT_DIR "libpn547_fw_platform" FW_DLL_EXTENSION
 /* Upgrade the public Key */
 #define PKU_LIB_PATH      FW_DLL_ROOT_DIR "libpn547_fw_pku"      FW_DLL_EXTENSION
+#endif
 
 /* HAL Version number (Updated as per release) */
-#define NXP_MW_VERSION_MAJ  (2U)
-#define NXP_MW_VERSION_MIN  (5U)
+#define NXP_MW_VERSION_MAJ  (1U)
+#define NXP_MW_VERSION_MIN  (0U)
 
 /*
  *****************************************************************
@@ -78,14 +89,14 @@
 #define NXP_SYS_CLK_FREQ_SEL  CLK_FREQ_19_2MHZ /* Set to one of CLK_FREQ_<value> */
 
 #define CLK_TO_CFG_DEF         1
-#define CLK_TO_CFG_MAX         25
+#define CLK_TO_CFG_MAX         26
 /*
  *  information to configure OSAL
  */
 typedef struct phOsalNfc_Config
 {
     uint8_t *pLogFile; /* Log File Name*/
-    uint32_t dwCallbackThreadId; /* Client ID to which message is posted */
+    uintptr_t dwCallbackThreadId; /* Client ID to which message is posted */
 }phOsalNfc_Config_t, *pphOsalNfc_Config_t /* Pointer to #phOsalNfc_Config_t */;
 
 

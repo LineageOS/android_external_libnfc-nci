@@ -45,7 +45,7 @@
 #define PHDNLDNFC_CLR_HDR_FRAGBIT(n)      ((n) & ~(1U<<10))   /* Header chunk bit clear macro */
 #define PHDNLDNFC_CHK_HDR_FRAGBIT(n)      ((n) & 0x04)       /* macro to check if frag bit is set in Hdr */
 
-#define PHDNLDNFC_RSP_TIMEOUT   (2500)                /* Timeout value to wait for response from PN547 */
+#define PHDNLDNFC_RSP_TIMEOUT   (2500)                /* Timeout value to wait for response from NFCC */
 #define PHDNLDNFC_RETRY_FRAME_WRITE   (50)            /* Timeout value to wait before resending the last frame */
 
 #define PHDNLDNFC_USERDATA_EEPROM_LENSIZE    (0x02U)    /* size of EEPROM user data length */
@@ -56,9 +56,17 @@
 #define PHDNLDNFC_USERDATA_EEPROM_OFFSET  (0x003CU)    /* 16 bits offset indicating user data area start location */
 #define PHDNLDNFC_USERDATA_EEPROM_LEN     (0x0DC0U)    /* 16 bits length of user data area */
 #else
+
+#if(NFC_NXP_CHIP_TYPE == PN547C2)
 /* EEPROM offset and length value for C2 */
 #define PHDNLDNFC_USERDATA_EEPROM_OFFSET  (0x023CU)    /* 16 bits offset indicating user data area start location */
 #define PHDNLDNFC_USERDATA_EEPROM_LEN     (0x0C80U)    /* 16 bits length of user data area */
+#else
+/* EEPROM offset and length value for PN548AD */
+#define PHDNLDNFC_USERDATA_EEPROM_OFFSET  (0x02BCU)    /* 16 bits offset indicating user data area start location */
+#define PHDNLDNFC_USERDATA_EEPROM_LEN     (0x0C00U)    /* 16 bits length of user data area */
+#endif
+
 #endif
 #define PH_LIBNFC_VEN_RESET_ON_DOWNLOAD_TIMEOUT (1)
 
@@ -91,7 +99,7 @@ static void phDnldNfc_ResendTimeOutCb(uint32_t TimerId, void *pContext);
 **                  TrigEvent - event requested by user
 **
 ** Returns          NFC status:
-**                  NFCSTATUS_PENDING           - download request sent to PN547 successfully,response pending
+**                  NFCSTATUS_PENDING           - download request sent to NFCC successfully,response pending
 **                  NFCSTATUS_BUSY              - handler is busy processing a download request
 **                  NFCSTATUS_INVALID_PARAMETER - one or more of the supplied parameters could not be interpreted properly
 **                  Other errors                -

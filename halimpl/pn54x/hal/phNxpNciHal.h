@@ -25,6 +25,7 @@
 #define NCI_POLL_DURATION     500
 #define HAL_NFC_ENABLE_I2C_FRAGMENTATION_EVT    0x07
 #undef P2P_PRIO_LOGIC_HAL_IMP
+
 typedef void (phNxpNciHal_control_granted_callback_t)();
 
 /* NCI Data */
@@ -82,6 +83,18 @@ typedef struct phNxpNciHal_Control
     uint8_t read_retry_cnt;
 } phNxpNciHal_Control_t;
 
+typedef struct phNxpNciClock{
+    bool_t  isClockSet;
+    uint8_t  p_rx_data[20];
+    bool_t  issetConfig;
+}phNxpNciClock_t;
+
+typedef struct phNxpNciRfSetting{
+    bool_t  isGetRfSetting;
+    uint8_t  p_rx_data[20];
+}phNxpNciRfSetting_t;
+
+
 typedef enum {
     NFC_FORUM_PROFILE,
     EMV_CO_PROFILE,
@@ -94,7 +107,6 @@ typedef struct phNxpNciProfile_Control
     uint8_t                      bClkSrcVal;     /* Holds the System clock source read from config file */
     uint8_t                      bClkFreqVal;    /* Holds the System clock frequency read from config file */
     uint8_t                      bTimeout;       /* Holds the Timeout Value */
-
 } phNxpNciProfile_Control_t;
 
 /* Internal messages to handle callbacks */
