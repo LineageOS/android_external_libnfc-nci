@@ -202,7 +202,7 @@
 #define T2T_TLEN_LOCK_CTRL_TLV    3      /* Tag len for LOCK_CTRL TLV per spec */
 #define T2T_TLEN_MEM_CTRL_TLV     3      /* Tag len for MEM_CTRL TLV per spec */
 
-#define T2T_MAX_SECTOR            2      /* Maximum number of sectors supported */
+#define T2T_MAX_SECTOR            3      /* Maximum number of sectors supported */
 
 #define T2T_TLV_TYPE_LEN                1     /* Tlv type identifier len                */
 
