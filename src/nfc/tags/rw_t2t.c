@@ -191,6 +191,13 @@ static void rw_t2t_proc_data (UINT8 conn_id, tNFC_DATA_CEVT *p_data)
             {
                 p_t2t->b_read_hdr = TRUE;
                 memcpy (p_t2t->tag_hdr,  p, T2T_READ_DATA_LEN);
+                /* On Ultralight - C tag, if CC is corrupt, correct it */
+                if (  (p_t2t->tag_hdr[0] == TAG_MIFARE_MID)
+                    &&(p_t2t->tag_hdr[T2T_CC2_TMS_BYTE] >= T2T_INVALID_CC_TMS_VAL0)
+                    &&(p_t2t->tag_hdr[T2T_CC2_TMS_BYTE] <= T2T_INVALID_CC_TMS_VAL1)  )
+                {
+                    p_t2t->tag_hdr[T2T_CC2_TMS_BYTE] = T2T_CC2_TMS_MULC;
+                }
             }
             break;
 
