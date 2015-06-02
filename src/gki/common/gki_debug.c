@@ -135,7 +135,7 @@ UINT16 gki_calc_stack (UINT8 task)
 void GKI_print_task(void)
 {
 #ifdef _BT_WIN32
-	GKI_TRACE_0("Service not available under insight");
+    GKI_TRACE_0("Service not available under insight");
 #else
     UINT8 TaskId;
 

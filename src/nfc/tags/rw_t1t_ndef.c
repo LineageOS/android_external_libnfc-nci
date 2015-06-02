@@ -159,7 +159,7 @@ tRW_EVENT rw_t1t_info_to_event (const tT1T_CMD_RSP_INFO * p_info)
         break;
 
     default:
-	    rw_event = t1t_info_to_evt (p_info);
+        rw_event = t1t_info_to_evt (p_info);
         break;
     }
     return rw_event;
