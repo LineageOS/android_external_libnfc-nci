@@ -84,7 +84,7 @@ typedef struct
     UINT8 task_id;          /* GKI task id */
     TASKPTR task_entry;     /* Task entry function*/
     UINT32 params;          /* Extra params to pass to task entry function */
-    pthread_cond_t* pCond;	/* for android*/
+    pthread_cond_t* pCond;  /* for android*/
     pthread_mutex_t* pMutex;  /* for android*/
 } gki_pthread_info_t;
 gki_pthread_info_t gki_pthread_info[GKI_MAX_TASKS];
@@ -927,7 +927,7 @@ void GKI_enable (void)
 {
     GKI_TRACE_0("GKI_enable");
     pthread_mutex_unlock(&gki_cb.os.GKI_mutex);
-/* 	pthread_mutex_xx is nesting save, no need for this: already_disabled = 0; */
+/*  pthread_mutex_xx is nesting save, no need for this: already_disabled = 0; */
     GKI_TRACE_0("Leaving GKI_enable");
     return;
 }
@@ -947,9 +947,9 @@ void GKI_disable (void)
 {
     //GKI_TRACE_0("GKI_disable");
 
-/*	pthread_mutex_xx is nesting save, no need for this: if (!already_disabled) {
+/*  pthread_mutex_xx is nesting save, no need for this: if (!already_disabled) {
     already_disabled = 1; */
-    		pthread_mutex_lock(&gki_cb.os.GKI_mutex);
+            pthread_mutex_lock(&gki_cb.os.GKI_mutex);
 /*  } */
     //GKI_TRACE_0("Leaving GKI_disable");
     return;
@@ -1124,7 +1124,7 @@ void *GKI_os_malloc (UINT32 size)
 void GKI_os_free (void *p_mem)
 {
     if(p_mem != NULL)
-		free(p_mem);
+        free(p_mem);
     return;
 }
 
@@ -1209,7 +1209,7 @@ void GKI_exit_task (UINT8 task_id)
 
     GKI_enable();
 
-	//GKI_send_event(task_id, EVENT_MASK(GKI_SHUTDOWN_EVT));
+    //GKI_send_event(task_id, EVENT_MASK(GKI_SHUTDOWN_EVT));
 
     GKI_TRACE_1("GKI_exit_task %d done", task_id);
     return;
@@ -1290,5 +1290,4 @@ void GKI_shiftup (UINT8 *p_dest, UINT8 *p_src, UINT32 len)
     for (xx = 0; xx < len; xx++)
         *pd++ = *ps++;
 }
-
 

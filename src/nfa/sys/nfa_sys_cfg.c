@@ -38,4 +38,3 @@ const tNFA_SYS_CFG nfa_sys_cfg =
 
 tNFA_SYS_CFG *p_nfa_sys_cfg = (tNFA_SYS_CFG *) &nfa_sys_cfg;
 
-

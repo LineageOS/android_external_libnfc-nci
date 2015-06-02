@@ -708,6 +708,3 @@
 
 
 #endif /* NFC_TARGET_H */
-
-
-

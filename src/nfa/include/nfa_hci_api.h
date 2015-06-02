@@ -39,16 +39,16 @@
 #define NFA_HCI_DEBUG_DISABLE_LOOPBACK          102
 
 /* NFA HCI callback events */
-#define NFA_HCI_REGISTER_EVT	                0x00    /* Application registered                       */
+#define NFA_HCI_REGISTER_EVT                    0x00    /* Application registered                       */
 #define NFA_HCI_DEREGISTER_EVT                  0x01    /* Application deregistered                     */
 #define NFA_HCI_GET_GATE_PIPE_LIST_EVT          0x02    /* Retrieved gates,pipes assoc. to application  */
-#define NFA_HCI_ALLOCATE_GATE_EVT	            0x03    /* A generic gate allocated to the application  */
-#define NFA_HCI_DEALLOCATE_GATE_EVT	            0x04    /* A generic gate is released                   */
-#define NFA_HCI_CREATE_PIPE_EVT         	    0x05    /* Pipe is created                              */
-#define NFA_HCI_OPEN_PIPE_EVT         	        0x06    /* Pipe is opened / could not open              */
-#define NFA_HCI_CLOSE_PIPE_EVT         	        0x07    /* Pipe is closed / could not close             */
-#define NFA_HCI_DELETE_PIPE_EVT         	    0x08    /* Pipe is deleted                              */
-#define NFA_HCI_HOST_LIST_EVT       	        0x09    /* Received list of Host from Host controller   */
+#define NFA_HCI_ALLOCATE_GATE_EVT               0x03    /* A generic gate allocated to the application  */
+#define NFA_HCI_DEALLOCATE_GATE_EVT             0x04    /* A generic gate is released                   */
+#define NFA_HCI_CREATE_PIPE_EVT                 0x05    /* Pipe is created                              */
+#define NFA_HCI_OPEN_PIPE_EVT                   0x06    /* Pipe is opened / could not open              */
+#define NFA_HCI_CLOSE_PIPE_EVT                  0x07    /* Pipe is closed / could not close             */
+#define NFA_HCI_DELETE_PIPE_EVT                 0x08    /* Pipe is deleted                              */
+#define NFA_HCI_HOST_LIST_EVT                   0x09    /* Received list of Host from Host controller   */
 #define NFA_HCI_INIT_EVT                        0x0A    /* HCI subsytem initialized                     */
 #define NFA_HCI_EXIT_EVT                        0x0B    /* HCI subsytem exited                          */
 #define NFA_HCI_RSP_RCVD_EVT                    0x0C    /* Response recvd to cmd sent on app owned pipe */
