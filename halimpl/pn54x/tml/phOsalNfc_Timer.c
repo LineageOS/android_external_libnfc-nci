@@ -333,12 +333,12 @@ static void phOsalNfc_DeferredCall (void *pParams)
     if(NULL != pParams)
     {
         /* Retrieve the index at which the timer handle structure is stored */
-        dwIndex = (uint32_t)pParams - PH_NFC_TIMER_BASE_ADDRESS - 0x01;
+        dwIndex = (uintptr_t)pParams - PH_NFC_TIMER_BASE_ADDRESS - 0x01;
         pTimerHandle = (phOsalNfc_TimerHandle_t *)&apTimerInfo[dwIndex];
         if(pTimerHandle->Application_callback != NULL)
         {
             /* Invoke the callback function with osal Timer ID */
-            pTimerHandle->Application_callback((uint32_t)pParams, pTimerHandle->pContext);
+            pTimerHandle->Application_callback((uintptr_t)pParams, pTimerHandle->pContext);
         }
     }
 
@@ -361,7 +361,7 @@ static void phOsalNfc_DeferredCall (void *pParams)
 static void phOsalNfc_PostTimerMsg(phLibNfc_Message_t *pMsg)
 {
 
-    (void)phDal4Nfc_msgsnd((uint32_t) nxpncihal_ctrl.gDrvCfg.nClientId/*gpphOsalNfc_Context->dwCallbackThreadID*/, pMsg,0);
+    (void)phDal4Nfc_msgsnd(nxpncihal_ctrl.gDrvCfg.nClientId/*gpphOsalNfc_Context->dwCallbackThreadID*/, pMsg,0);
 
     return;
 }
@@ -390,7 +390,7 @@ static void phOsalNfc_Timer_Expired(union sigval sv)
     pTimerHandle->eState = eTimerStopped;
 
     pTimerHandle->tDeferedCallInfo.pDeferedCall = &phOsalNfc_DeferredCall;
-    pTimerHandle->tDeferedCallInfo.pParam = (void *) (sv.sival_int);
+    pTimerHandle->tDeferedCallInfo.pParam = (void *) ((intptr_t)(sv.sival_int));
 
     pTimerHandle->tOsalMessage.eMsgType = PH_LIBNFC_DEFERREDCALL_MSG;
     pTimerHandle->tOsalMessage.pMsgData = (void *)&pTimerHandle->tDeferedCallInfo;

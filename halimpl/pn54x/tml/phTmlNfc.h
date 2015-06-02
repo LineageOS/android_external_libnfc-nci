@@ -144,7 +144,7 @@ typedef struct phTmlNfc_Context
     phTmlNfc_ReadWriteInfo_t tReadInfo; /*Pointer to Reader Thread Structure */
     phTmlNfc_ReadWriteInfo_t tWriteInfo; /*Pointer to Writer Thread Structure */
     void *pDevHandle; /* Pointer to Device Handle */
-    uint32_t dwCallbackThreadId; /* Thread ID to which message to be posted */
+    uintptr_t dwCallbackThreadId; /* Thread ID to which message to be posted */
     uint8_t bEnableCrc; /*Flag to validate/not CRC for input buffer */
     sem_t   rxSemaphore;
     sem_t   txSemaphore; /* Lock/Aquire txRx Semaphore */
@@ -156,20 +156,20 @@ typedef struct phTmlNfc_Context
  */
 typedef struct phTmlNfc_Config
 {
-    /* Port name connected to PN547
+    /* Port name connected to PN54X
      *
-     * Platform specific canonical device name to which PN547 is connected.
+     * Platform specific canonical device name to which PN54X is connected.
      *
-     * e.g. On Linux based systems this would be /dev/pn547
+     * e.g. On Linux based systems this would be /dev/PN54X
      */
     int8_t *pDevName;
     /* Callback Thread ID
      *
      * This is the thread ID on which the Reader & Writer thread posts message. */
-    uint32_t dwGetMsgThreadId;
-    /* Communication speed between DH and PN547
+    uintptr_t dwGetMsgThreadId;
+    /* Communication speed between DH and PN54X
      *
-     * This is the baudrate of the bus for communication between DH and PN547 */
+     * This is the baudrate of the bus for communication between DH and PN54X */
     uint32_t dwBaudRate;
 } phTmlNfc_Config_t,*pphTmlNfc_Config_t;    /* pointer to phTmlNfc_Config_t */
 
@@ -191,8 +191,8 @@ typedef struct {
 
 typedef enum
 {
-    I2C_FRAGMENATATION_DISABLED,     /*i2c fragmentation_enabled           */
-    I2C_FRAGMENTATION_ENABLED      /*i2c_fragmentation_disabled          */
+    I2C_FRAGMENATATION_DISABLED,     /*i2c fragmentation_disabled           */
+    I2C_FRAGMENTATION_ENABLED      /*i2c_fragmentation_enabled          */
 } phTmlNfc_i2cfragmentation_t;
 /* Function declarations */
 NFCSTATUS phTmlNfc_Init(pphTmlNfc_Config_t pConfig);
@@ -202,7 +202,7 @@ NFCSTATUS phTmlNfc_Read(uint8_t *pBuffer, uint16_t wLength, pphTmlNfc_TransactCo
 NFCSTATUS phTmlNfc_WriteAbort(void);
 NFCSTATUS phTmlNfc_ReadAbort(void);
 NFCSTATUS phTmlNfc_IoCtl(phTmlNfc_ControlCode_t eControlCode);
-void phTmlNfc_DeferredCall(uint32_t dwThreadId, phLibNfc_Message_t *ptWorkerMsg);
+void phTmlNfc_DeferredCall(uintptr_t dwThreadId, phLibNfc_Message_t *ptWorkerMsg);
 void phTmlNfc_ConfigNciPktReTx( phTmlNfc_ConfigRetrans_t eConfig, uint8_t bRetryCount);
 void phTmlNfc_set_fragmentation_enabled(phTmlNfc_i2cfragmentation_t enable);
 phTmlNfc_i2cfragmentation_t phTmlNfc_get_fragmentation_enabled();

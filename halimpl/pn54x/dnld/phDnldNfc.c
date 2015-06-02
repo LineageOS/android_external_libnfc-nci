@@ -46,7 +46,7 @@ static void phDnldNfc_ReadComplete(void* pContext, NFCSTATUS status, void* pInfo
 **                  pContext - caller context
 **
 ** Returns          NFC status:
-**                  NFCSTATUS_SUCCESS     - reset request to PN547 is successful
+**                  NFCSTATUS_SUCCESS     - reset request to NFCC is successful
 **                  NFCSTATUS_FAILED      - reset request failed due to internal error
 **                  NFCSTATUS_NOT_ALLOWED - command not allowed
 **                  Other command specific errors                -
@@ -78,14 +78,14 @@ NFCSTATUS phDnldNfc_Reset(pphDnldNfc_RspCb_t pNotify, void *pContext)
             (gpphDnldContext->tRspBuffInfo.wLen) = 0;
             (gpphDnldContext->tUserData.pBuff) = NULL;
             (gpphDnldContext->tUserData.wLen) = 0;
+            (gpphDnldContext->UserCb) = pNotify;
+            (gpphDnldContext->UserCtxt) = pContext;
 
             wStatus = phDnldNfc_CmdHandler(gpphDnldContext,phDnldNfc_EventReset);
 
             if(NFCSTATUS_PENDING == wStatus)
             {
                 NXPLOG_FWDNLD_D("Reset Request submitted successfully");
-                (gpphDnldContext->UserCb) = pNotify;
-                (gpphDnldContext->UserCtxt) = pContext;
             }
             else
             {
@@ -104,12 +104,12 @@ NFCSTATUS phDnldNfc_Reset(pphDnldNfc_RspCb_t pNotify, void *pContext)
 ** Description      Retrieves Hardware version, ROM Code version, Protected Data version,
 **                  Trim data version, User data version, and Firmware version information
 **
-** Parameters       pVersionInfo - response buffer which gets updated with complete version info from PN547
+** Parameters       pVersionInfo - response buffer which gets updated with complete version info from NFCC
 **                  pNotify      - notify caller after getting response
 **                  pContext     - caller context
 **
 ** Returns          NFC status:
-**                  NFCSTATUS_SUCCESS     - GetVersion request to PN547 is successful
+**                  NFCSTATUS_SUCCESS     - GetVersion request to NFCC is successful
 **                  NFCSTATUS_FAILED      - GetVersion request failed due to internal error
 **                  NFCSTATUS_NOT_ALLOWED - command not allowed
 **                  Other command specific errors                -
@@ -143,14 +143,14 @@ NFCSTATUS phDnldNfc_GetVersion(pphDnldNfc_Buff_t pVersionInfo, pphDnldNfc_RspCb_
                 (gpphDnldContext->tCmdId) = PH_DL_CMD_GETVERSION;
                 (gpphDnldContext->tUserData.pBuff) = NULL;
                 (gpphDnldContext->tUserData.wLen) = 0;
+                (gpphDnldContext->UserCb) = pNotify;
+                (gpphDnldContext->UserCtxt) = pContext;
 
                 wStatus = phDnldNfc_CmdHandler(gpphDnldContext,phDnldNfc_EventGetVer);
 
                 if(NFCSTATUS_PENDING == wStatus)
                 {
                     NXPLOG_FWDNLD_D("GetVersion Request submitted successfully");
-                    (gpphDnldContext->UserCb) = pNotify;
-                    (gpphDnldContext->UserCtxt) = pContext;
                 }
                 else
                 {
@@ -172,14 +172,14 @@ NFCSTATUS phDnldNfc_GetVersion(pphDnldNfc_Buff_t pVersionInfo, pphDnldNfc_RspCb_
 **
 ** Function         phDnldNfc_GetSessionState
 **
-** Description      Retrieves the current session state of PN547
+** Description      Retrieves the current session state of NFCC
 **
-** Parameters       pSession - response buffer which gets updated with complete version info from PN547
+** Parameters       pSession - response buffer which gets updated with complete version info from NFCC
 **                  pNotify  - notify caller after getting response
 **                  pContext - caller context
 **
 ** Returns          NFC status:
-**                  NFCSTATUS_SUCCESS     - GetSessionState request to PN547 is successful
+**                  NFCSTATUS_SUCCESS     - GetSessionState request to NFCC is successful
 **                  NFCSTATUS_FAILED      - GetSessionState request failed due to internal error
 **                  NFCSTATUS_NOT_ALLOWED - command not allowed
 **                  Other command specific errors                -
@@ -213,14 +213,14 @@ NFCSTATUS phDnldNfc_GetSessionState(pphDnldNfc_Buff_t pSession, pphDnldNfc_RspCb
                 (gpphDnldContext->tCmdId) = PH_DL_CMD_GETSESSIONSTATE;
                 (gpphDnldContext->tUserData.pBuff) = NULL;
                 (gpphDnldContext->tUserData.wLen) = 0;
+                (gpphDnldContext->UserCb) = pNotify;
+                (gpphDnldContext->UserCtxt) = pContext;
 
                 wStatus = phDnldNfc_CmdHandler(gpphDnldContext,phDnldNfc_EventGetSesnSt);
 
                 if(NFCSTATUS_PENDING == wStatus)
                 {
                     NXPLOG_FWDNLD_D("GetSessionState Request submitted successfully");
-                    (gpphDnldContext->UserCb) = pNotify;
-                    (gpphDnldContext->UserCtxt) = pContext;
                 }
                 else
                 {
@@ -242,13 +242,13 @@ NFCSTATUS phDnldNfc_GetSessionState(pphDnldNfc_Buff_t pSession, pphDnldNfc_RspCb
 **
 ** Function         phDnldNfc_CheckIntegrity
 **
-** Description      Inspects the integrity of EEPROM and FLASH contents of the PN547,
+** Description      Inspects the integrity of EEPROM and FLASH contents of the NFCC,
 **                  provides CRC for each section
 **                  NOTE: The user data section CRC is valid only after fresh download
 **
 ** Parameters       bChipVer - current ChipVersion for including additional parameters in request payload
 **                  pCRCData - response buffer which gets updated with respective section CRC status
-**                             and CRC bytes from PN547
+**                             and CRC bytes from NFCC
 **                  pNotify  - notify caller after getting response
 **                  pContext - caller context
 **
@@ -279,7 +279,8 @@ NFCSTATUS phDnldNfc_CheckIntegrity(uint8_t bChipVer, pphDnldNfc_Buff_t pCRCData,
         }
         else
         {
-            if((PHDNLDNFC_HWVER_MRA2_1 == bChipVer) || (PHDNLDNFC_HWVER_MRA2_2 == bChipVer))
+            if((PHDNLDNFC_HWVER_MRA2_1 == bChipVer) || (PHDNLDNFC_HWVER_MRA2_2 == bChipVer) ||
+               (PHDNLDNFC_HWVER_PN548AD_MRA1_0 == bChipVer))
             {
                 (gpphDnldContext->FrameInp.Type) = phDnldNfc_ChkIntg;
             }
@@ -295,14 +296,14 @@ NFCSTATUS phDnldNfc_CheckIntegrity(uint8_t bChipVer, pphDnldNfc_Buff_t pCRCData,
                 (gpphDnldContext->tCmdId) = PH_DL_CMD_CHECKINTEGRITY;
                 (gpphDnldContext->tUserData.pBuff) = NULL;
                 (gpphDnldContext->tUserData.wLen) = 0;
+                (gpphDnldContext->UserCb) = pNotify;
+                (gpphDnldContext->UserCtxt) = pContext;
 
                 wStatus = phDnldNfc_CmdHandler(gpphDnldContext,phDnldNfc_EventIntegChk);
 
                 if(NFCSTATUS_PENDING == wStatus)
                 {
                     NXPLOG_FWDNLD_D("CheckIntegrity Request submitted successfully");
-                    (gpphDnldContext->UserCb) = pNotify;
-                    (gpphDnldContext->UserCtxt) = pContext;
                 }
                 else
                 {
@@ -330,7 +331,7 @@ NFCSTATUS phDnldNfc_CheckIntegrity(uint8_t bChipVer, pphDnldNfc_Buff_t pCRCData,
 **                  pContext - caller context
 **
 ** Returns          NFC status:
-**                  NFCSTATUS_SUCCESS     - Read request to PN547 is successful
+**                  NFCSTATUS_SUCCESS     - Read request to NFCC is successful
 **                  NFCSTATUS_FAILED      - Read request failed due to internal error
 **                  NFCSTATUS_NOT_ALLOWED - command not allowed
 **                  Other command specific errors                -
@@ -365,6 +366,8 @@ NFCSTATUS phDnldNfc_ReadLog(pphDnldNfc_Buff_t pData, pphDnldNfc_RspCb_t pNotify,
                 (gpphDnldContext->tRspBuffInfo.wLen) = pData->wLen;
                 (gpphDnldContext->tUserData.pBuff) = NULL;
                 (gpphDnldContext->tUserData.wLen) = 0;
+                (gpphDnldContext->UserCb) = pNotify;
+                (gpphDnldContext->UserCtxt) = pContext;
 
                 memset(&(gpphDnldContext->tRWInfo),0,sizeof(gpphDnldContext->tRWInfo));
 
@@ -373,8 +376,6 @@ NFCSTATUS phDnldNfc_ReadLog(pphDnldNfc_Buff_t pData, pphDnldNfc_RspCb_t pNotify,
                 if(NFCSTATUS_PENDING == wStatus)
                 {
                     NXPLOG_FWDNLD_D("Read Request submitted successfully");
-                    (gpphDnldContext->UserCb) = pNotify;
-                    (gpphDnldContext->UserCtxt) = pContext;
                 }
                 else
                 {
@@ -404,7 +405,7 @@ NFCSTATUS phDnldNfc_ReadLog(pphDnldNfc_Buff_t pData, pphDnldNfc_RspCb_t pNotify,
 **                  pContext    - caller context
 **
 ** Returns          NFC status:
-**                  NFCSTATUS_SUCCESS     - Write request to PN547 is successful
+**                  NFCSTATUS_SUCCESS     - Write request to NFCC is successful
 **                  NFCSTATUS_FAILED      - Write request failed due to internal error
 **                  NFCSTATUS_NOT_ALLOWED - command not allowed
 **                  Other command specific errors                -
@@ -488,14 +489,14 @@ NFCSTATUS phDnldNfc_Write(bool_t  bRecoverSeq, pphDnldNfc_Buff_t pData, pphDnldN
 
                 memset(&(gpphDnldContext->tRWInfo),0,sizeof(gpphDnldContext->tRWInfo));
                 (gpphDnldContext->tRWInfo.bFirstWrReq) = TRUE;
+                (gpphDnldContext->UserCb) = pNotify;
+                (gpphDnldContext->UserCtxt) = pContext;
 
                 wStatus = phDnldNfc_CmdHandler(gpphDnldContext,phDnldNfc_EventWrite);
 
                 if(NFCSTATUS_PENDING == wStatus)
                 {
                     NXPLOG_FWDNLD_D("Write Request submitted successfully");
-                    (gpphDnldContext->UserCb) = pNotify;
-                    (gpphDnldContext->UserCtxt) = pContext;
                 }
                 else
                 {
@@ -524,7 +525,7 @@ NFCSTATUS phDnldNfc_Write(bool_t  bRecoverSeq, pphDnldNfc_Buff_t pData, pphDnldN
 **                  pContext    - caller context
 **
 ** Returns          NFC status:
-**                  NFCSTATUS_SUCCESS     - Write request to PN547 is successful
+**                  NFCSTATUS_SUCCESS     - Write request to NFCC is successful
 **                  NFCSTATUS_FAILED      - Write request failed due to internal error
 **                  NFCSTATUS_NOT_ALLOWED - command not allowed
 **                  Other command specific errors                -
@@ -560,14 +561,14 @@ NFCSTATUS phDnldNfc_Log(pphDnldNfc_Buff_t pData, pphDnldNfc_RspCb_t pNotify, voi
                 (gpphDnldContext->tUserData.wLen) = (pData->wLen);
 
                 memset(&(gpphDnldContext->tRWInfo),0,sizeof(gpphDnldContext->tRWInfo));
+                (gpphDnldContext->UserCb) = pNotify;
+                (gpphDnldContext->UserCtxt) = pContext;
 
                 wStatus = phDnldNfc_CmdHandler(gpphDnldContext,phDnldNfc_EventLog);
 
                 if(NFCSTATUS_PENDING == wStatus)
                 {
                     NXPLOG_FWDNLD_D("Log Request submitted successfully");
-                    (gpphDnldContext->UserCb) = pNotify;
-                    (gpphDnldContext->UserCtxt) = pContext;
                 }
                 else
                 {
@@ -589,7 +590,7 @@ NFCSTATUS phDnldNfc_Log(pphDnldNfc_Buff_t pData, pphDnldNfc_RspCb_t pNotify, voi
 **
 ** Function         phDnldNfc_Force
 **
-** Description      Used as an emergency recovery procedure for PN547 due to corrupt
+** Description      Used as an emergency recovery procedure for NFCC due to corrupt
 **                  settings of system platform specific parameters by the host
 **
 ** Parameters       pInputs  - input buffer which contains  clk src & clk freq settings for desired platform
@@ -690,14 +691,14 @@ NFCSTATUS phDnldNfc_Force(pphDnldNfc_Buff_t pInputs, pphDnldNfc_RspCb_t pNotify,
             (gpphDnldContext->tUserData.wLen) = sizeof(bPldVal);
 
             memset(&(gpphDnldContext->tRWInfo),0,sizeof(gpphDnldContext->tRWInfo));
+            (gpphDnldContext->UserCb) = pNotify;
+            (gpphDnldContext->UserCtxt) = pContext;
 
             wStatus = phDnldNfc_CmdHandler(gpphDnldContext,phDnldNfc_EventForce);
 
             if(NFCSTATUS_PENDING == wStatus)
             {
                 NXPLOG_FWDNLD_D("Force Command Request submitted successfully");
-                (gpphDnldContext->UserCb) = pNotify;
-                (gpphDnldContext->UserCtxt) = pContext;
             }
             else
             {
@@ -735,10 +736,7 @@ void phDnldNfc_SetHwDevHandle(void)
         {
             (void ) memset((void *)psDnldContext,0,
                                             sizeof(phDnldNfc_DlContext_t));
-
             gpphDnldContext = psDnldContext;
-
-
         }
         else
         {
@@ -749,7 +747,6 @@ void phDnldNfc_SetHwDevHandle(void)
     {
         (void ) memset((void *)gpphDnldContext,0,
                                             sizeof(phDnldNfc_DlContext_t));
-
     }
     return;
 }
@@ -780,16 +777,16 @@ void phDnldNfc_ReSetHwDevHandle(void)
 **
 ** Function         phDnldNfc_RawReq
 **
-** Description      Sends raw frame request to PN547.
+** Description      Sends raw frame request to NFCC.
 **                  It is currently used for sending an NCI RESET cmd after doing a production key update
 **
-** Parameters       pFrameData - input buffer, contains raw frame packet to be sent to PN547
-**                  pRspData   - response buffer received from PN547
+** Parameters       pFrameData - input buffer, contains raw frame packet to be sent to NFCC
+**                  pRspData   - response buffer received from NFCC
 **                  pNotify    - notify caller after getting response
 **                  pContext   - caller context
 **
 ** Returns          NFC status:
-**                  NFCSTATUS_SUCCESS     - GetSessionState request to PN547 is successful
+**                  NFCSTATUS_SUCCESS     - GetSessionState request to NFCC is successful
 **                  NFCSTATUS_FAILED      - GetSessionState request failed due to internal error
 **                  NFCSTATUS_NOT_ALLOWED - command not allowed
 **                  Other command specific errors                -
@@ -825,14 +822,14 @@ NFCSTATUS phDnldNfc_RawReq(pphDnldNfc_Buff_t pFrameData, pphDnldNfc_Buff_t pRspD
                 (gpphDnldContext->tCmdId) = PH_DL_CMD_NONE;
                 (gpphDnldContext->tUserData.pBuff) = pFrameData->pBuff;
                 (gpphDnldContext->tUserData.wLen) = pFrameData->wLen;
+                (gpphDnldContext->UserCb) = pNotify;
+                (gpphDnldContext->UserCtxt) = pContext;
 
                 wStatus = phDnldNfc_CmdHandler(gpphDnldContext,phDnldNfc_EventRaw);
 
                 if(NFCSTATUS_PENDING == wStatus)
                 {
                     NXPLOG_FWDNLD_D("RawFrame Request submitted successfully");
-                    (gpphDnldContext->UserCb) = pNotify;
-                    (gpphDnldContext->UserCtxt) = pContext;
                 }
                 else
                 {
@@ -875,7 +872,7 @@ NFCSTATUS phDnldNfc_InitImgInfo(void)
     wStatus = phDnldNfc_LoadFW(FW_LIB_PATH, &pImageInfo, &ImageInfoLen);
 
     NXPLOG_FWDNLD_D("FW Image Length - ImageInfoLen %d",ImageInfoLen);
-    NXPLOG_FWDNLD_D("FW Image Info Pointer - pImageInfo %x",(uint32_t)pImageInfo);
+    NXPLOG_FWDNLD_D("FW Image Info Pointer - pImageInfo %x",(uintptr_t)pImageInfo);
 
     if((pImageInfo == NULL) || (ImageInfoLen == 0))
     {
@@ -885,14 +882,14 @@ NFCSTATUS phDnldNfc_InitImgInfo(void)
 
     if (wStatus != NFCSTATUS_SUCCESS)
     {
-        NXPLOG_FWDNLD_E("Error loading libpn547_fw !!\n");
+        NXPLOG_FWDNLD_E("Error loading libpn54x_fw !!\n");
     }
 
    /* get the MW version */
    if(NFCSTATUS_SUCCESS == wStatus)
    {
-       NXPLOG_FWDNLD_D("MW Major Version Num - %x",NXP_MW_VERSION_MAJ);
-       NXPLOG_FWDNLD_D("MW Minor Version Num - %x",NXP_MW_VERSION_MIN);
+       //NXPLOG_FWDNLD_D("MW Major Version Num - %x",NXP_MW_VERSION_MAJ);
+       //NXPLOG_FWDNLD_D("MW Minor Version Num - %x",NXP_MW_VERSION_MIN);
        wMwVer = (((uint16_t)(NXP_MW_VERSION_MAJ) << 8U) | (NXP_MW_VERSION_MIN));
    }
 
@@ -905,7 +902,7 @@ NFCSTATUS phDnldNfc_InitImgInfo(void)
            NXPLOG_FWDNLD_D("FW Major Version Num - %x",gpphDnldContext->nxp_nfc_fw[5]);
            NXPLOG_FWDNLD_D("FW Minor Version Num - %x",gpphDnldContext->nxp_nfc_fw[4]);
            NXPLOG_FWDNLD_D("FW Image Length - %d",ImageInfoLen);
-           NXPLOG_FWDNLD_D("FW Image Info Pointer - %x",(uint32_t)pImageInfo);
+           NXPLOG_FWDNLD_D("FW Image Info Pointer - %x",(uintptr_t)pImageInfo);
 
            /* get the FW version */
            wFwVer = (((uint16_t)(gpphDnldContext->nxp_nfc_fw[5]) << 8U) | (gpphDnldContext->nxp_nfc_fw[4]));
@@ -954,7 +951,7 @@ NFCSTATUS phDnldNfc_LoadRecInfo(void)
     /* load the PLL recovery image library */
     if (wStatus != NFCSTATUS_SUCCESS)
     {
-        NXPLOG_FWDNLD_E("Error loading libpn547_fw_platform !!\n");
+        NXPLOG_FWDNLD_E("Error loading libpn54x_fw_platform !!\n");
     }
 
    if(NFCSTATUS_SUCCESS == wStatus)
@@ -965,7 +962,7 @@ NFCSTATUS phDnldNfc_LoadRecInfo(void)
        if((NULL != gpphDnldContext->nxp_nfc_fwp) && (0 != gpphDnldContext->nxp_nfc_fwp_len))
        {
            NXPLOG_FWDNLD_D("Recovery Image Length - %d",ImageInfoLen);
-           NXPLOG_FWDNLD_D("Recovery Image Info Pointer - %x",(uint32_t)pImageInfo);
+           NXPLOG_FWDNLD_D("Recovery Image Info Pointer - %x",(uintptr_t)pImageInfo);
            wStatus = NFCSTATUS_SUCCESS;
        }
        else
@@ -1010,7 +1007,7 @@ NFCSTATUS phDnldNfc_LoadPKInfo(void)
 
     if (wStatus != NFCSTATUS_SUCCESS)
     {
-        NXPLOG_FWDNLD_E("Error loading libpn547_fw_pku !!\n");
+        NXPLOG_FWDNLD_E("Error loading libpn54x_fw_pku !!\n");
     }
 
    if(NFCSTATUS_SUCCESS == wStatus)
@@ -1022,7 +1019,7 @@ NFCSTATUS phDnldNfc_LoadPKInfo(void)
        if((NULL != gpphDnldContext->nxp_nfc_fwp) && (0 != gpphDnldContext->nxp_nfc_fwp_len))
        {
            NXPLOG_FWDNLD_D("PKU Image Length - %d",ImageInfoLen);
-           NXPLOG_FWDNLD_D("PKU Image Info Pointer - %x",(uint32_t)pImageInfo);
+           NXPLOG_FWDNLD_D("PKU Image Info Pointer - %x",(uintptr_t)pImageInfo);
            wStatus = NFCSTATUS_SUCCESS;
        }
        else
@@ -1081,11 +1078,18 @@ NFCSTATUS phDnldNfc_LoadFW(const char* pathName, uint8_t **pImgInfo, uint16_t* p
     void* pImageInfo = NULL;
     void* pImageInfoLen = NULL;
 
+#if(NFC_NXP_CHIP_TYPE != PN547C2)
     /* check for path name */
+    if(pathName == NULL)
+    {
+        pathName = "/system/vendor/firmware/libpn548ad_fw.so";
+    }
+#else
     if(pathName == NULL)
     {
         pathName = "/system/vendor/firmware/libpn547_fw.so";
     }
+#endif
 
     /* check if the handle is not NULL then free the library */
     if(pFwLibHandle != NULL)
@@ -1175,7 +1179,7 @@ NFCSTATUS phDnldNfc_UnloadFW(void)
 **                  pContext - caller context
 **
 ** Returns          NFC status:
-**                  NFCSTATUS_SUCCESS     - request to PN547 is successful
+**                  NFCSTATUS_SUCCESS     - request to NFCC is successful
 **                  NFCSTATUS_FAILED      - request failed due to internal error
 **                  NFCSTATUS_NOT_ALLOWED - command not allowed
 **                  Other command specific errors                -
@@ -1224,6 +1228,8 @@ NFCSTATUS phDnldNfc_ReadMem(void *pHwRef, pphDnldNfc_RspCb_t pNotify, void *pCon
 
             Data.pBuff = bRdData;
             Data.wLen = sizeof(bRdData);
+            UserCb = pNotify;
+            UserCtxt = pContext;
 
             wStatus = phDnldNfc_Read(&Data, wRdAddr,(pphDnldNfc_RspCb_t)phDnldNfc_ReadComplete,gpphDnldContext);
         }
@@ -1237,8 +1243,6 @@ NFCSTATUS phDnldNfc_ReadMem(void *pHwRef, pphDnldNfc_RspCb_t pNotify, void *pCon
         if(NFCSTATUS_PENDING == wStatus)
         {
             NXPLOG_FWDNLD_D("Read Request submitted successfully..");
-            UserCb = pNotify;
-            UserCtxt = pContext;
         }
         else
         {
@@ -1292,7 +1296,7 @@ static void phDnldNfc_ReadComplete(void* pContext,NFCSTATUS status,void* pInfo)
 **                  pContext - caller context
 **
 ** Returns          NFC status:
-**                  NFCSTATUS_SUCCESS     - Read request to PN547 is successful
+**                  NFCSTATUS_SUCCESS     - Read request to NFCC is successful
 **                  NFCSTATUS_FAILED      - Read request failed due to internal error
 **                  NFCSTATUS_NOT_ALLOWED - command not allowed
 **                  Other command specific errors                -
@@ -1327,6 +1331,8 @@ NFCSTATUS phDnldNfc_Read(pphDnldNfc_Buff_t pData, uint32_t dwRdAddr, pphDnldNfc_
                 (gpphDnldContext->tRspBuffInfo.wLen) = pData->wLen;
                 (gpphDnldContext->tUserData.pBuff) = NULL;
                 (gpphDnldContext->tUserData.wLen) = 0;
+                (gpphDnldContext->UserCb) = pNotify;
+                (gpphDnldContext->UserCtxt) = pContext;
 
                 memset(&(gpphDnldContext->tRWInfo),0,sizeof(gpphDnldContext->tRWInfo));
 
@@ -1335,8 +1341,6 @@ NFCSTATUS phDnldNfc_Read(pphDnldNfc_Buff_t pData, uint32_t dwRdAddr, pphDnldNfc_
                 if(NFCSTATUS_PENDING == wStatus)
                 {
                     NXPLOG_FWDNLD_D("Read Request submitted successfully");
-                    (gpphDnldContext->UserCb) = pNotify;
-                    (gpphDnldContext->UserCtxt) = pContext;
                 }
                 else
                 {

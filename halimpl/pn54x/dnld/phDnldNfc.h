@@ -24,7 +24,7 @@
 
 /*
  *
- * Callback for handling the received data/response from PN547.
+ * Callback for handling the received data/response from PN54X.
  * Parameters to be passed/registered to download context during respective download function call:
  *      pContext - Upper layer context
  *      wStatus  - Status of the transaction
@@ -41,6 +41,7 @@ typedef void (*pphDnldNfc_RspCb_t)(void* pContext, NFCSTATUS wStatus,void* pInfo
 #define PHDNLDNFC_HWVER_MRA2_1       (0x04U)   /* ChipVersion MRA2.1 */
 #define PHDNLDNFC_HWVER_MRA2_2       (0x05U)   /* ChipVersion MRA2.2 */
 
+#define PHDNLDNFC_HWVER_PN548AD_MRA1_0       (0x08U)   /* PN548AD ChipVersion MRA1.0 */
 /*
  * Enum definition contains Download Life Cycle States
  */

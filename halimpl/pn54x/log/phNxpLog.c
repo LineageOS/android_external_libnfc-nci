@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-/* ############################################### Header Includes ################################################ */
+#include <string.h>
 #if ! defined (NXPLOG__H_INCLUDED)
 #    include "phNxpLog.h"
 #    include "phNxpConfig.h"

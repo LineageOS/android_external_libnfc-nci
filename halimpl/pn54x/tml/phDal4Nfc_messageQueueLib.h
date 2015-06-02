@@ -24,10 +24,10 @@
 #include <linux/ipc.h>
 #include <phNfcTypes.h>
 
-int phDal4Nfc_msgget(key_t key, int msgflg);
-void phDal4Nfc_msgrelease(int msqid);
-int phDal4Nfc_msgctl(int msqid, int cmd, void *buf);
-int phDal4Nfc_msgsnd(int msqid, phLibNfc_Message_t * msg, int msgflg);
-int phDal4Nfc_msgrcv(int msqid, phLibNfc_Message_t * msg, long msgtyp, int msgflg);
+intptr_t phDal4Nfc_msgget(key_t key, int msgflg);
+void phDal4Nfc_msgrelease(intptr_t msqid);
+int phDal4Nfc_msgctl(intptr_t msqid, int cmd, void *buf);
+intptr_t phDal4Nfc_msgsnd(intptr_t msqid, phLibNfc_Message_t * msg, int msgflg);
+int phDal4Nfc_msgrcv(intptr_t msqid, phLibNfc_Message_t * msg, long msgtyp, int msgflg);
 
 #endif /*  PHDAL4NFC_MESSAGEQUEUE_H  */

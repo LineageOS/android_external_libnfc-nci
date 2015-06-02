@@ -1,5 +1,4 @@
-# Copyright (C) 2011 The Android Open Source Project
-# Copyright (C) 2014 Cyanogen Inc
+# Copyright (C) 2012-2014 NXP Semiconductors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -35,24 +34,36 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := nfc_nci.$(HAL_SUFFIX)
 LOCAL_MODULE_RELATIVE_PATH := hw
 LOCAL_SRC_FILES := $(call all-c-files-under, .)  $(call all-cpp-files-under, .)
-LOCAL_SHARED_LIBRARIES := liblog libcutils libhardware_legacy libdl libstlport
+LOCAL_SHARED_LIBRARIES := liblog libcutils libhardware_legacy libdl libhardware
 LOCAL_MODULE_TAGS := optional
 
-LOCAL_C_INCLUDES += external/stlport/stlport  bionic/  bionic/libstdc++/include \
-	$(LOCAL_PATH)/utils \
-	$(LOCAL_PATH)/inc \
-	$(LOCAL_PATH)/common \
-	$(LOCAL_PATH)/dnld \
-	$(LOCAL_PATH)/hal \
-	$(LOCAL_PATH)/log \
-	$(LOCAL_PATH)/tml \
-	$(LOCAL_PATH)/self-test
+LOCAL_C_INCLUDES += \
+    $(LOCAL_PATH)/utils \
+    $(LOCAL_PATH)/inc \
+    $(LOCAL_PATH)/common \
+    $(LOCAL_PATH)/dnld \
+    $(LOCAL_PATH)/hal \
+    $(LOCAL_PATH)/log \
+    $(LOCAL_PATH)/tml \
+    $(LOCAL_PATH)/self-test
+
+#variables for NFC_NXP_CHIP_TYPE
+PN547C2 := 1
+PN548C2 := 2
+
+ifeq ($(PN547C2),1)
+LOCAL_CFLAGS += -DPN547C2=1
+endif
+ifeq ($(PN548C2),2)
+LOCAL_CFLAGS += -DPN548C2=2
+endif
+
+#### Select the CHIP ####
+LOCAL_CFLAGS += -DNFC_NXP_CHIP_TYPE=PN548C2
 
 LOCAL_CFLAGS += -DANDROID \
         -DNXP_UICC_ENABLE -DNXP_HW_SELF_TEST
+LOCAL_CFLAGS += -DNFC_NXP_HFO_SETTINGS=FALSE
 #LOCAL_CFLAGS += -DFELICA_CLT_ENABLE
-#-DNXP_PN547C1_DOWNLOAD
 
-LOCAL_ADDITIONAL_DEPENDENCIES += $(TARGET_OUT_INTERMEDIATES)/KERNEL_OBJ/usr
-LOCAL_C_INCLUDES += $(TARGET_OUT_INTERMEDIATES)/KERNEL_OBJ/usr/include
 include $(BUILD_SHARED_LIBRARY)
