@@ -34,10 +34,10 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := nfc_nci.$(HAL_SUFFIX)
 LOCAL_MODULE_RELATIVE_PATH := hw
 LOCAL_SRC_FILES := $(call all-c-files-under, .)  $(call all-cpp-files-under, .)
-LOCAL_SHARED_LIBRARIES := liblog libcutils libhardware_legacy libdl libhardware
+LOCAL_SHARED_LIBRARIES := liblog libcutils libhardware_legacy libdl libstlport libhardware
 LOCAL_MODULE_TAGS := optional
 
-LOCAL_C_INCLUDES += \
+LOCAL_C_INCLUDES += external/stlport/stlport  bionic/  bionic/libstdc++/include \
     $(LOCAL_PATH)/utils \
     $(LOCAL_PATH)/inc \
     $(LOCAL_PATH)/common \

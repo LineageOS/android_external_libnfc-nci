@@ -24,9 +24,9 @@ LOCAL_ADDITIONAL_DEPENDENCIES := $(LOCAL_PATH)/Android.mk
 LOCAL_ARM_MODE := arm
 LOCAL_MODULE := libnfc-nci
 LOCAL_MODULE_TAGS := optional
-LOCAL_SHARED_LIBRARIES := libhardware_legacy libcutils liblog libdl libhardware
+LOCAL_SHARED_LIBRARIES := libhardware_legacy libcutils liblog libdl libstlport libhardware
 LOCAL_CFLAGS := $(D_CFLAGS)
-LOCAL_C_INCLUDES := \
+LOCAL_C_INCLUDES := external/stlport/stlport bionic/ bionic/libstdc++/include \
     $(LOCAL_PATH)/src/include \
     $(LOCAL_PATH)/src/gki/ulinux \
     $(LOCAL_PATH)/src/gki/common \
@@ -68,9 +68,9 @@ LOCAL_SRC_FILES := $(call all-c-files-under, $(HALIMPL)) \
     $(call all-cpp-files-under, $(HALIMPL)) \
     src/adaptation/CrcChecksum.cpp \
     src//nfca_version.c
-LOCAL_SHARED_LIBRARIES := liblog libcutils libhardware_legacy
+LOCAL_SHARED_LIBRARIES := liblog libcutils libhardware_legacy libstlport
 LOCAL_MODULE_TAGS := optional
-LOCAL_C_INCLUDES := \
+LOCAL_C_INCLUDES := external/stlport/stlport bionic/ bionic/libstdc++/include \
     $(LOCAL_PATH)/$(HALIMPL)/include \
     $(LOCAL_PATH)/$(HALIMPL)/gki/ulinux \
     $(LOCAL_PATH)/$(HALIMPL)/gki/common \
