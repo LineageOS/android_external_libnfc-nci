@@ -50,7 +50,7 @@ typedef struct phNfc_sData
 
 /*
  * Possible Hardware Configuration exposed to upper layer.
- * Typically this should be port name (Ex:"COM1","COM2") to which PN547 is connected.
+ * Typically this should be port name (Ex:"COM1","COM2") to which PN54X is connected.
  */
 typedef enum
 {
@@ -100,7 +100,7 @@ typedef struct phLibNfc_sConfig
    /* Hardware communication link to the controller */
    phLibNfc_eConfigLinkType  nLinkType;
    /* The client ID (thread ID or message queue ID) */
-   unsigned int              nClientId;
+   uintptr_t              nClientId;
 } phLibNfc_sConfig_t, *pphLibNfc_sConfig_t;
 
 /*

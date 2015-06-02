@@ -36,13 +36,13 @@
  *
  ******************************************************************************/
 
-#include <phNxpConfig.h>
-#include <stdio.h>
 #include <string>
 #include <vector>
 #include <list>
+#include <stdio.h>
 #include <sys/stat.h>
 
+#include <phNxpConfig.h>
 #include <phNxpLog.h>
 
 #if GENERIC_TARGET
