@@ -346,6 +346,10 @@ void rw_t2t_conn_cback (UINT8 conn_id, tNFC_CONN_EVT event, tNFC_CONN *p_data)
         {
             rw_t2t_process_error ();
         }
+        /* Free the response buffer in case of invalid response*/
+        if (p_data != NULL) {
+            GKI_freebuf((BT_HDR *) (p_data->data.p_data));
+        }
         break;
 
     default:

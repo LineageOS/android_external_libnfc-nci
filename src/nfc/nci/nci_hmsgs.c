@@ -340,6 +340,10 @@ UINT8 nci_snd_discover_cmd (UINT8 num, tNCI_DISCOVER_PARAMS *p_param)
     int xx;
     int size;
 
+    if(NULL == p_param)
+    {
+        return NCI_STATUS_FAILED;
+    }
     size   = num * sizeof (tNCI_DISCOVER_PARAMS) + 1;
     if ((p = NCI_GET_CMD_BUF (size)) == NULL)
         return (NCI_STATUS_FAILED);
