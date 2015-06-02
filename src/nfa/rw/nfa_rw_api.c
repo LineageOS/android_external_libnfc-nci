@@ -646,7 +646,7 @@ tNFA_STATUS NFA_RwT2tRead (UINT8 block_number)
 **      NFA_STATUS_FAILED otherwise
 **
 *******************************************************************************/
-tNFA_STATUS NFA_RwT2tWrite (UINT8 block_number,	UINT8 *p_data)
+tNFA_STATUS NFA_RwT2tWrite (UINT8 block_number, UINT8 *p_data)
 {
     tNFA_RW_OPERATION *p_msg;
 
@@ -768,7 +768,7 @@ tNFA_STATUS NFA_RwT3tRead (UINT8 num_blocks, tNFA_T3T_BLOCK_DESC *t3t_blocks)
 **      NFA_STATUS_FAILED otherwise
 **
 *******************************************************************************/
-tNFA_STATUS NFA_RwT3tWrite (UINT8 num_blocks, tNFA_T3T_BLOCK_DESC *t3t_blocks,	UINT8 *p_data)
+tNFA_STATUS NFA_RwT3tWrite (UINT8 num_blocks, tNFA_T3T_BLOCK_DESC *t3t_blocks,  UINT8 *p_data)
 {
     tNFA_RW_OPERATION *p_msg;
     UINT8 *p_block_desc, *p_data_area;

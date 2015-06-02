@@ -207,7 +207,7 @@ tRW_EVENT rw_t2t_info_to_event (const tT2T_CMD_RSP_INFO *p_info)
         break;
 
     default:
-	    rw_event = t2t_info_to_evt (p_info);
+        rw_event = t2t_info_to_evt (p_info);
         break;
     }
     return rw_event;
