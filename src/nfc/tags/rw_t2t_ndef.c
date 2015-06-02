@@ -88,6 +88,13 @@ void rw_t2t_handle_rsp (UINT8 *p_data)
     {
         p_t2t->b_read_hdr = TRUE;
         memcpy (p_t2t->tag_hdr,  p_data, T2T_READ_DATA_LEN);
+        /* On Ultralight - C tag, if CC is corrupt, correct it */
+        if (  (p_t2t->tag_hdr[0] == TAG_MIFARE_MID)
+            &&(p_t2t->tag_hdr[T2T_CC2_TMS_BYTE] >= T2T_INVALID_CC_TMS_VAL0)
+            &&(p_t2t->tag_hdr[T2T_CC2_TMS_BYTE] <= T2T_INVALID_CC_TMS_VAL1)  )
+        {
+            p_t2t->tag_hdr[T2T_CC2_TMS_BYTE] = T2T_CC2_TMS_MULC;
+        }
     }
 
     switch (p_t2t->state)
@@ -838,6 +845,8 @@ tNFC_STATUS rw_t2t_read_locks (void)
     UINT16      block;
 
     if (  (p_t2t->tag_hdr[T2T_CC3_RWA_BYTE] != T2T_CC3_RWA_RW)
+        ||((p_t2t->tag_hdr[0] == TAG_MIFARE_MID) && (p_t2t->tag_hdr[T2T_CC2_TMS_BYTE] == T2T_CC2_TMS_MULC))
+        ||((p_t2t->tag_hdr[0] == TAG_MIFARE_MID) && (p_t2t->tag_hdr[T2T_CC2_TMS_BYTE] == T2T_CC2_TMS_MUL))
         ||(p_t2t->skip_dyn_locks)  )
     {
         /* Skip reading dynamic lock bytes if CC is set as Read only or layer above instructs to skip */
@@ -849,7 +858,7 @@ tNFC_STATUS rw_t2t_read_locks (void)
         }
     }
 
-    while (num_locks < p_t2t->num_lockbytes)
+    while ((num_locks < p_t2t->num_lockbytes) && (num_locks < RW_T2T_MAX_LOCK_BYTES))
     {
         if (p_t2t->lockbyte[num_locks].b_lock_read == FALSE)
         {
@@ -2348,7 +2357,7 @@ static void rw_t2t_update_lock_attributes (void)
                 bytes_covered = 0;
                 while (bytes_covered < bytes_locked_per_lock_bit)
                 {
-                    if (p_t2t->lockbyte[num_dyn_lock_bytes].lock_byte & rw_t2t_mask_bits[xx])
+                    if ((p_t2t->lockbyte[num_dyn_lock_bytes].lock_byte & rw_t2t_mask_bits[xx]) && (block_count < RW_T2T_SEGMENT_SIZE))
                     {
                         /* If the bit is set then it is locked */
                         p_t2t->lock_attr[block_count] |= 0x01 << bits_covered;
