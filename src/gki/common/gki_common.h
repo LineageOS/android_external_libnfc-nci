@@ -22,7 +22,7 @@
 #include "dyn_mem.h"
 
 #ifndef GKI_DEBUG
-#define GKI_DEBUG	FALSE
+#define GKI_DEBUG   FALSE
 #endif
 
 /* Task States: (For OSRdyTbl) */
@@ -359,8 +359,8 @@ extern void      gki_timers_init(void);
 extern void      gki_adjust_timer_count (INT32);
 
 extern void    OSStartRdy(void);
-extern void	   OSCtxSw(void);
-extern void	   OSIntCtxSw(void);
+extern void    OSCtxSw(void);
+extern void    OSIntCtxSw(void);
 extern void    OSSched(void);
 extern void    OSIntEnter(void);
 extern void    OSIntExit(void);

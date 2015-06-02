@@ -62,8 +62,8 @@
 #define NFA_SNEP_PUT_RESP_EVT               0x07    /* PUT response from server             */
 #define NFA_SNEP_DISC_EVT                   0x08    /* Failed to connect or disconnected    */
 
-#define NFA_SNEP_ALLOC_BUFF_EVT	            0x09    /* Request to allocate a buffer for NDEF*/
-#define NFA_SNEP_FREE_BUFF_EVT	            0x0A    /* Request to deallocate buffer for NDEF*/
+#define NFA_SNEP_ALLOC_BUFF_EVT             0x09    /* Request to allocate a buffer for NDEF*/
+#define NFA_SNEP_FREE_BUFF_EVT              0x0A    /* Request to deallocate buffer for NDEF*/
 #define NFA_SNEP_GET_RESP_CMPL_EVT          0x0B    /* GET response sent to client          */
 
 #define NFA_SNEP_DEFAULT_SERVER_STARTED_EVT 0x0C    /* SNEP default server is started       */

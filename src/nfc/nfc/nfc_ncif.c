@@ -212,9 +212,9 @@ UINT8 nfc_ncif_send_data (tNFC_CONN_CB *p_cb, BT_HDR *p_data)
             p->offset = NCI_MSG_OFFSET_SIZE + NCI_DATA_HDR_SIZE + 1;
             if (p->len)
             {
-            pp        = (UINT8 *)(p + 1) + p->offset;
-            ps        = (UINT8 *)(p_data + 1) + p_data->offset;
-            memcpy (pp, ps, ulen);
+                pp        = (UINT8 *)(p + 1) + p->offset;
+                ps        = (UINT8 *)(p_data + 1) + p_data->offset;
+                memcpy (pp, ps, ulen);
             }
             /* adjust the BT_HDR on the old fragment */
             p_data->len     -= ulen;
