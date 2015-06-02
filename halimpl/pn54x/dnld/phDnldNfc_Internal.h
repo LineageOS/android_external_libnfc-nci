@@ -26,6 +26,11 @@
 
 #define PHDNLDNFC_CMDRESP_MAX_BUFF_SIZE   (0x100U)  /* DL Host Frame Buffer Size for all CMD/RSP
                                                          except pipelined WRITE */
+#if ( PHDNLDNFC_CMDRESP_MAX_BUFF_SIZE > PHNFC_I2C_FRAGMENT_SIZE )
+#undef PHDNLDNFC_CMDRESP_MAX_BUFF_SIZE
+#define PHDNLDNFC_CMDRESP_MAX_BUFF_SIZE   (PHNFC_I2C_FRAGMENT_SIZE)
+#endif
+
 #define PHDNLDNFC_WRITERSP_BUFF_SIZE  (0x08U)   /* DL Host Short Frame Buffer Size for pipelined WRITE RSP */
 
 #define PHDNLDNFC_FRAME_HDR_LEN  (0x02U)   /* DL Host Frame Buffer Header Length */
@@ -66,10 +71,10 @@ typedef enum phDnldNfc_Event{
  */
 typedef enum phDnldNfc_State{
     phDnldNfc_StateInit=0x00,        /* Handler init state */
-    phDnldNfc_StateSend,             /* Send frame to PN547 state */
+    phDnldNfc_StateSend,             /* Send frame to NFCC state */
     phDnldNfc_StateRecv,             /* Recv Send complete State */
     phDnldNfc_StateTimer,            /* State to stop prev set timer on Recv or handle timed out scenario */
-    phDnldNfc_StateResponse,         /* Process response from PN547 state */
+    phDnldNfc_StateResponse,         /* Process response from NFCC state */
     phDnldNfc_StatePipelined,        /* Write requests to be pipelined state */
     phDnldNfc_StateInvalid           /* Invalid Handler state */
 }phDnldNfc_State_t;

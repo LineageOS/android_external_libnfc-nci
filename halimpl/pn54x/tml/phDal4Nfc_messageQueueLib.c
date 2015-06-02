@@ -53,26 +53,27 @@ typedef struct phDal4Nfc_message_queue
 **                  -1, if failed to allocate memory or to init mutex
 **
 *******************************************************************************/
-int phDal4Nfc_msgget(key_t key, int msgflg)
+intptr_t phDal4Nfc_msgget(key_t key, int msgflg)
 {
     phDal4Nfc_message_queue_t * pQueue;
-
+    UNUSED(key);
+    UNUSED(msgflg);
     pQueue = (phDal4Nfc_message_queue_t *) malloc(sizeof(phDal4Nfc_message_queue_t));
     if (pQueue == NULL)
         return -1;
     memset(pQueue, 0, sizeof(phDal4Nfc_message_queue_t));
     if (pthread_mutex_init(&pQueue->nCriticalSectionMutex, NULL) == -1)
     {
-        free(pQueue);
+        free (pQueue);
         return -1;
     }
     if (sem_init(&pQueue->nProcessSemaphore, 0, 0) == -1)
     {
-        free(pQueue);
+        free (pQueue);
         return -1;
     }
 
-    return ((int) pQueue);
+    return ((intptr_t) pQueue);
 }
 
 /*******************************************************************************
@@ -86,7 +87,7 @@ int phDal4Nfc_msgget(key_t key, int msgflg)
 ** Returns          None
 **
 *******************************************************************************/
-void phDal4Nfc_msgrelease(int msqid)
+void phDal4Nfc_msgrelease(intptr_t msqid)
 {
     phDal4Nfc_message_queue_t * pQueue = (phDal4Nfc_message_queue_t*)msqid;
 
@@ -119,11 +120,12 @@ void phDal4Nfc_msgrelease(int msqid)
 **                  -1, if invalid handle is passed
 **
 *******************************************************************************/
-int phDal4Nfc_msgctl(int msqid, int cmd, void *buf)
+int phDal4Nfc_msgctl(intptr_t msqid, int cmd, void *buf)
 {
     phDal4Nfc_message_queue_t * pQueue;
     phDal4Nfc_message_queue_item_t * p;
-
+    UNUSED(cmd);
+    UNUSED(buf);
     if (msqid == 0)
         return -1;
 
@@ -168,12 +170,12 @@ int phDal4Nfc_msgctl(int msqid, int cmd, void *buf)
 **                  -1, if invalid parameter passed or failed to allocate memory
 **
 *******************************************************************************/
-int phDal4Nfc_msgsnd(int msqid, phLibNfc_Message_t * msg, int msgflg)
+intptr_t phDal4Nfc_msgsnd(intptr_t msqid, phLibNfc_Message_t * msg, int msgflg)
 {
     phDal4Nfc_message_queue_t * pQueue;
     phDal4Nfc_message_queue_item_t * p;
     phDal4Nfc_message_queue_item_t * pNew;
-
+    UNUSED(msgflg);
     if ((msqid == 0) || (msg == NULL) )
         return -1;
 
@@ -225,11 +227,12 @@ int phDal4Nfc_msgsnd(int msqid, phLibNfc_Message_t * msg, int msgflg)
 **                  -1, if invalid parameter passed
 **
 *******************************************************************************/
-int phDal4Nfc_msgrcv(int msqid, phLibNfc_Message_t * msg, long msgtyp, int msgflg)
+int phDal4Nfc_msgrcv(intptr_t msqid, phLibNfc_Message_t * msg, long msgtyp, int msgflg)
 {
     phDal4Nfc_message_queue_t * pQueue;
     phDal4Nfc_message_queue_item_t * p;
-
+    UNUSED(msgflg);
+    UNUSED(msgtyp);
     if ((msqid == 0) || (msg == NULL))
         return -1;
 
