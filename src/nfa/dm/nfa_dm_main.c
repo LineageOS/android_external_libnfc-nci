@@ -225,7 +225,7 @@ BOOLEAN nfa_dm_is_active (void)
 *******************************************************************************/
 tNFA_STATUS nfa_dm_check_set_config (UINT8 tlv_list_len, UINT8 *p_tlv_list, BOOLEAN app_init)
 {
-    UINT8 type, len, *p_value, *p_stored, max_len;
+    UINT8 type, len, *p_value, *p_stored = NULL, max_len = 0;
     UINT8 xx = 0, updated_len = 0, *p_cur_len;
     BOOLEAN update;
     tNFC_STATUS nfc_status;
