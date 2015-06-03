@@ -68,7 +68,11 @@ typedef UINT8 tNFA_HCI_EVT;
 #define NFA_MAX_HCI_APP_NAME_LEN                0x10    /* Max application name length */
 #define NFA_MAX_HCI_CMD_LEN                     255     /* Max HCI command length */
 #define NFA_MAX_HCI_RSP_LEN                     255     /* Max HCI event length */
-#define NFA_MAX_HCI_EVENT_LEN                   260     /* Max HCI event length */
+/*
+ * increased the the buffer size, since as per HCI specification connectivity event may
+ * take up 271 bytes. (MAX AID length:16, MAX PARAMETERS length:255)
+ * */
+#define NFA_MAX_HCI_EVENT_LEN                   300     /* Max HCI event length */
 #define NFA_MAX_HCI_DATA_LEN                    260     /* Max HCI data length */
 
 /* NFA HCI PIPE states */
