@@ -1005,6 +1005,12 @@ void nfc_ncif_proc_deactivate (UINT8 status, UINT8 deact_type, BOOLEAN is_ntf)
 
     if (p_cb->p_cback)
         (*p_cb->p_cback) (NFC_RF_CONN_ID, NFC_DEACTIVATE_CEVT, (tNFC_CONN *) p_deact);
+    if((nfc_cb.flags & (NFC_FL_DISCOVER_PENDING | NFC_FL_CONTROL_REQUESTED))
+       && (deact_type == NFC_DEACTIVATE_TYPE_DISCOVERY) && (is_ntf == TRUE))
+    {
+        NFC_TRACE_DEBUG0 ("Abnormal State, Deactivate NTF is ignored, MW is already going to Discovery state");
+        return;
+    }
 
     if (nfc_cb.p_discv_cback)
     {
