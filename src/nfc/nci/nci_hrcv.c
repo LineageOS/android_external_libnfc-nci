@@ -169,6 +169,7 @@ void nci_proc_rf_management_rsp (BT_HDR *p_msg)
     switch (op_code)
     {
     case NCI_MSG_RF_DISCOVER:
+        nfa_dm_p2p_prio_logic(op_code, pp, 1);
         nfc_ncif_rf_management_status (NFC_START_DEVT, *pp);
         break;
 
@@ -184,6 +185,11 @@ void nci_proc_rf_management_rsp (BT_HDR *p_msg)
         break;
 
     case NCI_MSG_RF_DEACTIVATE:
+        if (FALSE == nfa_dm_p2p_prio_logic(op_code, pp, 1))
+        {
+            NFC_TRACE_ERROR0("Dont process the Response");
+            return;
+        }
         nfc_ncif_proc_deactivate (*pp, *p_old, FALSE);
         break;
 
@@ -238,10 +244,20 @@ void nci_proc_rf_management_ntf (BT_HDR *p_msg)
         break;
 
     case NCI_MSG_RF_DEACTIVATE:
+        if (FALSE == nfa_dm_p2p_prio_logic(op_code, pp, 2))
+        {
+            NFC_TRACE_ERROR0("Dont process the Event");
+            return;
+        }
         nfc_ncif_proc_deactivate (NFC_STATUS_OK, *pp, TRUE);
         break;
 
     case NCI_MSG_RF_INTF_ACTIVATED:
+        if (FALSE == nfa_dm_p2p_prio_logic(op_code, pp, 2))
+        {
+            NFC_TRACE_ERROR0("Dont process the Event");
+            return;
+        }
         nfc_ncif_proc_activate (pp, len);
         break;
 
