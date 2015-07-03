@@ -1,22 +1,4 @@
 /*
- * Copyright (C) 2010 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/*
- *
- *  The original Work has been changed by NXP Semiconductors.
  *
  *  Copyright (C) 2013-2014 NXP Semiconductors
  *
@@ -32,7 +14,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  *
- */
+ ******************************************************************************/
 
 #ifndef _PHNXPNCIHAL_UTILS_H_
 #define _PHNXPNCIHAL_UTILS_H_
@@ -112,9 +94,10 @@ void phNxpNciHal_print_packet(const char *pString, const uint8_t *p_data,
 void phNxpNciHal_emergency_recovery(void);
 
 /* Lock unlock helper macros */
-#define REENTRANCE_LOCK()        pthread_mutex_lock(&phNxpNciHal_get_monitor()->reentrance_mutex)
-#define REENTRANCE_UNLOCK()      pthread_mutex_unlock(&phNxpNciHal_get_monitor()->reentrance_mutex)
-#define CONCURRENCY_LOCK()       pthread_mutex_lock(&phNxpNciHal_get_monitor()->concurrency_mutex)
-#define CONCURRENCY_UNLOCK()     pthread_mutex_unlock(&phNxpNciHal_get_monitor()->concurrency_mutex)
+/* Lock unlock helper macros */
+#define REENTRANCE_LOCK()      if (phNxpNciHal_get_monitor()) pthread_mutex_lock(&phNxpNciHal_get_monitor()->reentrance_mutex)
+#define REENTRANCE_UNLOCK()    if (phNxpNciHal_get_monitor()) pthread_mutex_unlock(&phNxpNciHal_get_monitor()->reentrance_mutex)
+#define CONCURRENCY_LOCK()     if (phNxpNciHal_get_monitor()) pthread_mutex_lock(&phNxpNciHal_get_monitor()->concurrency_mutex)
+#define CONCURRENCY_UNLOCK()   if (phNxpNciHal_get_monitor()) pthread_mutex_unlock(&phNxpNciHal_get_monitor()->concurrency_mutex)
 
 #endif /* _PHNXPNCIHAL_UTILS_H_ */

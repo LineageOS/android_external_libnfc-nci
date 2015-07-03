@@ -16,25 +16,6 @@
  *
  ******************************************************************************/
 
-/******************************************************************************
- *
- *  The original Work has been changed by NXP Semiconductors.
- *
- *  Copyright (C) 2013-2014 NXP Semiconductors
- *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- *
- ******************************************************************************/
 
 /******************************************************************************
  *
@@ -313,6 +294,12 @@ void rw_t1t_conn_cback (UINT8 conn_id, tNFC_CONN_EVT event, tNFC_CONN *p_data)
         else
         {
             rw_t1t_process_error ();
+        }
+        if((p_data != NULL) && (p_data->data.p_data != NULL))
+        {
+            /* Free the response buffer in case of invalid response*/
+            GKI_freebuf((BT_HDR *) (p_data->data.p_data));
+            p_data->data.p_data = NULL;
         }
         break;
 

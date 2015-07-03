@@ -104,7 +104,7 @@ enum
 };
 typedef UINT8 tNFA_EE_CONN_ST;
 
-#define NFA_EE_MAX_AID_CFG_LEN  (510)
+#define NFA_EE_MAX_AID_CFG_LEN  (580)
 #define NFA_EE_7816_STATUS_LEN  (2)
 
 /* NFA EE control block flags:

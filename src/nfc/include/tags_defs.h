@@ -15,25 +15,6 @@
  *  limitations under the License.
  *
  ******************************************************************************/
-/******************************************************************************
- *
- *  The original Work has been changed by NXP Semiconductors.
- *
- *  Copyright (C) 2013-2014 NXP Semiconductors
- *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- *
- ******************************************************************************/
 
 
 /******************************************************************************
@@ -176,7 +157,7 @@
 #define T2T_CC_LEN              4     /* the len of CC used in T2T tag                  */
 
 /* Capability Container definitions */
-#define T2T_CC_BLOCK            0x03  /* Capability container block */
+#define T2T_CC_BLOCK		    0x03  /* Capability container block */
 #define T2T_CC0_NMN_BYTE        0x0C  /* NDEF Magic Number byte number */
 #define T2T_CC1_VNO_BYTE        0x0D  /* Version Number byte number*/
 #define T2T_CC2_TMS_BYTE        0x0E  /* Tag Memory Size byte number */
@@ -198,8 +179,8 @@
 #define T2T_CMD_READ            0x30    /* read  4 blocks (16 bytes) */
 #define T2T_CMD_WRITE           0xA2    /* write 1 block  (4 bytes)  */
 #define T2T_CMD_SEC_SEL         0xC2    /* Sector select             */
-#define T2T_RSP_ACK             0xA
-#define T2T_RSP_NACK5           0x5
+#define T2T_RSP_ACK			    0xA
+#define T2T_RSP_NACK5		    0x5
 #define T2T_RSP_NACK1           0x1     /* Nack can be either 1    */
 
 #define T2T_FIRST_DATA_BLOCK    4
@@ -221,7 +202,7 @@
 #define T2T_TLEN_LOCK_CTRL_TLV    3      /* Tag len for LOCK_CTRL TLV per spec */
 #define T2T_TLEN_MEM_CTRL_TLV     3      /* Tag len for MEM_CTRL TLV per spec */
 
-#define T2T_MAX_SECTOR            2      /* Maximum number of sectors supported */
+#define T2T_MAX_SECTOR            3      /* Maximum number of sectors supported */
 
 #define T2T_TLV_TYPE_LEN                1     /* Tlv type identifier len                */
 

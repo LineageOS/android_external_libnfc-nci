@@ -128,7 +128,10 @@ static NFCSTATUS phNxpNciHal_stop_polling_loop()
     pthread_t pthread;
     discover_type = STOP_POLLING;
 
-    if(pthread_create(&pthread, NULL, tmp_thread, (void*) &discover_type) != 0)
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+    if(pthread_create(&pthread, &attr, tmp_thread, (void*) &discover_type) != 0)
     {
         NXPLOG_NCIHAL_E("phNxpNciHal_resume_polling_loop");
     }
@@ -151,7 +154,10 @@ static NFCSTATUS phNxpNciHal_resume_polling_loop()
     pthread_t pthread;
     discover_type = RESUME_POLLING;
 
-    if(pthread_create(&pthread, NULL, tmp_thread, (void*) &discover_type) != 0)
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+    if(pthread_create(&pthread, &attr, tmp_thread, (void*) &discover_type) != 0)
     {
         NXPLOG_NCIHAL_E("phNxpNciHal_resume_polling_loop");
     }
@@ -174,7 +180,10 @@ NFCSTATUS phNxpNciHal_start_polling_loop()
     pthread_t pthread;
     discover_type = START_POLLING;
 
-    if(pthread_create(&pthread, NULL, tmp_thread, (void*) &discover_type) != 0)
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+    if(pthread_create(&pthread, &attr, tmp_thread, (void*) &discover_type) != 0)
     {
         NXPLOG_NCIHAL_E("phNxpNciHal_resume_polling_loop");
     }
@@ -568,7 +577,10 @@ NFCSTATUS phNxpNciHal_select_RF_Discovery(unsigned int RfID,unsigned int RfProto
     cmd_select_rf_discovery[3]=RfID;
     cmd_select_rf_discovery[4]=RfProtocolType;
 
-    if(pthread_create(&pthread, NULL, tmp_thread, (void*) &discover_type) != 0)
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+    if(pthread_create(&pthread, &attr, tmp_thread, (void*) &discover_type) != 0)
     {
         NXPLOG_NCIHAL_E("phNxpNciHal_resume_polling_loop");
     }
@@ -604,4 +616,3 @@ void phNxpNciHal_NfcDep_cmd_ext(uint8_t *p_cmd_data, uint16_t *cmd_len)
 
     return;
 }
-

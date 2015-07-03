@@ -15,25 +15,6 @@
  *  limitations under the License.
  *
  ******************************************************************************/
-/******************************************************************************
- *
- *  The original Work has been changed by NXP Semiconductors.
- *
- *  Copyright (C) 2013-2014 NXP Semiconductors
- *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- *
- ******************************************************************************/
 
 
 /******************************************************************************
@@ -210,6 +191,11 @@ typedef struct
 #define T2T_BRCM_STATIC_MEM                             0x2E01
 #define T2T_BRCM_DYNAMIC_MEM                            0x2E02
 
+/* CC2 value on MiFare ULC tag */
+#define T2T_MIFARE_ULC_TMS                              0x12
+/* Possible corrupt cc2 value range on MiFare ULC tags */
+#define T2T_INVALID_CC_TMS_VAL0                         0x10
+#define T2T_INVALID_CC_TMS_VAL1                         0x1F
 #define T2T_NDEF_NOT_DETECTED                           0x00
 #define T2T_NDEF_DETECTED                               0x01
 #define T2T_NDEF_READ                                   0x02
@@ -484,8 +470,8 @@ typedef struct
 
     UINT16              max_read_size;      /* max reading size per a command   */
     UINT16              max_update_size;    /* max updating size per a command  */
-    UINT16              card_size;          /* card memory size */
-    UINT8               card_type;          /* card type value on type 4 tag */
+    UINT16              card_size;
+    UINT8               card_type;
 } tRW_T4T_CB;
 
 /* RW retransmission statistics */

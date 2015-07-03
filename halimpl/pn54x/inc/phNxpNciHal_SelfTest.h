@@ -22,6 +22,19 @@
 #include <phNxpNciHal.h>
 #include <phTmlNfc.h>
 
+/* PRBS Generation type  */
+typedef enum
+{
+    NFC_FW_PRBS, /* FW software would generate the PRBS */
+    NFC_HW_PRBS /* Hardware would generate the PRBS */
+} phNxpNfc_PrbsType_t;
+
+/* Different HW PRBS types */
+typedef enum
+{
+    NFC_HW_PRBS9,
+    NFC_HW_PRBS15
+} phNxpNfc_PrbsHwType_t;
 /* RF Technology */
 typedef enum
 {
@@ -111,9 +124,12 @@ NFCSTATUS phNxpNciHal_SwpTest (uint8_t swp_line);
  **                  otherwise NFCSTATUS_FAILED.
  **
  *******************************************************************************/
-
+#if(NFC_NXP_CHIP_TYPE != PN547C2)
+NFCSTATUS phNxpNciHal_PrbsTestStart (phNxpNfc_PrbsType_t prbs_type, phNxpNfc_PrbsHwType_t hw_prbs_type,
+        phNxpNfc_Tech_t tech, phNxpNfc_Bitrate_t bitrate);
+#else
 NFCSTATUS phNxpNciHal_PrbsTestStart (phNxpNfc_Tech_t tech, phNxpNfc_Bitrate_t bitrate);
-
+#endif
 /*******************************************************************************
  **
  ** Function         phNxpNciHal_PrbsTestStop
@@ -139,7 +155,7 @@ NFCSTATUS phNxpNciHal_PrbsTestStop ();
 **
 *******************************************************************************/
 
-NFCSTATUS phNxpNciHal_AntennaTest (void);
+NFCSTATUS phNxpNciHal_AntennaSelfTest(phAntenna_St_Resp_t * phAntenna_St_Resp );
 
 /*******************************************************************************
 **

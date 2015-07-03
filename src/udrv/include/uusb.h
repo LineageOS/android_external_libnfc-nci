@@ -76,10 +76,10 @@ typedef struct tUUSB_SETUP_PKTTag
 #define UUSB_HOST_TO_DEVICE      0x00    /* Data transfer directions */
 #define UUSB_DEVICE_TO_HOST      0x80    /* Data transfer directions */
 /* Types of requests */
-#define UUSB_REQUEST_TYPE		0x60	/* Mask to get request type */
-#define UUSB_STANDARD_REQUEST	0x00	/* Standard request */
-#define	UUSB_CLASS_REQUEST		0x20	/* Class request */
-#define	UUSB_VENDOR_REQUEST		0x40	/* Vendor request */
+#define UUSB_REQUEST_TYPE       0x60    /* Mask to get request type */
+#define UUSB_STANDARD_REQUEST   0x00    /* Standard request */
+#define UUSB_CLASS_REQUEST      0x20    /* Class request */
+#define UUSB_VENDOR_REQUEST     0x40    /* Vendor request */
   UINT8 bmRequestType;
   UINT8 bRequest;
   UINT16 wValue;
@@ -90,7 +90,7 @@ typedef struct tUUSB_SETUP_PKTTag
 typedef union
 {
 #define UUSB_HEAD_SIZE (8)
-	UINT8           HeadBytes[UUSB_HEAD_SIZE];
+    UINT8           HeadBytes[UUSB_HEAD_SIZE];
     tUUSB_SETUP_PKT Setup;
 } tSETUP_OR_HEAD;
 
@@ -133,20 +133,20 @@ typedef enum
 
 typedef enum _tUUSB_STANDART_REQ
 {
-	UUSB_GET_STATUS = 0,
-	UUSB_CLEAR_FEATURE,
-	UUSB_RESERVED1,
-	UUSB_SET_FEATURE,
-	UUSB_RESERVED2,
-	UUSB_SET_ADDRESS,
-	UUSB_GET_DESCRIPTOR,
-	UUSB_SET_DESCRIPTOR,
-	UUSB_GET_CONFIGURATION,
-	UUSB_SET_CONFIGURATION,
-	UUSB_GET_INTERFACE,
-	UUSB_SET_INTERFACE,
-	UUSB_TOTAL_sREQUEST,				/* Total number of Standard request */
-	UUSB_SYNCH_FRAME = 12
+    UUSB_GET_STATUS = 0,
+    UUSB_CLEAR_FEATURE,
+    UUSB_RESERVED1,
+    UUSB_SET_FEATURE,
+    UUSB_RESERVED2,
+    UUSB_SET_ADDRESS,
+    UUSB_GET_DESCRIPTOR,
+    UUSB_SET_DESCRIPTOR,
+    UUSB_GET_CONFIGURATION,
+    UUSB_SET_CONFIGURATION,
+    UUSB_GET_INTERFACE,
+    UUSB_SET_INTERFACE,
+    UUSB_TOTAL_sREQUEST,                /* Total number of Standard request */
+    UUSB_SYNCH_FRAME = 12
 } tUUSB_STANDART_REQ;
 
 

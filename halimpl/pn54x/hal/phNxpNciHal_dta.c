@@ -150,7 +150,7 @@ NFCSTATUS phNxpNHal_DtaUpdate(uint16_t *cmd_len, uint8_t *p_cmd_data,
             p_rsp_data[3] = 0x00;
             p_rsp_data[4] = 0x00;
             status = NFCSTATUS_FAILED;
-            phNxpNciHal_print_packet("DTARECV", p_rsp_data, 4);
+            phNxpNciHal_print_packet("DTARECV", p_rsp_data, 5);
         }
        else if(p_cmd_data[0] == 0x21 &&
             p_cmd_data[1] == 0x03 )
@@ -181,7 +181,7 @@ NFCSTATUS phNxpNHal_DtaUpdate(uint16_t *cmd_len, uint8_t *p_cmd_data,
             p_rsp_data[3] = 0x00;
             p_rsp_data[4] = 0x00;
             status = NFCSTATUS_FAILED;
-            phNxpNciHal_print_packet("DTARECV", p_rsp_data, 4);
+            phNxpNciHal_print_packet("DTARECV", p_rsp_data, 5);
         }
         else if (p_cmd_data[0] == 0x20 && p_cmd_data[1] == 0x02 &&
                  p_cmd_data[2] == 0x0D && p_cmd_data[3] == 0x04 &&
@@ -196,7 +196,7 @@ NFCSTATUS phNxpNHal_DtaUpdate(uint16_t *cmd_len, uint8_t *p_cmd_data,
             p_rsp_data[3] = 0x00;
             p_rsp_data[4] = 0x00;
             status = NFCSTATUS_FAILED;
-            phNxpNciHal_print_packet("DTARECV", p_rsp_data, 4);
+            phNxpNciHal_print_packet("DTARECV", p_rsp_data, 5);
         }
         else if (p_cmd_data[0] == 0x20 && p_cmd_data[1] == 0x02 &&
                  p_cmd_data[2] == 0x04 && p_cmd_data[3] == 0x01 &&
@@ -211,7 +211,7 @@ NFCSTATUS phNxpNHal_DtaUpdate(uint16_t *cmd_len, uint8_t *p_cmd_data,
             p_rsp_data[3] = 0x00;
             p_rsp_data[4] = 0x00;
             status = NFCSTATUS_FAILED;
-            phNxpNciHal_print_packet("DTARECV", p_rsp_data, 4);
+            phNxpNciHal_print_packet("DTARECV", p_rsp_data, 5);
         }
         else
         {
@@ -219,6 +219,7 @@ NFCSTATUS phNxpNHal_DtaUpdate(uint16_t *cmd_len, uint8_t *p_cmd_data,
         }
         if (nxpdta_ctrl.dta_t1t_flag == TRUE)
         {
+
            if (p_cmd_data[2] == 0x07 && p_cmd_data[3] == 0x78 && p_cmd_data[4] ==0x00 &&  p_cmd_data[5] == 0x00)
            {
              /*if (nxpdta_ctrl.dta_pattern_no == 0)

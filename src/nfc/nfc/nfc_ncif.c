@@ -16,25 +16,7 @@
  *
  ******************************************************************************/
 
-/******************************************************************************
- *
- *  The original Work has been changed by NXP Semiconductors.
- *
- *  Copyright (C) 2013-2014 NXP Semiconductors
- *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- *
- ******************************************************************************/
+
 /******************************************************************************
  *
  *  This file contains functions that interface with the NFC NCI transport.
@@ -42,6 +24,7 @@
  *  (callback). On the transmit side, it manages the command transmission.
  *
  ******************************************************************************/
+#include <stdlib.h>
 #include <string.h>
 #include "nfc_target.h"
 
@@ -229,9 +212,9 @@ UINT8 nfc_ncif_send_data (tNFC_CONN_CB *p_cb, BT_HDR *p_data)
             p->offset = NCI_MSG_OFFSET_SIZE + NCI_DATA_HDR_SIZE + 1;
             if (p->len)
             {
-            pp        = (UINT8 *)(p + 1) + p->offset;
-            ps        = (UINT8 *)(p_data + 1) + p_data->offset;
-            memcpy (pp, ps, ulen);
+                pp        = (UINT8 *)(p + 1) + p->offset;
+                ps        = (UINT8 *)(p_data + 1) + p_data->offset;
+                memcpy (pp, ps, ulen);
             }
             /* adjust the BT_HDR on the old fragment */
             p_data->len     -= ulen;
@@ -303,12 +286,6 @@ void nfc_ncif_check_cmd_queue (BT_HDR *p_buf)
                 /* save the callback for NCI VSCs)  */
                 nfc_cb.p_vsc_cback = (void *)((tNFC_NCI_VS_MSG *)p_buf)->p_cback;
             }
-            else if (p_buf->layer_specific == NFC_WAIT_RSP_NXP)
-            {
-                /* save the callback for NCI NXPs)  */
-                nfc_cb.p_vsc_cback = (void *)((tNFC_NCI_VS_MSG *)p_buf)->p_cback;
-                nfc_cb.nxpCbflag = TRUE;
-            }
 
             /* send to HAL */
             HAL_WRITE(p_buf);
@@ -343,12 +320,7 @@ void nfc_ncif_check_cmd_queue (BT_HDR *p_buf)
                     nfc_cb.flags         &= ~NFC_FL_DISCOVER_PENDING;
                     ps                    = (UINT8 *)nfc_cb.p_disc_pending;
                     nci_snd_discover_cmd (*ps, (tNFC_DISCOVER_PARAMS *)(ps + 1));
-                    if(nfc_cb.p_last_disc)
-                    {
-                        GKI_freebuf (nfc_cb.p_last_disc);
-                        nfc_cb.p_last_disc = NULL;
-                    }
-                    nfc_cb.p_last_disc = nfc_cb.p_disc_pending;
+                    GKI_freebuf (nfc_cb.p_disc_pending);
                     nfc_cb.p_disc_pending = NULL;
                 }
             }
@@ -376,6 +348,11 @@ void nfc_ncif_check_cmd_queue (BT_HDR *p_buf)
 *******************************************************************************/
 void nfc_ncif_send_cmd (BT_HDR *p_buf)
 {
+    if(p_buf == NULL)
+    {
+        NFC_TRACE_DEBUG0 ("p_buf is NULL.");
+        return;
+    }
     /* post the p_buf to NCIT task */
     p_buf->event            = BT_EVT_TO_NFC_NCI;
     p_buf->layer_specific   = 0;
@@ -402,13 +379,6 @@ BOOLEAN nfc_ncif_process_event (BT_HDR *p_msg)
 
     p = (UINT8 *) (p_msg + 1) + p_msg->offset;
 
-
-    if (nfc_cb.nxpCbflag == TRUE)
-    {
-        nci_proc_prop_nxp_rsp(p_msg);
-        nfc_cb.nxpCbflag = FALSE;
-        return (free);
-    }
     pp = p;
     NCI_MSG_PRS_HDR0 (pp, mt, pbf, gid);
 
@@ -1041,7 +1011,7 @@ void nfc_ncif_proc_deactivate (UINT8 status, UINT8 deact_type, BOOLEAN is_ntf)
     if (p_cb->p_cback)
         (*p_cb->p_cback) (NFC_RF_CONN_ID, NFC_DEACTIVATE_CEVT, (tNFC_CONN *) p_deact);
     if((nfc_cb.flags & (NFC_FL_DISCOVER_PENDING | NFC_FL_CONTROL_REQUESTED))
-        && (deact_type == NFC_DEACTIVATE_TYPE_DISCOVERY) && (is_ntf == TRUE))
+       && (deact_type == NFC_DEACTIVATE_TYPE_DISCOVERY) && (is_ntf == TRUE))
     {
         NFC_TRACE_DEBUG0 ("Abnormal State, Deactivate NTF is ignored, MW is already going to Discovery state");
         return;

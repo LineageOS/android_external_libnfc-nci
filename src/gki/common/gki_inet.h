@@ -23,8 +23,8 @@
 #define htons   ntohs
 #define htonl   ntohl
 
-#define htonets	nettohs
-#define htonetl	nettohl
+#define htonets nettohs
+#define htonetl nettohl
 
 #if BIG_ENDIAN == TRUE
 #define ntohs(n) (n)

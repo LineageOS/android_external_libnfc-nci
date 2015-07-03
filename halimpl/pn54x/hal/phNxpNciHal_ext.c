@@ -22,7 +22,7 @@
 #include <phNxpLog.h>
 #include <phNxpConfig.h>
 
-#define HAL_EXTNS_WRITE_RSP_TIMEOUT   (1000)                /* Timeout value to wait for response from PN547 */
+#define HAL_EXTNS_WRITE_RSP_TIMEOUT   (1000)                /* Timeout value to wait for response from PN548AD */
 
 #undef P2P_PRIO_LOGIC_HAL_IMP
 
@@ -55,17 +55,21 @@ static uint32_t iCoreInitRspLen;
 
 extern uint32_t timeoutTimerId;
 
-extern void read_retry();
+extern NFCSTATUS read_retry();
 /************** HAL extension functions ***************************************/
 static void hal_extns_write_rsp_timeout_cb(uint32_t TimerId, void *pContext);
+
 /*Proprietary cmd sent to HAL to send reader mode flag
  * Last byte of 4 byte proprietary cmd data contains ReaderMode flag
  * If this flag is enabled, NFC-DEP protocol is modified to T3T protocol
  * if FrameRF interface is selected. This needs to be done as the FW
  * always sends Ntf for FrameRF with NFC-DEP even though FrameRF with T3T is
- * previously selected with DISCOVER_SELECT_CMD*/
+ * previously selected with DISCOVER_SELECT_CMD
+ */
 #define PROPRIETARY_CMD_FELICA_READER_MODE 0xFE
 static uint8_t gFelicaReaderMode;
+
+
 /*******************************************************************************
 **
 ** Function         phNxpNciHal_ext_init
@@ -97,6 +101,7 @@ NFCSTATUS phNxpNciHal_process_ext_rsp (uint8_t *p_ntf, uint16_t *p_len)
 {
 
     NFCSTATUS status = NFCSTATUS_SUCCESS;
+    uint16_t rf_technology_length_param = 0;
 
     if (p_ntf[0] == 0x61 &&
         p_ntf[1] == 0x05 &&
@@ -117,13 +122,11 @@ NFCSTATUS phNxpNciHal_process_ext_rsp (uint8_t *p_ntf, uint16_t *p_len)
         p_ntf[6] == 0x02 &&
         gFelicaReaderMode)
     {
-        /*If FelicaReaderMode is enabled,Change Protocol to T3T from NFC-DEP
-         * when FrameRF interface is selected*/
+     /*If FelicaReaderMode is enabled,Change Protocol to T3T from NFC-DEP
+          * when FrameRF interface is selected*/
         p_ntf[5] = 0x03;
-        NXPLOG_NCIHAL_D("FelicaReaderMode:Activity 1.1 WA");
+        NXPLOG_NCIHAL_D("FelicaReaderMode:Activity 1.1");
     }
-
-
 
 #ifdef P2P_PRIO_LOGIC_HAL_IMP
     if(p_ntf[0] == 0x61 &&
@@ -198,13 +201,17 @@ NFCSTATUS phNxpNciHal_process_ext_rsp (uint8_t *p_ntf, uint16_t *p_len)
         case 0x05:
             NXPLOG_NCIHAL_D("NxpNci: Protocol = NFC-DEP");
             break;
-            case 0x06:
-            NXPLOG_NCIHAL_D("NxpNci: Protocol = ISO-15693");
+        case 0x06:
+            NXPLOG_NCIHAL_D("NxpNci: Protocol = 15693");
             break;
         case 0x80:
             NXPLOG_NCIHAL_D("NxpNci: Protocol = MIFARE");
             break;
+#if(NFC_NXP_CHIP_TYPE != PN547C2)
+        case 0x81:
+#else
         case 0x8A:
+#endif
             NXPLOG_NCIHAL_D("NxpNci: Protocol = Kovio");
             break;
         default:
@@ -232,7 +239,11 @@ NFCSTATUS phNxpNciHal_process_ext_rsp (uint8_t *p_ntf, uint16_t *p_len)
         case 0x06:
             NXPLOG_NCIHAL_D("NxpNci: Mode = 15693 Passive Poll");
             break;
+#if(NFC_NXP_CHIP_TYPE != PN547C2)
+        case 0x70:
+#else
         case 0x77:
+#endif
             NXPLOG_NCIHAL_D("NxpNci: Mode = Kovio");
             break;
         case 0x80:
@@ -262,15 +273,12 @@ NFCSTATUS phNxpNciHal_process_ext_rsp (uint8_t *p_ntf, uint16_t *p_len)
     if (p_ntf[0] == 0x61 &&
             p_ntf[1] == 0x05 &&
             p_ntf[2] == 0x15 &&
-            p_ntf[3] == 0x01 &&
             p_ntf[4] == 0x01 &&
             p_ntf[5] == 0x06 &&
             p_ntf[6] == 0x06)
     {
         NXPLOG_NCIHAL_D ("> Going through workaround - notification of ISO 15693");
         icode_detected = 0x01;
-        p_ntf[4] = 0x83;
-        p_ntf[5] = 0x83;
         p_ntf[21] = 0x01;
         p_ntf[22] = 0x01;
     }
@@ -294,11 +302,6 @@ NFCSTATUS phNxpNciHal_process_ext_rsp (uint8_t *p_ntf, uint16_t *p_len)
             NXPLOG_NCIHAL_D ("> Going through workaround - data of ISO 15693");
             p_ntf[2]--;
             (*p_len)--;
-        }
-        else
-        {
-            NXPLOG_NCIHAL_D ("> STATUS_RF_FRAME ERROR response - workaround");
-            p_ntf[p_ntf[2]+ 2] |= 0x01;
         }
     }
     else if (p_ntf[2] == 0x02 &&
@@ -331,6 +334,8 @@ NFCSTATUS phNxpNciHal_process_ext_rsp (uint8_t *p_ntf, uint16_t *p_len)
     {
         int len = p_ntf[2] + 2; /*include 2 byte header*/
         wFwVerRsp= (((uint32_t)p_ntf[len - 2])<< 16U)|(((uint32_t)p_ntf[len - 1])<< 8U)|p_ntf[len];
+        if(wFwVerRsp == 0)
+            status = NFCSTATUS_FAILED;
         iCoreInitRspLen = *p_len;
         memcpy(bCoreInitRsp, p_ntf, *p_len);
         NXPLOG_NCIHAL_D ("NxpNci> FW Version: %x.%x.%x", p_ntf[len-2], p_ntf[len-1], p_ntf[len]);
@@ -350,13 +355,7 @@ NFCSTATUS phNxpNciHal_process_ext_rsp (uint8_t *p_ntf, uint16_t *p_len)
     }
     else if(p_ntf[0] == 0x61 && p_ntf[1] == 0x03 /*&& cleanup_timer!=0*/)
     {
-        if (p_ntf[4] == 0x06 && p_ntf[5] == 0x06)
-        {
-           NXPLOG_NCIHAL_D ("> Going through workaround - 6103 notification of ISO 15693");
-            //icode_detected = 0x01;
-            p_ntf[4] = 0x83;
-           // p_ntf[5] = 0x83;
-        }else if(cleanup_timer!=0)
+        if(cleanup_timer!=0)
         {
             /* if RF Notification Type of RF_DISCOVER_NTF is Last Notification */
             if(0== (*(p_ntf + 2 + (*(p_ntf+2)))))
@@ -372,7 +371,9 @@ NFCSTATUS phNxpNciHal_process_ext_rsp (uint8_t *p_ntf, uint16_t *p_len)
             }
             status = NFCSTATUS_FAILED;
             return status;
+
         }
+
     }
     else if(p_ntf[0] == 0x41 && p_ntf[1] == 0x04 && cleanup_timer!=0)
     {
@@ -384,6 +385,19 @@ NFCSTATUS phNxpNciHal_process_ext_rsp (uint8_t *p_ntf, uint16_t *p_len)
         NXPLOG_NCIHAL_E("CORE_RESET_NTF received!");
         phNxpNciHal_emergency_recovery();
     }
+#if(NFC_NXP_CHIP_TYPE == PN547C2)
+    else if(p_ntf[0] == 0x61 && p_ntf[1] == 0x05
+            && p_ntf[4] == 0x02 && p_ntf[5] == 0x80
+            && p_ntf[6] == 0x00 )
+    {
+        NXPLOG_NCIHAL_D("Going through workaround - iso-dep  interface  mifare protocol with sak value not equal to 0x20");
+        rf_technology_length_param = p_ntf[9];
+        if((p_ntf[ 9 + rf_technology_length_param] & 0x20) != 0x20)
+        {
+            p_ntf[4] = 0x80;
+        }
+    }
+#endif
     /*
     else if(p_ntf[0] == 0x61 && p_ntf[1] == 0x05 && p_ntf[4] == 0x01 && p_ntf[5] == 0x00 && p_ntf[6] == 0x01)
     {
@@ -409,7 +423,7 @@ NFCSTATUS phNxpNciHal_process_ext_rsp (uint8_t *p_ntf, uint16_t *p_len)
 static NFCSTATUS phNxpNciHal_process_ext_cmd_rsp(uint16_t cmd_len, uint8_t *p_cmd)
 {
     NFCSTATUS status = NFCSTATUS_FAILED;
-    uint8_t data_written = 0;
+    uint16_t data_written = 0;
 
     /* Create the local semaphore */
     if (phNxpNciHal_init_cb_data(&nxpncihal_ctrl.ext_cb_data, NULL)
@@ -418,6 +432,8 @@ static NFCSTATUS phNxpNciHal_process_ext_cmd_rsp(uint16_t cmd_len, uint8_t *p_cm
         NXPLOG_NCIHAL_D("Create ext_cb_data failed");
         return NFCSTATUS_FAILED;
     }
+
+    nxpncihal_ctrl.ext_cb_data.status = NFCSTATUS_SUCCESS;
 
     /* Send ext command */
     data_written = phNxpNciHal_write_unlocked(cmd_len, p_cmd);
@@ -462,6 +478,14 @@ static NFCSTATUS phNxpNciHal_process_ext_cmd_rsp(uint16_t cmd_len, uint8_t *p_cm
     {
         NXPLOG_NCIHAL_E("Response timer stop ERROR!!!");
         status  = NFCSTATUS_FAILED;
+        goto clean_and_return;
+    }
+
+    if(nxpncihal_ctrl.ext_cb_data.status != NFCSTATUS_SUCCESS)
+    {
+        NXPLOG_NCIHAL_E("Callback Status is failed!! Timer Expired!! Couldn't read it! 0x%x", nxpncihal_ctrl.ext_cb_data.status);
+        status  = NFCSTATUS_FAILED;
+        goto clean_and_return;
     }
 
     NXPLOG_NCIHAL_D("Checking response");
@@ -501,11 +525,17 @@ NFCSTATUS phNxpNciHal_write_ext(uint16_t *cmd_len, uint8_t *p_cmd_data,
     }
 
     if (p_cmd_data[0] == PROPRIETARY_CMD_FELICA_READER_MODE &&
-            p_cmd_data[1] == PROPRIETARY_CMD_FELICA_READER_MODE &&
-            p_cmd_data[2] == PROPRIETARY_CMD_FELICA_READER_MODE)
+        p_cmd_data[1] == PROPRIETARY_CMD_FELICA_READER_MODE &&
+        p_cmd_data[2] == PROPRIETARY_CMD_FELICA_READER_MODE)
     {
         NXPLOG_NCIHAL_D ("Received proprietary command to set Felica Reader mode:%d",p_cmd_data[3]);
         gFelicaReaderMode = p_cmd_data[3];
+        /* frame the dummy response */
+        *rsp_len = 4;
+        p_rsp_data[0] = 0x00;
+        p_rsp_data[1] = 0x00;
+        p_rsp_data[2] = 0x00;
+        p_rsp_data[3] = 0x00;
         status = NFCSTATUS_FAILED;
     }
     else if (p_cmd_data[0] == 0x20 &&
@@ -568,61 +598,45 @@ NFCSTATUS phNxpNciHal_write_ext(uint16_t *cmd_len, uint8_t *p_cmd_data,
             *cmd_len = 8;
         }
     }
+#if(NFC_NXP_CHIP_TYPE == PN547C2)
     if (retval == 0x01 &&
-            p_cmd_data[0] == 0x21 &&
-            p_cmd_data[1] == 0x00)
+        p_cmd_data[0] == 0x21 &&
+        p_cmd_data[1] == 0x00)
     {
         NXPLOG_NCIHAL_D ("Going through extns - Adding Mifare in RF Discovery");
-
         p_cmd_data[2] += 3;
         p_cmd_data[3] += 1;
         p_cmd_data[*cmd_len] = 0x80;
         p_cmd_data[*cmd_len + 1] = 0x01;
         p_cmd_data[*cmd_len + 2] = 0x80;
         *cmd_len += 3;
-
         status = NFCSTATUS_SUCCESS;
         NXPLOG_NCIHAL_D ("Going through extns - Adding Mifare in RF Discovery - END");
     }
-    else if (p_cmd_data[3] == 0x81 &&
+    else
+#endif
+    if (p_cmd_data[3] == 0x81 &&
             p_cmd_data[4] == 0x01 &&
             p_cmd_data[5] == 0x03)
     {
-        *cmd_len = 7;
-
         NXPLOG_NCIHAL_D("> Going through workaround - set host list");
+
+#if(NFC_NXP_CHIP_TYPE != PN547C2)
+        *cmd_len = 8;
+
+        p_cmd_data[2] = 0x05;
+        p_cmd_data[6] = 0x02;
+        p_cmd_data[7] = 0xC0;
+#else
+        *cmd_len = 7;
 
         p_cmd_data[2] = 0x04;
         p_cmd_data[6] = 0xC0;
-
-        NXPLOG_NCIHAL_D("> Going through workaround - set host list - END");
-
-        status = NFCSTATUS_SUCCESS;
-    }
-#ifndef FELICA_CLT_ENABLE
-    else if (p_cmd_data[0] == 0x21 &&
-             p_cmd_data[1] == 0x01)
-    {
-        NXPLOG_NCIHAL_D("> Going through workaround - NFC-DEP Routing");
-
-        p_cmd_data[2] += 5;
-
-        p_cmd_data[4] += 1;
-
-        p_cmd_data[*cmd_len] = 0x01;
-        p_cmd_data[*cmd_len + 1] = 0x03;
-        p_cmd_data[*cmd_len + 2] = 0x00;
-        p_cmd_data[*cmd_len + 3] = 0x01;
-        p_cmd_data[*cmd_len + 4] = 0x05;
-
-        *cmd_len += 5;
-
-        NXPLOG_NCIHAL_D("> Going through workaround - NFC-DEP Routing - END");
-
-        status = NFCSTATUS_SUCCESS;
-    }
 #endif
 
+        NXPLOG_NCIHAL_D("> Going through workaround - set host list - END");
+        status = NFCSTATUS_SUCCESS;
+    }
     else if(icode_detected)
     {
         if ((p_cmd_data[3] & 0x40) == 0x40 &&
@@ -659,16 +673,15 @@ NFCSTATUS phNxpNciHal_write_ext(uint16_t *cmd_len, uint8_t *p_cmd_data,
             p_cmd_data[3] == 0x00
             )
     {
-       *rsp_len = 5;
+        //ee_disc_done = 0x01;//Reader Over SWP event getting
+        *rsp_len = 0x05;
         p_rsp_data[0] = 0x42;
         p_rsp_data[1] = 0x00;
         p_rsp_data[2] = 0x02;
         p_rsp_data[3] = 0x00;
         p_rsp_data[4] = 0x00;
-
-        phNxpNciHal_print_packet("RECV", p_rsp_data, 5);
+        phNxpNciHal_print_packet("RECV", p_rsp_data,5);
         status = NFCSTATUS_FAILED;
-        //ee_disc_done = 0x01;
     }
     //2002 0904 3000 3100 3200 5000
     else if ( (p_cmd_data[0] == 0x20 && p_cmd_data[1] == 0x02 ) &&
@@ -715,9 +728,8 @@ NFCSTATUS phNxpNciHal_write_ext(uint16_t *cmd_len, uint8_t *p_cmd_data,
     //2002 0401 320100
     else if ( (p_cmd_data[0] == 0x20 && p_cmd_data[1] == 0x02 ) &&
             (
-             /*(p_cmd_data[2] == 0x0D && p_cmd_data[3] == 0x04)*/
-               (p_cmd_data[2] == 0x04 && p_cmd_data[3] == 0x01 &&
-                p_cmd_data[4] == 0x32 && p_cmd_data[5] == 0x00)
+              /*(p_cmd_data[2] == 0x0D && p_cmd_data[3] == 0x04)*/
+                (p_cmd_data[2] == 0x04 && p_cmd_data[3] == 0x01 && p_cmd_data[4] == 0x32 && p_cmd_data[5] == 0x00)
             )
     )
     {
@@ -848,15 +860,12 @@ NFCSTATUS phNxpNciHal_send_ext_cmd(uint16_t cmd_len, uint8_t *p_cmd)
  ******************************************************************************/
 static void hal_extns_write_rsp_timeout_cb(uint32_t timerId, void *pContext)
 {
-    if(nxpncihal_ctrl.read_retry_cnt != 1)
-    {
-        nxpncihal_ctrl.read_retry_cnt = 1;
-        read_retry();
-        return;
-    }
-
+    UNUSED(timerId);
+    UNUSED(pContext);
     NXPLOG_NCIHAL_E("hal_extns_write_rsp_timeout_cb - write timeout!!!");
-    phNxpNciHal_emergency_recovery();
+    nxpncihal_ctrl.ext_cb_data.status = NFCSTATUS_FAILED;
+    usleep(1);
+    SEM_POST(&(nxpncihal_ctrl.ext_cb_data));
 
     return;
 }

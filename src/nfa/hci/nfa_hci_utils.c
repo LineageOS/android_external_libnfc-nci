@@ -320,7 +320,7 @@ tNFA_STATUS nfa_hciu_send_msg (UINT8 pipe_id, UINT8 type, UINT8 instruction, UIN
     BOOLEAN          first_pkt = TRUE;
     UINT16          data_len;
     tNFA_STATUS     status = NFA_STATUS_OK;
-    UINT16          max_seg_hcp_pkt_size = nfa_hci_cb.buff_size - NCI_DATA_HDR_SIZE;
+    UINT16          max_seg_hcp_pkt_size = nfa_hci_cb.buff_size;
 
 #if (BT_TRACE_VERBOSE == TRUE)
     char    buff[100];

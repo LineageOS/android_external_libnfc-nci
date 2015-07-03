@@ -16,6 +16,8 @@
 
 #define LOG_TAG "NxpNfcNciHal"
 
+#include <string.h>
+#include <stdlib.h>
 #include <utils/Log.h>
 #include <errno.h>
 #include <hardware/hardware.h>

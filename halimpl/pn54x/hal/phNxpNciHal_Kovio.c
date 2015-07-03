@@ -32,6 +32,7 @@ int send_to_upper_kovio = 0x01;
 int disable_kovio=0x00;
 static uint8_t rf_deactivate_cmd[]   = { 0x21, 0x06, 0x01, 0x03 }; /* discovery */
 static uint8_t rf_deactivated_ntf[]  = { 0x61, 0x06, 0x02, 0x03, 0x01 };
+static uint8_t reset_ntf[] = {0x60, 0x00, 0x06, 0xA0, 0x00, 0xC7, 0xD4, 0x00, 0x00};
 
 static uint32_t kovio_timer;
 
@@ -50,6 +51,8 @@ static NFCSTATUS phNxpNciHal_rf_deactivate(void);
 *******************************************************************************/
 static void hal_write_cb(void *pContext, phTmlNfc_TransactInfo_t *pInfo)
 {
+    UNUSED(pContext);
+    UNUSED(pInfo);
     return;
 }
 
@@ -64,6 +67,8 @@ static void hal_write_cb(void *pContext, phTmlNfc_TransactInfo_t *pInfo)
 *******************************************************************************/
 static void kovio_timer_handler(uint32_t timerId, void *pContext)
 {
+    UNUSED(timerId);
+    UNUSED(pContext);
     NXPLOG_NCIHAL_D(">> kovio_timer_handler. Did not receive RF_INTF_ACTIVATED_NTF, Kovio TAG must be removed.");
 
     phOsalNfc_Timer_Delete(kovio_timer);
@@ -108,7 +113,16 @@ static NFCSTATUS phNxpNciHal_rf_deactivate()
 
     if(status != NFCSTATUS_PENDING)
     {
-        phNxpNciHal_emergency_recovery();
+        //phNxpNciHal_emergency_recovery();
+        if (nxpncihal_ctrl.p_nfc_stack_data_cback!= NULL &&
+            nxpncihal_ctrl.hal_open_status == TRUE)
+        {
+            NXPLOG_NCIHAL_D("Send the Core Reset NTF to upper layer, which will trigger the recovery\n");
+            //Send the Core Reset NTF to upper layer, which will trigger the recovery.
+            nxpncihal_ctrl.rx_data_len = sizeof(reset_ntf);
+            memcpy(nxpncihal_ctrl.p_rx_data, reset_ntf, sizeof(reset_ntf));
+            (*nxpncihal_ctrl.p_nfc_stack_data_cback)(nxpncihal_ctrl.rx_data_len, nxpncihal_ctrl.p_rx_data);
+        }
     }
 
     return status;
@@ -119,7 +133,7 @@ static NFCSTATUS phNxpNciHal_rf_deactivate()
 ** Function         phNxpNciHal_kovio_rsp_ext
 **
 ** Description      Implements kovio presence check. In BCM controller this is
-**                  managed by NFCC. But since PN547 does not handle this, the
+**                  managed by NFCC. But since PN54X does not handle this, the
 **                  presence check is mimiced here.
 **                  For the very first time Kovio is detected, NTF has to be
 **                  passed on to upper layer. for every NTF, DH send a deactivated
@@ -138,7 +152,11 @@ NFCSTATUS phNxpNciHal_kovio_rsp_ext(uint8_t *p_ntf, uint16_t *p_len)
     send_to_upper_kovio = 1;
     if((p_ntf[0]==0x61)&&(p_ntf[1]==0x05))
     {
+#if(NFC_NXP_CHIP_TYPE != PN547C2)
+        if((p_ntf[5]==0x81)&&(p_ntf[6]==0x70))
+#else
         if((p_ntf[5]==0x8A)&&(p_ntf[6]==0x77))
+#endif
         {
             if (kovio_detected == 0)
             {

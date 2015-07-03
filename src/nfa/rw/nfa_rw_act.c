@@ -15,25 +15,7 @@
  *  limitations under the License.
  *
  ******************************************************************************/
-/******************************************************************************
- *
- *  The original Work has been changed by NXP Semiconductors.
- *
- *  Copyright (C) 2013-2014 NXP Semiconductors
- *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- *
- ******************************************************************************/
+
 
 /******************************************************************************
  *
@@ -302,6 +284,7 @@ static void nfa_rw_handle_ndef_detect(tRW_EVENT event, tRW_DATA *p_rw_data)
                 conn_evt_data.ndef_detect.cur_size = 0;
                 conn_evt_data.ndef_detect.max_size = 0;
                 conn_evt_data.ndef_detect.flags    = RW_NDEF_FL_UNKNOWN;
+                conn_evt_data.ndef_detect.status   = NFA_STATUS_TIMEOUT;
             }
             else
             {
@@ -577,6 +560,7 @@ static void nfa_rw_handle_t1t_evt (tRW_EVENT event, tRW_DATA *p_rw_data)
     tNFA_CONN_EVT_DATA conn_evt_data;
     tNFA_TAG_PARAMS tag_params;
     UINT8 *p_rid_rsp;
+    tNFA_STATUS activation_status;
 
     conn_evt_data.status = p_rw_data->data.status;
     switch (event)
@@ -594,7 +578,11 @@ static void nfa_rw_handle_t1t_evt (tRW_EVENT event, tRW_DATA *p_rw_data)
         /* Command complete - perform cleanup, notify the app */
         nfa_rw_command_complete();
 
-        nfa_dm_notify_activation_status(NFA_STATUS_OK, &tag_params);
+        if (p_rw_data->status == NFC_STATUS_TIMEOUT)
+            activation_status = NFA_STATUS_TIMEOUT;
+        else
+            activation_status = NFA_STATUS_OK;
+        nfa_dm_notify_activation_status(activation_status, &tag_params);
         break;
     case RW_T1T_RALL_CPLT_EVT:
     case RW_T1T_READ_CPLT_EVT:
@@ -2633,6 +2621,11 @@ BOOLEAN nfa_rw_activate_ntf(tNFA_RW_MSG *p_data)
         &&(nfa_rw_cb.pa_sel_res == NFC_SEL_RES_NFC_FORUM_T2T)  )
     {
         /* Type 2 tag is wake up from HALT State */
+        if(nfa_dm_cb.p_activate_ntf != NULL)
+        {
+            GKI_freebuf (nfa_dm_cb.p_activate_ntf);
+            nfa_dm_cb.p_activate_ntf = NULL;
+        }
         NFA_TRACE_DEBUG0("nfa_rw_activate_ntf () - Type 2 tag wake up from HALT State");
         return TRUE;
     }
