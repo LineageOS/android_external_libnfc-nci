@@ -279,6 +279,11 @@ NFCSTATUS phNxpNciHal_process_ext_rsp (uint8_t *p_ntf, uint16_t *p_len)
     {
         NXPLOG_NCIHAL_D ("> Going through workaround - notification of ISO 15693");
         icode_detected = 0x01;
+        if (p_ntf[3] == 0x01)
+        {
+            p_ntf[4] = 0x83;
+            p_ntf[5] = 0x83;
+        }
         p_ntf[21] = 0x01;
         p_ntf[22] = 0x01;
     }
@@ -302,6 +307,11 @@ NFCSTATUS phNxpNciHal_process_ext_rsp (uint8_t *p_ntf, uint16_t *p_len)
             NXPLOG_NCIHAL_D ("> Going through workaround - data of ISO 15693");
             p_ntf[2]--;
             (*p_len)--;
+        }
+        else
+        {
+            NXPLOG_NCIHAL_D ("> STATUS_RF_FRAME ERROR response - workaround");
+            p_ntf[p_ntf[2]+ 2] |= 0x01;
         }
     }
     else if (p_ntf[2] == 0x02 &&
@@ -355,7 +365,13 @@ NFCSTATUS phNxpNciHal_process_ext_rsp (uint8_t *p_ntf, uint16_t *p_len)
     }
     else if(p_ntf[0] == 0x61 && p_ntf[1] == 0x03 /*&& cleanup_timer!=0*/)
     {
-        if(cleanup_timer!=0)
+        if (p_ntf[4] == 0x06 && p_ntf[5] == 0x06)
+        {
+           NXPLOG_NCIHAL_D ("> Going through workaround - 6103 notification of ISO 15693");
+            //icode_detected = 0x01;
+            p_ntf[4] = 0x83;
+           // p_ntf[5] = 0x83;
+        }else if(cleanup_timer!=0)
         {
             /* if RF Notification Type of RF_DISCOVER_NTF is Last Notification */
             if(0== (*(p_ntf + 2 + (*(p_ntf+2)))))
