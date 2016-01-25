@@ -2022,17 +2022,7 @@ static void nfa_dm_disc_sm_discovery (tNFA_DM_RF_DISC_SM_EVENT event,
         }
         break;
     case NFA_DM_RF_DISCOVER_NTF:
-        /* Notification Type = NCI_DISCOVER_NTF_LAST_ABORT */
-        if (p_data->nfc_discover.result.more == NCI_DISCOVER_NTF_LAST_ABORT)
-        {
-            /* Fix for multiple tags: After receiving deactivate event, restart discovery */
-            NFA_TRACE_DEBUG0 ("Received NCI_DISCOVER_NTF_LAST_ABORT, sending deactivate command");
-            NFC_Deactivate (NFA_DEACTIVATE_TYPE_IDLE);
-        }
-        else
-        {
-            nfa_dm_disc_new_state (NFA_DM_RFST_W4_ALL_DISCOVERIES);
-        }
+        nfa_dm_disc_new_state (NFA_DM_RFST_W4_ALL_DISCOVERIES);
         nfa_dm_notify_discovery (p_data);
         break;
     case NFA_DM_RF_INTF_ACTIVATED_NTF:
