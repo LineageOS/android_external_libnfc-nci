@@ -32,6 +32,14 @@ D_CFLAGS += -DPN551=3
 endif
 
 #### Select the CHIP ####
+ifeq ($(BOARD_NFC_CHIPSET),pn547)
+NXP_CHIP_TYPE := $(PN547C2)
+else ifeq ($(BOARD_NFC_CHIPSET),pn548)
+NXP_CHIP_TYPE := $(PN548C2)
+else
+NXP_CHIP_TYPE := $(PN551)
+endif
+
 ifeq ($(NXP_CHIP_TYPE),$(PN547C2))
 D_CFLAGS += -DNFC_NXP_CHIP_TYPE=PN547C2
 else ifeq ($(NXP_CHIP_TYPE),$(PN548C2))
