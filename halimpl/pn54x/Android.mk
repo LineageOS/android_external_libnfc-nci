@@ -36,7 +36,7 @@ ifeq ($(BOARD_NFC_CHIPSET),pn547)
 NXP_CHIP_TYPE := $(PN547C2)
 else ifeq ($(BOARD_NFC_CHIPSET),pn548)
 NXP_CHIP_TYPE := $(PN548C2)
-else
+else ifeq ($(BOARD_NFC_CHIPSET),pn551)
 NXP_CHIP_TYPE := $(PN551)
 endif
 
