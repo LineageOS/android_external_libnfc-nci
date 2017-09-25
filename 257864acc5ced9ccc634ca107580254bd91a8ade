@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ab3f01d3_7bab4446",
+        "filename": "halimpl/pn54x/Android.mk",
+        "patchSetId": 1
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 11883
+      },
+      "writtenOn": "2017-09-25T09:49:45Z",
+      "side": 1,
+      "message": "PN551 is still the default chip, this commit allows to use the aosp flag",
+      "range": {
+        "startLine": 50,
+        "startChar": 0,
+        "endLine": 50,
+        "endChar": 37
+      },
+      "revId": "257864acc5ced9ccc634ca107580254bd91a8ade",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71",
+      "unresolved": false
+    }
+  ]
+}
