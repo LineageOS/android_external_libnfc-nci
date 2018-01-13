@@ -457,6 +457,9 @@ int phNxpNciHal_open(nfc_stack_callback_t *p_cback, nfc_stack_data_callback_t *p
     int init_retry_cnt= 0;
     int8_t ret_val = 0x00;
 
+    unsigned long num = 0;
+    uint8_t allow_fw_downgrade;
+
     /* initialize trace level */
     phNxpLog_InitializeLogLevel();
 
@@ -599,12 +602,17 @@ init_retry:
     status = phDnldNfc_InitImgInfo();
     NXPLOG_NCIHAL_D ("FW version for FW file = 0x%x", wFwVer);
     NXPLOG_NCIHAL_D ("FW version from device = 0x%x", wFwVerRsp);
+
+    if (GetNxpNumValue("NXP_FW_ALLOW_DOWNGRADE", &num, sizeof(num)) > 0) {
+        allow_fw_downgrade = !!num;
+    }
+
     if ((wFwVerRsp & 0x0000FFFF) == wFwVer)
     {
         NXPLOG_NCIHAL_D ("FW uptodate not required");
         phDnldNfc_ReSetHwDevHandle();
     }
-    else if (wFwVer != 0 && (wFwVerRsp & 0x0000FFFF) > wFwVer)
+    else if (wFwVer != 0 && (wFwVerRsp & 0x0000FFFF) > wFwVer && !allow_fw_downgrade)
     {
         NXPLOG_NCIHAL_D ("FW image older than device's, skip update");
         phDnldNfc_ReSetHwDevHandle();
