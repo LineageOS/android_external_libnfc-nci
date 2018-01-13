@@ -553,6 +553,13 @@ static void phNxpNciHal_fw_dnld_get_version_cb(void* pContext,
     uint8_t bNewVer[2];
     uint8_t bCurrVer[2];
 
+    unsigned long num = 0;
+    uint8_t allow_fw_downgrade = 0;
+
+    if (GetNxpNumValue("NXP_FW_ALLOW_DOWNGRADE", &num, sizeof(num)) > 0) {
+        allow_fw_downgrade = !!num;
+    }
+
     if ((NFCSTATUS_SUCCESS == wStatus) && (NULL != pInfo))
     {
         NXPLOG_FWDNLD_D ("phNxpNciHal_fw_dnld_get_version_cb - Request Successful");
@@ -614,7 +621,7 @@ static void phNxpNciHal_fw_dnld_get_version_cb(void* pContext,
                 wStatus = NFCSTATUS_NOT_ALLOWED;
             }
             /* Major Version number check */
-            else if((FALSE == (gphNxpNciHal_fw_IoctlCtx.bDnldInitiated)) && (bNewVer[1] < bCurrVer[1]))
+            else if((FALSE == (gphNxpNciHal_fw_IoctlCtx.bDnldInitiated)) && ((bNewVer[1] < bCurrVer[1]) && !allow_fw_downgrade))
             {
                 NXPLOG_FWDNLD_E("Version Check Failed - MajorVerNum Mismatch\n");
                 wStatus = NFCSTATUS_NOT_ALLOWED;
