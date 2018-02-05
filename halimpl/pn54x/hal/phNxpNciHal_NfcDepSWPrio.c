@@ -65,9 +65,9 @@ static void phNxpNciHal_NfcDep_store_ntf(uint8_t *p_cmd_data, uint16_t cmd_len);
 *******************************************************************************/
 static void cleanup_timer_handler(uint32_t timerId, void *pContext)
 {
-    NXPLOG_NCIHAL_D(">> cleanup_timer_handler.");
+    NXPLOG_NCIHAL_E(">> cleanup_timer_handler.");
 
-    NXPLOG_NCIHAL_D(">> cleanup_timer_handler. ISO_DEP not detected second time.");
+    NXPLOG_NCIHAL_E(">> cleanup_timer_handler. ISO_DEP not detected second time.");
 
     phOsalNfc_Timer_Delete(cleanup_timer);
     cleanup_timer=0;
@@ -87,9 +87,9 @@ static void cleanup_timer_handler(uint32_t timerId, void *pContext)
 *******************************************************************************/
 static void custom_poll_timer_handler(uint32_t timerId, void *pContext)
 {
-    NXPLOG_NCIHAL_D(">> custom_poll_timer_handler.");
+    NXPLOG_NCIHAL_E(">> custom_poll_timer_handler.");
 
-    NXPLOG_NCIHAL_D(">> custom_poll_timer_handler. NFC_DEP not detected. so giving early chance to ISO_DEP.");
+    NXPLOG_NCIHAL_E(">> custom_poll_timer_handler. NFC_DEP not detected. so giving early chance to ISO_DEP.");
 
     phOsalNfc_Timer_Delete(custom_poll_timer);
 
@@ -101,7 +101,7 @@ static void custom_poll_timer_handler(uint32_t timerId, void *pContext)
          * Restart polling loop.
          * When the polling loop is stopped, polling will be restarted.
          */
-        NXPLOG_NCIHAL_D(">> custom_poll_timer_handler - restart polling loop.");
+        NXPLOG_NCIHAL_E(">> custom_poll_timer_handler - restart polling loop.");
 
         phNxpNciHal_stop_polling_loop();
     }
@@ -219,13 +219,13 @@ NFCSTATUS phNxpNciHal_NfcDep_rsp_ext(uint8_t *p_ntf, uint16_t *p_len)
 {
     NFCSTATUS status = NFCSTATUS_INVALID_PARAMETER;
 
-    NXPLOG_NCIHAL_D(">> p_ntf[0]=%02x , p_ntf[1]=%02x",p_ntf[0],p_ntf[1]);
+    NXPLOG_NCIHAL_E(">> p_ntf[0]=%02x , p_ntf[1]=%02x",p_ntf[0],p_ntf[1]);
 
     if(p_ntf[0] == 0x41 && p_ntf[1] == 0x04)
     {
         //Tag selected, Disable P2P Prio logic.
         bIgnoreIsoDep = 1;
-        NXPLOG_NCIHAL_D(">> Tag selected, Disable P2P Prio logic.");
+        NXPLOG_NCIHAL_E(">> Tag selected, Disable P2P Prio logic.");
 
     }
     else if( ((p_ntf[0] == 0x61 && p_ntf[1] == 0x06) ||
@@ -234,7 +234,7 @@ NFCSTATUS phNxpNciHal_NfcDep_rsp_ext(uint8_t *p_ntf, uint16_t *p_len)
     {
         //Tag deselected, enable P2P Prio logic.
         bIgnoreIsoDep = 0x00;
-        NXPLOG_NCIHAL_D(">> Tag deselected, enable P2P Prio logic.");
+        NXPLOG_NCIHAL_E(">> Tag deselected, enable P2P Prio logic.");
 
     }
     if (bIgnoreIsoDep == 0x00 &&
@@ -243,18 +243,18 @@ NFCSTATUS phNxpNciHal_NfcDep_rsp_ext(uint8_t *p_ntf, uint16_t *p_len)
     {
         if (p_ntf[5] == 0x04 && p_ntf[6] < 0x80)
         {
-            NXPLOG_NCIHAL_D(">> ISO DEP detected.");
+            NXPLOG_NCIHAL_E(">> ISO DEP detected.");
 
             if (iso_dep_detected == 0x00)
             {
-                NXPLOG_NCIHAL_D(
+                NXPLOG_NCIHAL_E(
                         ">> ISO DEP detected first time. Resume polling loop");
 
                 iso_dep_detected = 0x01;
                 status = phNxpNciHal_resume_polling_loop();
 
                 custom_poll_timer = phOsalNfc_Timer_Create();
-                NXPLOG_NCIHAL_D("custom poll timer started - %d", custom_poll_timer);
+                NXPLOG_NCIHAL_E("custom poll timer started - %d", custom_poll_timer);
 
                 status = phOsalNfc_Timer_Start(custom_poll_timer,
                         CUSTOM_POLL_TIMEOUT,
@@ -263,7 +263,7 @@ NFCSTATUS phNxpNciHal_NfcDep_rsp_ext(uint8_t *p_ntf, uint16_t *p_len)
 
                 if (NFCSTATUS_SUCCESS == status)
                 {
-                    NXPLOG_NCIHAL_D("custom poll timer started");
+                    NXPLOG_NCIHAL_E("custom poll timer started");
                 }
                 else
                 {
@@ -275,7 +275,7 @@ NFCSTATUS phNxpNciHal_NfcDep_rsp_ext(uint8_t *p_ntf, uint16_t *p_len)
             }
             else
             {
-                NXPLOG_NCIHAL_D(">> ISO DEP detected second time.");
+                NXPLOG_NCIHAL_E(">> ISO DEP detected second time.");
                 /* Store notification */
                 phNxpNciHal_NfcDep_store_ntf(p_ntf, *p_len);
 
@@ -290,7 +290,7 @@ NFCSTATUS phNxpNciHal_NfcDep_rsp_ext(uint8_t *p_ntf, uint16_t *p_len)
         }
         else if (p_ntf[5] == 0x05)
         {
-            NXPLOG_NCIHAL_D(">> NFC-DEP Detected - stopping the custom poll timer");
+            NXPLOG_NCIHAL_E(">> NFC-DEP Detected - stopping the custom poll timer");
 
             phOsalNfc_Timer_Stop(custom_poll_timer);
             phOsalNfc_Timer_Delete(custom_poll_timer);
@@ -300,7 +300,7 @@ NFCSTATUS phNxpNciHal_NfcDep_rsp_ext(uint8_t *p_ntf, uint16_t *p_len)
         }
         else
         {
-            NXPLOG_NCIHAL_D(">>  detected other technology- stopping the custom poll timer");
+            NXPLOG_NCIHAL_E(">>  detected other technology- stopping the custom poll timer");
             phOsalNfc_Timer_Stop(custom_poll_timer);
             phOsalNfc_Timer_Delete(custom_poll_timer);
             EnableP2P_PrioLogic = FALSE;
@@ -313,17 +313,17 @@ NFCSTATUS phNxpNciHal_NfcDep_rsp_ext(uint8_t *p_ntf, uint16_t *p_len)
             && p_ntf[1] == 0x06))
             )
     {
-        NXPLOG_NCIHAL_D(">> RF disabled");
+        NXPLOG_NCIHAL_E(">> RF disabled");
         if (poll_timer_fired == 0x01)
         {
             poll_timer_fired = 0x00;
 
-            NXPLOG_NCIHAL_D(">>restarting polling loop.");
+            NXPLOG_NCIHAL_E(">>restarting polling loop.");
 
             /* start polling loop */
             phNxpNciHal_start_polling_loop();
             EnableP2P_PrioLogic = FALSE;
-            NXPLOG_NCIHAL_D (">> NFC DEP NOT  detected - custom poll timer expired - RF disabled");
+            NXPLOG_NCIHAL_E (">> NFC DEP NOT  detected - custom poll timer expired - RF disabled");
 
             cleanup_timer = phOsalNfc_Timer_Create();
 
@@ -335,7 +335,7 @@ NFCSTATUS phNxpNciHal_NfcDep_rsp_ext(uint8_t *p_ntf, uint16_t *p_len)
 
             if (NFCSTATUS_SUCCESS == status)
             {
-                NXPLOG_NCIHAL_D("cleanup timer started");
+                NXPLOG_NCIHAL_E("cleanup timer started");
             }
             else
             {
@@ -356,12 +356,12 @@ NFCSTATUS phNxpNciHal_NfcDep_rsp_ext(uint8_t *p_ntf, uint16_t *p_len)
         if ((p_ntf[0] == 0x41 && p_ntf[1] == 0x06) || (p_ntf[0] == 0x61
                 && p_ntf[1] == 0x06))
         {
-            NXPLOG_NCIHAL_D(">>iso_dep_detected Disconnect related notification");
+            NXPLOG_NCIHAL_E(">>iso_dep_detected Disconnect related notification");
             status = NFCSTATUS_FAILED;
         }
         else
         {
-            NXPLOG_NCIHAL_W("Never come here");
+            NXPLOG_NCIHAL_E("Never come here");
         }
     }
 
@@ -463,7 +463,7 @@ static void hal_write_cb(void *pContext, phTmlNfc_TransactInfo_t *pInfo)
 
     if (pInfo->wStatus == NFCSTATUS_SUCCESS)
     {
-        NXPLOG_NCIHAL_D("hal_write_cb: write successful status = 0x%x", pInfo->wStatus);
+        NXPLOG_NCIHAL_E("hal_write_cb: write successful status = 0x%x", pInfo->wStatus);
     }
     else
     {

@@ -728,24 +728,24 @@ static uint8_t st_validator_testAntenna_Txldo(nci_data_t *exp, phTmlNfc_Transact
         return result;
     }
 
-    NXPLOG_NCIHAL_D("st_validator_testAntenna_Txldo = 0x%x", act->pBuff[3]);
+    NXPLOG_NCIHAL_E("st_validator_testAntenna_Txldo = 0x%x", act->pBuff[3]);
     if (0x05 == act->pBuff[2])
     {
         if (NFCSTATUS_SUCCESS == act->pBuff[3])
         {
             result = 1;
-            NXPLOG_NCIHAL_D("Antenna: TxLDO current measured raw value in mA : 0x%x", act->pBuff[4]);
+            NXPLOG_NCIHAL_E("Antenna: TxLDO current measured raw value in mA : 0x%x", act->pBuff[4]);
             if(0x00 == act->pBuff[5])
             {
-                NXPLOG_NCIHAL_D("Measured range : 0x00 = 50 - 100 mA");
+                NXPLOG_NCIHAL_E("Measured range : 0x00 = 50 - 100 mA");
                 measured_val = ((0.40 * act->pBuff[4]) + 50);
-                NXPLOG_NCIHAL_D("TxLDO current absolute value in mA = %ld", measured_val);
+                NXPLOG_NCIHAL_E("TxLDO current absolute value in mA = %ld", measured_val);
             }
             else
             {
-                NXPLOG_NCIHAL_D("Measured range : 0x01 = 20 - 70 mA");
+                NXPLOG_NCIHAL_E("Measured range : 0x01 = 20 - 70 mA");
                 measured_val = ((0.40 * act->pBuff[4]) + 20);
-                NXPLOG_NCIHAL_D("TxLDO current absolute value in mA = %ld", measured_val);
+                NXPLOG_NCIHAL_E("TxLDO current absolute value in mA = %ld", measured_val);
             }
 
             tolerance = (phAntenna_resp.wTxdoMeasuredRangeMax  *
@@ -814,7 +814,7 @@ static uint8_t st_validator_testAntenna_AgcVal(nci_data_t *exp, phTmlNfc_Transac
             result = 1;
             agc_tolerance = (phAntenna_resp.wAgcValue * phAntenna_resp.wAgcValueTolerance)/100;
             agc_val =  ((act->pBuff[5] << 8) | (act->pBuff[4]));
-            NXPLOG_NCIHAL_D("AGC value : %ld", agc_val);
+            NXPLOG_NCIHAL_E("AGC value : %ld", agc_val);
             if(((phAntenna_resp.wAgcValue - agc_tolerance) <= agc_val) &&
                (agc_val <= (phAntenna_resp.wAgcValue + agc_tolerance)))
             {
@@ -870,7 +870,7 @@ static uint8_t st_validator_testAntenna_AgcVal_FixedNfcLd(nci_data_t *exp, phTml
             agc_nfcld_tolerance = (phAntenna_resp.wAgcValuewithfixedNFCLD *
                                    phAntenna_resp.wAgcValuewithfixedNFCLDTolerance)/100;
             agc_nfcld =  ((act->pBuff[5] << 8) | (act->pBuff[4]));
-            NXPLOG_NCIHAL_D("AGC value with Fixed Nfcld  : %ld", agc_nfcld);
+            NXPLOG_NCIHAL_E("AGC value with Fixed Nfcld  : %ld", agc_nfcld);
 
             if(((phAntenna_resp.wAgcValuewithfixedNFCLD - agc_nfcld_tolerance) <= agc_nfcld) &&
               (agc_nfcld <= (phAntenna_resp.wAgcValuewithfixedNFCLD + agc_nfcld_tolerance)))
@@ -932,8 +932,8 @@ static uint8_t st_validator_testAntenna_AgcVal_Differential(nci_data_t *exp, phT
                                 phAntenna_resp.wAgcDifferentialWithOpenTolerance2)/100;
             agc_differentialOpne1 =  ((act->pBuff[5] << 8) | (act->pBuff[4]));
             agc_differentialOpne2 =  ((act->pBuff[7] << 8) | (act->pBuff[6]));
-            NXPLOG_NCIHAL_D("AGC value differential Opne 1  : %ld", agc_differentialOpne1);
-            NXPLOG_NCIHAL_D("AGC value differentialOpne  2 : %ld", agc_differentialOpne2);
+            NXPLOG_NCIHAL_E("AGC value differential Opne 1  : %ld", agc_differentialOpne1);
+            NXPLOG_NCIHAL_E("AGC value differentialOpne  2 : %ld", agc_differentialOpne2);
 
             if(((agc_differentialOpne1 >= phAntenna_resp.wAgcDifferentialWithOpen1 - agc_toleranceopne1) &&
                (agc_differentialOpne1 <= phAntenna_resp.wAgcDifferentialWithOpen1 + agc_toleranceopne1)) &&
@@ -1023,7 +1023,7 @@ static void hal_write_cb(void *pContext, phTmlNfc_TransactInfo_t *pInfo)
 
     if (pInfo->wStatus == NFCSTATUS_SUCCESS)
     {
-        NXPLOG_NCIHAL_D("write successful status = 0x%x", pInfo->wStatus);
+        NXPLOG_NCIHAL_E("write successful status = 0x%x", pInfo->wStatus);
     }
     else
     {
@@ -1051,7 +1051,7 @@ static void hal_read_cb(void *pContext, phTmlNfc_TransactInfo_t *pInfo)
     NFCSTATUS status;
     if(hal_write_timer_fired == 1)
     {
-        NXPLOG_NCIHAL_D("hal_read_cb - response timeout occurred");
+        NXPLOG_NCIHAL_E("hal_read_cb - response timeout occurred");
 
         hal_write_timer_fired = 0;
         p_cb_data->status = NFCSTATUS_RESPONSE_TIMEOUT;
@@ -1063,7 +1063,7 @@ static void hal_read_cb(void *pContext, phTmlNfc_TransactInfo_t *pInfo)
 
         if (NFCSTATUS_SUCCESS == status)
         {
-            NXPLOG_NCIHAL_D("Response timer stopped");
+            NXPLOG_NCIHAL_E("Response timer stopped");
         }
         else
         {
@@ -1079,7 +1079,7 @@ static void hal_read_cb(void *pContext, phTmlNfc_TransactInfo_t *pInfo)
         {
             if (pInfo->wStatus == NFCSTATUS_SUCCESS)
             {
-                NXPLOG_NCIHAL_D ("hal_read_cb successful status = 0x%x", pInfo->wStatus);
+                NXPLOG_NCIHAL_E ("hal_read_cb successful status = 0x%x", pInfo->wStatus);
                 p_cb_data->status = NFCSTATUS_SUCCESS;
             }
             else
@@ -1136,7 +1136,7 @@ static void *phNxpNciHal_test_rx_thread(void *arg)
 {
     phLibNfc_Message_t msg;
     UNUSED(arg);
-    NXPLOG_NCIHAL_D("Self test thread started");
+    NXPLOG_NCIHAL_E("Self test thread started");
 
     thread_running = 1;
 
@@ -1171,7 +1171,7 @@ static void *phNxpNciHal_test_rx_thread(void *arg)
         }
     }
 
-    NXPLOG_NCIHAL_D("Self test thread stopped");
+    NXPLOG_NCIHAL_E("Self test thread stopped");
 
     return NULL;
 }
@@ -1198,7 +1198,7 @@ static NFCSTATUS phNxpNciHal_readLocked(nci_test_data_t *pData )
     /* Create the local semaphore */
     if (phNxpNciHal_init_cb_data(&cb_data, pData) != NFCSTATUS_SUCCESS)
     {
-        NXPLOG_NCIHAL_D("phTmlNfc_Read Create cb data failed");
+        NXPLOG_NCIHAL_E("phTmlNfc_Read Create cb data failed");
         status = NFCSTATUS_FAILED;
         goto clean_and_return;
     }
@@ -1224,7 +1224,7 @@ static NFCSTATUS phNxpNciHal_readLocked(nci_test_data_t *pData )
 
     if (NFCSTATUS_SUCCESS == status)
     {
-        NXPLOG_NCIHAL_D("Response timer started");
+        NXPLOG_NCIHAL_E("Response timer started");
     }
     else
     {
@@ -1283,7 +1283,7 @@ static NFCSTATUS phNxpNciHal_writeLocked(nci_test_data_t *pData )
     /* Create the local semaphore */
     if (phNxpNciHal_init_cb_data(&cb_data, NULL) != NFCSTATUS_SUCCESS)
     {
-        NXPLOG_NCIHAL_D("phTmlNfc_Write Create cb data failed");
+        NXPLOG_NCIHAL_E("phTmlNfc_Write Create cb data failed");
         goto clean_and_return;
     }
 
@@ -1468,7 +1468,7 @@ NFCSTATUS phNxpNciHal_TestMode_open (void)
     }
     else
     {
-        NXPLOG_NCIHAL_D("phOsalNfc_Timer_Create SUCCESS");
+        NXPLOG_NCIHAL_E("phOsalNfc_Timer_Create SUCCESS");
     }
     CONCURRENCY_UNLOCK();
 
@@ -1513,7 +1513,7 @@ void phNxpNciHal_TestMode_close ()
 
         status = phTmlNfc_Shutdown();
 
-        NXPLOG_NCIHAL_D("phNxpNciHal_close return status = %d", status);
+        NXPLOG_NCIHAL_E("phNxpNciHal_close return status = %d", status);
 
         thread_running = 0;
 
@@ -1547,7 +1547,7 @@ NFCSTATUS phNxpNciHal_SwpTest(uint8_t swp_line)
     int len = 0;
     int cnt = 0;
 
-    NXPLOG_NCIHAL_D("phNxpNciHal_SwpTest - start\n");
+    NXPLOG_NCIHAL_E("phNxpNciHal_SwpTest - start\n");
 
     if(swp_line == 0x01)
     {
@@ -1586,14 +1586,14 @@ NFCSTATUS phNxpNciHal_SwpTest(uint8_t swp_line)
 
     if( status == NFCSTATUS_SUCCESS)
     {
-        NXPLOG_NCIHAL_D("phNxpNciHal_SwpTest - SUCCESSS\n");
+        NXPLOG_NCIHAL_E("phNxpNciHal_SwpTest - SUCCESSS\n");
     }
     else
     {
-        NXPLOG_NCIHAL_D("phNxpNciHal_SwpTest - FAILED\n");
+        NXPLOG_NCIHAL_E("phNxpNciHal_SwpTest - FAILED\n");
     }
 
-    NXPLOG_NCIHAL_D("phNxpNciHal_SwpTest - end\n");
+    NXPLOG_NCIHAL_E("phNxpNciHal_SwpTest - end\n");
 
     return status;
 }
@@ -1653,7 +1653,7 @@ NFCSTATUS phNxpNciHal_PrbsTestStart (phNxpNfc_Tech_t tech, phNxpNfc_Bitrate_t bi
     if( status == NFCSTATUS_FAILED)
     {
         //Invalid Param.
-        NXPLOG_NCIHAL_D("phNxpNciHal_PrbsTestStart - INVALID_PARAM\n");
+        NXPLOG_NCIHAL_E("phNxpNciHal_PrbsTestStart - INVALID_PARAM\n");
 
         goto clean_and_return;
     }
@@ -1677,14 +1677,14 @@ NFCSTATUS phNxpNciHal_PrbsTestStart (phNxpNfc_Tech_t tech, phNxpNfc_Bitrate_t bi
 
     if( status == NFCSTATUS_SUCCESS)
     {
-        NXPLOG_NCIHAL_D("phNxpNciHal_PrbsTestStart - SUCCESSS\n");
+        NXPLOG_NCIHAL_E("phNxpNciHal_PrbsTestStart - SUCCESSS\n");
     }
     else
     {
-        NXPLOG_NCIHAL_D("phNxpNciHal_PrbsTestStart - FAILED\n");
+        NXPLOG_NCIHAL_E("phNxpNciHal_PrbsTestStart - FAILED\n");
     }
 
-    NXPLOG_NCIHAL_D("phNxpNciHal_PrbsTestStart - end\n");
+    NXPLOG_NCIHAL_E("phNxpNciHal_PrbsTestStart - end\n");
 
     return status;
 }
@@ -1703,7 +1703,7 @@ NFCSTATUS phNxpNciHal_PrbsTestStart (phNxpNfc_Tech_t tech, phNxpNfc_Bitrate_t bi
 
 NFCSTATUS phNxpNciHal_PrbsTestStop ()
 {
-    NXPLOG_NCIHAL_D("phNxpNciHal_PrbsTestStop - Start\n");
+    NXPLOG_NCIHAL_E("phNxpNciHal_PrbsTestStop - Start\n");
 
     NFCSTATUS status = NFCSTATUS_SUCCESS;
 
@@ -1711,14 +1711,14 @@ NFCSTATUS phNxpNciHal_PrbsTestStop ()
 
     if(NFCSTATUS_SUCCESS == status)
     {
-        NXPLOG_NCIHAL_D("phNxpNciHal_PrbsTestStop - SUCCESS\n");
+        NXPLOG_NCIHAL_E("phNxpNciHal_PrbsTestStop - SUCCESS\n");
     }
     else
     {
-        NXPLOG_NCIHAL_D("phNxpNciHal_PrbsTestStop - FAILED\n");
+        NXPLOG_NCIHAL_E("phNxpNciHal_PrbsTestStop - FAILED\n");
 
     }
-    NXPLOG_NCIHAL_D("phNxpNciHal_PrbsTestStop - end\n");
+    NXPLOG_NCIHAL_E("phNxpNciHal_PrbsTestStop - end\n");
 
     return status;
 }
@@ -1743,7 +1743,7 @@ NFCSTATUS phNxpNciHal_getPrbsCmd (uint8_t tech, uint8_t bitrate, uint8_t *prbs_c
     int position_tech_param = 0;
     int position_bit_param = 0;
 
-    NXPLOG_NCIHAL_D("phNxpNciHal_getPrbsCmd - tech 0x%x bitrate = 0x%x", tech, bitrate);
+    NXPLOG_NCIHAL_E("phNxpNciHal_getPrbsCmd - tech 0x%x bitrate = 0x%x", tech, bitrate);
     if(NULL == prbs_cmd ||
 #if(NFC_NXP_CHIP_TYPE != PN547C2)
             prbs_cmd_len != 0x09)
@@ -1781,15 +1781,15 @@ NFCSTATUS phNxpNciHal_getPrbsCmd (uint8_t tech, uint8_t bitrate, uint8_t *prbs_c
 
     switch (tech) {
         case NFC_RF_TECHNOLOGY_A:
-            NXPLOG_NCIHAL_D("phNxpNciHal_getPrbsCmd - NFC_RF_TECHNOLOGY_A");
+            NXPLOG_NCIHAL_E("phNxpNciHal_getPrbsCmd - NFC_RF_TECHNOLOGY_A");
             prbs_cmd[position_tech_param] = 0x00;
             break;
         case NFC_RF_TECHNOLOGY_B:
-            NXPLOG_NCIHAL_D("phNxpNciHal_getPrbsCmd - NFC_RF_TECHNOLOGY_B");
+            NXPLOG_NCIHAL_E("phNxpNciHal_getPrbsCmd - NFC_RF_TECHNOLOGY_B");
             prbs_cmd[position_tech_param] = 0x01;
             break;
         case NFC_RF_TECHNOLOGY_F:
-            NXPLOG_NCIHAL_D("phNxpNciHal_getPrbsCmd - NFC_RF_TECHNOLOGY_F");
+            NXPLOG_NCIHAL_E("phNxpNciHal_getPrbsCmd - NFC_RF_TECHNOLOGY_F");
             prbs_cmd[position_tech_param] = 0x02;
             break;
         default:
@@ -1799,22 +1799,22 @@ NFCSTATUS phNxpNciHal_getPrbsCmd (uint8_t tech, uint8_t bitrate, uint8_t *prbs_c
     switch (bitrate)
     {
         case NFC_BIT_RATE_106:
-            NXPLOG_NCIHAL_D("phNxpNciHal_getPrbsCmd - NFC_BIT_RATE_106");
+            NXPLOG_NCIHAL_E("phNxpNciHal_getPrbsCmd - NFC_BIT_RATE_106");
             if(prbs_cmd[position_tech_param] != 0x02)
             {
                 prbs_cmd[position_bit_param] = 0x00;
             }
             break;
         case NFC_BIT_RATE_212:
-            NXPLOG_NCIHAL_D("phNxpNciHal_getPrbsCmd - NFC_BIT_RATE_212");
+            NXPLOG_NCIHAL_E("phNxpNciHal_getPrbsCmd - NFC_BIT_RATE_212");
             prbs_cmd[position_bit_param] = 0x01;
             break;
         case NFC_BIT_RATE_424:
-            NXPLOG_NCIHAL_D("phNxpNciHal_getPrbsCmd - NFC_BIT_RATE_424");
+            NXPLOG_NCIHAL_E("phNxpNciHal_getPrbsCmd - NFC_BIT_RATE_424");
             prbs_cmd[position_bit_param] = 0x02;
             break;
         case NFC_BIT_RATE_848:
-            NXPLOG_NCIHAL_D("phNxpNciHal_getPrbsCmd - NFC_BIT_RATE_848");
+            NXPLOG_NCIHAL_E("phNxpNciHal_getPrbsCmd - NFC_BIT_RATE_848");
             if(prbs_cmd[position_tech_param] != 0x02)
             {
                 prbs_cmd[position_bit_param] = 0x03;
@@ -1848,7 +1848,7 @@ NFCSTATUS phNxpNciHal_RfFieldTest (uint8_t on)
     int len = 0;
     int cnt = 0;
 
-    NXPLOG_NCIHAL_D("phNxpNciHal_RfFieldTest - start %x\n",on);
+    NXPLOG_NCIHAL_E("phNxpNciHal_RfFieldTest - start %x\n",on);
 
     if(on == 0x01)
     {
@@ -1883,14 +1883,14 @@ NFCSTATUS phNxpNciHal_RfFieldTest (uint8_t on)
 
     if( status == NFCSTATUS_SUCCESS)
     {
-        NXPLOG_NCIHAL_D("phNxpNciHal_RfFieldTest - SUCCESSS\n");
+        NXPLOG_NCIHAL_E("phNxpNciHal_RfFieldTest - SUCCESSS\n");
     }
     else
     {
-        NXPLOG_NCIHAL_D("phNxpNciHal_RfFieldTest - FAILED\n");
+        NXPLOG_NCIHAL_E("phNxpNciHal_RfFieldTest - FAILED\n");
     }
 
-    NXPLOG_NCIHAL_D("phNxpNciHal_RfFieldTest - end\n");
+    NXPLOG_NCIHAL_E("phNxpNciHal_RfFieldTest - end\n");
 
     return status;
 }
@@ -1926,7 +1926,7 @@ NFCSTATUS phNxpNciHal_DownloadPinTest(void)
     int len = 0;
     int cnt = 0;
 
-    NXPLOG_NCIHAL_D("phNxpNciHal_DownloadPinTest - start\n");
+    NXPLOG_NCIHAL_E("phNxpNciHal_DownloadPinTest - start\n");
 
     len = (sizeof(download_pin_test_data1)/sizeof(download_pin_test_data1[0]));
 
@@ -1941,7 +1941,7 @@ NFCSTATUS phNxpNciHal_DownloadPinTest(void)
 
     if (status != NFCSTATUS_SUCCESS)
     {
-        NXPLOG_NCIHAL_D("phNxpNciHal_DownloadPinTest - FAILED\n");
+        NXPLOG_NCIHAL_E("phNxpNciHal_DownloadPinTest - FAILED\n");
         return status;
     }
 
@@ -1949,7 +1949,7 @@ NFCSTATUS phNxpNciHal_DownloadPinTest(void)
     status = phTmlNfc_IoCtl(phTmlNfc_e_EnableDownloadMode);
     if (NFCSTATUS_SUCCESS != status)
     {
-        NXPLOG_NCIHAL_D("phNxpNciHal_DownloadPinTest - FAILED\n");
+        NXPLOG_NCIHAL_E("phNxpNciHal_DownloadPinTest - FAILED\n");
         return status;
     }
 
@@ -1967,14 +1967,14 @@ NFCSTATUS phNxpNciHal_DownloadPinTest(void)
 
     if( status == NFCSTATUS_SUCCESS)
     {
-        NXPLOG_NCIHAL_D("phNxpNciHal_DownloadPinTest - SUCCESSS\n");
+        NXPLOG_NCIHAL_E("phNxpNciHal_DownloadPinTest - SUCCESSS\n");
     }
     else
     {
-        NXPLOG_NCIHAL_D("phNxpNciHal_DownloadPinTest - FAILED\n");
+        NXPLOG_NCIHAL_E("phNxpNciHal_DownloadPinTest - FAILED\n");
     }
 
-    NXPLOG_NCIHAL_D("phNxpNciHal_DownloadPinTest - end\n");
+    NXPLOG_NCIHAL_E("phNxpNciHal_DownloadPinTest - end\n");
 
     return status;
 }
@@ -1995,7 +1995,7 @@ NFCSTATUS phNxpNciHal_AntennaSelfTest(phAntenna_St_Resp_t * phAntenna_St_Resp )
     int len = 0;
     int cnt = 0;
 
-    NXPLOG_NCIHAL_D("phNxpNciHal_AntennaSelfTest - start\n");
+    NXPLOG_NCIHAL_E("phNxpNciHal_AntennaSelfTest - start\n");
     memcpy(&phAntenna_resp, phAntenna_St_Resp, sizeof(phAntenna_St_Resp_t));
     len = (sizeof(antenna_self_test_data)/sizeof(antenna_self_test_data[0]));
 
@@ -2015,19 +2015,19 @@ NFCSTATUS phNxpNciHal_AntennaSelfTest(phAntenna_St_Resp_t * phAntenna_St_Resp )
            (gagc_nfcld_status == NFCSTATUS_SUCCESS) && (gagc_differential_status == NFCSTATUS_SUCCESS))
         {
             antenna_st_status = NFCSTATUS_SUCCESS;
-            NXPLOG_NCIHAL_D("phNxpNciHal_AntennaSelfTest - SUCESS\n");
+            NXPLOG_NCIHAL_E("phNxpNciHal_AntennaSelfTest - SUCESS\n");
         }
         else
         {
-            NXPLOG_NCIHAL_D("phNxpNciHal_AntennaSelfTest - FAILED\n");
+            NXPLOG_NCIHAL_E("phNxpNciHal_AntennaSelfTest - FAILED\n");
         }
     }
     else
     {
-        NXPLOG_NCIHAL_D("phNxpNciHal_AntennaSelfTest - FAILED\n");
+        NXPLOG_NCIHAL_E("phNxpNciHal_AntennaSelfTest - FAILED\n");
     }
 
-    NXPLOG_NCIHAL_D("phNxpNciHal_AntennaSelfTest - end\n");
+    NXPLOG_NCIHAL_E("phNxpNciHal_AntennaSelfTest - end\n");
 
     return antenna_st_status;
 }

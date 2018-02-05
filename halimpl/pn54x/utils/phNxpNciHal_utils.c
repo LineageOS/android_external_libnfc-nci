@@ -221,7 +221,7 @@ int listGetAndRemoveNext(struct listHead* pList, void** ppData)
     if (pList->pFirst ==  NULL)
     {
         /* Empty list */
-        NXPLOG_NCIHAL_D("Failed to deallocate (list empty)");
+        NXPLOG_NCIHAL_E("Failed to deallocate (list empty)");
         result = 0;
         goto clean_and_return;
     }
@@ -260,10 +260,10 @@ void listDump(struct listHead* pList)
 {
     struct listNode* pNode = pList->pFirst;
 
-    NXPLOG_NCIHAL_D("Node dump:");
+    NXPLOG_NCIHAL_E("Node dump:");
     while (pNode != NULL)
     {
-        NXPLOG_NCIHAL_D("- %8p (%8p)", pNode, pNode->pData);
+        NXPLOG_NCIHAL_E("- %8p (%8p)", pNode, pNode->pData);
         pNode = pNode->pNext;
     }
 
@@ -288,7 +288,7 @@ static phNxpNciHal_Monitor_t *nxpncihal_monitor = NULL;
 phNxpNciHal_Monitor_t*
 phNxpNciHal_init_monitor(void)
 {
-    NXPLOG_NCIHAL_D("Entering phNxpNciHal_init_monitor");
+    NXPLOG_NCIHAL_E("Entering phNxpNciHal_init_monitor");
 
     if (nxpncihal_monitor == NULL)
     {
@@ -329,12 +329,12 @@ phNxpNciHal_init_monitor(void)
         goto clean_and_return;
     }
 
-    NXPLOG_NCIHAL_D("Returning with SUCCESS");
+    NXPLOG_NCIHAL_E("Returning with SUCCESS");
 
     return nxpncihal_monitor;
 
 clean_and_return:
-    NXPLOG_NCIHAL_D("Returning with FAILURE");
+    NXPLOG_NCIHAL_E("Returning with FAILURE");
 
     if (nxpncihal_monitor != NULL)
     {

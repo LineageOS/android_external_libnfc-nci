@@ -66,7 +66,7 @@ uint16_t phDnldNfc_CalcCrc16(uint8_t* pBuff, uint16_t wLen)
 
     if((NULL == pBuff) || (0 == wLen))
     {
-        NXPLOG_FWDNLD_W("Invalid Params supplied!!");
+        NXPLOG_NCIHAL_E("Invalid Params supplied!!");
     }
     else
     {
