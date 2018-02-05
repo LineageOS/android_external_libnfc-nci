@@ -116,7 +116,7 @@ NFCSTATUS phDnldNfc_CmdHandler(void *pContext, phDnldNfc_Event_t TrigEvent)
 
     if(NULL == pDlCtxt)
     {
-      NXPLOG_FWDNLD_E("Invalid Input Parameter!!");
+      NXPLOG_NCIHAL_E("Invalid Input Parameter!!");
       status = PHNFCSTVAL(CID_NFC_DNLD,NFCSTATUS_INVALID_PARAMETER);
     }
     else
@@ -131,7 +131,7 @@ NFCSTATUS phDnldNfc_CmdHandler(void *pContext, phDnldNfc_Event_t TrigEvent)
             {
                 if(phDnldNfc_EventInvalid == (pDlCtxt->tCurrEvent))
                 {
-                    NXPLOG_FWDNLD_D("Processing Normal Sequence..");
+                    NXPLOG_NCIHAL_E("Processing Normal Sequence..");
                     pDlCtxt->tCurrEvent = TrigEvent;
                     pDlCtxt->tDnldInProgress = phDnldNfc_TransitionBusy;
 
@@ -141,7 +141,7 @@ NFCSTATUS phDnldNfc_CmdHandler(void *pContext, phDnldNfc_Event_t TrigEvent)
                 }
                 else
                 {
-                    NXPLOG_FWDNLD_E("Prev Norml Sequence not completed/restored!!");
+                    NXPLOG_NCIHAL_E("Prev Norml Sequence not completed/restored!!");
                     status = PHNFCSTVAL(CID_NFC_DNLD,NFCSTATUS_FAILED);
                 }
                 break;
@@ -153,7 +153,7 @@ NFCSTATUS phDnldNfc_CmdHandler(void *pContext, phDnldNfc_Event_t TrigEvent)
             {
                 if(phDnldNfc_EventInvalid == (pDlCtxt->tCurrEvent))
                 {
-                    NXPLOG_FWDNLD_D("Processing R/W Sequence..");
+                    NXPLOG_NCIHAL_E("Processing R/W Sequence..");
                     pDlCtxt->tCurrEvent = TrigEvent;
                     pDlCtxt->tDnldInProgress = phDnldNfc_TransitionBusy;
 
@@ -163,7 +163,7 @@ NFCSTATUS phDnldNfc_CmdHandler(void *pContext, phDnldNfc_Event_t TrigEvent)
                 }
                 else
                 {
-                    NXPLOG_FWDNLD_E("Prev R/W Sequence not completed/restored!!");
+                    NXPLOG_NCIHAL_E("Prev R/W Sequence not completed/restored!!");
                     status = PHNFCSTVAL(CID_NFC_DNLD,NFCSTATUS_FAILED);
                 }
                 break;
@@ -171,7 +171,7 @@ NFCSTATUS phDnldNfc_CmdHandler(void *pContext, phDnldNfc_Event_t TrigEvent)
             default:
             {
                 /* Unknown Event */
-                NXPLOG_FWDNLD_E("Unknown Event Parameter!!");
+                NXPLOG_NCIHAL_E("Unknown Event Parameter!!");
                 status = PHNFCSTVAL(CID_NFC_DNLD,NFCSTATUS_INVALID_PARAMETER);
                 break;
             }
@@ -202,7 +202,7 @@ static void phDnldNfc_ProcessSeqState(void *pContext, phTmlNfc_TransactInfo_t *p
 
     if(NULL == pDlCtxt)
     {
-        NXPLOG_FWDNLD_E("Invalid Input Parameter!!");
+        NXPLOG_NCIHAL_E("Invalid Input Parameter!!");
         wStatus = PHNFCSTVAL(CID_NFC_DNLD,NFCSTATUS_INVALID_PARAMETER);
     }
     else
@@ -211,7 +211,7 @@ static void phDnldNfc_ProcessSeqState(void *pContext, phTmlNfc_TransactInfo_t *p
         {
             case phDnldNfc_StateInit:
             {
-                NXPLOG_FWDNLD_D("Initializing Sequence..");
+                NXPLOG_NCIHAL_E("Initializing Sequence..");
 
                 if(0 == (pDlCtxt->TimerInfo.dwRspTimerId))
                 {
@@ -219,14 +219,14 @@ static void phDnldNfc_ProcessSeqState(void *pContext, phTmlNfc_TransactInfo_t *p
 
                     if (0 == TimerId)
                     {
-                        NXPLOG_FWDNLD_W("Response Timer Create failed!!");
+                        NXPLOG_NCIHAL_E("Response Timer Create failed!!");
                         wStatus = NFCSTATUS_INSUFFICIENT_RESOURCES;
                         pDlCtxt->wCmdSendStatus = wStatus;
                         break;
                     }
                     else
                     {
-                        NXPLOG_FWDNLD_D("Response Timer Created Successfully");
+                        NXPLOG_NCIHAL_E("Response Timer Created Successfully");
                         (pDlCtxt->TimerInfo.dwRspTimerId) = TimerId;
                         (pDlCtxt->TimerInfo.TimerStatus) = 0;
                         (pDlCtxt->TimerInfo.wTimerExpStatus) = 0;
@@ -263,13 +263,13 @@ static void phDnldNfc_ProcessSeqState(void *pContext, phTmlNfc_TransactInfo_t *p
 
                     if (NFCSTATUS_SUCCESS == wStatus)
                     {
-                        NXPLOG_FWDNLD_D("Response timer started");
+                        NXPLOG_NCIHAL_E("Response timer started");
                         pDlCtxt->TimerInfo.TimerStatus = 1;
                         pDlCtxt->tCurrState = phDnldNfc_StateTimer;
                     }
                     else
                     {
-                         NXPLOG_FWDNLD_W("Response timer not started");
+                         NXPLOG_NCIHAL_E("Response timer not started");
                         pDlCtxt->tCurrState = phDnldNfc_StateResponse;
                     }
                     /* Call TML_Read function and register the call back function */
@@ -326,7 +326,7 @@ static void phDnldNfc_ProcessSeqState(void *pContext, phTmlNfc_TransactInfo_t *p
                 if(NFCSTATUS_SUCCESS != wIntStatus)
                 {
                     /* TODO:-Action to take in this case:-Tml read abort failed!? */
-                    NXPLOG_FWDNLD_W("Tml Read Abort failed!!");
+                    NXPLOG_NCIHAL_E("Tml Read Abort failed!!");
                 }
 
                 pDlCtxt->tCurrEvent = phDnldNfc_EventInvalid;
@@ -378,7 +378,7 @@ static void phDnldNfc_ProcessRWSeqState(void *pContext, phTmlNfc_TransactInfo_t 
 
     if(NULL == pDlCtxt)
     {
-        NXPLOG_FWDNLD_E("Invalid Input Parameter!!");
+        NXPLOG_NCIHAL_E("Invalid Input Parameter!!");
         wStatus = PHNFCSTVAL(CID_NFC_DNLD,NFCSTATUS_INVALID_PARAMETER);
     }
     else
@@ -393,12 +393,12 @@ static void phDnldNfc_ProcessRWSeqState(void *pContext, phTmlNfc_TransactInfo_t 
 
                     if (0 == TimerId)
                     {
-                        NXPLOG_FWDNLD_E("Response Timer Create failed!!");
+                        NXPLOG_NCIHAL_E("Response Timer Create failed!!");
                         wStatus = NFCSTATUS_INSUFFICIENT_RESOURCES;
                     }
                     else
                     {
-                        NXPLOG_FWDNLD_D("Response Timer Created Successfully");
+                        NXPLOG_NCIHAL_E("Response Timer Created Successfully");
                         (pDlCtxt->TimerInfo.dwRspTimerId) = TimerId;
                         (pDlCtxt->TimerInfo.TimerStatus) = 0;
                         (pDlCtxt->TimerInfo.wTimerExpStatus) = 0;
@@ -443,13 +443,13 @@ static void phDnldNfc_ProcessRWSeqState(void *pContext, phTmlNfc_TransactInfo_t 
 
                     if (NFCSTATUS_SUCCESS == wStatus)
                     {
-                        NXPLOG_FWDNLD_D("Response timer started");
+                        NXPLOG_NCIHAL_E("Response timer started");
                         pDlCtxt->TimerInfo.TimerStatus = 1;
                         pDlCtxt->tCurrState = phDnldNfc_StateTimer;
                     }
                     else
                     {
-                         NXPLOG_FWDNLD_W("Response timer not started");
+                         NXPLOG_NCIHAL_E("Response timer not started");
                         pDlCtxt->tCurrState = phDnldNfc_StateResponse;
                         /* Todo:- diagnostic in this case */
                     }
@@ -516,7 +516,7 @@ static void phDnldNfc_ProcessRWSeqState(void *pContext, phTmlNfc_TransactInfo_t 
 
                     if(NFCSTATUS_SUCCESS != wIntStatus)
                     {
-                         NXPLOG_FWDNLD_W("Tml read abort failed!");
+                         NXPLOG_NCIHAL_E("Tml read abort failed!");
                     }
 
                     wStatus = phDnldNfc_BuildFramePkt(pDlCtxt);
@@ -545,7 +545,7 @@ static void phDnldNfc_ProcessRWSeqState(void *pContext, phTmlNfc_TransactInfo_t 
 
                     if(NFCSTATUS_SUCCESS != wIntStatus)
                     {
-                         NXPLOG_FWDNLD_W("Tml read abort failed!");
+                         NXPLOG_NCIHAL_E("Tml read abort failed!");
                     }
 
                     pDlCtxt->tCurrEvent = phDnldNfc_EventInvalid;
@@ -598,7 +598,7 @@ static NFCSTATUS phDnldNfc_BuildFramePkt(pphDnldNfc_DlContext_t pDlContext)
 
     if(NULL == pDlContext)
     {
-        NXPLOG_FWDNLD_E("Invalid Input Parameter!!");
+        NXPLOG_NCIHAL_E("Invalid Input Parameter!!");
         wStatus = PHNFCSTVAL(CID_NFC_DNLD,NFCSTATUS_INVALID_PARAMETER);
     }
     else
@@ -607,7 +607,7 @@ static NFCSTATUS phDnldNfc_BuildFramePkt(pphDnldNfc_DlContext_t pDlContext)
         {
             if((0 == (pDlContext->tUserData.wLen)) || (NULL == (pDlContext->tUserData.pBuff)))
             {
-                NXPLOG_FWDNLD_E("Invalid Input Parameter(s) for Write!!");
+                NXPLOG_NCIHAL_E("Invalid Input Parameter(s) for Write!!");
                 wStatus = PHNFCSTVAL(CID_NFC_DNLD,NFCSTATUS_INVALID_PARAMETER);
             }
             else
@@ -623,14 +623,14 @@ static NFCSTATUS phDnldNfc_BuildFramePkt(pphDnldNfc_DlContext_t pDlContext)
         {
             if((0 == (pDlContext->tRspBuffInfo.wLen)) || (NULL == (pDlContext->tRspBuffInfo.pBuff)))
             {
-                NXPLOG_FWDNLD_E("Invalid Input Parameter(s) for Read!!");
+                NXPLOG_NCIHAL_E("Invalid Input Parameter(s) for Read!!");
                 wStatus = PHNFCSTVAL(CID_NFC_DNLD,NFCSTATUS_INVALID_PARAMETER);
             }
             else
             {
                 if(FALSE == (pDlContext->tRWInfo.bFramesSegmented))
                 {
-                    NXPLOG_FWDNLD_D("Verifying RspBuffInfo for Read Request..");
+                    NXPLOG_NCIHAL_E("Verifying RspBuffInfo for Read Request..");
                     wFrameLen = (pDlContext->tRspBuffInfo.wLen) + PHDNLDNFC_MIN_PLD_LEN;
 
                     (pDlContext->tRWInfo.wRWPldSize) = (PHDNLDNFC_CMDRESP_MAX_PLD_SIZE - PHDNLDNFC_MIN_PLD_LEN);
@@ -650,7 +650,7 @@ static NFCSTATUS phDnldNfc_BuildFramePkt(pphDnldNfc_DlContext_t pDlContext)
         {
             if((0 == (pDlContext->tUserData.wLen)) || (NULL == (pDlContext->tUserData.pBuff)))
             {
-                NXPLOG_FWDNLD_E("Invalid Input Parameter(s) for Log!!");
+                NXPLOG_NCIHAL_E("Invalid Input Parameter(s) for Log!!");
                 wStatus = PHNFCSTVAL(CID_NFC_DNLD,NFCSTATUS_INVALID_PARAMETER);
             }
         }
@@ -677,7 +677,7 @@ static NFCSTATUS phDnldNfc_BuildFramePkt(pphDnldNfc_DlContext_t pDlContext)
                     pDlContext->tCmdRspFrameInfo.aFrameBuff[PHDNLDNFC_FRAME_HDR_OFFSET] = pFrameByte[1];
                     pDlContext->tCmdRspFrameInfo.aFrameBuff[PHDNLDNFC_FRAME_HDR_OFFSET + 1] = pFrameByte[0];
 
-                    NXPLOG_FWDNLD_D("Inserting FrameId ..");
+                    NXPLOG_NCIHAL_E("Inserting FrameId ..");
                     pDlContext->tCmdRspFrameInfo.aFrameBuff[PHDNLDNFC_FRAMEID_OFFSET] =
                         (pDlContext->tCmdId);
 
@@ -706,7 +706,7 @@ static NFCSTATUS phDnldNfc_BuildFramePkt(pphDnldNfc_DlContext_t pDlContext)
                 }
                 if (wFrameLen > PHDNLDNFC_CMDRESP_MAX_BUFF_SIZE)
                 {
-                    NXPLOG_FWDNLD_D ("wFrameLen exceeds the limit");
+                    NXPLOG_NCIHAL_E ("wFrameLen exceeds the limit");
                     return NFCSTATUS_FAILED;
                 }
                 /* calculate CRC16 */
@@ -722,11 +722,11 @@ static NFCSTATUS phDnldNfc_BuildFramePkt(pphDnldNfc_DlContext_t pDlContext)
             }
 
             (pDlContext->tCmdRspFrameInfo.dwSendlength) = wFrameLen;
-            NXPLOG_FWDNLD_D("Frame created successfully");
+            NXPLOG_NCIHAL_E("Frame created successfully");
         }
         else
         {
-            NXPLOG_FWDNLD_E("Frame creation failed!!");
+            NXPLOG_NCIHAL_E("Frame creation failed!!");
             wStatus = PHNFCSTVAL(CID_NFC_DNLD,NFCSTATUS_FAILED);
         }
     }
@@ -754,7 +754,7 @@ static NFCSTATUS phDnldNfc_CreateFramePld(pphDnldNfc_DlContext_t pDlContext)
 
     if(NULL == pDlContext)
     {
-        NXPLOG_FWDNLD_E("Invalid Input Parameter!!");
+        NXPLOG_NCIHAL_E("Invalid Input Parameter!!");
         wStatus = PHNFCSTVAL(CID_NFC_DNLD,NFCSTATUS_INVALID_PARAMETER);
     }
     else
@@ -871,7 +871,7 @@ static NFCSTATUS phDnldNfc_CreateFramePld(pphDnldNfc_DlContext_t pDlContext)
         {
             if((0 == (pDlContext->tUserData.wLen)) || (NULL == (pDlContext->tUserData.pBuff)))
             {
-                NXPLOG_FWDNLD_E("Invalid Input Parameter(s) for Raw Request!!");
+                NXPLOG_NCIHAL_E("Invalid Input Parameter(s) for Raw Request!!");
                 wStatus = PHNFCSTVAL(CID_NFC_DNLD,NFCSTATUS_INVALID_PARAMETER);
             }
             else
@@ -913,7 +913,7 @@ static NFCSTATUS phDnldNfc_ProcessFrame(void *pContext, phTmlNfc_TransactInfo_t 
        (NULL == pInfo)
        )
     {
-        NXPLOG_FWDNLD_E("Invalid Input Parameters!!");
+        NXPLOG_NCIHAL_E("Invalid Input Parameters!!");
         wStatus = PHNFCSTVAL(CID_NFC_DNLD,NFCSTATUS_INVALID_PARAMETER);
     }
     else
@@ -922,7 +922,7 @@ static NFCSTATUS phDnldNfc_ProcessFrame(void *pContext, phTmlNfc_TransactInfo_t 
             (0 == pInfo->wLength) ||
             (NULL == pInfo->pBuff))
         {
-            NXPLOG_FWDNLD_E("Dnld Cmd Request Failed!!");
+            NXPLOG_NCIHAL_E("Dnld Cmd Request Failed!!");
             wStatus = PHNFCSTVAL(CID_NFC_DNLD,NFCSTATUS_FAILED);
         }
         else
@@ -938,7 +938,7 @@ static NFCSTATUS phDnldNfc_ProcessFrame(void *pContext, phTmlNfc_TransactInfo_t 
               }
               else
               {
-                  NXPLOG_FWDNLD_E("Cannot update Response buff with received data!!");
+                  NXPLOG_NCIHAL_E("Cannot update Response buff with received data!!");
               }
             }
             else
@@ -959,7 +959,7 @@ static NFCSTATUS phDnldNfc_ProcessFrame(void *pContext, phTmlNfc_TransactInfo_t 
 
                     if(wRecvdLen != wPldLen)
                     {
-                        NXPLOG_FWDNLD_E("Invalid frame payload length received");
+                        NXPLOG_NCIHAL_E("Invalid frame payload length received");
                         wStatus = PHNFCSTVAL(CID_NFC_DNLD,NFCSTATUS_FAILED);
                     }
                     else
@@ -969,7 +969,7 @@ static NFCSTATUS phDnldNfc_ProcessFrame(void *pContext, phTmlNfc_TransactInfo_t 
                 }
                 else
                 {
-                    NXPLOG_FWDNLD_E("Invalid frame received");
+                    NXPLOG_NCIHAL_E("Invalid frame received");
                     wStatus = PHNFCSTVAL(CID_NFC_DNLD,NFCSTATUS_FAILED);
                 }
             }
@@ -1000,7 +1000,7 @@ static NFCSTATUS phDnldNfc_ProcessRecvInfo(void *pContext, phTmlNfc_TransactInfo
     {
         if (NULL == pInfo)
         {
-            NXPLOG_FWDNLD_E("Invalid pInfo received from TML!!");
+            NXPLOG_NCIHAL_E("Invalid pInfo received from TML!!");
             wStatus = PHNFCSTVAL(CID_NFC_DNLD,NFCSTATUS_FAILED);
         }
         else
@@ -1009,17 +1009,17 @@ static NFCSTATUS phDnldNfc_ProcessRecvInfo(void *pContext, phTmlNfc_TransactInfo
 
             if(NFCSTATUS_SUCCESS == wStatus)
             {
-                NXPLOG_FWDNLD_D("Send Success");
+                NXPLOG_NCIHAL_E("Send Success");
             }else
             {
-                NXPLOG_FWDNLD_E("Tml Write error!!");
+                NXPLOG_NCIHAL_E("Tml Write error!!");
                  wStatus = PHNFCSTVAL(CID_NFC_DNLD,NFCSTATUS_FAILED);
             }
         }
     }
     else
     {
-        NXPLOG_FWDNLD_E("Invalid context received from TML!!");
+        NXPLOG_NCIHAL_E("Invalid context received from TML!!");
          wStatus = PHNFCSTVAL(CID_NFC_DNLD,NFCSTATUS_FAILED);
     }
 
@@ -1048,13 +1048,13 @@ static NFCSTATUS phDnldNfc_SetupResendTimer(pphDnldNfc_DlContext_t pDlContext)
 
     if(NFCSTATUS_SUCCESS == wStatus)
     {
-        NXPLOG_FWDNLD_D("Frame Resend wait timer started");
+        NXPLOG_NCIHAL_E("Frame Resend wait timer started");
         (pDlContext->TimerInfo.TimerStatus) = 1;
         pDlContext->tCurrState = phDnldNfc_StateTimer;
     }
     else
     {
-         NXPLOG_FWDNLD_W("Frame Resend wait timer not started");
+         NXPLOG_NCIHAL_E("Frame Resend wait timer not started");
          (pDlContext->TimerInfo.TimerStatus) = 0;/*timer stopped*/
          pDlContext->tCurrState = phDnldNfc_StateResponse;
         /* Todo:- diagnostic in this case */
@@ -1092,15 +1092,15 @@ static void phDnldNfc_RspTimeOutCb(uint32_t TimerId, void *pContext)
             /* No response received and the timer expired */
             pDlCtxt->TimerInfo.TimerStatus = 0;    /* Reset timer status flag */
 
-            NXPLOG_FWDNLD_D("%x",pDlCtxt->tLastStatus);
+            NXPLOG_NCIHAL_E("%x",pDlCtxt->tLastStatus);
 
 #if PH_LIBNFC_VEN_RESET_ON_DOWNLOAD_TIMEOUT
             if ( PH_DL_STATUS_SIGNATURE_ERROR  == pDlCtxt->tLastStatus ) {
                 /* Do a VEN Reset of the chip. */
-                NXPLOG_FWDNLD_E("Performing a VEN Reset");
+                NXPLOG_NCIHAL_E("Performing a VEN Reset");
                 phTmlNfc_IoCtl(phTmlNfc_e_EnableNormalMode);
                 phTmlNfc_IoCtl(phTmlNfc_e_EnableDownloadMode);
-                NXPLOG_FWDNLD_E("VEN Reset Done");
+                NXPLOG_NCIHAL_E("VEN Reset Done");
             }
 #endif
 
@@ -1181,7 +1181,7 @@ static NFCSTATUS phDnldNfc_UpdateRsp(pphDnldNfc_DlContext_t   pDlContext, phTmlN
 
     if((NULL == pDlContext) || (NULL == pInfo))
     {
-        NXPLOG_FWDNLD_E("Invalid Input Parameters!!");
+        NXPLOG_NCIHAL_E("Invalid Input Parameters!!");
         wStatus = PHNFCSTVAL(CID_NFC_DNLD,NFCSTATUS_INVALID_PARAMETER);
     }
     else
@@ -1193,7 +1193,7 @@ static NFCSTATUS phDnldNfc_UpdateRsp(pphDnldNfc_DlContext_t   pDlContext, phTmlN
                 /* first write frame response received case */
                 if(TRUE == (pDlContext->tRWInfo.bFirstWrReq))
                 {
-                    NXPLOG_FWDNLD_D("First Write Frame Success Status received!!");
+                    NXPLOG_NCIHAL_E("First Write Frame Success Status received!!");
                     (pDlContext->tRWInfo.bFirstWrReq) = FALSE;
                 }
 
@@ -1201,13 +1201,13 @@ static NFCSTATUS phDnldNfc_UpdateRsp(pphDnldNfc_DlContext_t   pDlContext, phTmlN
                 {
                     if(FALSE == (pDlContext->tRWInfo.bFramesSegmented))
                     {
-                        NXPLOG_FWDNLD_D("Chunked Write Frame Success Status received!!");
+                        NXPLOG_NCIHAL_E("Chunked Write Frame Success Status received!!");
                         (pDlContext->tRWInfo.wRemChunkBytes) -= (pDlContext->tRWInfo.wBytesToSendRecv);
                         (pDlContext->tRWInfo.bFirstChunkResp) = FALSE;
                     }
                     else
                     {
-                        NXPLOG_FWDNLD_E("UnExpected Status received!!");
+                        NXPLOG_NCIHAL_E("UnExpected Status received!!");
                         wStatus = PHNFCSTVAL(CID_NFC_DNLD, NFCSTATUS_FAILED);
                     }
                 }
@@ -1230,7 +1230,7 @@ static NFCSTATUS phDnldNfc_UpdateRsp(pphDnldNfc_DlContext_t   pDlContext, phTmlN
                 /* first write frame response received case */
                 if(TRUE == (pDlContext->tRWInfo.bFirstWrReq))
                 {
-                    NXPLOG_FWDNLD_D("First Write Frame Success Status received!!");
+                    NXPLOG_NCIHAL_E("First Write Frame Success Status received!!");
                     (pDlContext->tRWInfo.bFirstWrReq) = FALSE;
                 }
             }
@@ -1244,7 +1244,7 @@ static NFCSTATUS phDnldNfc_UpdateRsp(pphDnldNfc_DlContext_t   pDlContext, phTmlN
             }
             else if(PH_DL_STATUS_FIRMWARE_VERSION_ERROR == (pInfo->pBuff[PHDNLDNFC_FRAMESTATUS_OFFSET]))
             {
-                NXPLOG_FWDNLD_E("FW version Error !!!could be either due to FW major version mismatch or Firmware Already Up To Date !!");
+                NXPLOG_NCIHAL_E("FW version Error !!!could be either due to FW major version mismatch or Firmware Already Up To Date !!");
                 (pDlContext->tRWInfo.bFirstWrReq) = FALSE;
                 /* resetting wRemBytes to 0 to avoid any further write frames send */
                 (pDlContext->tRWInfo.wRemBytes) = 0;
@@ -1253,26 +1253,26 @@ static NFCSTATUS phDnldNfc_UpdateRsp(pphDnldNfc_DlContext_t   pDlContext, phTmlN
             }
             else if(PH_DL_STATUS_PLL_ERROR == (pInfo->pBuff[PHDNLDNFC_FRAMESTATUS_OFFSET]))
             {
-                NXPLOG_FWDNLD_E("PLL Error Status received!!");
+                NXPLOG_NCIHAL_E("PLL Error Status received!!");
                 (pDlContext->tLastStatus) = PH_DL_STATUS_PLL_ERROR;
                 wStatus = NFCSTATUS_WRITE_FAILED;
             }
             else if(PH_DL_STATUS_SIGNATURE_ERROR == (pInfo->pBuff[PHDNLDNFC_FRAMESTATUS_OFFSET]))
             {
-                NXPLOG_FWDNLD_E("Signature Mismatch Error received!!");
+                NXPLOG_NCIHAL_E("Signature Mismatch Error received!!");
                 /* save the status for use in loading the relevant recovery image (either signature or platform) */
                 (pDlContext->tLastStatus) = PH_DL_STATUS_SIGNATURE_ERROR;
                 wStatus = NFCSTATUS_REJECTED;
             }
             else if(PH_DL_STATUS_MEM_BSY == (pInfo->pBuff[PHDNLDNFC_FRAMESTATUS_OFFSET]))
             {
-                NXPLOG_FWDNLD_E("Mem Busy Status received!!");
+                NXPLOG_NCIHAL_E("Mem Busy Status received!!");
                 (pDlContext->tLastStatus) = PH_DL_STATUS_MEM_BSY;
                 wStatus = NFCSTATUS_BUSY;
             }
             else
             {
-                NXPLOG_FWDNLD_E("Unsuccessful Status received!!");
+                NXPLOG_NCIHAL_E("Unsuccessful Status received!!");
                 wStatus = PHNFCSTVAL(CID_NFC_DNLD, NFCSTATUS_FAILED);
             }
         }
@@ -1285,7 +1285,7 @@ static NFCSTATUS phDnldNfc_UpdateRsp(pphDnldNfc_DlContext_t   pDlContext, phTmlN
 
                 if(wReadLen != (pDlContext->tRWInfo.wBytesToSendRecv))
                 {
-                    NXPLOG_FWDNLD_E("Desired Length bytes not received!!");
+                    NXPLOG_NCIHAL_E("Desired Length bytes not received!!");
                     wStatus = PHNFCSTVAL(CID_NFC_DNLD, NFCSTATUS_FAILED);
                 }
                 else
@@ -1305,7 +1305,7 @@ static NFCSTATUS phDnldNfc_UpdateRsp(pphDnldNfc_DlContext_t   pDlContext, phTmlN
             }
             else
             {
-                NXPLOG_FWDNLD_E("Unsuccessful Status received!!");
+                NXPLOG_NCIHAL_E("Unsuccessful Status received!!");
                 wStatus = PHNFCSTVAL(CID_NFC_DNLD, NFCSTATUS_FAILED);
             }
         }
@@ -1324,7 +1324,7 @@ static NFCSTATUS phDnldNfc_UpdateRsp(pphDnldNfc_DlContext_t   pDlContext, phTmlN
             }
             else
             {
-                NXPLOG_FWDNLD_E("Unsuccessful Status received!!");
+                NXPLOG_NCIHAL_E("Unsuccessful Status received!!");
                 wStatus = PHNFCSTVAL(CID_NFC_DNLD, NFCSTATUS_FAILED);
             }
         }

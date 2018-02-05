@@ -46,18 +46,18 @@ extern nci_log_level_t gLog_level;
 
 /* ####################### Set the log module name in .conf file ########################## */
 #define NAME_NXPLOG_EXTNS_LOGLEVEL          "NXPLOG_EXTNS_LOGLEVEL"
-#define NAME_NXPLOG_HAL_LOGLEVEL            "NXPLOG_NCIHAL_LOGLEVEL"
+#define NAME_NXPLOG_HAL_LOGLEVEL            "NXPLOG_NCIHAL_EOGLEVEL"
 #define NAME_NXPLOG_NCIX_LOGLEVEL           "NXPLOG_NCIX_LOGLEVEL"
 #define NAME_NXPLOG_NCIR_LOGLEVEL           "NXPLOG_NCIR_LOGLEVEL"
-#define NAME_NXPLOG_FWDNLD_LOGLEVEL         "NXPLOG_FWDNLD_LOGLEVEL"
+#define NAME_NXPLOG_NCIHAL_EOGLEVEL         "NXPLOG_NCIHAL_EOGLEVEL"
 #define NAME_NXPLOG_TML_LOGLEVEL            "NXPLOG_TML_LOGLEVEL"
 
 /* ####################### Set the log module name by Android property ########################## */
-#define PROP_NAME_NXPLOG_GLOBAL_LOGLEVEL       "nfc.nxp_log_level_global"
+#define PROP_NAME_NXPLOG_NCIHAL_EOGLEVEL       "nfc.nxp_log_level_global"
 #define PROP_NAME_NXPLOG_EXTNS_LOGLEVEL        "nfc.nxp_log_level_extns"
 #define PROP_NAME_NXPLOG_HAL_LOGLEVEL          "nfc.nxp_log_level_hal"
 #define PROP_NAME_NXPLOG_NCI_LOGLEVEL          "nfc.nxp_log_level_nci"
-#define PROP_NAME_NXPLOG_FWDNLD_LOGLEVEL       "nfc.nxp_log_level_dnld"
+#define PROP_NAME_NXPLOG_NCIHAL_EOGLEVEL       "nfc.nxp_log_level_dnld"
 #define PROP_NAME_NXPLOG_TML_LOGLEVEL          "nfc.nxp_log_level_tml"
 
 /* ####################### Set the logging level for EVERY COMPONENT here ######################## :START: */
@@ -112,12 +112,12 @@ extern const char * NXPLOG_ITEM_HCPR;    /* Android logging tag for NxpHcpR   */
 
 /* Logging APIs used by NxpNciHal module */
 #if (ENABLE_HAL_TRACES == TRUE )
-#    define NXPLOG_NCIHAL_D(...)  {if(gLog_level.hal_log_level >= NXPLOG_LOG_DEBUG_LOGLEVEL) LOG_PRI(ANDROID_LOG_DEBUG,NXPLOG_ITEM_NCIHAL,__VA_ARGS__);}
-#    define NXPLOG_NCIHAL_W(...)  {if(gLog_level.hal_log_level >= NXPLOG_LOG_WARN_LOGLEVEL) LOG_PRI(ANDROID_LOG_WARN,NXPLOG_ITEM_NCIHAL,__VA_ARGS__);}
+#    define NXPLOG_NCIHAL_E(...)  {if(gLog_level.hal_log_level >= NXPLOG_LOG_DEBUG_LOGLEVEL) LOG_PRI(ANDROID_LOG_DEBUG,NXPLOG_ITEM_NCIHAL,__VA_ARGS__);}
+#    define NXPLOG_NCIHAL_E(...)  {if(gLog_level.hal_log_level >= NXPLOG_LOG_WARN_LOGLEVEL) LOG_PRI(ANDROID_LOG_WARN,NXPLOG_ITEM_NCIHAL,__VA_ARGS__);}
 #    define NXPLOG_NCIHAL_E(...)  {if(gLog_level.hal_log_level >= NXPLOG_LOG_ERROR_LOGLEVEL) LOG_PRI(ANDROID_LOG_ERROR,NXPLOG_ITEM_NCIHAL,__VA_ARGS__);}
 #else
-#    define NXPLOG_NCIHAL_D(...)
-#    define NXPLOG_NCIHAL_W(...)
+#    define NXPLOG_NCIHAL_E(...)
+#    define NXPLOG_NCIHAL_E(...)
 #    define NXPLOG_NCIHAL_E(...)
 #endif /* Logging APIs used by HAL module */
 
@@ -145,13 +145,13 @@ extern const char * NXPLOG_ITEM_HCPR;    /* Android logging tag for NxpHcpR   */
 
 /* Logging APIs used by NxpFwDnld module */
 #if (ENABLE_FWDNLD_TRACES == TRUE )
-#    define NXPLOG_FWDNLD_D(...)  {if(gLog_level.dnld_log_level >= NXPLOG_LOG_DEBUG_LOGLEVEL) LOG_PRI(ANDROID_LOG_DEBUG,NXPLOG_ITEM_FWDNLD,__VA_ARGS__);}
-#    define NXPLOG_FWDNLD_W(...)  {if(gLog_level.dnld_log_level >= NXPLOG_LOG_WARN_LOGLEVEL) LOG_PRI(ANDROID_LOG_WARN,NXPLOG_ITEM_FWDNLD,__VA_ARGS__);}
-#    define NXPLOG_FWDNLD_E(...)  {if(gLog_level.dnld_log_level >= NXPLOG_LOG_ERROR_LOGLEVEL) LOG_PRI(ANDROID_LOG_ERROR,NXPLOG_ITEM_FWDNLD,__VA_ARGS__);}
+#    define NXPLOG_NCIHAL_E(...)  {if(gLog_level.dnld_log_level >= NXPLOG_LOG_DEBUG_LOGLEVEL) LOG_PRI(ANDROID_LOG_DEBUG,NXPLOG_ITEM_FWDNLD,__VA_ARGS__);}
+#    define NXPLOG_NCIHAL_E(...)  {if(gLog_level.dnld_log_level >= NXPLOG_LOG_WARN_LOGLEVEL) LOG_PRI(ANDROID_LOG_WARN,NXPLOG_ITEM_FWDNLD,__VA_ARGS__);}
+#    define NXPLOG_NCIHAL_E(...)  {if(gLog_level.dnld_log_level >= NXPLOG_LOG_ERROR_LOGLEVEL) LOG_PRI(ANDROID_LOG_ERROR,NXPLOG_ITEM_FWDNLD,__VA_ARGS__);}
 #else
-#    define NXPLOG_FWDNLD_D(...)
-#    define NXPLOG_FWDNLD_W(...)
-#    define NXPLOG_FWDNLD_E(...)
+#    define NXPLOG_NCIHAL_E(...)
+#    define NXPLOG_NCIHAL_E(...)
+#    define NXPLOG_NCIHAL_E(...)
 #endif /* Logging APIs used by NxpFwDnld module */
 
 /* Logging APIs used by NxpTml module */

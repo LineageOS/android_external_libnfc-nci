@@ -54,7 +54,7 @@ static uint8_t phNxpLog_SetGlobalLogLevel (void)
     unsigned long num = 0;
     char valueStr [PROPERTY_VALUE_MAX] = {0};
 
-    int len = property_get (PROP_NAME_NXPLOG_GLOBAL_LOGLEVEL, valueStr, "");
+    int len = property_get (PROP_NAME_NXPLOG_NCIHAL_EOGLEVEL, valueStr, "");
     if (len > 0)
     {
         /* let Android property override .conf variable */
@@ -164,12 +164,12 @@ static void phNxpLog_SetDnldLogLevel (uint8_t level)
     unsigned long num = 0;
     int len;
     char valueStr [PROPERTY_VALUE_MAX] = {0};
-    if (GetNxpNumValue (NAME_NXPLOG_FWDNLD_LOGLEVEL, &num, sizeof(num)))
+    if (GetNxpNumValue (NAME_NXPLOG_NCIHAL_EOGLEVEL, &num, sizeof(num)))
     {
         gLog_level.dnld_log_level = (level > (unsigned char) num) ? level : (unsigned char) num;;
     }
 
-    len = property_get (PROP_NAME_NXPLOG_FWDNLD_LOGLEVEL, valueStr, "");
+    len = property_get (PROP_NAME_NXPLOG_NCIHAL_EOGLEVEL, valueStr, "");
     if (len > 0)
     {
         /* let Android property override .conf variable */
