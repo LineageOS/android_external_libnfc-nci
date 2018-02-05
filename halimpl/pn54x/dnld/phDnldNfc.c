@@ -64,14 +64,14 @@ NFCSTATUS phDnldNfc_Reset(pphDnldNfc_RspCb_t pNotify, void *pContext)
        (NULL == pContext)
        )
     {
-        NXPLOG_FWDNLD_E("Invalid Input Parameters!!");
+        NXPLOG_NCIHAL_E("Invalid Input Parameters!!");
         wStatus = PHNFCSTVAL(CID_NFC_DNLD, NFCSTATUS_INVALID_PARAMETER);
     }
     else
     {
         if(phDnldNfc_TransitionIdle != gpphDnldContext->tDnldInProgress)
         {
-            NXPLOG_FWDNLD_E("Dnld Cmd Request in Progress..Cannot Continue!!");
+            NXPLOG_NCIHAL_E("Dnld Cmd Request in Progress..Cannot Continue!!");
             wStatus = PHNFCSTVAL(CID_NFC_DNLD, NFCSTATUS_BUSY);
         }
         else
@@ -89,11 +89,11 @@ NFCSTATUS phDnldNfc_Reset(pphDnldNfc_RspCb_t pNotify, void *pContext)
 
             if(NFCSTATUS_PENDING == wStatus)
             {
-                NXPLOG_FWDNLD_D("Reset Request submitted successfully");
+                NXPLOG_NCIHAL_E("Reset Request submitted successfully");
             }
             else
             {
-                NXPLOG_FWDNLD_E("Reset Request Failed!!");
+                NXPLOG_NCIHAL_E("Reset Request Failed!!");
             }
         }
     }
@@ -127,14 +127,14 @@ NFCSTATUS phDnldNfc_GetVersion(pphDnldNfc_Buff_t pVersionInfo, pphDnldNfc_RspCb_
        (NULL == pContext)
        )
     {
-        NXPLOG_FWDNLD_E("Invalid Input Parameters!!");
+        NXPLOG_NCIHAL_E("Invalid Input Parameters!!");
         wStatus = PHNFCSTVAL(CID_NFC_DNLD, NFCSTATUS_INVALID_PARAMETER);
     }
     else
     {
         if(phDnldNfc_TransitionIdle != gpphDnldContext->tDnldInProgress)
         {
-            NXPLOG_FWDNLD_E("Dnld Cmd Request in Progress..Cannot Continue!!");
+            NXPLOG_NCIHAL_E("Dnld Cmd Request in Progress..Cannot Continue!!");
             wStatus = PHNFCSTVAL(CID_NFC_DNLD, NFCSTATUS_BUSY);
         }
         else
@@ -154,16 +154,16 @@ NFCSTATUS phDnldNfc_GetVersion(pphDnldNfc_Buff_t pVersionInfo, pphDnldNfc_RspCb_
 
                 if(NFCSTATUS_PENDING == wStatus)
                 {
-                    NXPLOG_FWDNLD_D("GetVersion Request submitted successfully");
+                    NXPLOG_NCIHAL_E("GetVersion Request submitted successfully");
                 }
                 else
                 {
-                    NXPLOG_FWDNLD_E("GetVersion Request Failed!!");
+                    NXPLOG_NCIHAL_E("GetVersion Request Failed!!");
                 }
             }
             else
             {
-                NXPLOG_FWDNLD_E("Invalid Buff Parameters!!");
+                NXPLOG_NCIHAL_E("Invalid Buff Parameters!!");
                 wStatus = PHNFCSTVAL(CID_NFC_DNLD, NFCSTATUS_INVALID_PARAMETER);
             }
         }
@@ -197,14 +197,14 @@ NFCSTATUS phDnldNfc_GetSessionState(pphDnldNfc_Buff_t pSession, pphDnldNfc_RspCb
        (NULL == pContext)
        )
     {
-        NXPLOG_FWDNLD_E("Invalid Input Parameters!!");
+        NXPLOG_NCIHAL_E("Invalid Input Parameters!!");
         wStatus = PHNFCSTVAL(CID_NFC_DNLD, NFCSTATUS_INVALID_PARAMETER);
     }
     else
     {
         if(phDnldNfc_TransitionIdle != gpphDnldContext->tDnldInProgress)
         {
-            NXPLOG_FWDNLD_E("Dnld Cmd Request in Progress..Cannot Continue!!");
+            NXPLOG_NCIHAL_E("Dnld Cmd Request in Progress..Cannot Continue!!");
             wStatus = PHNFCSTVAL(CID_NFC_DNLD, NFCSTATUS_BUSY);
         }
         else
@@ -224,16 +224,16 @@ NFCSTATUS phDnldNfc_GetSessionState(pphDnldNfc_Buff_t pSession, pphDnldNfc_RspCb
 
                 if(NFCSTATUS_PENDING == wStatus)
                 {
-                    NXPLOG_FWDNLD_D("GetSessionState Request submitted successfully");
+                    NXPLOG_NCIHAL_E("GetSessionState Request submitted successfully");
                 }
                 else
                 {
-                    NXPLOG_FWDNLD_E("GetSessionState Request Failed!!");
+                    NXPLOG_NCIHAL_E("GetSessionState Request Failed!!");
                 }
             }
             else
             {
-                NXPLOG_FWDNLD_E("Invalid Buff Parameters!!");
+                NXPLOG_NCIHAL_E("Invalid Buff Parameters!!");
                 wStatus = PHNFCSTVAL(CID_NFC_DNLD, NFCSTATUS_INVALID_PARAMETER);
             }
         }
@@ -271,14 +271,14 @@ NFCSTATUS phDnldNfc_CheckIntegrity(uint8_t bChipVer, pphDnldNfc_Buff_t pCRCData,
        (NULL == pContext)
        )
     {
-        NXPLOG_FWDNLD_E("Invalid Input Parameters!!");
+        NXPLOG_NCIHAL_E("Invalid Input Parameters!!");
         wStatus = PHNFCSTVAL(CID_NFC_DNLD, NFCSTATUS_INVALID_PARAMETER);
     }
     else
     {
         if(phDnldNfc_TransitionIdle != gpphDnldContext->tDnldInProgress)
         {
-            NXPLOG_FWDNLD_E("Dnld Cmd Request in Progress..Cannot Continue!!");
+            NXPLOG_NCIHAL_E("Dnld Cmd Request in Progress..Cannot Continue!!");
             wStatus = PHNFCSTVAL(CID_NFC_DNLD, NFCSTATUS_BUSY);
         }
         else
@@ -312,16 +312,16 @@ NFCSTATUS phDnldNfc_CheckIntegrity(uint8_t bChipVer, pphDnldNfc_Buff_t pCRCData,
 
                 if(NFCSTATUS_PENDING == wStatus)
                 {
-                    NXPLOG_FWDNLD_D("CheckIntegrity Request submitted successfully");
+                    NXPLOG_NCIHAL_E("CheckIntegrity Request submitted successfully");
                 }
                 else
                 {
-                    NXPLOG_FWDNLD_E("CheckIntegrity Request Failed!!");
+                    NXPLOG_NCIHAL_E("CheckIntegrity Request Failed!!");
                 }
             }
             else
             {
-                NXPLOG_FWDNLD_E("Invalid Buff Parameters!!");
+                NXPLOG_NCIHAL_E("Invalid Buff Parameters!!");
                 wStatus = PHNFCSTVAL(CID_NFC_DNLD, NFCSTATUS_INVALID_PARAMETER);
             }
         }
@@ -354,14 +354,14 @@ NFCSTATUS phDnldNfc_ReadLog(pphDnldNfc_Buff_t pData, pphDnldNfc_RspCb_t pNotify,
        (NULL == pContext)
        )
     {
-        NXPLOG_FWDNLD_E("Invalid Input Parameters!!");
+        NXPLOG_NCIHAL_E("Invalid Input Parameters!!");
         wStatus = PHNFCSTVAL(CID_NFC_DNLD, NFCSTATUS_INVALID_PARAMETER);
     }
     else
     {
         if(phDnldNfc_TransitionIdle != gpphDnldContext->tDnldInProgress)
         {
-            NXPLOG_FWDNLD_E("Dnld Cmd Request in Progress..Cannot Continue!!");
+            NXPLOG_NCIHAL_E("Dnld Cmd Request in Progress..Cannot Continue!!");
             wStatus = PHNFCSTVAL(CID_NFC_DNLD, NFCSTATUS_BUSY);
         }
         else
@@ -384,16 +384,16 @@ NFCSTATUS phDnldNfc_ReadLog(pphDnldNfc_Buff_t pData, pphDnldNfc_RspCb_t pNotify,
 
                 if(NFCSTATUS_PENDING == wStatus)
                 {
-                    NXPLOG_FWDNLD_D("Read Request submitted successfully");
+                    NXPLOG_NCIHAL_E("Read Request submitted successfully");
                 }
                 else
                 {
-                    NXPLOG_FWDNLD_E("Read Request Failed!!");
+                    NXPLOG_NCIHAL_E("Read Request Failed!!");
                 }
             }
             else
             {
-                NXPLOG_FWDNLD_E("Invalid Buff Parameters!!");
+                NXPLOG_NCIHAL_E("Invalid Buff Parameters!!");
                 wStatus = PHNFCSTVAL(CID_NFC_DNLD, NFCSTATUS_INVALID_PARAMETER);
             }
         }
@@ -429,14 +429,14 @@ NFCSTATUS phDnldNfc_Write(bool_t  bRecoverSeq, pphDnldNfc_Buff_t pData, pphDnldN
 
     if((NULL == pNotify) || (NULL == pContext))
     {
-        NXPLOG_FWDNLD_E("Invalid Input Parameters!!");
+        NXPLOG_NCIHAL_E("Invalid Input Parameters!!");
         wStatus = PHNFCSTVAL(CID_NFC_DNLD, NFCSTATUS_INVALID_PARAMETER);
     }
     else
     {
         if(phDnldNfc_TransitionIdle != gpphDnldContext->tDnldInProgress)
         {
-            NXPLOG_FWDNLD_E("Dnld Cmd Request in Progress..Cannot Continue!!");
+            NXPLOG_NCIHAL_E("Dnld Cmd Request in Progress..Cannot Continue!!");
             wStatus = PHNFCSTVAL(CID_NFC_DNLD, NFCSTATUS_BUSY);
         }
         else
@@ -476,7 +476,7 @@ NFCSTATUS phDnldNfc_Write(bool_t  bRecoverSeq, pphDnldNfc_Buff_t pData, pphDnldN
                     }
                     else
                     {
-                        NXPLOG_FWDNLD_E("Platform Recovery Image extraction Failed!!");
+                        NXPLOG_NCIHAL_E("Platform Recovery Image extraction Failed!!");
                         pImgPtr = NULL;
                         wLen = 0;
                     }
@@ -505,16 +505,16 @@ NFCSTATUS phDnldNfc_Write(bool_t  bRecoverSeq, pphDnldNfc_Buff_t pData, pphDnldN
 
                 if(NFCSTATUS_PENDING == wStatus)
                 {
-                    NXPLOG_FWDNLD_D("Write Request submitted successfully");
+                    NXPLOG_NCIHAL_E("Write Request submitted successfully");
                 }
                 else
                 {
-                    NXPLOG_FWDNLD_E("Write Request Failed!!");
+                    NXPLOG_NCIHAL_E("Write Request Failed!!");
                 }
             }
             else
             {
-                NXPLOG_FWDNLD_E("Download Image Primitives extraction failed!!");
+                NXPLOG_NCIHAL_E("Download Image Primitives extraction failed!!");
                 wStatus = NFCSTATUS_FAILED;
             }
         }
@@ -548,14 +548,14 @@ NFCSTATUS phDnldNfc_Log(pphDnldNfc_Buff_t pData, pphDnldNfc_RspCb_t pNotify, voi
        (NULL == pContext)
        )
     {
-        NXPLOG_FWDNLD_E("Invalid Input Parameters!!");
+        NXPLOG_NCIHAL_E("Invalid Input Parameters!!");
         wStatus = PHNFCSTVAL(CID_NFC_DNLD, NFCSTATUS_INVALID_PARAMETER);
     }
     else
     {
         if(phDnldNfc_TransitionIdle != gpphDnldContext->tDnldInProgress)
         {
-            NXPLOG_FWDNLD_E("Dnld Cmd Request in Progress..Cannot Continue!!");
+            NXPLOG_NCIHAL_E("Dnld Cmd Request in Progress..Cannot Continue!!");
             wStatus = PHNFCSTVAL(CID_NFC_DNLD, NFCSTATUS_BUSY);
         }
         else
@@ -577,16 +577,16 @@ NFCSTATUS phDnldNfc_Log(pphDnldNfc_Buff_t pData, pphDnldNfc_RspCb_t pNotify, voi
 
                 if(NFCSTATUS_PENDING == wStatus)
                 {
-                    NXPLOG_FWDNLD_D("Log Request submitted successfully");
+                    NXPLOG_NCIHAL_E("Log Request submitted successfully");
                 }
                 else
                 {
-                    NXPLOG_FWDNLD_E("Log Request Failed!!");
+                    NXPLOG_NCIHAL_E("Log Request Failed!!");
                 }
             }
             else
             {
-                NXPLOG_FWDNLD_E("Invalid Input Parameters for Log!!");
+                NXPLOG_NCIHAL_E("Invalid Input Parameters for Log!!");
                 wStatus = PHNFCSTVAL(CID_NFC_DNLD, NFCSTATUS_INVALID_PARAMETER);
             }
         }
@@ -621,14 +621,14 @@ NFCSTATUS phDnldNfc_Force(pphDnldNfc_Buff_t pInputs, pphDnldNfc_RspCb_t pNotify,
 
     if((NULL == pNotify) || (NULL == pContext))
     {
-        NXPLOG_FWDNLD_E("Invalid Input Parameters!!");
+        NXPLOG_NCIHAL_E("Invalid Input Parameters!!");
         wStatus = PHNFCSTVAL(CID_NFC_DNLD, NFCSTATUS_INVALID_PARAMETER);
     }
     else
     {
         if(phDnldNfc_TransitionIdle != gpphDnldContext->tDnldInProgress)
         {
-            NXPLOG_FWDNLD_E("Dnld Cmd Request in Progress..Cannot Continue!!");
+            NXPLOG_NCIHAL_E("Dnld Cmd Request in Progress..Cannot Continue!!");
             wStatus = PHNFCSTVAL(CID_NFC_DNLD, NFCSTATUS_BUSY);
         }
         else
@@ -673,7 +673,7 @@ NFCSTATUS phDnldNfc_Force(pphDnldNfc_Buff_t pInputs, pphDnldNfc_RspCb_t pNotify,
                    }
                    else
                    {
-                       NXPLOG_FWDNLD_E("Invalid Clk Frequency !! Using default value of 19.2Mhz..");
+                       NXPLOG_NCIHAL_E("Invalid Clk Frequency !! Using default value of 19.2Mhz..");
                        bClkFreq = phDnldNfc_ClkFreq_19_2Mhz;
                    }
 
@@ -684,7 +684,7 @@ NFCSTATUS phDnldNfc_Force(pphDnldNfc_Buff_t pInputs, pphDnldNfc_RspCb_t pNotify,
                }
                else
                {
-                   NXPLOG_FWDNLD_E("Invalid Clk src !! Using default value of PLL..");
+                   NXPLOG_NCIHAL_E("Invalid Clk src !! Using default value of PLL..");
                    bClkSrc = phDnldNfc_ClkSrcPLL;
                }
 
@@ -693,7 +693,7 @@ NFCSTATUS phDnldNfc_Force(pphDnldNfc_Buff_t pInputs, pphDnldNfc_RspCb_t pNotify,
             }
             else
             {
-                NXPLOG_FWDNLD_E("Clk src inputs not provided!! Using default values..");
+                NXPLOG_NCIHAL_E("Clk src inputs not provided!! Using default values..");
             }
 
             (gpphDnldContext->tUserData.pBuff) = bPldVal;
@@ -707,11 +707,11 @@ NFCSTATUS phDnldNfc_Force(pphDnldNfc_Buff_t pInputs, pphDnldNfc_RspCb_t pNotify,
 
             if(NFCSTATUS_PENDING == wStatus)
             {
-                NXPLOG_FWDNLD_D("Force Command Request submitted successfully");
+                NXPLOG_NCIHAL_E("Force Command Request submitted successfully");
             }
             else
             {
-                NXPLOG_FWDNLD_E("Force Command Request Failed!!");
+                NXPLOG_NCIHAL_E("Force Command Request Failed!!");
             }
         }
     }
@@ -736,7 +736,7 @@ void phDnldNfc_SetHwDevHandle(void)
 
     if(NULL == gpphDnldContext)
     {
-        NXPLOG_FWDNLD_D("Allocating Mem for Dnld Context..");
+        NXPLOG_NCIHAL_E("Allocating Mem for Dnld Context..");
         /* Create the memory for Download Mgmt Context */
         psDnldContext = (pphDnldNfc_DlContext_t)
                         malloc(sizeof(phDnldNfc_DlContext_t));
@@ -749,7 +749,7 @@ void phDnldNfc_SetHwDevHandle(void)
         }
         else
         {
-            NXPLOG_FWDNLD_E("Error Allocating Mem for Dnld Context..")
+            NXPLOG_NCIHAL_E("Error Allocating Mem for Dnld Context..")
         }
     }
     else
@@ -775,7 +775,7 @@ void phDnldNfc_ReSetHwDevHandle(void)
 {
     if (gpphDnldContext != NULL)
     {
-        NXPLOG_FWDNLD_E("Freeing Mem for Dnld Context..")
+        NXPLOG_NCIHAL_E("Freeing Mem for Dnld Context..")
         free(gpphDnldContext);
         gpphDnldContext = NULL;
     }
@@ -809,14 +809,14 @@ NFCSTATUS phDnldNfc_RawReq(pphDnldNfc_Buff_t pFrameData, pphDnldNfc_Buff_t pRspD
        (NULL == pContext)
        )
     {
-        NXPLOG_FWDNLD_E("Invalid Input Parameters!!");
+        NXPLOG_NCIHAL_E("Invalid Input Parameters!!");
         wStatus = PHNFCSTVAL(CID_NFC_DNLD, NFCSTATUS_INVALID_PARAMETER);
     }
     else
     {
         if(phDnldNfc_TransitionIdle != gpphDnldContext->tDnldInProgress)
         {
-            NXPLOG_FWDNLD_E("Raw Cmd Request in Progress..Cannot Continue!!");
+            NXPLOG_NCIHAL_E("Raw Cmd Request in Progress..Cannot Continue!!");
             wStatus = PHNFCSTVAL(CID_NFC_DNLD, NFCSTATUS_BUSY);
         }
         else
@@ -838,16 +838,16 @@ NFCSTATUS phDnldNfc_RawReq(pphDnldNfc_Buff_t pFrameData, pphDnldNfc_Buff_t pRspD
 
                 if(NFCSTATUS_PENDING == wStatus)
                 {
-                    NXPLOG_FWDNLD_D("RawFrame Request submitted successfully");
+                    NXPLOG_NCIHAL_E("RawFrame Request submitted successfully");
                 }
                 else
                 {
-                    NXPLOG_FWDNLD_E("RawFrame Request Failed!!");
+                    NXPLOG_NCIHAL_E("RawFrame Request Failed!!");
                 }
             }
             else
             {
-                NXPLOG_FWDNLD_E("Invalid Buff Parameters!!");
+                NXPLOG_NCIHAL_E("Invalid Buff Parameters!!");
                 wStatus = PHNFCSTVAL(CID_NFC_DNLD, NFCSTATUS_INVALID_PARAMETER);
             }
         }
@@ -896,25 +896,25 @@ NFCSTATUS phDnldNfc_InitImgInfo(void)
 #endif
         wStatus = phDnldNfc_LoadFW (pathName, &pImageInfo, &ImageInfoLen);
 
-    NXPLOG_FWDNLD_D("FW Image Length - ImageInfoLen %d", ImageInfoLen);
-    NXPLOG_FWDNLD_D("FW Image Info Pointer - pImageInfo %p", pImageInfo);
+    NXPLOG_NCIHAL_E("FW Image Length - ImageInfoLen %d", ImageInfoLen);
+    NXPLOG_NCIHAL_E("FW Image Info Pointer - pImageInfo %p", pImageInfo);
 
     if((pImageInfo == NULL) || (ImageInfoLen == 0))
     {
-        NXPLOG_FWDNLD_E("Image extraction Failed - invalid imginfo or imginfolen!!");
+        NXPLOG_NCIHAL_E("Image extraction Failed - invalid imginfo or imginfolen!!");
         wStatus = NFCSTATUS_FAILED;
     }
 
     if (wStatus != NFCSTATUS_SUCCESS)
     {
-        NXPLOG_FWDNLD_E("Error loading libpn54x_fw !!\n");
+        NXPLOG_NCIHAL_E("Error loading libpn54x_fw !!\n");
     }
 
    /* get the MW version */
    if(NFCSTATUS_SUCCESS == wStatus)
    {
-       //NXPLOG_FWDNLD_D("MW Major Version Num - %x",NXP_MW_VERSION_MAJ);
-       //NXPLOG_FWDNLD_D("MW Minor Version Num - %x",NXP_MW_VERSION_MIN);
+       //NXPLOG_NCIHAL_E("MW Major Version Num - %x",NXP_MW_VERSION_MAJ);
+       //NXPLOG_NCIHAL_E("MW Minor Version Num - %x",NXP_MW_VERSION_MIN);
        wMwVer = (((uint16_t)(NXP_MW_VERSION_MAJ) << 8U) | (NXP_MW_VERSION_MIN));
    }
 
@@ -924,10 +924,10 @@ NFCSTATUS phDnldNfc_InitImgInfo(void)
        gpphDnldContext->nxp_nfc_fw_len = ImageInfoLen;
        if((NULL != gpphDnldContext->nxp_nfc_fw) && (0 != gpphDnldContext->nxp_nfc_fw_len))
        {
-           NXPLOG_FWDNLD_D("FW Major Version Num - %x",gpphDnldContext->nxp_nfc_fw[5]);
-           NXPLOG_FWDNLD_D("FW Minor Version Num - %x",gpphDnldContext->nxp_nfc_fw[4]);
-           NXPLOG_FWDNLD_D("FW Image Length - %d",ImageInfoLen);
-           NXPLOG_FWDNLD_D("FW Image Info Pointer - %p", pImageInfo);
+           NXPLOG_NCIHAL_E("FW Major Version Num - %x",gpphDnldContext->nxp_nfc_fw[5]);
+           NXPLOG_NCIHAL_E("FW Minor Version Num - %x",gpphDnldContext->nxp_nfc_fw[4]);
+           NXPLOG_NCIHAL_E("FW Image Length - %d",ImageInfoLen);
+           NXPLOG_NCIHAL_E("FW Image Info Pointer - %p", pImageInfo);
 
            /* get the FW version */
            wFwVer = (((uint16_t)(gpphDnldContext->nxp_nfc_fw[5]) << 8U) | (gpphDnldContext->nxp_nfc_fw[4]));
@@ -935,7 +935,7 @@ NFCSTATUS phDnldNfc_InitImgInfo(void)
        }
        else
        {
-           NXPLOG_FWDNLD_E("Image details extraction Failed!!");
+           NXPLOG_NCIHAL_E("Image details extraction Failed!!");
            wStatus = NFCSTATUS_FAILED;
        }
    }
@@ -972,14 +972,14 @@ NFCSTATUS phDnldNfc_LoadRecInfo(void)
         wStatus = phDnldNfc_LoadFW (PLATFORM_LIB_PATH, &pImageInfo, &ImageInfoLen);
     if((pImageInfo == NULL) || (ImageInfoLen == 0))
     {
-        NXPLOG_FWDNLD_E("Image extraction Failed - invalid imginfo or imginfolen!!");
+        NXPLOG_NCIHAL_E("Image extraction Failed - invalid imginfo or imginfolen!!");
         wStatus = NFCSTATUS_FAILED;
     }
 
     /* load the PLL recovery image library */
     if (wStatus != NFCSTATUS_SUCCESS)
     {
-        NXPLOG_FWDNLD_E("Error loading libpn54x_fw_platform !!\n");
+        NXPLOG_NCIHAL_E("Error loading libpn54x_fw_platform !!\n");
     }
 
    if(NFCSTATUS_SUCCESS == wStatus)
@@ -989,13 +989,13 @@ NFCSTATUS phDnldNfc_LoadRecInfo(void)
        gpphDnldContext->nxp_nfc_fwp_len = ImageInfoLen;
        if((NULL != gpphDnldContext->nxp_nfc_fwp) && (0 != gpphDnldContext->nxp_nfc_fwp_len))
        {
-           NXPLOG_FWDNLD_D("Recovery Image Length - %d",ImageInfoLen);
-           NXPLOG_FWDNLD_D("Recovery Image Info Pointer - %p", pImageInfo);
+           NXPLOG_NCIHAL_E("Recovery Image Length - %d",ImageInfoLen);
+           NXPLOG_NCIHAL_E("Recovery Image Info Pointer - %p", pImageInfo);
            wStatus = NFCSTATUS_SUCCESS;
        }
        else
        {
-           NXPLOG_FWDNLD_E("Recovery Image details extraction Failed!!");
+           NXPLOG_NCIHAL_E("Recovery Image details extraction Failed!!");
            wStatus = NFCSTATUS_FAILED;
        }
    }
@@ -1033,13 +1033,13 @@ NFCSTATUS phDnldNfc_LoadPKInfo(void)
         wStatus = phDnldNfc_LoadFW (PKU_LIB_PATH, &pImageInfo, &ImageInfoLen);
     if((pImageInfo == NULL) || (ImageInfoLen == 0))
     {
-        NXPLOG_FWDNLD_E("Image extraction Failed - invalid imginfo or imginfolen!!");
+        NXPLOG_NCIHAL_E("Image extraction Failed - invalid imginfo or imginfolen!!");
         wStatus = NFCSTATUS_FAILED;
     }
 
     if (wStatus != NFCSTATUS_SUCCESS)
     {
-        NXPLOG_FWDNLD_E("Error loading libpn54x_fw_pku !!\n");
+        NXPLOG_NCIHAL_E("Error loading libpn54x_fw_pku !!\n");
     }
 
    if(NFCSTATUS_SUCCESS == wStatus)
@@ -1050,13 +1050,13 @@ NFCSTATUS phDnldNfc_LoadPKInfo(void)
 
        if((NULL != gpphDnldContext->nxp_nfc_fwp) && (0 != gpphDnldContext->nxp_nfc_fwp_len))
        {
-           NXPLOG_FWDNLD_D("PKU Image Length - %d",ImageInfoLen);
-           NXPLOG_FWDNLD_D("PKU Image Info Pointer - %p",pImageInfo);
+           NXPLOG_NCIHAL_E("PKU Image Length - %d",ImageInfoLen);
+           NXPLOG_NCIHAL_E("PKU Image Info Pointer - %p",pImageInfo);
            wStatus = NFCSTATUS_SUCCESS;
        }
        else
        {
-           NXPLOG_FWDNLD_E("PKU Image details extraction Failed!!");
+           NXPLOG_NCIHAL_E("PKU Image details extraction Failed!!");
            wStatus = NFCSTATUS_FAILED;
        }
    }
@@ -1083,11 +1083,11 @@ void phDnldNfc_CloseFwLibHandle(void)
     wStatus = phDnldNfc_UnloadFW();
     if(wStatus != NFCSTATUS_SUCCESS)
     {
-        NXPLOG_FWDNLD_E("free library FAILED !!\n");
+        NXPLOG_NCIHAL_E("free library FAILED !!\n");
     }
     else
     {
-        NXPLOG_FWDNLD_E("free library SUCCESS !!\n");
+        NXPLOG_NCIHAL_E("free library SUCCESS !!\n");
     }
     return;
 }
@@ -1129,12 +1129,12 @@ NFCSTATUS phDnldNfc_LoadFW(const char* pathName, uint8_t **pImgInfo, uint16_t* p
 
     /* load the DLL file */
     pFwLibHandle = dlopen(pathName, RTLD_LAZY);
-    NXPLOG_FWDNLD_D ("@@@%s", pathName);
+    NXPLOG_NCIHAL_E ("@@@%s", pathName);
 
     /* if library load failed then handle will be NULL */
     if(pFwLibHandle == NULL)
     {
-        NXPLOG_FWDNLD_E("NULL handler : unable to load the library file, specify correct path");
+        NXPLOG_NCIHAL_E("NULL handler : unable to load the library file, specify correct path");
         return NFCSTATUS_FAILED;
     }
 
@@ -1145,7 +1145,7 @@ NFCSTATUS phDnldNfc_LoadFW(const char* pathName, uint8_t **pImgInfo, uint16_t* p
 
    if(dlerror()|| (NULL == pImageInfo))
    {
-       NXPLOG_FWDNLD_E("Problem loading symbol : gphDnldNfc_DlSeq");
+       NXPLOG_NCIHAL_E("Problem loading symbol : gphDnldNfc_DlSeq");
        return NFCSTATUS_FAILED;
    }
    (*pImgInfo) = (*(uint8_t**)pImageInfo);
@@ -1153,7 +1153,7 @@ NFCSTATUS phDnldNfc_LoadFW(const char* pathName, uint8_t **pImgInfo, uint16_t* p
    pImageInfoLen  = (void*)dlsym(pFwLibHandle,"gphDnldNfc_DlSeqSz");
    if(dlerror() || (NULL == pImageInfoLen))
    {
-       NXPLOG_FWDNLD_E("Problem loading symbol : gphDnldNfc_DlSeqSz");
+       NXPLOG_NCIHAL_E("Problem loading symbol : gphDnldNfc_DlSeqSz");
        return NFCSTATUS_FAILED;
    }
 
@@ -1203,12 +1203,12 @@ NFCSTATUS phDnldNfc_LoadRecoveryFW (const char* pathName, uint8_t **pImgInfo, ui
     }
     /* load the DLL file */
     pFwLibHandle = dlopen (pathName, RTLD_LAZY);
-    NXPLOG_FWDNLD_D ("phDnldNfc_LoadRecoveryFW %s ", pathName);
+    NXPLOG_NCIHAL_E ("phDnldNfc_LoadRecoveryFW %s ", pathName);
 
     /* if library load failed then handle will be NULL */
     if (pFwLibHandle == NULL)
     {
-        NXPLOG_FWDNLD_E("NULL handler : unable to load the library file, specify correct path");
+        NXPLOG_NCIHAL_E("NULL handler : unable to load the library file, specify correct path");
         return NFCSTATUS_FAILED;
     }
 
@@ -1219,7 +1219,7 @@ NFCSTATUS phDnldNfc_LoadRecoveryFW (const char* pathName, uint8_t **pImgInfo, ui
 
     if (dlerror() || (NULL == pImageInfo))
     {
-        NXPLOG_FWDNLD_E ("Problem loading symbol : gphDnldNfc_DummyDlSeq");
+        NXPLOG_NCIHAL_E ("Problem loading symbol : gphDnldNfc_DummyDlSeq");
         return NFCSTATUS_FAILED;
     }
 
@@ -1227,7 +1227,7 @@ NFCSTATUS phDnldNfc_LoadRecoveryFW (const char* pathName, uint8_t **pImgInfo, ui
     pImageInfoLen  = (void*)dlsym (pFwLibHandle, "gphDnldNfc_DlSeqDummyFwSz");
     if (dlerror() ||(NULL == pImageInfoLen))
     {
-       NXPLOG_FWDNLD_E ("Problem loading symbol : gphDnldNfc_DlSeqDummyFwSz");
+       NXPLOG_NCIHAL_E ("Problem loading symbol : gphDnldNfc_DlSeqDummyFwSz");
        return NFCSTATUS_FAILED;
     }
 
@@ -1263,7 +1263,7 @@ NFCSTATUS phDnldNfc_UnloadFW(void)
         if(status != 0)
         {
             wStatus = NFCSTATUS_FAILED;
-            NXPLOG_FWDNLD_E("Free library file failed");
+            NXPLOG_NCIHAL_E("Free library file failed");
         }
     }
 
@@ -1299,7 +1299,7 @@ NFCSTATUS phDnldNfc_ReadMem(void *pHwRef, pphDnldNfc_RspCb_t pNotify, void *pCon
 
     if((NULL == pNotify) || (NULL == pContext))
     {
-        NXPLOG_FWDNLD_E("Invalid Input Parameters!!");
+        NXPLOG_NCIHAL_E("Invalid Input Parameters!!");
         wStatus = PHNFCSTVAL(CID_NFC_DNLD, NFCSTATUS_INVALID_PARAMETER);
     }
     else
@@ -1345,11 +1345,11 @@ NFCSTATUS phDnldNfc_ReadMem(void *pHwRef, pphDnldNfc_RspCb_t pNotify, void *pCon
 
         if(NFCSTATUS_PENDING == wStatus)
         {
-            NXPLOG_FWDNLD_D("Read Request submitted successfully..");
+            NXPLOG_NCIHAL_E("Read Request submitted successfully..");
         }
         else
         {
-            NXPLOG_FWDNLD_E("Read Request submission failed!!");
+            NXPLOG_NCIHAL_E("Read Request submission failed!!");
         }
     }
 
@@ -1379,7 +1379,7 @@ static void phDnldNfc_ReadComplete(void* pContext,NFCSTATUS status,void* pInfo)
 
     if(NFCSTATUS_SUCCESS == wStatus)
     {
-        NXPLOG_FWDNLD_D("Read Done!!");
+        NXPLOG_NCIHAL_E("Read Done!!");
     }
 
     UserCb(&UserCtxt,status,pInfo);
@@ -1413,14 +1413,14 @@ NFCSTATUS phDnldNfc_Read(pphDnldNfc_Buff_t pData, uint32_t dwRdAddr, pphDnldNfc_
        (NULL == pContext)
        )
     {
-        NXPLOG_FWDNLD_E("Invalid Input Parameters!!");
+        NXPLOG_NCIHAL_E("Invalid Input Parameters!!");
         wStatus = PHNFCSTVAL(CID_NFC_DNLD, NFCSTATUS_INVALID_PARAMETER);
     }
     else
     {
         if(phDnldNfc_TransitionIdle != gpphDnldContext->tDnldInProgress)
         {
-            NXPLOG_FWDNLD_E("Dnld Cmd Request in Progress..Cannot Continue!!");
+            NXPLOG_NCIHAL_E("Dnld Cmd Request in Progress..Cannot Continue!!");
             wStatus = PHNFCSTVAL(CID_NFC_DNLD, NFCSTATUS_BUSY);
         }
         else
@@ -1443,16 +1443,16 @@ NFCSTATUS phDnldNfc_Read(pphDnldNfc_Buff_t pData, uint32_t dwRdAddr, pphDnldNfc_
 
                 if(NFCSTATUS_PENDING == wStatus)
                 {
-                    NXPLOG_FWDNLD_D("Read Request submitted successfully");
+                    NXPLOG_NCIHAL_E("Read Request submitted successfully");
                 }
                 else
                 {
-                    NXPLOG_FWDNLD_E("Read Request Failed!!");
+                    NXPLOG_NCIHAL_E("Read Request Failed!!");
                 }
             }
             else
             {
-                NXPLOG_FWDNLD_E("Invalid Buff Parameters!!");
+                NXPLOG_NCIHAL_E("Invalid Buff Parameters!!");
                 wStatus = PHNFCSTVAL(CID_NFC_DNLD, NFCSTATUS_INVALID_PARAMETER);
             }
         }

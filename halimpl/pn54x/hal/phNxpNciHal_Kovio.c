@@ -70,7 +70,7 @@ static void kovio_timer_handler(uint32_t timerId, void *pContext)
 {
     UNUSED(timerId);
     UNUSED(pContext);
-    NXPLOG_NCIHAL_D(">> kovio_timer_handler. Did not receive RF_INTF_ACTIVATED_NTF, Kovio TAG must be removed.");
+    NXPLOG_NCIHAL_E(">> kovio_timer_handler. Did not receive RF_INTF_ACTIVATED_NTF, Kovio TAG must be removed.");
 
     phOsalNfc_Timer_Delete(kovio_timer);
 
@@ -80,7 +80,7 @@ static void kovio_timer_handler(uint32_t timerId, void *pContext)
     /*
      * send kovio deactivated ntf to upper layer.
     */
-    NXPLOG_NCIHAL_D(">> send kovio deactivated ntf to upper layer.");
+    NXPLOG_NCIHAL_E(">> send kovio deactivated ntf to upper layer.");
     if (nxpncihal_ctrl.p_nfc_stack_data_cback != NULL)
     {
         (*nxpncihal_ctrl.p_nfc_stack_data_cback)(
@@ -118,7 +118,7 @@ static NFCSTATUS phNxpNciHal_rf_deactivate()
         if (nxpncihal_ctrl.p_nfc_stack_data_cback!= NULL &&
             nxpncihal_ctrl.hal_open_status == TRUE)
         {
-            NXPLOG_NCIHAL_D("Send the Core Reset NTF to upper layer, which will trigger the recovery\n");
+            NXPLOG_NCIHAL_E("Send the Core Reset NTF to upper layer, which will trigger the recovery\n");
             //Send the Core Reset NTF to upper layer, which will trigger the recovery.
             send_to_upper_kovio = 0;
             nxpncihal_ctrl.rx_data_len = sizeof(reset_ntf);
@@ -171,11 +171,11 @@ NFCSTATUS phNxpNciHal_kovio_rsp_ext(uint8_t *p_ntf, uint16_t *p_len)
                     *p_len+=1;
                 }else
                 {
-                    NXPLOG_NCIHAL_D("Kovio Act ntf payload exceeded temp buffer size");
+                    NXPLOG_NCIHAL_E("Kovio Act ntf payload exceeded temp buffer size");
                 }
                 kovio_detected = 1;
                 kovio_timer = phOsalNfc_Timer_Create();
-                NXPLOG_NCIHAL_D("custom kovio timer Created - %d", kovio_timer);
+                NXPLOG_NCIHAL_E("custom kovio timer Created - %d", kovio_timer);
             }
             else
             {
@@ -184,12 +184,12 @@ NFCSTATUS phNxpNciHal_kovio_rsp_ext(uint8_t *p_ntf, uint16_t *p_len)
 
             if (!rf_deactive_cmd)
             {
-                NXPLOG_NCIHAL_D ("Send RF deactivate command to NFCC");
+                NXPLOG_NCIHAL_E ("Send RF deactivate command to NFCC");
                 status = phNxpNciHal_rf_deactivate ();
             }
             else
             {
-                NXPLOG_NCIHAL_D ("RF deactivate command is already sent to NFCC");
+                NXPLOG_NCIHAL_E ("RF deactivate command is already sent to NFCC");
                 disable_kovio = TRUE;
                 send_to_upper_kovio = 0;
             }
@@ -199,7 +199,7 @@ NFCSTATUS phNxpNciHal_kovio_rsp_ext(uint8_t *p_ntf, uint16_t *p_len)
                     NULL);
             if (NFCSTATUS_SUCCESS == status)
             {
-                NXPLOG_NCIHAL_D("kovio timer started");
+                NXPLOG_NCIHAL_E("kovio timer started");
             }
             else
             {
@@ -212,7 +212,7 @@ NFCSTATUS phNxpNciHal_kovio_rsp_ext(uint8_t *p_ntf, uint16_t *p_len)
             if (kovio_detected == 1)
             {
                 phNxpNciHal_clean_Kovio_Ext();
-                NXPLOG_NCIHAL_D ("Disabling Kovio detection logic as another tag type detected");
+                NXPLOG_NCIHAL_E ("Disabling Kovio detection logic as another tag type detected");
             }
         }
     }
@@ -223,7 +223,7 @@ NFCSTATUS phNxpNciHal_kovio_rsp_ext(uint8_t *p_ntf, uint16_t *p_len)
             send_to_upper_kovio = 0;
         if((kovio_detected == 1)&&(disable_kovio==0x01))
         {
-            NXPLOG_NCIHAL_D ("Disabling Kovio detection logic");
+            NXPLOG_NCIHAL_E ("Disabling Kovio detection logic");
             phNxpNciHal_clean_Kovio_Ext();
             disable_kovio=0x00;
         }
@@ -250,7 +250,7 @@ NFCSTATUS phNxpNciHal_kovio_rsp_ext(uint8_t *p_ntf, uint16_t *p_len)
 *******************************************************************************/
 void phNxpNciHal_clean_Kovio_Ext()
 {
-    NXPLOG_NCIHAL_D(">> Cleaning up Kovio State machine and timer.");
+    NXPLOG_NCIHAL_E(">> Cleaning up Kovio State machine and timer.");
     phOsalNfc_Timer_Delete(kovio_timer);
     kovio_detected = 0x00;
     send_to_upper_kovio=0x01;
@@ -258,7 +258,7 @@ void phNxpNciHal_clean_Kovio_Ext()
     /*
      * send kovio deactivated ntf to upper layer.
     */
-    NXPLOG_NCIHAL_D(">> send kovio deactivated ntf to upper layer.");
+    NXPLOG_NCIHAL_E(">> send kovio deactivated ntf to upper layer.");
     if (nxpncihal_ctrl.p_nfc_stack_data_cback != NULL)
     {
         (*nxpncihal_ctrl.p_nfc_stack_data_cback)(
