@@ -23,6 +23,7 @@
  *
  ******************************************************************************/
 
+#include <log/log.h>
 #include <string.h>
 #include "gki.h"
 #include "nfc_target.h"
@@ -881,6 +882,15 @@ void llcp_dlc_proc_i_pdu (UINT8 dsap, UINT8 ssap, UINT16 i_pdu_length, UINT8 *p_
         {
             i_pdu_length = p_msg->len;
             p_i_pdu = (UINT8 *) (p_msg + 1) + p_msg->offset;
+        }
+
+        if (i_pdu_length < LLCP_PDU_HEADER_SIZE + LLCP_SEQUENCE_SIZE) {
+            android_errorWriteLog(0x534e4554, "116722267");
+            LLCP_TRACE_ERROR1 ("Insufficient I PDU length %d", i_pdu_length);
+            if (p_msg) {
+                GKI_freebuf(p_msg);
+            }
+            return;
         }
 
         info_len = i_pdu_length - LLCP_PDU_HEADER_SIZE - LLCP_SEQUENCE_SIZE;
