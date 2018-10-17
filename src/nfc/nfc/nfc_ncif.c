@@ -42,6 +42,7 @@
  *  (callback). On the transmit side, it manages the command transmission.
  *
  ******************************************************************************/
+#include <log/log.h>
 #include <string.h>
 #include "nfc_target.h"
 
@@ -1231,8 +1232,14 @@ void nfc_ncif_proc_get_routing (UINT8 *p, UINT8 len)
             {
                 tl                  = *(p+1);
                 tl                 += NFC_TL_SIZE;
-                STREAM_TO_ARRAY (pn, p, tl);
                 evt_data.tlv_size  += tl;
+                if (evt_data.tlv_size > NFC_MAX_EE_TLV_SIZE)
+                {
+                    android_errorWriteLog(0x534e4554, "117554809");
+                    NFC_TRACE_ERROR1 ("%s: Invalid data format", __func__);
+                    return;
+                }
+                STREAM_TO_ARRAY (pn, p, tl);
                 pn                 += tl;
             }
             (*nfc_cb.p_resp_cback) (NFC_GET_ROUTING_REVT, (tNFC_RESPONSE *) &evt_data);
