@@ -23,6 +23,7 @@
  *
  ******************************************************************************/
 
+#include <log/log.h>
 #include <string.h>
 #include "gki.h"
 #include "nfc_target.h"
@@ -1132,7 +1133,7 @@ static void llcp_link_proc_agf_pdu (BT_HDR *p_agf)
 {
     UINT16 agf_length;
     UINT8 *p, *p_info, *p_pdu_length;
-    UINT16 pdu_hdr, pdu_length;
+    UINT16 pdu_hdr, pdu_length, pdu_num;
     UINT8  dsap, ptype, ssap;
 
     p_agf->len    -= LLCP_PDU_HEADER_SIZE;
@@ -1143,12 +1144,17 @@ static void llcp_link_proc_agf_pdu (BT_HDR *p_agf)
     */
     agf_length = p_agf->len;
     p = (UINT8 *) (p_agf + 1) + p_agf->offset;
+    pdu_num = 0;
 
     while (agf_length > 0)
     {
         if (agf_length > LLCP_PDU_AGF_LEN_SIZE)
         {
             BE_STREAM_TO_UINT16 (pdu_length, p);
+            if (pdu_length < LLCP_PDU_HEADER_SIZE) {
+                LLCP_TRACE_ERROR0 ("Received invalid encapsulated PDU");
+                break;
+            }
             agf_length -= LLCP_PDU_AGF_LEN_SIZE;
         }
         else
@@ -1160,6 +1166,7 @@ static void llcp_link_proc_agf_pdu (BT_HDR *p_agf)
         {
             p += pdu_length;
             agf_length -= pdu_length;
+            pdu_num++;
         }
         else
         {
@@ -1167,8 +1174,9 @@ static void llcp_link_proc_agf_pdu (BT_HDR *p_agf)
         }
     }
 
-    if (agf_length != 0)
+    if (agf_length != 0 || pdu_num < 2)
     {
+        android_errorWriteLog(0x534e4554, "116791157");
         LLCP_TRACE_ERROR0 ("llcp_link_proc_agf_pdu (): Received invalid AGF PDU");
         GKI_freebuf (p_agf);
         return;
@@ -1207,6 +1215,9 @@ static void llcp_link_proc_agf_pdu (BT_HDR *p_agf)
             GKI_freebuf (p_agf);
             llcp_link_deactivate (LLCP_LINK_REMOTE_INITIATED);
             return;
+        }
+        else if (ptype == LLCP_PDU_AGF_TYPE) {
+            LLCP_TRACE_ERROR0 ("AGF PDU shall not be in AGF");
         }
         else if (ptype == LLCP_PDU_SYMM_TYPE)
         {
