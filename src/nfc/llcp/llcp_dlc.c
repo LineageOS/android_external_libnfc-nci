@@ -1098,7 +1098,11 @@ static void llcp_dlc_proc_rr_rnr_pdu (UINT8 dsap, UINT8 ptype, UINT8 ssap, UINT1
     {
         error_flags = 0;
 
-        rcv_seq = LLCP_GET_NR (*p_data);
+        if (length == 0) {
+            android_errorWriteLog(0x534e4554, "116788646");
+            return;
+        }
+        rcv_seq = LLCP_GET_NR(*p_data);
 
         if (length != LLCP_PDU_RR_SIZE - LLCP_PDU_HEADER_SIZE)
         {
