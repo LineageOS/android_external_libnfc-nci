@@ -1401,7 +1401,7 @@ void rw_t3t_act_handle_check_rsp (tRW_T3T_CB *p_cb, BT_HDR *p_msg_rsp)
         nfc_status = NFC_STATUS_FAILED;
         GKI_freebuf (p_msg_rsp);
     }
-    else
+    else if (p_msg_rsp->len >= T3T_MSG_RSP_OFFSET_CHECK_DATA)
     {
         /* Copy incoming data into buffer */
         p_msg_rsp->offset += T3T_MSG_RSP_OFFSET_CHECK_DATA;     /* Skip over t3t header */
@@ -1409,6 +1409,12 @@ void rw_t3t_act_handle_check_rsp (tRW_T3T_CB *p_cb, BT_HDR *p_msg_rsp)
         evt_data.status = NFC_STATUS_OK;
         evt_data.p_data = p_msg_rsp;
         (*(rw_cb.p_cback)) (RW_T3T_CHECK_EVT, (tRW_DATA *) &evt_data);
+    }
+    else
+    {
+        android_errorWriteLog(0x534e4554, "120503926");
+        nfc_status = NFC_STATUS_FAILED;
+        GKI_freebuf(p_msg_rsp);
     }
 
 
