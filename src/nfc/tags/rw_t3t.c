@@ -1608,7 +1608,12 @@ static void rw_t3t_handle_get_sc_poll_rsp (tRW_T3T_CB *p_cb, UINT8 nci_status, U
             {
                 RW_TRACE_DEBUG1 ("FeliCa Lite tag detected (system code %04X)", sc);
                 /* Store system code */
-                p_cb->system_codes[p_cb->num_system_codes++] = sc;
+                if (p_cb->num_system_codes < T3T_MAX_SYSTEM_CODES) {
+                  p_cb->system_codes[p_cb->num_system_codes++] = sc;
+                } else {
+                  RW_TRACE_DEBUG0 ("Exceed T3T_MAX_SYSTEM_CODES!");
+                  android_errorWriteLog(0x534e4554, "120499324");
+                }
 
                 /* Poll for NDEF system code */
                 if ((status = (tNFC_STATUS) nci_snd_t3t_polling (T3T_SYSTEM_CODE_NDEF, 0, 0)) == NCI_STATUS_OK)
