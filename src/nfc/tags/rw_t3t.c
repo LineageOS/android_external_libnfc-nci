@@ -1288,6 +1288,10 @@ void rw_t3t_act_handle_ndef_detect_rsp (tRW_T3T_CB *p_cb, BT_HDR *p_msg_rsp)
     {
         evt_data.status = NFC_STATUS_FAILED;
     }
+    else if (p_msg_rsp->len < (T3T_MSG_RSP_OFFSET_CHECK_DATA + T3T_MSG_BLOCKSIZE)) {
+        evt_data.status = NFC_STATUS_FAILED;
+        android_errorWriteLog(0x534e4554, "120428041");
+    }
     else
     {
         /* Get checksum from received ndef attribute msg */
