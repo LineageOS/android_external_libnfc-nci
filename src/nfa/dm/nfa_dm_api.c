@@ -22,7 +22,9 @@
  *  NFA interface for device management
  *
  ******************************************************************************/
+#include <log/log.h>
 #include <string.h>
+
 #include "nfa_api.h"
 #include "nfa_sys.h"
 #include "nfa_dm_int.h"
@@ -869,6 +871,12 @@ tNFA_STATUS NFA_SendRawFrame (UINT8  *p_raw_data,
         return (NFA_STATUS_INVALID_PARAM);
 
     size = BT_HDR_SIZE + NCI_MSG_OFFSET_SIZE + NCI_DATA_HDR_SIZE + data_len;
+    /* Check for integer overflow */
+    if (size < data_len)
+    {
+        android_errorWriteLog(0x534e4554, "120664978");
+        return NFA_STATUS_INVALID_PARAM;
+    }
     if ((p_msg = (BT_HDR *) GKI_getbuf (size)) != NULL)
     {
         p_msg->event  = NFA_DM_API_RAW_FRAME_EVT;
