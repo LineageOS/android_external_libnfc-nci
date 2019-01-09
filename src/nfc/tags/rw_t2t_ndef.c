@@ -654,7 +654,15 @@ static void rw_t2t_handle_tlv_detect_rsp (UINT8 *p_data)
                 break;
 
             case TAG_LOCK_CTRL_TLV:
-                p_t2t->bytes_count--;
+                if (p_t2t->bytes_count > 0)
+                {
+                  p_t2t->bytes_count--;
+                }
+                else
+                {
+                  RW_TRACE_ERROR0 ("Underflow p_t2t->bytes_count!");
+                  android_errorWriteLog(0x534e4554, "120506143");
+                }
                 if (  (tlvtype == TAG_LOCK_CTRL_TLV)
                     ||(tlvtype == TAG_NDEF_TLV)  )
                 {
@@ -701,7 +709,15 @@ static void rw_t2t_handle_tlv_detect_rsp (UINT8 *p_data)
                 break;
 
             case TAG_MEM_CTRL_TLV:
-                p_t2t->bytes_count--;
+                if (p_t2t->bytes_count > 0)
+                {
+                  p_t2t->bytes_count--;
+                }
+                else
+                {
+                  RW_TRACE_ERROR0 ("Underflow p_t2t->bytes_count!");
+                  android_errorWriteLog(0x534e4554, "120506143");
+                }
                 if (  (tlvtype == TAG_MEM_CTRL_TLV)
                     ||(tlvtype == TAG_NDEF_TLV)  )
                 {
@@ -736,7 +752,15 @@ static void rw_t2t_handle_tlv_detect_rsp (UINT8 *p_data)
                 break;
 
             case TAG_PROPRIETARY_TLV:
-                p_t2t->bytes_count--;
+                if (p_t2t->bytes_count > 0)
+                {
+                  p_t2t->bytes_count--;
+                }
+                else
+                {
+                  RW_TRACE_ERROR0 ("Underflow p_t2t->bytes_count!");
+                  android_errorWriteLog(0x534e4554, "120506143");
+                }
                 if (tlvtype == TAG_PROPRIETARY_TLV)
                 {
                     found = TRUE;
