@@ -1527,10 +1527,12 @@ void rw_t3t_act_handle_check_ndef_rsp (tRW_T3T_CB *p_cb, BT_HDR *p_msg_rsp)
         nfc_status = NFC_STATUS_FAILED;
         GKI_freebuf (p_msg_rsp);
     }
-    else
+    else if (p_msg_rsp->len >= T3T_MSG_RSP_OFFSET_CHECK_DATA &&
+             p_t3t_rsp[T3T_MSG_RSP_OFFSET_NUMBLOCKS] > 0)
     {
         /* Notify app of NDEF segment received */
-        rsp_num_bytes_rx = p_t3t_rsp[T3T_MSG_RSP_OFFSET_NUMBLOCKS] * 16;    /* Number of bytes received, according to header */
+        /* Number of bytes received, according to header */
+        rsp_num_bytes_rx = p_t3t_rsp[T3T_MSG_RSP_OFFSET_NUMBLOCKS] * 16;
         p_cb->ndef_rx_offset += p_cb->ndef_rx_readlen;
         read_data.status = NFC_STATUS_OK;
         p_msg_rsp->offset += T3T_MSG_RSP_OFFSET_CHECK_DATA;     /* Skip over t3t header (point to block data) */
@@ -1565,6 +1567,13 @@ void rw_t3t_act_handle_check_ndef_rsp (tRW_T3T_CB *p_cb, BT_HDR *p_msg_rsp)
                 }
             }
         }
+    }
+    else
+    {
+      android_errorWriteLog (0x534e4554, "120502559");
+      GKI_freebuf (p_msg_rsp);
+      nfc_status = NFC_STATUS_FAILED;
+      RW_TRACE_ERROR0 ("Underflow in p_msg_rsp->len!");
     }
 
     /* Notify app of RW_T3T_CHECK_CPLT_EVT if entire NDEF has been read, or if failure */
