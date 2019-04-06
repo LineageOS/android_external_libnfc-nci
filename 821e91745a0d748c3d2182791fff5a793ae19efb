@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fe222a7d_53db0203",
+        "filename": "src/nfc/tags/rw_t3t.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1531,
+      "author": {
+        "id": 8964
+      },
+      "writtenOn": "2019-04-06T07:45:41Z",
+      "side": 1,
+      "message": "not needed, it\u0027s one line below",
+      "range": {
+        "startLine": 1531,
+        "startChar": 58,
+        "endLine": 1531,
+        "endChar": 59
+      },
+      "revId": "821e91745a0d748c3d2182791fff5a793ae19efb",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71",
+      "unresolved": true
+    }
+  ]
+}
