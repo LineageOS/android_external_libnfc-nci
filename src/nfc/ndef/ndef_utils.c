@@ -24,6 +24,7 @@
  *
  ******************************************************************************/
 #include <string.h>
+#include <log/log.h>
 #include "ndef_utils.h"
 
 /*******************************************************************************
@@ -80,6 +81,7 @@ tNDEF_STATUS NDEF_MsgValidate (UINT8 *p_msg, UINT32 msg_len, BOOLEAN b_allow_chu
 {
     UINT8   *p_rec = p_msg;
     UINT8   *p_end = p_msg + msg_len;
+    UINT8   *p_new;
     UINT8   rec_hdr=0, type_len, id_len;
     int     count;
     UINT32  payload_len;
@@ -185,6 +187,14 @@ tNDEF_STATUS NDEF_MsgValidate (UINT8 *p_msg, UINT32 msg_len, BOOLEAN b_allow_chu
         {
             if (type_len != 0)
                 return (NDEF_MSG_LENGTH_MISMATCH);
+        }
+
+        /* Check for OOB */
+        p_new = p_rec + (payload_len + type_len + id_len);
+        if (p_rec > p_new || p_end < p_new)
+        {
+            android_errorWriteLog(0x534e4554, "126200054");
+            return (NDEF_MSG_LENGTH_MISMATCH);
         }
 
         /* Point to next record */
