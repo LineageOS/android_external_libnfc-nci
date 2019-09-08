@@ -23,6 +23,8 @@
  *
  ******************************************************************************/
 #include <string.h>
+#include <log/log.h>
+
 #include "trace_api.h"
 #include "nfc_api.h"
 #include "nfa_sys.h"
@@ -1456,7 +1458,9 @@ void nfa_hci_handle_admin_gate_rsp (UINT8 *p_data, UINT8 data_len)
             else if (nfa_hci_cb.param_in_use == NFA_HCI_SESSION_IDENTITY_INDEX)
             {
                 /* The only parameter we get when initializing is the session ID. Check for match. */
-                if (!memcmp ((UINT8 *) nfa_hci_cb.cfg.admin_gate.session_id, p_data, NFA_HCI_SESSION_ID_LEN) )
+                if (data_len >= NFA_HCI_SESSION_ID_LEN &&
+                    !memcmp((uint8_t*)nfa_hci_cb.cfg.admin_gate.session_id, p_data,
+                            NFA_HCI_SESSION_ID_LEN))
                 {
                     /* Session has not changed, Set WHITELIST */
                     nfa_hciu_send_set_param_cmd (NFA_HCI_ADMIN_PIPE, NFA_HCI_WHITELIST_INDEX, p_nfa_hci_cfg->num_whitelist_host, p_nfa_hci_cfg->p_whitelist);
@@ -1466,6 +1470,10 @@ void nfa_hci_handle_admin_gate_rsp (UINT8 *p_data, UINT8 data_len)
                     /* Something wrong, NVRAM data could be corrupt or first start with default session id */
                     nfa_hciu_send_clear_all_pipe_cmd ();
                     nfa_hci_cb.b_hci_netwk_reset = TRUE;
+                    if (data_len < NFA_HCI_SESSION_ID_LEN)
+                    {
+                      android_errorWriteLog(0x534e4554, "124524315");
+                    }
                 }
             }
             break;
@@ -1516,7 +1524,9 @@ void nfa_hci_handle_admin_gate_rsp (UINT8 *p_data, UINT8 data_len)
         case NFA_HCI_ANY_GET_PARAMETER:
             if (nfa_hci_cb.param_in_use == NFA_HCI_SESSION_IDENTITY_INDEX)
             {
-                if (!memcmp ((UINT8 *) default_session, p_data , NFA_HCI_SESSION_ID_LEN))
+                if (data_len >= NFA_HCI_SESSION_ID_LEN &&
+                    !memcmp((UINT8 *) default_session, p_data,
+                             NFA_HCI_SESSION_ID_LEN))
                 {
                     memcpy (&nfa_hci_cb.cfg.admin_gate.session_id[(NFA_HCI_SESSION_ID_LEN / 2)], nfa_hci_cb.cfg.admin_gate.session_id, (NFA_HCI_SESSION_ID_LEN / 2));
                     os_tick = GKI_get_os_tick_count ();
@@ -1526,6 +1536,10 @@ void nfa_hci_handle_admin_gate_rsp (UINT8 *p_data, UINT8 data_len)
                 }
                 else
                 {
+                    if (data_len < NFA_HCI_SESSION_ID_LEN)
+                    {
+                      android_errorWriteLog(0x534e4554, "124524315");
+                    }
                     if (nfa_hci_cb.hci_state == NFA_HCI_STATE_APP_DEREGISTER)
                         nfa_hci_api_deregister (NULL);
                     else if (nfa_hci_cb.hci_state == NFA_HCI_STATE_REMOVE_GATE)
@@ -1535,6 +1549,11 @@ void nfa_hci_handle_admin_gate_rsp (UINT8 *p_data, UINT8 data_len)
             else if (nfa_hci_cb.param_in_use == NFA_HCI_HOST_LIST_INDEX)
             {
                 evt_data.hosts.status    = status;
+                if (data_len > NFA_HCI_MAX_HOST_IN_NETWORK)
+                {
+                  data_len = NFA_HCI_MAX_HOST_IN_NETWORK;
+                  android_errorWriteLog(0x534e4554, "124524315");
+                }
                 evt_data.hosts.num_hosts = data_len;
                 memcpy (evt_data.hosts.host, p_data, data_len);
 
@@ -1566,7 +1585,8 @@ void nfa_hci_handle_admin_gate_rsp (UINT8 *p_data, UINT8 data_len)
             break;
 
         case NFA_HCI_ADM_CREATE_PIPE:
-            if (status == NFA_STATUS_OK)
+            // p_data should have at least 5 bytes length for pipe info
+            if (data_len >= 5 && status == NFA_STATUS_OK)
             {
                 STREAM_TO_UINT8 (source_host, p_data);
                 STREAM_TO_UINT8 (source_gate, p_data);
@@ -1583,7 +1603,10 @@ void nfa_hci_handle_admin_gate_rsp (UINT8 *p_data, UINT8 data_len)
                 }
 
                 nfa_hciu_add_pipe_to_gate (pipe, source_gate, dest_host, dest_gate);
-
+            } else if (data_len < 5 && status == NFA_STATUS_OK)
+            {
+              android_errorWriteLog(0x534e4554, "124524315");
+              status = NFA_STATUS_FAILED;
             }
 
             /* Tell the application his pipe was created or not */
