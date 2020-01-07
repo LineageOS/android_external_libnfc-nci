@@ -2208,7 +2208,10 @@ void rw_i93_sm_update_ndef (BT_HDR *p_resp)
 
         block_number = (p_i93->ndef_tlv_start_offset + 1) / p_i93->block_size;
 
-        if (rw_i93_send_cmd_write_single_block (block_number, p) == NFC_STATUS_OK)
+        if (length < p_i93->block_size) {
+            android_errorWriteLog(0x534e4554, "143109193");
+            rw_i93_handle_error(NFC_STATUS_FAILED);
+        } else if (rw_i93_send_cmd_write_single_block(block_number, p) == NFC_STATUS_OK)
         {
             /* update next writing offset */
             p_i93->rw_offset = (block_number + 1) * p_i93->block_size;
