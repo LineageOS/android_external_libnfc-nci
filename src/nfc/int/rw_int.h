@@ -377,6 +377,7 @@ typedef struct
 #define RW_T3T_FL_W4_NDEF_DETECT_POLL_RSP       0x08    /* Waiting for POLL response for RW_T3tDetectNDef */
 #define RW_T3T_FL_W4_FMT_FELICA_LITE_POLL_RSP   0x10    /* Waiting for POLL response for RW_T3tFormat */
 #define RW_T3T_FL_W4_SRO_FELICA_LITE_POLL_RSP   0x20    /* Waiting for POLL response for RW_T3tSetReadOnly */
+#define RW_T3T_FL_W4_USER_POLL_RSP              0x40    /* Waiting for POLL response for RW_T3tPoll */
 
 typedef struct
 {
