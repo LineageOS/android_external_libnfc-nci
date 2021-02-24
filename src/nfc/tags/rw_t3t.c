@@ -242,6 +242,15 @@ void rw_t3t_process_error (tNFC_STATUS status)
             rw_t3t_handle_get_system_codes_cplt ();
             return;
         }
+        else if ((p_cb->flags & (RW_T3T_FL_W4_PRESENCE_CHECK_POLL_RSP |
+                                 RW_T3T_FL_W4_GET_SC_POLL_RSP |
+                                 RW_T3T_FL_W4_FMT_FELICA_LITE_POLL_RSP |
+                                 RW_T3T_FL_W4_SRO_FELICA_LITE_POLL_RSP |
+                                 RW_T3T_FL_W4_NDEF_DETECT_POLL_RSP |
+                                 RW_T3T_FL_W4_USER_POLL_RSP))) {
+        /* Tag did not respond correctly to requested POLL */
+        return;
+        }
         /* Retry sending command if retry-count < max */
         else if (rw_cb.cur_retry < RW_MAX_RETRIES)
         {
@@ -263,8 +272,7 @@ void rw_t3t_process_error (tNFC_STATUS status)
                 }
                 else
                 {
-                    /* failure - could not send buffer */
-                    GKI_freebuf (p_cmd_buf);
+                    android_errorWriteLog(0x534e4554, "179687208");
                 }
             }
         }
@@ -370,6 +378,7 @@ void rw_t3t_handle_nci_poll_ntf (UINT8 nci_status, UINT8 num_responses, UINT8 se
     else
     {
         /* Handle POLL ntf in response to RW_T3tPoll */
+        p_cb->flags &= ~RW_T3T_FL_W4_USER_POLL_RSP;
         if ((evt_data.t3t_poll.status = nci_status) == NCI_STATUS_OK)
         {
             evt_data.t3t_poll.rc = p_cb->cur_poll_rc;
@@ -2999,6 +3008,7 @@ tNFC_STATUS RW_T3tPoll (UINT16 system_code, tT3T_POLL_RC rc, UINT8 tsn)
     if ((retval = (tNFC_STATUS) nci_snd_t3t_polling (system_code, (UINT8) rc, tsn)) == NCI_STATUS_OK)
     {
         /* start timer for waiting for responses */
+        p_cb->flags |= RW_T3T_FL_W4_USER_POLL_RSP;
         p_cb->cur_poll_rc = rc;
         p_cb->rw_state = RW_T3T_STATE_COMMAND_PENDING;
         rw_t3t_start_poll_timer (p_cb);
