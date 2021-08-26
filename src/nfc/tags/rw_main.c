@@ -30,6 +30,7 @@
 
 #if (NFC_INCLUDED == TRUE)
 #include "nfc_api.h"
+#include "nfc_int.h"
 #include "nci_hmsgs.h"
 #include "rw_api.h"
 #include "rw_int.h"
@@ -218,6 +219,34 @@ tNFC_STATUS RW_SetActivatedTagType (tNFC_ACTIVATE_DEVT *p_activate_params, tRW_C
         return (NFC_STATUS_FAILED);
     }
 
+    switch (rw_cb.tcb_type) {
+      case RW_CB_TYPE_T1T: {
+        nfc_stop_quick_timer(&rw_cb.tcb.t1t.timer);
+        break;
+      }
+      case RW_CB_TYPE_T2T: {
+        nfc_stop_quick_timer(&rw_cb.tcb.t2t.t2_timer);
+        break;
+      }
+      case RW_CB_TYPE_T3T: {
+        nfc_stop_quick_timer(&rw_cb.tcb.t3t.timer);
+        nfc_stop_quick_timer(&rw_cb.tcb.t3t.poll_timer);
+        break;
+      }
+      case RW_CB_TYPE_T4T: {
+        nfc_stop_quick_timer(&rw_cb.tcb.t4t.timer);
+        break;
+      }
+      case RW_CB_TYPE_T5T: {
+        nfc_stop_quick_timer(&rw_cb.tcb.i93.timer);
+        break;
+      }
+      case RW_CB_TYPE_UNKNOWN: {
+        break;
+      }
+    }
+
+
     /* Reset tag-specific area of control block */
     memset (&rw_cb.tcb, 0, sizeof (tRW_TCB));
 
@@ -233,6 +262,7 @@ tNFC_STATUS RW_SetActivatedTagType (tNFC_ACTIVATE_DEVT *p_activate_params, tRW_C
         /* Type1Tag    - NFC-A */
         if (p_activate_params->rf_tech_param.mode == NFC_DISCOVERY_TYPE_POLL_A)
         {
+            rw_cb.tcb_type = RW_CB_TYPE_T1T;
             status = rw_t1t_select (p_activate_params->rf_tech_param.param.pa.hr,
                                     p_activate_params->rf_tech_param.param.pa.nfcid1);
         }
@@ -242,6 +272,7 @@ tNFC_STATUS RW_SetActivatedTagType (tNFC_ACTIVATE_DEVT *p_activate_params, tRW_C
         /* Type2Tag    - NFC-A */
         if (p_activate_params->rf_tech_param.mode == NFC_DISCOVERY_TYPE_POLL_A)
         {
+            rw_cb.tcb_type = RW_CB_TYPE_T2T;
             if (p_activate_params->rf_tech_param.param.pa.sel_rsp == NFC_SEL_RES_NFC_FORUM_T2T)
                 status      = rw_t2t_select ();
         }
@@ -251,6 +282,7 @@ tNFC_STATUS RW_SetActivatedTagType (tNFC_ACTIVATE_DEVT *p_activate_params, tRW_C
         /* Type3Tag    - NFC-F */
         if (p_activate_params->rf_tech_param.mode == NFC_DISCOVERY_TYPE_POLL_F)
         {
+            rw_cb.tcb_type = RW_CB_TYPE_T3T;
             status = rw_t3t_select (p_activate_params->rf_tech_param.param.pf.nfcid2,
                                     p_activate_params->rf_tech_param.param.pf.mrti_check,
                                     p_activate_params->rf_tech_param.param.pf.mrti_update);
@@ -262,6 +294,7 @@ tNFC_STATUS RW_SetActivatedTagType (tNFC_ACTIVATE_DEVT *p_activate_params, tRW_C
         if (  (p_activate_params->rf_tech_param.mode == NFC_DISCOVERY_TYPE_POLL_B)
             ||(p_activate_params->rf_tech_param.mode == NFC_DISCOVERY_TYPE_POLL_A)  )
         {
+            rw_cb.tcb_type = RW_CB_TYPE_T4T;
             status          = rw_t4t_select ();
         }
     }
@@ -270,12 +303,14 @@ tNFC_STATUS RW_SetActivatedTagType (tNFC_ACTIVATE_DEVT *p_activate_params, tRW_C
         /* ISO 15693 */
         if (p_activate_params->rf_tech_param.mode == NFC_DISCOVERY_TYPE_POLL_ISO15693)
         {
+            rw_cb.tcb_type = RW_CB_TYPE_T5T;
             status          = rw_i93_select (p_activate_params->rf_tech_param.param.pi93.uid);
         }
     }
     /* TODO set up callback for proprietary protocol */
     else
     {
+        rw_cb.tcb_type = RW_CB_TYPE_UNKNOWN;
         RW_TRACE_ERROR0 ("RW_SetActivatedTagType Invalid protocol");
     }
 
