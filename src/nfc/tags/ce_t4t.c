@@ -701,6 +701,7 @@ static void ce_t4t_data_cback (UINT8 conn_id, tNFC_CONN_EVT event, tNFC_CONN *p_
         {
             GKI_freebuf (p_c_apdu);
             ce_t4t_send_status (T4T_RSP_NOT_FOUND);
+            return;
         }
     }
     else if (ce_cb.mem.t4t.status & CE_T4T_STATUS_WILDCARD_AID_SELECTED)
