@@ -28,6 +28,7 @@
 #include "nfa_sys.h"
 #include "nfa_dm_int.h"
 #include "nfa_sys_int.h"
+#include <log/log.h>
 
 
 /*****************************************************************************
@@ -247,6 +248,13 @@ tNFA_STATUS nfa_dm_check_set_config (UINT8 tlv_list_len, UINT8 *p_tlv_list, BOOL
         len     = *(p_tlv_list + xx + 1);
         p_value = p_tlv_list + xx + 2;
         p_cur_len = NULL;
+        if (len > (tlv_list_len - xx - 2))
+        {
+            NFA_TRACE_ERROR2 ("error: invalid TLV length: t:0x%x, l:%d",
+                                       type, len);
+            android_errorWriteLog(0x534e4554, "221216105");
+            return NFA_STATUS_FAILED;
+        }
 
         switch (type)
         {
