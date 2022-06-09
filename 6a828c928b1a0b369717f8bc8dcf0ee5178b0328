@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "fe946108_be76bde0",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 25691
+      },
+      "writtenOn": "2022-06-09T17:04:06Z",
+      "side": 1,
+      "message": "The entire topic, together with all the previous ones since September, builds for and runs on my Moto G5 Cedric. THANK YOU!",
+      "revId": "6a828c928b1a0b369717f8bc8dcf0ee5178b0328",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71"
+    }
+  ]
+}
