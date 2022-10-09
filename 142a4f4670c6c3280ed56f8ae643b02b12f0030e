@@ -16,6 +16,23 @@
       "message": "All fine for Moto G5 Cedric. THANK YOU!",
       "revId": "142a4f4670c6c3280ed56f8ae643b02b12f0030e",
       "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "232aa093_f677ac69",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 26658
+      },
+      "writtenOn": "2022-10-09T20:31:31Z",
+      "side": 1,
+      "message": "Builds fine for potter and thea.\nThank you!",
+      "revId": "142a4f4670c6c3280ed56f8ae643b02b12f0030e",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71"
     }
   ]
 }
