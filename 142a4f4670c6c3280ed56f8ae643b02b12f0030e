@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "b258bbc3_55f8ca1a",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 25691
+      },
+      "writtenOn": "2022-10-09T18:13:19Z",
+      "side": 1,
+      "message": "All fine for Moto G5 Cedric. THANK YOU!",
+      "revId": "142a4f4670c6c3280ed56f8ae643b02b12f0030e",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71"
+    }
+  ]
+}
