@@ -588,6 +588,11 @@ UINT8 nci_snd_set_routing_cmd (BOOLEAN more, UINT8 num_tlv, UINT8 tlv_size, UINT
     UINT8 *pp;
     UINT8 size = tlv_size + 2;
 
+    if (size < tlv_size)
+    {
+        return (NCI_STATUS_FAILED);
+    }
+
     if (tlv_size == 0)
     {
         /* just to terminate routing table
