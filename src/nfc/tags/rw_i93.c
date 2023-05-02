@@ -437,6 +437,16 @@ void rw_i93_send_to_upper (BT_HDR *p_resp)
     case I93_CMD_READ_MULTI_BLOCK:
     case I93_CMD_GET_MULTI_BLK_SEC:
 
+        if (UINT16_MAX - length < BT_HDR_SIZE)
+        {
+          rw_data.i93_cmd_cmpl.status = NFC_STATUS_FAILED;
+          rw_data.i93_cmd_cmpl.command = p_i93->sent_cmd;
+          rw_cb.tcb.i93.sent_cmd = 0;
+
+          event = RW_I93_CMD_CMPL_EVT;
+          break;
+        }
+
         /* forward tag data or security status */
         p_buff = (BT_HDR*) GKI_getbuf ((UINT16) (length + BT_HDR_SIZE));
 
